@@ -2,12 +2,12 @@
 from pygments.style import Style
 from pygments.token import Token
 
-from pyline import CommandLine
-from pyline.contrib.shell.code import ShellCode
-from pyline.contrib.shell.completers import Path
-from pyline.contrib.shell.prompt import ShellPrompt
-from pyline.contrib.shell.rules import Any, Sequence, Literal, Repeat, Variable
-from pyline.line import Exit
+from prompt_toolkit import CommandLine
+from prompt_toolkit.contrib.shell.code import ShellCode
+from prompt_toolkit.contrib.shell.completers import Path
+from prompt_toolkit.contrib.shell.prompt import ShellPrompt
+from prompt_toolkit.contrib.shell.rules import Any, Sequence, Literal, Repeat, Variable
+from prompt_toolkit.line import Exit
 
 
 class OurGitCode(ShellCode):

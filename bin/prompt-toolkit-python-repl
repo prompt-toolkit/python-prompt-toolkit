@@ -8,7 +8,7 @@ Options:
 """
 import docopt
 
-from pyline.contrib.repl.python import embed
+from prompt_toolkit.contrib.repl.python import embed
 
 def _run_repl():
     a = docopt.docopt(__doc__)

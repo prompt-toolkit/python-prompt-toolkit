@@ -1,4 +1,4 @@
-from pyline.prompt import Prompt
+from prompt_toolkit.prompt import Prompt
 from pygments.token import Token
 
 from .rules import TokenStream

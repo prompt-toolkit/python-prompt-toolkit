@@ -4,9 +4,9 @@ Simple example of a syntax-highlighted HTML input line.
 """
 from pygments.lexers import HtmlLexer
 
-from pyline import CommandLine
-from pyline.code import Code
-from pyline.line import Exit
+from prompt_toolkit import CommandLine
+from prompt_toolkit.code import Code
+from prompt_toolkit.line import Exit
 
 
 class HtmlCode(Code):

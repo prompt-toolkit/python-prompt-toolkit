@@ -157,9 +157,12 @@ class Line(object):
             self._history_lines.append('')
         self._history_index = len(self._history_lines) - 1
 
+        #: The current text (we edit here instead of `_history_lines[_history_index]`)
+        self._text = ''
+
     @property
     def text(self):
-        return self._history_lines[self._history_index]
+        return self._text
 
     @text.setter
     def text(self, value):
@@ -170,7 +173,7 @@ class Line(object):
         if safe_current_in_undo_buffer:
             self._undo_stack.append((self.text, self.cursor_position))
 
-        self._history_lines[self._history_index] = value
+        self._text = value
 
     @property
     def document(self):
@@ -206,7 +209,9 @@ class Line(object):
 
     @_quit_reverse_search_when_called
     def cursor_up(self):
-        """ (only for multiline edit). Move cursor to the previous line. """
+        """
+        (only for multiline edit). Move cursor to the previous line.
+        """
         document = self.document
 
         if '\n' in document.text_before_cursor:
@@ -225,7 +230,9 @@ class Line(object):
 
     @_quit_reverse_search_when_called
     def cursor_down(self):
-        """ (only for multiline edit). Move cursor to the next line. """
+        """
+        (only for multiline edit). Move cursor to the next line.
+        """
         document = self.document
 
         if '\n' in document.text_after_cursor:
@@ -313,7 +320,6 @@ class Line(object):
         if after_whitespace:
             while self.document.current_char.isspace():
                 self.cursor_right()
-
 
     def delete_character_before_cursor(self):
         if self._in_isearch:
@@ -492,13 +498,25 @@ class Line(object):
     @_quit_reverse_search_when_called
     def history_forward(self):
         if self._history_index < len(self._history_lines) - 1:
+            # Save current edited text in history.
+            if self._text:
+                self._history_lines[self._history_index] = self._text
+
+            # Go back in history, and update _text/cursor_position.
             self._history_index += 1
+            self._text = self._history_lines[self._history_index]
             self.cursor_position = len(self.text)
 
     @_quit_reverse_search_when_called
     def history_backward(self):
         if self._history_index > 0:
+            # Save current edited text in history.
+            if self._text:
+                self._history_lines[self._history_index] = self._text
+
+            # Go back in history, and update _text/cursor_position.
             self._history_index -= 1
+            self._text = self._history_lines[self._history_index]
             self.cursor_position = len(self.text)
 
     @_quit_reverse_search_when_called
@@ -562,10 +580,11 @@ class Line(object):
         code = self._create_code_obj()
         text = self.text
 
-        # If the last edit was in the middle of the history, apply it to the
-        # end of the history.
-        if text != self._history_lines[-1]:
-            self._history_lines[-1] = text
+        # Save at the tail of the history. (But remove tail if we have a
+        # duplate entry in the history.)
+        self._history_lines[-1] = text
+        if len(self._history_lines) > 1 and self._history_lines[-1] == self._history_lines[-2]:
+            self._history_lines.pop()
 
         render_context = self.get_render_context(_accept=True)
 

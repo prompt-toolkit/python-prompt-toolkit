@@ -4,14 +4,14 @@ from pygments.style import Style
 from pygments.token import Token
 from pygments.token import Keyword, Operator, Number, Name, Error, Comment
 
-from pyline import CommandLine
-from pyline.contrib.shell.code import ShellCode
-from pyline.contrib.shell.prompt import ShellPrompt
-from pyline.contrib.shell.rules import Any, Sequence, Literal, Variable, Repeat
-from pyline.line import Exit
-from pyline.prompt import Prompt
+from prompt_toolkit import CommandLine
+from prompt_toolkit.contrib.shell.code import ShellCode
+from prompt_toolkit.contrib.shell.prompt import ShellPrompt
+from prompt_toolkit.contrib.shell.rules import Any, Sequence, Literal, Variable, Repeat
+from prompt_toolkit.line import Exit
+from prompt_toolkit.prompt import Prompt
 
-from pyline.contrib.repl.python import PythonCode
+from prompt_toolkit.contrib.repl.python import PythonCode
 
 
 class PdbCode(ShellCode):

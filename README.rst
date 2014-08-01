@@ -1,5 +1,5 @@
-pyline
-======
+Python Prompt Toolkit
+=====================
 
 (WORK IN PROGRESS)
 
@@ -14,7 +14,7 @@ It could be a replacement for `readline`, but it's more powerful:
 The Python repl
 ---------------
 
-Run `./bin/pyline-python-repl` to get an interactive Python prompt with syntaxt
+Run `./bin/prompt_toolkit-python-repl` to get an interactive Python prompt with syntaxt
 highlighting, code completion, etc...
 
 
@@ -23,8 +23,8 @@ Example
 
 .. code:: python
 
-    from pyline import CommandLine
-    from pyline.line import Exit
+    from prompt_toolkit import CommandLine
+    from prompt_toolkit.line import Exit
 
     def main():
         # Create CommandLine instance
@@ -40,3 +40,29 @@ Example
 
     if __name__ == '__main__':
         main()
+
+
+Architecture
+------------
+
+::
+
+    command_prompt
+    terminal_input
+
+    pure_readline
+    xedit
+
+    xline # Extended pure python readline alternative
+
+    tprompt, tpython
+
+    xline.Line:
+
+        - InputStream
+        - InputStreamHandler
+        - LineObject
+        - Prompt
+        - RenderContext
+        - Renderer
+

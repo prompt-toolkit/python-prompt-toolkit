@@ -4,8 +4,8 @@ from __future__ import unicode_literals
 import unittest
 import six
 
-from pyline.inputstream import InputStream
-from pyline.line import Line, Document, ReturnInput
+from prompt_toolkit.inputstream import InputStream
+from prompt_toolkit.line import Line, Document, ReturnInput
 
 
 class _CLILogger(object):
@@ -422,8 +422,8 @@ class DocumentTest(unittest.TestCase):
         self.assertEqual(doc2.cursor_at_the_end, True)
 
 
-from pyline.code import Code
-from pyline.prompt import Prompt
+from prompt_toolkit.code import Code
+from prompt_toolkit.prompt import Prompt
 
 import pygments
 
@@ -457,7 +457,7 @@ class PromptTest(unittest.TestCase):
 #--
 
 
-from pyline.contrib.shell.lexer import ParametersLexer, TextToken
+from prompt_toolkit.contrib.shell.lexer import ParametersLexer, TextToken
 from pygments.token import Token
 
 class ParameterLexerTest(unittest.TestCase):
@@ -533,7 +533,7 @@ class TextTokenTest(unittest.TestCase):
 
 #---
 
-from pyline.contrib.shell.rules import TokenStream
+from prompt_toolkit.contrib.shell.rules import TokenStream
 
 class TokenStreamTest(unittest.TestCase):
     def test_tokenstream(self):
@@ -563,8 +563,8 @@ class TokenStreamTest(unittest.TestCase):
 
 #--
 
-from pyline.contrib.shell.rules import Literal
-from pyline.contrib.shell.nodes import LiteralNode
+from prompt_toolkit.contrib.shell.rules import Literal
+from prompt_toolkit.contrib.shell.nodes import LiteralNode
 
 class LiteralTest(unittest.TestCase):
     def setUp(self):

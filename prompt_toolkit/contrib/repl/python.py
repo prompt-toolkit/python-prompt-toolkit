@@ -3,7 +3,7 @@ Utility for creating a Python repl.
 
 ::
 
-    from pyline.contrib.python import PythonCommandLine
+    from prompt_toolkit.contrib.python import PythonCommandLine
     cli = PythonCommandLine()
     cli.read_input()
 
@@ -16,12 +16,12 @@ from pygments.lexers import PythonLexer, PythonTracebackLexer
 from pygments.style import Style
 from pygments.token import Keyword, Operator, Number, Name, Error, Comment, Token
 
-from pyline import CommandLine
-from pyline.code import Completion, Code
-from pyline.inputstream_handler import ViInputStreamHandler, EmacsInputStreamHandler
-from pyline.line import Exit
-from pyline.line import Line
-from pyline.prompt import Prompt
+from prompt_toolkit import CommandLine
+from prompt_toolkit.code import Completion, Code
+from prompt_toolkit.inputstream_handler import ViInputStreamHandler, EmacsInputStreamHandler
+from prompt_toolkit.line import Exit
+from prompt_toolkit.line import Line
+from prompt_toolkit.prompt import Prompt
 
 from six import exec_
 
@@ -212,6 +212,44 @@ class PythonLine(Line):
             if current_line[-1:] == ':':
                 for x in range(4):
                     insert_text(' ')
+
+    def delete_character_before_cursor(self):
+        """
+        Backspace.
+        When we have only spaces at the current line before the cursor, delete
+        spaces until we're at previous indentation level. (Probably delete four
+        spaces.)
+        """
+        before_cursor = self.document.current_line_before_cursor
+
+        if before_cursor and before_cursor.isspace():
+            # Delete until previous indentation level.
+            to_delete = 1 + (len(before_cursor) - 1) % 4
+            for i in range(to_delete):
+                super(PythonLine, self).delete_character_before_cursor()
+        else:
+            # Just delete one character.
+            super(PythonLine, self).delete_character_before_cursor()
+
+    def insert_text(self, data, overwrite=False, safe_current_in_undo_buffer=True):
+        """
+        Insert character.
+        If a space has been typed at the start of the line (and not in paste
+        mode), insert spaces until the next indentation level.
+        """
+        if not self.paste_mode and not self._in_isearch and data == ' ' and not overwrite:
+            before_cursor = self.document.current_line_before_cursor
+
+            if not before_cursor or before_cursor.isspace():
+                data = ' ' * (4 - len(before_cursor) % 4)
+
+        super(PythonLine, self).insert_text(data, overwrite=overwrite,
+                safe_current_in_undo_buffer=safe_current_in_undo_buffer)
+
+    # def cursor_left(self):
+    # def cursor_right(self):
+    # def delete_character_after_cursor(self):
+
 
 
 class PythonPrompt(Prompt):

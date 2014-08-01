@@ -1,6 +1,6 @@
 import os
 
-from pyline.code import Completion
+from prompt_toolkit.code import Completion
 
 class Path(object):
     """

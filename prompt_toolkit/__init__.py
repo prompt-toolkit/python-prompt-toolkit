@@ -33,6 +33,10 @@ class CommandLine(object):
     #: `Prompt` class for the layout of the prompt. (and the help text.)
     prompt_cls = Prompt
 
+    #: `InputStream` class for the parser of the input
+    #: (Normally, you don't override this one.)
+    inputstream_cls = InputStream
+
     #: `InputStreamHandler` class for the keybindings.
     inputstream_handler_cls = InputStreamHandler
 
@@ -62,7 +66,7 @@ class CommandLine(object):
         This can raise `Exit`, when the user presses Ctrl-D.
         """
         # create input stream
-        stream = InputStream(self._inputstream_handler, stdout=self.stdout)
+        stream = self.inputstream_cls(self._inputstream_handler, stdout=self.stdout)
 
         def render():
             self._renderer.render(self._line.get_render_context())
@@ -90,6 +94,8 @@ class CommandLine(object):
                     except ReturnInput as input:
                         self._renderer.render(input.render_context)
                         return input.document
+
+                    # TODO: completions should be 'rendered' as well through an exception.
 
                     # Now render the current prompt to the output.
                     # TODO: unless `select` tells us that there's another character to feed.

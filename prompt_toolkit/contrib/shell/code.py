@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 from pygments.token import Token
-from pyline.code import Code, Completion
+from prompt_toolkit.code import Code, Completion
 
 from .rules import Sequence, Literal, TokenStream
 from .lexer import TextToken, ParametersLexer
