@@ -495,15 +495,16 @@ class PythonCommandLine(CommandLine):
                 document = self.read_input()
                 line = document.text
 
-                try:
-                    # Eval and print.
-                    self._execute(line)
-                except KeyboardInterrupt as e: # KeyboardInterrupt doesn't inherit from Exception.
-                    self._handle_keyboard_interrupt(e)
-                except Exception as e:
-                    self._handle_exception(e)
+                if line and not line.isspace():
+                    try:
+                        # Eval and print.
+                        self._execute(line)
+                    except KeyboardInterrupt as e: # KeyboardInterrupt doesn't inherit from Exception.
+                        self._handle_keyboard_interrupt(e)
+                    except Exception as e:
+                        self._handle_exception(e)
 
-                self.current_statement_index += 1
+                    self.current_statement_index += 1
         except Exit:
             pass
 
