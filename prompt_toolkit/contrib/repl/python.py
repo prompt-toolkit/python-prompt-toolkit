@@ -192,7 +192,7 @@ class PythonLine(Line):
         """
         insert_text = super(PythonLine, self).insert_text
 
-        if self.paste_mode:
+        if self.paste_mode or self.document.current_line_after_cursor:
             insert_text('\n')
         else:
             # Go to new line, but also add indentation.
@@ -231,7 +231,6 @@ class PythonLine(Line):
 
     def insert_text(self, data, overwrite=False, safe_current_in_undo_buffer=True):
         """
-        Insert character.
         If a space has been typed at the start of the line (and not in paste
         mode), insert spaces until the next indentation level.
         """
@@ -244,10 +243,59 @@ class PythonLine(Line):
         super(PythonLine, self).insert_text(data, overwrite=overwrite,
                 safe_current_in_undo_buffer=safe_current_in_undo_buffer)
 
-    # def cursor_left(self):
-    # def cursor_right(self):
-    # def delete_character_after_cursor(self):
+    def cursor_left(self):
+        """
+        When moving the cursor left in the left indentation margin, move four
+        spaces at a time.
+        """
+        before_cursor = self.document.current_line_before_cursor
 
+        if not self.paste_mode and not self._in_isearch and before_cursor.isspace():
+            count = 1 + (len(before_cursor) - 1) % 4
+        else:
+            count = 1
+
+        for i in range(count):
+            super(PythonLine, self).cursor_left()
+
+    def cursor_right(self):
+        """
+        When moving the cursor right in the left indentation margin, move four
+        spaces at a time.
+        """
+        before_cursor = self.document.current_line_before_cursor
+        after_cursor = self.document.current_line_after_cursor
+
+        # Count space characters, after the cursor.
+        after_cursor_space_count = len(after_cursor) - len(after_cursor.lstrip())
+
+        if (not self.paste_mode and not self._in_isearch and
+                    (not before_cursor or before_cursor.isspace()) and after_cursor_space_count):
+            count = min(4, after_cursor_space_count)
+        else:
+            count = 1
+
+        for i in range(count):
+            super(PythonLine, self).cursor_right()
+
+    def delete(self):
+        """
+        When pressing delete in the left margin, delete until the first
+        non-whitespace character.
+        """
+        before_cursor = self.document.current_line_before_cursor
+        after_cursor = self.document.current_line_after_cursor
+
+        # Count space characters, after the cursor.
+        after_cursor_space_count = len(after_cursor) - len(after_cursor.lstrip())
+
+        if not self.paste_mode and not self._in_isearch and (not before_cursor or before_cursor.isspace()):
+            to_delete = max(1, after_cursor_space_count)
+        else:
+            to_delete = 1
+
+        for i in range(to_delete):
+            super(PythonLine, self).delete()
 
 
 class PythonPrompt(Prompt):

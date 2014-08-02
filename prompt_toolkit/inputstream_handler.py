@@ -59,7 +59,7 @@ class InputStreamHandler(object):
     # CTRL keys.
 
     def ctrl_a(self):
-        self._line.home()
+        self._line.cursor_to_start_of_line()
 
     def ctrl_b(self):
         self._line.cursor_left()
@@ -71,7 +71,7 @@ class InputStreamHandler(object):
         self._line.exit()
 
     def ctrl_e(self):
-        self._line.end()
+        self._line.cursor_to_end_of_line()
 
     def ctrl_f(self):
         self._line.cursor_right()
