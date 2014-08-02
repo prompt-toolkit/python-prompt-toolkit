@@ -685,6 +685,7 @@ class Line(object):
         ]
 
         for e in editors:
-            if os.path.exists(e):
-                subprocess.call([e, filename])
-                return
+            if e:
+                if os.path.exists(e):
+                    subprocess.call([e, filename])
+                    return
