@@ -82,6 +82,13 @@ class Document(object):
         return self.current_line_before_cursor + self.current_line_after_cursor
 
     @property
+    def leading_whitespace_in_current_line(self):
+        """ The leading whitespace in the left margin of the current line.  """
+        current_line = self.current_line
+        length = len(current_line) - len(current_line.lstrip())
+        return current_line[:length]
+
+    @property
     def current_line_position(self):
         """ Report the line number of our cursor. (0 when we are on the first line.) """
         return len(self.text_before_cursor.split('\n')) - 1
@@ -529,6 +536,31 @@ class Line(object):
     def newline(self):
         self.insert_text('\n')
 
+    def insert_line_above(self, copy_margin=True):
+        """
+        Insert a new line above the current one.
+        """
+        if copy_margin:
+            insert = self.document.leading_whitespace_in_current_line + '\n'
+        else:
+            insert = '\n'
+
+        self.cursor_to_start_of_line()
+        self.insert_text(insert)
+        self.cursor_position -= 1
+
+    def insert_line_below(self, copy_margin=True):
+        """
+        Insert a new line below the current one.
+        """
+        if copy_margin:
+            insert = '\n' + self.document.leading_whitespace_in_current_line
+        else:
+            insert = '\n'
+
+        self.cursor_to_end_of_line()
+        self.insert_text(insert)
+
     def insert_text(self, data, overwrite=False, safe_current_in_undo_buffer=True):
         """
         Insert characters at cursor position.
@@ -678,6 +710,7 @@ class Line(object):
                 editor,
 
                 # Order of preference.
+                '/usr/bin/editor',
                 '/usr/bin/nano',
                 '/usr/bin/pico',
                 '/usr/bin/vi',

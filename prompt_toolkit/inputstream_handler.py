@@ -516,13 +516,13 @@ class ViInputStreamHandler(InputStreamHandler):
 
         @handle('O')
         def _(arg):
-            # TODO: Insert line above.
-            pass
+            line.insert_line_above()
+            self._vi_navigation_mode = False
 
         @handle('o')
         def _(arg):
-            # TODO: Insert line below.
-            pass
+            line.insert_line_below()
+            self._vi_navigation_mode = False
 
         @handle('~')
         def _(arg):
