@@ -353,8 +353,10 @@ class ViInputStreamHandler(InputStreamHandler):
 
         @handle('s')
         def _(arg):
-            # TODO: substitute single character with new text
-            pass
+            # Substitute with new text
+            # (Delete character(s) and go to insert mode.)
+            self._clipboard = ''.join(line.delete() for i in range(arg))
+            self._vi_navigation_mode = False
 
         @handle('dd')
         def _(arg):
@@ -510,6 +512,16 @@ class ViInputStreamHandler(InputStreamHandler):
         @handle('<<')
         def _(arg):
             # TODO: Unindent current line.
+            pass
+
+        @handle('O')
+        def _(arg):
+            # TODO: Insert line above.
+            pass
+
+        @handle('o')
+        def _(arg):
+            # TODO: Insert line below.
             pass
 
         @handle('~')

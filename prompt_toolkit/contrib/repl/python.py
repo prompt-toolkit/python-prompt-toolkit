@@ -61,10 +61,10 @@ class PythonStyle(Style):
         Token.Prompt.SecondLinePrefix: 'bold #888888',
         Token.Prompt.ArgText:          'bold',
 
-        Token.Toolbar:         'bg:#444444 #aaaaaa',
-        Token.Toolbar.Off:     'bg:#444444 #888888',
-        Token.Toolbar.On:      'bg:#444444 #ffffff',
-        Token.Toolbar.Mode:    'bg:#444444 #ffffaa',
+        Token.Toolbar:         'bg:#222222 #aaaaaa',
+        Token.Toolbar.Off:     'bg:#222222 #888888',
+        Token.Toolbar.On:      'bg:#222222 #ffffff',
+        Token.Toolbar.Mode:    'bg:#222222 #ffffaa',
 
         # Grayed
         Token.Aborted:    '#aaaaaa',
@@ -156,9 +156,7 @@ class PythonLine(Line):
 
     def set_text(self, value, safe_current_in_undo_buffer=True):
         super(PythonLine, self).set_text(value, safe_current_in_undo_buffer)
-
-        if '\n' in value:
-            self.multiline = True
+        self.multiline = '\n' in value
 
     def _colon_before_cursor(self):
         return self.document.text_before_cursor[-1:] == ':'

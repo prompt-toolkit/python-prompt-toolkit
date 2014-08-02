@@ -11,6 +11,10 @@ from .code import Code
 from .prompt import Prompt
 from .enums import ReverseSearchDirection
 
+import os
+import tempfile
+import subprocess
+
 
 class Exit(Exception):
     def __init__(self, render_context):
@@ -504,7 +508,8 @@ class Line(object):
 
             # Go back in history, and update _text/cursor_position.
             self._history_index += 1
-            self._text = self._history_lines[self._history_index]
+            self.set_text(self._history_lines[self._history_index],
+                                    safe_current_in_undo_buffer=False)
             self.cursor_position = len(self.text)
 
     @_quit_reverse_search_when_called
@@ -516,7 +521,8 @@ class Line(object):
 
             # Go back in history, and update _text/cursor_position.
             self._history_index -= 1
-            self._text = self._history_lines[self._history_index]
+            self.set_text(self._history_lines[self._history_index],
+                                    safe_current_in_undo_buffer=False)
             self.cursor_position = len(self.text)
 
     @_quit_reverse_search_when_called
@@ -648,4 +654,37 @@ class Line(object):
 
     @_quit_reverse_search_when_called
     def open_in_editor(self):
-        """ Open code in editor. (Does nothing by default.) """
+        """ Open code in editor. """
+        # Write to temporary file
+        descriptor, filename = tempfile.mkstemp()
+        os.write(descriptor, self.text.encode('utf-8'))
+        os.close(descriptor)
+
+        # Open in editor
+        self._open_file_in_editor(filename)
+
+        # Read content again.
+        with open(filename, 'rb') as f:
+            self.set_text(f.read().decode('utf-8'))
+        self.cursor_position = len(self.text)
+
+    def _open_file_in_editor(self, filename):
+        """ Call editor executable. """
+        # If the 'EDITOR' environment variable has been set, use that one.
+        # Otherwise, fall back to the first available editor that we can find.
+        editor = os.environ.get('EDITOR')
+
+        editors = [
+                editor,
+
+                # Order of preference.
+                '/usr/bin/nano',
+                '/usr/bin/pico',
+                '/usr/bin/vi',
+                '/usr/bin/emacs',
+        ]
+
+        for e in editors:
+            if os.path.exists(e):
+                subprocess.call([e, filename])
+                return
