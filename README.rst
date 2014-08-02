@@ -5,17 +5,18 @@ Python Prompt Toolkit
 
 Library for building interactive command lines in Python.
 
-It could be a replacement for `readline`, but it's more powerful:
+It could be a replacement for `readline`. It's Pure Python, and has some
+advanced features:
 
 - Syntax highlighting of the input while typing. (Usually with a Pygments lexer.)
-- Multiline input.
-- Advanced code completion.
+- Multiline input
+- Advanced code completion
 
 The Python repl
 ---------------
 
-Run `./bin/prompt_toolkit-python-repl` to get an interactive Python prompt with syntaxt
-highlighting, code completion, etc...
+Run `./bin/prompt-toolkit-python-repl` to get an interactive Python prompt with
+syntaxt highlighting, code completion, etc...
 
 
 Example

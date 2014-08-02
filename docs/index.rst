@@ -21,10 +21,8 @@ The core features are:
  - Syntaxt highlighting of input
  - Multiline text input
 
-On top of that, it implements `prompt_toolkit.shell`, a library for shell-like interfaces. You can define the grammar of the input string, 
-
-
-
+On top of that, it implements `prompt_toolkit.shell`, a library for shell-like
+interfaces. You can define the grammar of the input string, ...
 
 Thanks to:
 
@@ -43,7 +41,7 @@ Thanks to:
 
     +---------------------------------------------------------------+
     |     InputStream                                               |
-    |     ------------                                              |
+    |     ===========                                               |
     |          - Parses the input stream coming from a VT100        |
     |            compatible terminal. Translates it into data input |
     |            and control characters. Calls the corresponding    |
@@ -56,7 +54,7 @@ Thanks to:
                v
     +---------------------------------------------------------------+
     |     InputStreamHandler                                        |
-    |     ------------------                                        |
+    |     ==================                                        |
     |          - Implements keybindings for control keys, arrow     |
     |            movement, escape, etc... There are two classes     |
     |            inheriting from this, which implement more         |
@@ -74,7 +72,7 @@ Thanks to:
                v
     +---------------------------------------------------------------+
     |     Line                                                      |
-    |     ----                                                      |
+    |     ====                                                      |
     |          - Contains a data structure to hold the current      |
     |            input (text and cursor position). This class       |
     |            implements all text manipulations and cursor       |
@@ -83,7 +81,7 @@ Thanks to:
     |                                                               |
     |            +-----------------------------------------------+  |
     |            | Document (text, cursor_position)              |  |
-    |            | --------------------------------              |  |
+    |            | ================================              |  |
     |            | Accessed as the `document` property of the    |  |
     |            | `Line` class. This is a wrapper around the    |  |
     |            | text and cursor position, and contains        |  |
@@ -99,7 +97,7 @@ Thanks to:
         |
         |     +---------------+     +-------------------------------+
         |     | RenderContext |     | Prompt                        |
-        |     | ------------- | --> | ------                        |
+        |     | ============= | --> | ======                        |
         |     |               |     |  - Responsible for the        |
         |     |               |     |    "prompt" (The leading text |
         |     |               |     |    before the actual input.)  |
@@ -113,7 +111,7 @@ Thanks to:
         |     |               |
         |     |               |     +-------------------------------+
         |     |               | ->  | Code                          |
-        |     |               |     | ----                          |
+        |     |               |     | ====                          |
         |     |               |     |  - Implements the semantics   |
         |     |               |     |    of the command line. This  |
         |     |               |     |    are two major things:      |
@@ -129,35 +127,10 @@ Thanks to:
         v
     +---------------------------------------------------------------+
     |     Renderer                                                  |
-    |     --------                                                  |
+    |     ========                                                  |
     |          - Responsible for painting the (Token, text) tuples  |
     |            to the terminal output.                            |
     +---------------------------------------------------------------+
-
-
-
-.. graphviz::
-
-    digraph line {
-        compound=True;
-        node[shape=record,style=filled,fillcolor=gray95]
-        fillcolor=pink1;
-
-        subgraph cluster_command_line{
-            label="CommandLine";
-
-            "InputStream" [
-                //label="{InputStream|feed(data)}"
-                label = "{InputStream|Parses input from keyboard|+ handler: InputStreamHandler\l+ age : int\l|+ feed(data)\l}"
-            ];
-
-            "InputStream" -> "InputStreamHandler";
-            "InputStreamHandler" -> "Line";
-            "Line" -> "RenderContext";
-            "RenderContext" -> "Prompt";
-            "RenderContext" -> "Code";
-        }
-    }
 
 
 .. toctree::
