@@ -294,8 +294,7 @@ class PythonLine(Line):
         else:
             to_delete = 1
 
-        for i in range(to_delete):
-            super(PythonLine, self).delete()
+        return ''.join(super(PythonLine, self).delete() for i in range(to_delete))
 
 
 class PythonPrompt(Prompt):
