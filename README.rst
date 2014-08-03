@@ -3,7 +3,8 @@ Python Prompt Toolkit
 
 (WORK IN PROGRESS)
 
-Library for building interactive command lines in Python.
+
+`prompt_toolkit` is a Library for building interactive command lines in Python.
 
 It could be a replacement for `readline`. It's Pure Python, and has some
 advanced features:
@@ -11,6 +12,9 @@ advanced features:
 - Syntax highlighting of the input while typing. (Usually with a Pygments lexer.)
 - Multiline input
 - Advanced code completion
+- Both Emacs and Vi keybindings (Similar to readline), including
+  reverse and forward incremental search
+
 
 The Python repl
 ---------------
@@ -41,29 +45,3 @@ Example
 
     if __name__ == '__main__':
         main()
-
-
-Architecture
-------------
-
-::
-
-    command_prompt
-    terminal_input
-
-    pure_readline
-    xedit
-
-    xline # Extended pure python readline alternative
-
-    tprompt, tpython
-
-    xline.Line:
-
-        - InputStream
-        - InputStreamHandler
-        - LineObject
-        - Prompt
-        - RenderContext
-        - Renderer
-
