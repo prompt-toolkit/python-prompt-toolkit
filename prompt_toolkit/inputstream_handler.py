@@ -1,7 +1,10 @@
 """
-An `InputStreamHandler` receive callbacks from an :class:`InputStream` instance,
-(where each callback represents a keystroke.) The `InputStreamHandler` will
-then do the correct manipulations on a `Line` object.
+An :class:`~.InputStreamHandler` receives callbacks for the keystrokes parsed
+from the input in the :class:`~prompt_toolkit.inputstream.InputStream`
+instance.
+
+The `InputStreamHandler` will according to the implemented keybindings apply
+the correct manipulations on the :class:`~prompt_toolkit.line.Line` object.
 
 This module implements Vi and Emacs keybindings.
 """
@@ -17,8 +20,10 @@ __all__ = (
 
 class InputStreamHandler(object):
     """
-    This class has callbacks for an `InputStream`, and calls the appropriate
-    actions on a Line object.
+    This is the base class for :class:`~.EmacsInputStreamHandler` and
+    :class:`~.ViInputStreamHandler`. It implements the common keybindings.
+
+    :attr line: :class:`~prompt_toolkit.line.Line` class.
     """
     def __init__(self, line):
         self._line = line

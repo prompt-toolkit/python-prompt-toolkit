@@ -1,6 +1,8 @@
 
 class RenderContext(object):
     """
+    :attr prompt: :class:`~prompt_toolkit.prompt.PromptBase` instance.
+    :attr code_obj: :class:`~prompt_toolkit.code.Code` instance.
     :param accept: True when the user accepts the input, by pressing enter.
                    (In that case we don't highlight the current line, and
                    set the mouse cursor at the end.)

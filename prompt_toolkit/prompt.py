@@ -6,11 +6,16 @@ from __future__ import unicode_literals
 from pygments.token import Token
 from .enums import ReverseSearchDirection
 
-__all__ = ('Prompt', )
+__all__ = ('PromptBase', 'Prompt', )
 
 
 class PromptBase(object):
-    """ Minimal base class for a valid prompt. """
+    """
+    Minimal base class for a valid prompt.
+
+    :attr line: :class:`~prompt_toolkit.line.Line` instance.
+    :attr code: :class:`~prompt_toolkit.code.Code` instance.
+    """
     def __init__(self, line, code):
         self.line = line
         self.code = code
@@ -50,6 +55,9 @@ class PromptBase(object):
 class Prompt(PromptBase):
     """
     Default Prompt class
+
+    :attr line: :class:`~prompt_toolkit.line.Line` instance.
+    :attr code: :class:`~prompt_toolkit.code.Code` instance.
     """
     def get_prompt(self):
         if self.line._in_isearch:

@@ -143,6 +143,9 @@ class Line(object):
     Data structure that holds the text and cursor position of the current input
     line and implements all text manupulations on top of it. It also implements
     the history and undo stack, and reverse search.
+
+    :attr code_cls: :class:`~prompt_toolkit.code.CodeBase` class.
+    :attr prompt_cls: :class:`~prompt_toolkit.prompt.PromptBase` class.
     """
     def __init__(self, renderer=None, code_cls=Code, prompt_cls=Prompt):
         self.renderer = renderer
@@ -188,7 +191,8 @@ class Line(object):
 
     @property
     def document(self):
-        """ Return document from the current text and cursor position. """
+        """ Return :class:`.Document` instance from the current text and cursor
+        position. """
         return Document(self.text, self.cursor_position)
 
     def set_arg_prompt(self, arg):

@@ -10,14 +10,17 @@ __all__ = ('InputStream', )
 class InputStream(object):
     """
     Parser for VT100 input stream.
-    Feed the data through the ``feed`` method and the correct callbacks of the
-    attached interfaces will be called.
+
+    Feed the data through the `feed` method and the correct callbacks of the
+    `inputstream_handler` will be called.
 
     ::
 
         h = CommandLineHandler()
         i = InputStream(h)
         i.feed('data\x01...')
+
+    :attr handler: :class:`~prompt_toolkit.inputstream_handler.InputStreamHandler` instance.
     """
     # Lookup table of ANSI escape sequences for a VT100 terminal
     CALLBACKS = {

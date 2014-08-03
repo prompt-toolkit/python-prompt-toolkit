@@ -5,8 +5,14 @@ It's usually tokenized, using a Pygments lexer.
 from __future__ import unicode_literals
 from pygments.token import Token
 
+__all__ = (
+    'CodeBase',
+    'Code',
+    'Completion'
+)
 
-class Completion:
+
+class Completion(object):
     def __init__(self, display='', suffix=''): # XXX: rename suffix to 'addition'
         self.display = display
         self.suffix = suffix
@@ -46,6 +52,8 @@ class Code(CodeBase):
     """
     Representation of a code document.
     (Immutable class -- caches tokens)
+
+    :attr document: :class:`~prompt_toolkit.line.Document`
     """
     #: The pygments Lexer class to use.
     lexer_cls = None
