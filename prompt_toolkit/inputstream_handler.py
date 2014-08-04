@@ -299,7 +299,8 @@ class EmacsInputStreamHandler(InputStreamHandler):
         """
         Capitalize the current (or following) word.
         """
-        self._line.capitalize_following_word()
+        words = self._line.document.get_following_words(self._arg_count or 1, consume_nonword_before=True)
+        self._line.insert_text(words.capitalize(), overwrite=True)
 
     def alt_f(self):
         self._line.cursor_word_forward()
@@ -318,7 +319,8 @@ class EmacsInputStreamHandler(InputStreamHandler):
         """
         Lowercase the current (or following) word.
         """
-        self._line.lowercase_following_word()
+        words = self._line.document.get_following_words(self._arg_count or 1, consume_nonword_before=True)
+        self._line.insert_text(words.lower(), overwrite=True)
 
     def ctrl_u(self):
         """
@@ -344,7 +346,8 @@ class EmacsInputStreamHandler(InputStreamHandler):
         """
         Uppercase the current (or following) word.
         """
-        self._line.uppercase_following_word()
+        words = self._line.document.get_following_words(self._arg_count or 1, consume_nonword_before=True)
+        self._line.insert_text(words.upper(), overwrite=True)
 
     def ctrl_underscore(self):
         """

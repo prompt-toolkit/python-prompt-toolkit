@@ -280,23 +280,23 @@ class PythonLine(Line):
         for i in range(count):
             super(PythonLine, self).cursor_right()
 
-    def delete(self):
-        """
-        When pressing delete in the left margin, delete until the first
-        non-whitespace character.
-        """
-        before_cursor = self.document.current_line_before_cursor
-        after_cursor = self.document.current_line_after_cursor
-
-        # Count space characters, after the cursor.
-        after_cursor_space_count = len(after_cursor) - len(after_cursor.lstrip())
-
-        if not self.paste_mode and not self._in_isearch and (not before_cursor or before_cursor.isspace()):
-            to_delete = max(1, after_cursor_space_count)
-        else:
-            to_delete = 1
-
-        return ''.join(super(PythonLine, self).delete() for i in range(to_delete))
+#    def delete(self, count=1): # TODO: implement `count`
+#        """
+#        When pressing delete in the left margin, delete until the first
+#        non-whitespace character.
+#        """
+#        before_cursor = self.document.current_line_before_cursor
+#        after_cursor = self.document.current_line_after_cursor
+#
+#        # Count space characters, after the cursor.
+#        after_cursor_space_count = len(after_cursor) - len(after_cursor.lstrip())
+#
+#        if not self.paste_mode and not self._in_isearch and (not before_cursor or before_cursor.isspace()):
+#            to_delete = max(1, after_cursor_space_count)
+#        else:
+#            to_delete = 1
+#
+#        return ''.join(super(PythonLine, self).delete() for i in range(to_delete))
 
 
 class PythonPrompt(Prompt):

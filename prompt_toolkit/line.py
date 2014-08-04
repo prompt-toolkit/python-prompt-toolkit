@@ -315,11 +315,13 @@ class Line(object):
         return char
 
     @_quit_reverse_search_when_called
-    def delete(self):
+    def delete(self, count=1): # TODO: unittest `count`
         """ Delete one character. Return deleted character. """
         if self.cursor_position < len(self.text):
-            deleted = self.document.current_char
-            self.text = self.text[:self.cursor_position] + self.text[self.cursor_position+1:]
+#1aoeu#            3deleted = self.document.current_char
+            deleted = self.document.text_after_cursor[:count]
+            self.text = self.text[:self.cursor_position] + \
+                    self.text[self.cursor_position + len(deleted):]
             return deleted
         else:
             return ''
@@ -327,20 +329,13 @@ class Line(object):
     @_quit_reverse_search_when_called
     def delete_word(self):
         """ Delete one word. Return deleted word. """
-        deleted = ''
-
-        # Delete word after cursor.
-        while self.document.current_char and self.document.current_char.isalnum():
-            deleted += self.delete()
-
-        # Delete whitespace after word.
-        while self.document.current_char and self.document.current_char.isspace():
-            deleted += self.delete()
-
+        deleted = self.document.get_following_words(consume_nonword_before=False)
+        self.delete(count=len(deleted))
         return deleted
 
     @_quit_reverse_search_when_called
     def delete_word_before_cursor(self): # TODO: unittest
+                                         # TODO: rewrite using document.get_words_before_cursor.
         """ Delete one word before cursor. Return deleted word. """
         deleted = ''
 
@@ -362,7 +357,7 @@ class Line(object):
         return deleted
 
     @_quit_reverse_search_when_called
-    def delete_until_end_of_line(self):
+    def delete_until_end_of_line(self): # TODO: rewrite using document.text_until_end_of_line
         """
         Delete all input until the end of this line. Return deleted text.
         """
@@ -378,7 +373,7 @@ class Line(object):
         return deleted
 
     @_quit_reverse_search_when_called
-    def delete_from_start_of_line(self):
+    def delete_from_start_of_line(self): # TODO: rewrite using document.text_from_start_of_line
         """
         Delete all input from the start of the line until the current
         character. Return deleted text.
@@ -394,7 +389,9 @@ class Line(object):
 
     @_quit_reverse_search_when_called
     def delete_current_line(self):
-        """ Delete current line. Return deleted text. """
+        """
+        Delete current line. Return deleted text.
+        """
         document = self.document
 
         # Remember deleted text.
@@ -411,44 +408,12 @@ class Line(object):
 
         return deleted
 
-    def uppercase_following_word(self):
-        """ Uppercase the current (or following) word.  """
-        self.transform_following_word(lambda word: word.upper())
-
-    def lowercase_following_word(self):
-        """ Lowercase the current (or following) word.  """
-        self.transform_following_word(lambda word: word.lower())
-
-    def capitalize_following_word(self):
-        """ Lowercase the current (or following) word.  """
-        self.transform_following_word(lambda word: word.capitalize())
-
-    @_quit_reverse_search_when_called
-    def transform_following_word(self, transform_func): # TODO: unittest
-        """
-        Apply text transform function to the following word.
-        e.g.::
-
-            transform_following_word(lambda word: word.lower())
-        """
-        # Move over non-word characters
-        while self.document.current_char and not self.document.current_char.isalnum():
-            self.cursor_position += 1
-
-        # Find word
-        word = ''
-        for c in self.document.current_line_after_cursor:
-            if c.isalnum():
-                word += c
-            else:
-                break
-
-        self.insert_text(transform_func(word), overwrite=True)
-
     @_quit_reverse_search_when_called
     def join_next_line(self):
-        """ Join the next line to the current one by deleting the line ending
-        after the current line. """
+        """
+        Join the next line to the current one by deleting the line ending after
+        the current line.
+        """
         # Find the first \n after the cursor
         after_cursor = self.document.text_after_cursor
 

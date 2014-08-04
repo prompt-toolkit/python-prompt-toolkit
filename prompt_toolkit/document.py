@@ -110,3 +110,34 @@ class Document(object):
     def cursor_at_the_end(self):
         """ True when the cursor is at the end of the text. """
         return self.cursor_position == len(self.text)
+
+    def get_following_words(self, count=1, consume_nonword_before=False): # TODO: unittest
+        """
+        Return the text porting that contains the `count` words following after
+        the cursor.
+        """
+        text = self.text_after_cursor
+        pos = 0
+
+        def more_text():
+            return pos < len(text)
+
+        def current_isalnum():
+            return text[pos].isalnum()
+
+        for i in range(count):
+            if consume_nonword_before:
+                # Consume non-word characters
+                while more_text() and not current_isalnum():
+                    pos += 1
+
+            # Consume word characters
+            while more_text() and current_isalnum():
+                pos += 1
+
+            if not consume_nonword_before:
+                # Consume non-word characters
+                while more_text() and not current_isalnum():
+                    pos += 1
+
+        return text[:pos]
