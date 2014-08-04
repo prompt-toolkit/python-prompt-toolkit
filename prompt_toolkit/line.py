@@ -300,13 +300,19 @@ class Line(object):
                 self.cursor_right()
 
     @_quit_reverse_search_when_called
-    def delete_character_before_cursor(self):
+    def delete_character_before_cursor(self): # TODO: unittest return type
+        """ Delete character before cursor, return deleted character. """
+        char = ''
+
         if self._in_isearch:
             self._isearch_text = self._isearch_text[:-1]
         else:
             if self.cursor_position > 0:
+                char = self.document.current_char or ''
                 self.text = self.text[:self.cursor_position - 1] + self.text[self.cursor_position:]
                 self.cursor_position -= 1
+
+        return char
 
     @_quit_reverse_search_when_called
     def delete(self):
@@ -325,12 +331,26 @@ class Line(object):
 
         # Delete word after cursor.
         while self.document.current_char and self.document.current_char.isalnum():
-            # Delete word first.
             deleted += self.delete()
 
+        # Delete whitespace after word.
         while self.document.current_char and self.document.current_char.isspace():
-            # Delete whitespace after word.
             deleted += self.delete()
+
+        return deleted
+
+    @_quit_reverse_search_when_called
+    def delete_word_before_cursor(self): # TODO: unittest
+        """ Delete one word before cursor. Return deleted word. """
+        deleted = ''
+
+        # Delete whitespace before cursor.
+        while self.document.char_before_cursor and self.document.char_before_cursor.isspace():
+            deleted += self.delete_character_before_cursor()
+
+        # Delete word before cursor.
+        while self.document.char_before_cursor and self.document.char_before_cursor.isalnum():
+            deleted += self.delete_character_before_cursor()
 
         return deleted
 
@@ -404,7 +424,7 @@ class Line(object):
         self.transform_following_word(lambda word: word.capitalize())
 
     @_quit_reverse_search_when_called
-    def transform_following_word(self, transform_func):
+    def transform_following_word(self, transform_func): # TODO: unittest
         """
         Apply text transform function to the following word.
         e.g.::

@@ -277,11 +277,13 @@ class EmacsInputStreamHandler(InputStreamHandler):
         """
         Delete the word before the cursor.
         """
+        self._line.delete_word_before_cursor()
 
     def alt_t(self):
         """
         Swap the last two words before the cursor.
         """
+        # TODO
 
     def alt_u(self):
         """

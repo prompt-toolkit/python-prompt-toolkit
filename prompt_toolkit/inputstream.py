@@ -16,7 +16,7 @@ class InputStream(object):
 
     ::
 
-        h = CommandLineHandler()
+        h = InputStreamHandler()
         i = InputStream(h)
         i.feed('data\x01...')
 

@@ -218,15 +218,18 @@ class PythonLine(Line):
         spaces.)
         """
         before_cursor = self.document.current_line_before_cursor
+        deleted = ''
 
         if before_cursor and before_cursor.isspace():
             # Delete until previous indentation level.
             to_delete = 1 + (len(before_cursor) - 1) % 4
             for i in range(to_delete):
-                super(PythonLine, self).delete_character_before_cursor()
+                deleted += super(PythonLine, self).delete_character_before_cursor()
         else:
             # Just delete one character.
-            super(PythonLine, self).delete_character_before_cursor()
+            deleted += super(PythonLine, self).delete_character_before_cursor()
+
+        return deleted
 
     def insert_text(self, data, overwrite=False, safe_current_in_undo_buffer=True, move_cursor=True):
         """

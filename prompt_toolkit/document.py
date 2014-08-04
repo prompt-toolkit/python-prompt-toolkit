@@ -26,6 +26,11 @@ class Document(object):
         return self._get_char_relative_to_cursor(0)
 
     @property
+    def char_before_cursor(self):
+        """ Return character before the cursor, or None """
+        return self._get_char_relative_to_cursor(-1)
+
+    @property
     def text_before_cursor(self):
         return self.text[:self.cursor_position:]
 
