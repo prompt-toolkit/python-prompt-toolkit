@@ -301,11 +301,15 @@ class ViInputStreamHandler(InputStreamHandler):
     """
     Vi extensions.
     """
+    # TODO: In case of navigation mode, we should not be able to move the
+    # cursor after the last character of a line.
     def _reset(self):
         super(ViInputStreamHandler, self)._reset()
         self._vi_mode = ViMode.INSERT
         self._arg_count = None # Usually for repeats
         self._all_navigation_handles = self._get_navigation_mode_handles()
+
+        self._one_character_callback = None
 
     def escape(self):
         """ Escape goes to vi navigation mode. """
@@ -352,25 +356,24 @@ class ViInputStreamHandler(InputStreamHandler):
         @handle('e')
         @handle('E')
         def _(arg):
-            # TODO: end of word
-            pass
+            # End of word
+            line.cursor_to_end_of_word()
 
         @handle('f')
         def _(arg):
             # Go to character. Typing 'fx' will move the cursor to the next
             # occurance of character. 'x'.
-            # TODO:
-            pass
-
-        @handle('o')
-        def _(arg):
-            # TODO: open line below and enter insertion mode
-            pass
+            def cb(char):
+                for i in range(arg):
+                    line.go_to_character_in_line(char)
+            self._one_character_callback = cb
 
         @handle('r')
         def _(arg):
-            # TODO: replace single character under cursor
-            pass
+            # Replace single character under cursor
+            def cb(char):
+                line.insert_text(char * arg, overwrite=True)
+            self._one_character_callback = cb
 
         @handle('s')
         def _(arg):
@@ -401,7 +404,7 @@ class ViInputStreamHandler(InputStreamHandler):
 
         @handle('cw')
         def _(arg):
-            data = ClipboardData(line.delete_word())
+            data = ClipboardData(''.join(line.delete_word() for i in range(arg)))
             line.set_clipboard(data)
             self._vi_mode = ViMode.INSERT
 
@@ -463,11 +466,13 @@ class ViInputStreamHandler(InputStreamHandler):
 
         @handle('p')
         def _(arg):
+            # Paste after
             for i in range(arg):
                 line.paste_from_clipboard()
 
         @handle('P')
         def _(arg):
+            # Paste before
             for i in range(arg):
                 line.paste_from_clipboard(before=True)
 
@@ -555,11 +560,13 @@ class ViInputStreamHandler(InputStreamHandler):
 
         @handle('O')
         def _(arg):
+            # Open line above and enter insertion mode
             line.insert_line_above()
             self._vi_mode = ViMode.INSERT
 
         @handle('o')
         def _(arg):
+            # Open line below and enter insertion mode
             line.insert_line_below()
             self._vi_mode = ViMode.INSERT
 
@@ -567,7 +574,7 @@ class ViInputStreamHandler(InputStreamHandler):
         def _(arg):
             """ Reverse case of current character and move cursor forward. """
             c = line.document.current_char
-            if c is not None:
+            if c is not None and c != '\n':
                 c = (c.upper() if c.islower() else c.lower())
                 line.insert_text(c, overwrite=True)
 
@@ -586,7 +593,11 @@ class ViInputStreamHandler(InputStreamHandler):
         """ Insert data at cursor position.  """
         assert len(data) == 1
 
-        if self._vi_mode == ViMode.NAVIGATION:
+        if self._one_character_callback:
+            self._one_character_callback(data)
+            self._one_character_callback = False
+
+        elif self._vi_mode == ViMode.NAVIGATION:
             # Always handle numberics to build the arg
             if data in '0123456789':
                 if self._arg_count is None:

@@ -247,7 +247,7 @@ class Line(object):
             self.cursor_left()
 
         # Move to beginning of word.
-        while self.cursor_position > 0 and not (self.document._get_char_relative_to_cursor(-1) or 'x').isspace():
+        while self.cursor_position > 0 and (self.document._get_char_relative_to_cursor(-1) or 'x').isalnum():
             self.cursor_left()
 
     @_quit_reverse_search_when_called
@@ -257,12 +257,28 @@ class Line(object):
         self.cursor_right()
 
         # Move over word characters.
-        while self.cursor_position < len(self.text) and not (self.document.current_char or ' ').isspace():
+        while self.cursor_position < len(self.text) and (self.document.current_char or ' ').isalnum():
             self.cursor_right()
 
         # Move over whitespace to the start of the next word.
         while self.cursor_position < len(self.text) and (self.document.current_char or 'x').isspace():
             self.cursor_right()
+
+    @_quit_reverse_search_when_called
+    def cursor_to_end_of_word(self):
+        self.cursor_right()
+
+        # Move over non-alnum characters.
+        while not (self.document.current_char or 'x').isalnum():
+            self.cursor_position += 1
+
+        # We're on a word now. Move to the last character of this word.
+        while True:
+            c = self.document._get_char_relative_to_cursor(1)
+            if c and c.isalnum():
+                self.cursor_position += 1
+            else:
+                break
 
     @_quit_reverse_search_when_called
     def cursor_to_end_of_line(self):
@@ -403,6 +419,14 @@ class Line(object):
                         self.cursor_position -= (i + 1)
                         break
 
+    def go_to_character_in_line(self, char):
+        assert len(char) == 1
+
+        after_cursor = self.document.current_line_after_cursor[1:]
+
+        if char in after_cursor:
+            self.cursor_position += 1 + after_cursor.find(char)
+
     def _create_code_obj(self):
         return self.code_cls(self.document)
 
@@ -534,7 +558,12 @@ class Line(object):
             set_text = lambda value: self.set_text(value, safe_current_in_undo_buffer)
 
             if overwrite:
-                set_text(self.text[:self.cursor_position] + data + self.text[self.cursor_position+len(data):])
+                # Don't overwrite the newline itself. Just before the line ending, it should act like insert mode.
+                overwritten_text = self.text[self.cursor_position:self.cursor_position+len(data)]
+                if '\n' in overwritten_text:
+                    overwritten_text = overwritten_text[:overwritten_text.find('\n')]
+
+                set_text(self.text[:self.cursor_position] + data + self.text[self.cursor_position+len(overwritten_text):])
             else:
                 set_text(self.text[:self.cursor_position] + data + self.text[self.cursor_position:])
 
