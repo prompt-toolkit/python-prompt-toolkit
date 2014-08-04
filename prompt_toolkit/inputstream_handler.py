@@ -36,6 +36,9 @@ class InputStreamHandler(object):
         #: The name of the last previous public function call.
         self._last_call = None
 
+        #: 'arg' count. For command repeats.
+        self._arg_count = None
+
     def __call__(self, name, *a):
         if name != 'ctrl_i':
             self._second_tab = False
@@ -53,6 +56,13 @@ class InputStreamHandler(object):
         # Keep track of what the last called method was.
         if not name.startswith('_'):
             self._last_call = name
+
+        # Set argument prompt
+        if self._arg_count:
+            self._line.set_arg_prompt(self._arg_count)
+        else:
+            self._line.set_arg_prompt('')
+
 
     def home(self):
         self._line.home()
@@ -220,8 +230,14 @@ class EmacsInputStreamHandler(InputStreamHandler):
         # key, and in VI mode, that's used to go from insert to navigation mode.)
         if self._escape_pressed:
             if name == 'insert_char':
-                name = 'alt_' + a[0]
-                a = []
+                # Handle Alt + digit in the `alt_digit` method.
+                if a[0] in '-0123456789':
+                    name = 'alt_digit'
+
+                # Handle Alt + char in their respective `alt_X` method.
+                else:
+                    name = 'alt_' + a[0]
+                    a = []
             else:
                 name = 'alt_' + name
             self._escape_pressed = False
@@ -237,6 +253,10 @@ class EmacsInputStreamHandler(InputStreamHandler):
         """ ALT + Carriage return """
         # Alias for alt_enter
         self.alt_enter()
+
+    def alt_digit(self, digit):
+        """ ALT + digit or '-' pressed. """
+        self._arg_count = _arg_count_append(self._arg_count, digit)
 
     def alt_enter(self):
         pass
@@ -332,7 +352,6 @@ class ViInputStreamHandler(InputStreamHandler):
     def _reset(self):
         super(ViInputStreamHandler, self)._reset()
         self._vi_mode = ViMode.INSERT
-        self._arg_count = None # Usually for repeats
         self._all_navigation_handles = self._get_navigation_mode_handles()
 
         # Hook for several actions in navigation mode which require an
@@ -608,15 +627,6 @@ class ViInputStreamHandler(InputStreamHandler):
 
         return handles
 
-    def __call__(self, name, *a):
-        super(ViInputStreamHandler, self).__call__(name, *a)
-
-        # Set argument prompt
-        if self._arg_count:
-            self._line.set_arg_prompt(self._arg_count)
-        else:
-            self._line.set_arg_prompt('')
-
     def insert_char(self, data):
         """ Insert data at cursor position.  """
         assert len(data) == 1
@@ -628,14 +638,7 @@ class ViInputStreamHandler(InputStreamHandler):
         elif self._vi_mode == ViMode.NAVIGATION:
             # Always handle numberics to build the arg
             if data in '0123456789':
-                if self._arg_count is None:
-                    self._arg_count = int(data)
-                else:
-                    self._arg_count = int("%s%s" % (self._arg_count, data))
-
-                # Don't exceed a million.
-                if int(self._arg_count) >= 1000000:
-                    self._arg_count = None
+                self._arg_count = _arg_count_append(self._arg_count, data)
 
             # If we have a handle for the current keypress. Call it.
             elif data in self._current_handles:
@@ -663,3 +666,25 @@ class ViInputStreamHandler(InputStreamHandler):
         # In insert/text mode.
         elif self._vi_mode == ViMode.INSERT:
             super(ViInputStreamHandler, self).insert_char(data)
+
+
+def _arg_count_append(current, data):
+    """
+    Utility for manupulating the arg-count string.
+
+    :param current: int or None
+    :param data: the typed digit as string
+    :returns: int or None
+    """
+    assert data in '0123456789'
+
+    if current  is None:
+        result = int(data)
+    else:
+        result = int("%s%s" % (current, data))
+
+    # Don't exceed a million.
+    if int(result) >= 1000000:
+        result = None
+
+    return result
