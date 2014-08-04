@@ -6,15 +6,24 @@ from __future__ import unicode_literals
 
 from functools import wraps
 
-from .render_context import RenderContext
 from .code import Code
-from .prompt import Prompt
+from .document import Document
 from .enums import ReverseSearchDirection
+from .prompt import Prompt
+from .render_context import RenderContext
 
 import os
 import tempfile
 import subprocess
 
+__all__ = (
+        'Line',
+
+        # Exceptions raised by the Line object.
+        'Exit',
+        'ReturnInput',
+        'Abort',
+)
 
 class Exit(Exception):
     def __init__(self, render_context):
@@ -32,98 +41,32 @@ class Abort(Exception):
         self.render_context = render_context
 
 
-class Document(object):
+class ClipboardDataType(object):
     """
-    Immutable class around Text & cursor position.
+    Depending on how data has been copied, it can be pasted differently.
+    If a whole line is copied, it will always be inserted as a line (below or
+    above thu current one). If a word has been copied, it wiss be pasted
+    inline. So, if you copy a whole line, it will not be pasted in the middle
+    of another line.
     """
-    __slots__ = ('text', 'cursor_position')
+    #: Several characters or words have been copied. They are pasted inline.
+    CHARACTERS = 'characters'
 
-    def __init__(self, text='', cursor_position=0):
+    #: A whole line that has been copied. This will be pasted below or above
+    #: the current line as a new line.
+    LINES = 'lines'
+
+
+class ClipboardData(object):
+    """
+    Text on the clipboard.
+
+    :param text: string
+    :param type: :class:`~.ClipboardDataType`
+    """
+    def __init__(self, text='', type=ClipboardDataType.CHARACTERS):
         self.text = text
-        self.cursor_position = cursor_position
-
-    @property
-    def current_char(self):
-        """ Return character under cursor, or None """
-        return self._get_char_relative_to_cursor(0)
-
-    @property
-    def text_before_cursor(self):
-        return self.text[:self.cursor_position:]
-
-    @property
-    def text_after_cursor(self):
-        return self.text[self.cursor_position:]
-
-    @property
-    def current_line_before_cursor(self):
-        """ Text from the start of the line until the cursor. """
-        return self.text_before_cursor.split('\n')[-1]
-
-    @property
-    def current_line_after_cursor(self):
-        """ Text from the cursor until the end of the line. """
-        return self.text_after_cursor.split('\n')[0]
-
-    @property
-    def lines(self):
-        return self.text.split('\n')
-
-    @property
-    def line_count(self):
-        """ Return the number of lines in this document. If the document ends
-        with a trailing \n, that counts as the beginning of a new line. """
-        return len(self.lines)
-
-    @property
-    def current_line(self):
-        """ Return the text on the line where the cursor is. (when the input
-        consists of just one line, it equals `text`. """
-        return self.current_line_before_cursor + self.current_line_after_cursor
-
-    @property
-    def leading_whitespace_in_current_line(self):
-        """ The leading whitespace in the left margin of the current line.  """
-        current_line = self.current_line
-        length = len(current_line) - len(current_line.lstrip())
-        return current_line[:length]
-
-    @property
-    def current_line_position(self):
-        """ Report the line number of our cursor. (0 when we are on the first line.) """
-        return len(self.text_before_cursor.split('\n')) - 1
-            # TODO: maybe deprecate: use cursor_position_row
-
-    def _get_char_relative_to_cursor(self, offset=0):
-        """ Return character relative to cursor position, or None """
-        try:
-            return self.text[self.cursor_position + offset]
-        except IndexError:
-            return None
-
-    @property
-    def cursor_position_row(self):
-        return len(self.text_before_cursor.split('\n'))
-
-    @property
-    def cursor_position_col(self):
-        return len(self.current_line_before_cursor)
-
-    def translate_index_to_position(self, index):
-        """
-        Given an index for the text, return the corresponding (row, col) tuple.
-        """
-        text_before_position = self.text[:index]
-
-        row = len(text_before_position.split('\n'))
-        col = len(text_before_position.split('\n')[-1])
-
-        return row, col
-
-    @property
-    def cursor_at_the_end(self):
-        """ True when the cursor is at the end of the text. """
-        return self.cursor_position == len(self.text)
+        self.type = type
 
 
 def _quit_reverse_search_when_called(func):
@@ -152,6 +95,7 @@ class Line(object):
         self.code_cls = code_cls
         self.prompt_cls = prompt_cls
         self._history_lines = [] # Implement loader (history.load/save)
+        self._clipboard = ClipboardData()
 
         #: Readline argument text (for displaying in the prompt.)
         #: https://www.gnu.org/software/bash/manual/html_node/Readline-Arguments.html
@@ -271,7 +215,7 @@ class Line(object):
         If we're not on the first line (of a multiline input) go a line up,
         otherwise go back in history.
         """
-        if self.document.cursor_position_row > 1:
+        if self.document.cursor_position_row > 0:
             self.cursor_up()
         else:
             self.history_backward()
@@ -282,7 +226,7 @@ class Line(object):
         If we're not on the last line (of a multiline input) go a line down,
         otherwise go forward in history.
         """
-        if self.document.cursor_position_row < self.document.line_count:
+        if self.document.cursor_position_row < self.document.line_count - 1:
             self.cursor_down()
         else:
             old_index = self._history_index
@@ -336,6 +280,7 @@ class Line(object):
             while self.document.current_char.isspace():
                 self.cursor_right()
 
+    @_quit_reverse_search_when_called
     def delete_character_before_cursor(self):
         if self._in_isearch:
             self._isearch_text = self._isearch_text[:-1]
@@ -396,14 +341,19 @@ class Line(object):
         """ Delete current line. Return deleted text. """
         document = self.document
 
-        # Remember deleted text
+        # Remember deleted text.
         deleted = document.current_line
 
+        # Cut line.
         lines = document.lines
-        pos = document.current_line_position
-
+        pos = document.cursor_position_row
         self.text = '\n'.join(lines[:pos] + lines[pos+1:])
-        return deleted + '\n'
+
+        # Move cursor.
+        before_cursor = document.current_line_before_cursor
+        self.cursor_position -= len(before_cursor)
+
+        return deleted
 
     @_quit_reverse_search_when_called
     def join_next_line(self):
@@ -411,9 +361,10 @@ class Line(object):
         after the current line. """
         # Find the first \n after the cursor
         after_cursor = self.document.text_after_cursor
-        i = after_cursor.index('\n')
 
-        self.text = self.document.text_before_cursor + after_cursor[:i] + after_cursor[i+1:]
+        if '\n' in after_cursor:
+            i = after_cursor.index('\n')
+            self.text = self.document.text_before_cursor + after_cursor[:i] + after_cursor[i+1:]
 
     @_quit_reverse_search_when_called
     def swap_characters_before_cursor(self):
@@ -565,7 +516,7 @@ class Line(object):
         self.cursor_to_end_of_line()
         self.insert_text(insert)
 
-    def insert_text(self, data, overwrite=False, safe_current_in_undo_buffer=True):
+    def insert_text(self, data, overwrite=False, safe_current_in_undo_buffer=True, move_cursor=True):
         """
         Insert characters at cursor position.
         """
@@ -587,8 +538,36 @@ class Line(object):
             else:
                 set_text(self.text[:self.cursor_position] + data + self.text[self.cursor_position:])
 
-            self.cursor_position += len(data)
+            if move_cursor:
+                self.cursor_position += len(data)
 
+    def set_clipboard(self, clipboard_data):
+        """
+        Set data to the clipboard.
+
+        :param clipboard_data: :class:`~.ClipboardData` instance.
+        """
+        self._clipboard = clipboard_data
+
+    @_quit_reverse_search_when_called
+    def paste_from_clipboard(self, before=False):
+        """
+        Insert the data from the clipboard.
+        """
+        if self._clipboard and self._clipboard.text:
+            if self._clipboard.type == ClipboardDataType.CHARACTERS:
+                self.insert_text(self._clipboard.text)
+
+            elif self._clipboard.type == ClipboardDataType.LINES:
+                if before:
+                    self.cursor_to_start_of_line()
+                    self.insert_text(self._clipboard.text + '\n', move_cursor=False)
+                else:
+                    self.cursor_to_end_of_line()
+                    self.insert_text('\n')
+                    self.insert_text(self._clipboard.text, move_cursor=False, safe_current_in_undo_buffer=False)
+
+    @_quit_reverse_search_when_called
     def undo(self):
         if self._undo_stack:
             text, pos = self._undo_stack.pop()
@@ -703,6 +682,9 @@ class Line(object):
         with open(filename, 'rb') as f:
             self.set_text(f.read().decode('utf-8'))
         self.cursor_position = len(self.text)
+
+        # Clean up temp file.
+        os.remove(filename)
 
     def _open_file_in_editor(self, filename):
         """ Call editor executable. """

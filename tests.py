@@ -320,15 +320,23 @@ class LineTest(unittest.TestCase):
         deleted_text = self.cli.delete_current_line()
 
         self.assertEqual(self.cli.text, 'line1\nline3')
-        self.assertEqual(deleted_text, 'line2\n')
+        self.assertEqual(deleted_text, 'line2')
+        self.assertEqual(self.cli.cursor_position, len('line1\n'))
 
     def test_join_next_line(self):
         self.cli.insert_text('line1\nline2\nline3')
         self.cli.cursor_up()
-
         self.cli.join_next_line()
 
         self.assertEqual(self.cli.text, 'line1\nline2line3')
+
+        # Test when there is no '\n' in the text
+        self.cli.reset()
+        self.cli.insert_text('line1')
+        self.cli.cursor_position = 0
+        self.cli.join_next_line()
+
+        self.assertEqual(self.cli.text, 'line1')
 
     def test_go_to_matching_bracket(self):
         self.cli.insert_text('A ( B [ C ) >')
@@ -400,12 +408,13 @@ class DocumentTest(unittest.TestCase):
     def test_current_line(self):
         self.assertEqual(self.document.current_line, 'line 2')
 
-    def test_current_line_position(self):
-        self.assertEqual(self.document.current_line_position, 1)
-
     def test_cursor_position(self):
-        self.assertEqual(self.document.cursor_position_row, 2)
+        self.assertEqual(self.document.cursor_position_row, 1)
         self.assertEqual(self.document.cursor_position_col, 3)
+
+        d = Document('', 0)
+        self.assertEqual(d.cursor_position_row, 0)
+        self.assertEqual(d.cursor_position_col, 0)
 
     def test_translate_index_to_position(self):
         pos = self.document.translate_index_to_position(

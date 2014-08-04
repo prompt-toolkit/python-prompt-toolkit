@@ -290,7 +290,7 @@ class Renderer(object):
 
         # Highlight current line.
         if self.highlight_current_line and not (render_context.accept or render_context.abort):
-            screen.highlight_line(render_context.code_obj.document.cursor_position_row - 1)
+            screen.highlight_line(render_context.code_obj.document.cursor_position_row)
 
         # Highlight regions
         if render_context.highlight_regions:
@@ -323,7 +323,7 @@ class Renderer(object):
             write(TerminalCodes.CRLF)
         else:
             cursor_y, cursor_x = screen._cursor_mappings[
-                            render_context.code_obj.document.cursor_position_row - 1,
+                            render_context.code_obj.document.cursor_position_row,
                             render_context.code_obj.document.cursor_position_col]
 
             if screen._y - cursor_y:

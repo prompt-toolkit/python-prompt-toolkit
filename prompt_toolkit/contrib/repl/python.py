@@ -18,9 +18,8 @@ from pygments.token import Keyword, Operator, Number, Name, Error, Comment, Toke
 
 from prompt_toolkit import CommandLine
 from prompt_toolkit.code import Completion, Code
-from prompt_toolkit.inputstream_handler import ViInputStreamHandler, EmacsInputStreamHandler
-from prompt_toolkit.line import Exit
-from prompt_toolkit.line import Line
+from prompt_toolkit.inputstream_handler import ViInputStreamHandler, EmacsInputStreamHandler, ViMode
+from prompt_toolkit.line import Exit, Line
 from prompt_toolkit.prompt import Prompt
 
 from six import exec_
@@ -115,7 +114,7 @@ class PythonViInputStreamHandler(_PythonInputStreamHandlerMixin, ViInputStreamHa
         self._enable_multiline_on_enter()
 
         if self._line.multiline:
-            if self._vi_navigation_mode:
+            if self._vi_mode == ViMode.NAVIGATION:
                 # We are in VI-navigation mode after pressing `Alt`.
                 self._line.return_input()
             else:
@@ -229,7 +228,7 @@ class PythonLine(Line):
             # Just delete one character.
             super(PythonLine, self).delete_character_before_cursor()
 
-    def insert_text(self, data, overwrite=False, safe_current_in_undo_buffer=True):
+    def insert_text(self, data, overwrite=False, safe_current_in_undo_buffer=True, move_cursor=True):
         """
         If a space has been typed at the start of the line (and not in paste
         mode), insert spaces until the next indentation level.
@@ -241,7 +240,7 @@ class PythonLine(Line):
                 data = ' ' * (4 - len(before_cursor) % 4)
 
         super(PythonLine, self).insert_text(data, overwrite=overwrite,
-                safe_current_in_undo_buffer=safe_current_in_undo_buffer)
+                safe_current_in_undo_buffer=safe_current_in_undo_buffer, move_cursor=move_cursor)
 
     def cursor_left(self):
         """
@@ -371,12 +370,17 @@ class PythonPrompt(Prompt):
         append((Token, '\n  '))
         append((TB, '  '))
 
-        if self._pythonline.vi_mode and self._pythonline._inputstream_handler._vi_navigation_mode:
-            append((TB.Mode, '(vi-NAV)'))
-            append((TB, '    '))
-        elif self._pythonline.vi_mode:
-            append((TB.Mode, '(vi-INSERT)'))
-            append((TB, ' '))
+        if self._pythonline.vi_mode:
+            mode = self._pythonline._inputstream_handler._vi_mode
+            if mode == ViMode.NAVIGATION:
+                append((TB.Mode, '(NAV)    '))
+                append((TB, '    '))
+            elif mode == ViMode.INSERT:
+                append((TB.Mode, '(INSERT) '))
+                append((TB, ' '))
+            elif mode == ViMode.REPLACE:
+                append((TB.Mode, '(REPLACE)'))
+                append((TB, ' '))
         else:
             append((TB.Mode, '(emacs)'))
             append((TB, ' '))
@@ -441,7 +445,7 @@ class PythonCode(Code):
     def _get_jedi_script(self):
         return jedi.Interpreter(self.text,
                 column=self.document.cursor_position_col,
-                line=self.document.cursor_position_row,
+                line=self.document.cursor_position_row + 1,
                 path='input-text',
                 namespaces=[ self._locals, self._globals ])
 
