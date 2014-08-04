@@ -224,12 +224,17 @@ class EmacsInputStreamHandler(InputStreamHandler):
     # Overview of Readline emacs commands:
     # http://www.catonmat.net/download/readline-emacs-editing-mode-cheat-sheet.pdf
 
-    def __init__(self, line):
-        super(EmacsInputStreamHandler, self).__init__(line)
+    def _reset(self):
+        super(EmacsInputStreamHandler, self)._reset()
         self._escape_pressed = False
+        self._ctrl_x_pressed = False
 
     def escape(self):
+        # Escape is the same as the 'alt-' prefix.
         self._escape_pressed = True
+
+    def ctrl_x(self):
+        self._ctrl_x_pressed = True
 
     def __call__(self, name, *a):
         reset_arg_count_after_call = True
@@ -252,6 +257,10 @@ class EmacsInputStreamHandler(InputStreamHandler):
                 name = 'alt_' + name
             self._escape_pressed = False
 
+        # If Ctrl-x was pressed. Prepend ctrl_x prefix to hander name.
+        if self._ctrl_x_pressed:
+            name = 'ctrl_x_%s' % name
+
         super(EmacsInputStreamHandler, self).__call__(name, *a)
 
         # Reset arg count.
@@ -260,6 +269,10 @@ class EmacsInputStreamHandler(InputStreamHandler):
 
         if reset_arg_count_after_call:
             self._arg_count = None
+
+        # Reset _ctrl_x_pressed state.
+        if name != 'ctrl_x':
+            self._ctrl_x_pressed = False
 
     def insert_char(self, data, overwrite=False):
         for i in range(self._arg_count or 1):
@@ -350,13 +363,16 @@ class EmacsInputStreamHandler(InputStreamHandler):
         `alt-*`: Insert all possible completions of the preceding text.
         """
 
-    # TODO: ctrl_x, ctrl_e sequence should open an editor. (like 'v' in VI mode.)
-    # TODO: ctrl_x, ctrl_u sequence should undo
-    # TODO: ctrl_x, ctrl_x move cursor to the start/end again.
+    def ctrl_x_ctrl_e(self):
+        """
+        Open editor.
+        """
+        self._line.open_in_editor()
 
-            # We can implement these as follows:
-            #     if an InputStreamHandler returns a not None value.
-            #     that object becomes the new InputStreamHandler
+    def ctrl_x_ctrl_u(self):
+        self._line.undo()
+
+    # TODO: ctrl_x, ctrl_x move cursor to the start/end again.
 
 
 class ViMode(object):
