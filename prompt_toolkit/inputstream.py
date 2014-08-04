@@ -146,7 +146,7 @@ class InputStream(object):
         Feed the input stream.
         """
         assert isinstance(data, six.text_type)
-        #print(repr(data))
 
         for c in data:
+            #print(repr(c))
             self._input_parser.send(c)

@@ -105,7 +105,10 @@ class Char(object):
 
     @property
     def width(self):
-        return max(1, wcwidth(self.char))
+        # We use the `max(0, ...` because some non printable control
+        # characters, like e.g. Ctrl-underscore get a -1 wcwidth value.
+        # It can be possible that these characters end up in the input text.
+        return max(0, wcwidth(self.char))
 
 
 class Screen(object):
@@ -242,7 +245,7 @@ class Screen(object):
                 c = 0
                 while c < cols:
                     result.append(line_data[c].output())
-                    c += line_data[c].width
+                    c += (line_data[c].width or 1)
 
             if y != rows - 1:
                 result.append(TerminalCodes.CRLF)
