@@ -36,8 +36,22 @@ class InputStreamHandler(object):
         #: The name of the last previous public function call.
         self._last_call = None
 
-        #: 'arg' count. For command repeats.
-        self._arg_count = None
+        self.__arg_count = None
+
+    @property
+    def _arg_count(self):
+        """ 'arg' count. For command repeats. """
+        return self.__arg_count
+
+    @_arg_count.setter
+    def _arg_count(self, value):
+        self.__arg_count = value
+
+        # Set argument prompt
+        if value:
+            self._line.set_arg_prompt(value)
+        else:
+            self._line.set_arg_prompt('')
 
     def __call__(self, name, *a):
         if name != 'ctrl_i':
@@ -56,13 +70,6 @@ class InputStreamHandler(object):
         # Keep track of what the last called method was.
         if not name.startswith('_'):
             self._last_call = name
-
-        # Set argument prompt
-        if self._arg_count:
-            self._line.set_arg_prompt(self._arg_count)
-        else:
-            self._line.set_arg_prompt('')
-
 
     def home(self):
         self._line.home()
@@ -225,14 +232,17 @@ class EmacsInputStreamHandler(InputStreamHandler):
         self._escape_pressed = True
 
     def __call__(self, name, *a):
+        reset_arg_count_after_call = True
+
         # When escape was pressed, call the `alt_`-function instead.
         # (This is emacs-mode behaviour. The alt-prefix is equal to the escape
         # key, and in VI mode, that's used to go from insert to navigation mode.)
         if self._escape_pressed:
             if name == 'insert_char':
                 # Handle Alt + digit in the `alt_digit` method.
-                if a[0] in '-0123456789':
+                if a[0] in '0123456789' or (a[0] == '-' and self._arg_count == None):
                     name = 'alt_digit'
+                    reset_arg_count_after_call = False
 
                 # Handle Alt + char in their respective `alt_X` method.
                 else:
@@ -243,6 +253,17 @@ class EmacsInputStreamHandler(InputStreamHandler):
             self._escape_pressed = False
 
         super(EmacsInputStreamHandler, self).__call__(name, *a)
+
+        # Reset arg count.
+        if name == 'escape':
+            reset_arg_count_after_call = False
+
+        if reset_arg_count_after_call:
+            self._arg_count = None
+
+    def insert_char(self, data, overwrite=False):
+        for i in range(self._arg_count or 1):
+            super(EmacsInputStreamHandler, self).insert_char(data, overwrite=overwrite)
 
     def alt_ctrl_j(self):
         """ ALT + Newline """
@@ -297,7 +318,8 @@ class EmacsInputStreamHandler(InputStreamHandler):
         """
         Delete the word before the cursor.
         """
-        self._line.delete_word_before_cursor()
+        for i in range(self._arg_count or 1):
+            self._line.delete_word_before_cursor()
 
     def alt_t(self):
         """
@@ -676,9 +698,11 @@ def _arg_count_append(current, data):
     :param data: the typed digit as string
     :returns: int or None
     """
-    assert data in '0123456789'
+    assert data in '-0123456789'
 
-    if current  is None:
+    if current is None:
+        if data == '-':
+            data = '-1'
         result = int(data)
     else:
         result = int("%s%s" % (current, data))
