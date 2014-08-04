@@ -57,7 +57,8 @@ class CommandLine(object):
             self.stdin = codecs.getreader('utf-8')(sys.stdin)
 
         self._renderer = self.renderer_cls(self.stdout, style=self.style_cls)
-        self._line = self.line_cls(renderer=self._renderer, code_cls=self.code_cls, prompt_cls=self.prompt_cls)
+        self._line = self.line_cls(renderer=self._renderer,
+                        code_cls=self.code_cls, prompt_cls=self.prompt_cls)
         self._inputstream_handler = self.inputstream_handler_cls(self._line)
 
     def read_input(self):
@@ -79,8 +80,8 @@ class CommandLine(object):
                     c = self.stdin.read(1)
 
                     try:
-                        # Feed one character at a time. Feeding can cause the `Line` object to raise
-                        # Exit/Abort/ReturnInput
+                        # Feed one character at a time. Feeding can cause the
+                        # `Line` object to raise Exit/Abort/ReturnInput
                         stream.feed(c)
 
                     except Exit as e:

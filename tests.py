@@ -190,6 +190,16 @@ class LineTest(unittest.TestCase):
         self.assertEqual(self.cli.text, 'hello world word3')
         self.assertEqual(self.cli.cursor_position, len('hello '))
 
+    def test_cursor_to_end_of_word(self):
+        self.cli.insert_text('hello world')
+        self.cli.home()
+
+        self.cli.cursor_to_end_of_word()
+        self.assertEqual(self.cli.cursor_position, len('hello') - 1)
+
+        self.cli.cursor_to_end_of_word()
+        self.assertEqual(self.cli.cursor_position, len('hello world') - 1)
+
     def test_delete_word(self):
         self.cli.insert_text('hello world word3')
         self.cli.home()
@@ -363,6 +373,20 @@ class LineTest(unittest.TestCase):
         self.cli.swap_characters_before_cursor()
 
         self.assertEqual(self.cli.text, 'hello wrold')
+
+    def test_go_to_character_in_line(self):
+        self.cli.insert_text('hello world')
+        self.cli.cursor_position = 0
+
+        self.cli.go_to_character_in_line('o')
+        self.assertEqual(self.cli.cursor_position, len('hello') - 1)
+
+        self.cli.go_to_character_in_line('o')
+        self.assertEqual(self.cli.cursor_position, len('hello wo') - 1)
+
+        # No more 'o' found. Cursor should not move further.
+        self.cli.go_to_character_in_line('o')
+        self.assertEqual(self.cli.cursor_position, len('hello wo') - 1)
 
 
 class DocumentTest(unittest.TestCase):

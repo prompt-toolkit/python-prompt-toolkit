@@ -105,7 +105,7 @@ class Char(object):
 
     @property
     def width(self):
-        return wcwidth(self.char)
+        return max(1, wcwidth(self.char))
 
 
 class Screen(object):

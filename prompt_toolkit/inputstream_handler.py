@@ -204,6 +204,9 @@ class EmacsInputStreamHandler(InputStreamHandler):
     """
     Some e-macs extensions.
     """
+    # Overview of Readline emacs commands:
+    # http://www.catonmat.net/download/readline-emacs-editing-mode-cheat-sheet.pdf
+
     def __init__(self, line):
         super(EmacsInputStreamHandler, self).__init__(line)
         self._escape_pressed = False
@@ -238,7 +241,13 @@ class EmacsInputStreamHandler(InputStreamHandler):
     def alt_enter(self):
         pass
 
-    def alt_f(self): # XXX: unittest.
+    def alt_c(self):
+        """
+        Capitalize the current (or following) word.
+        """
+        self._line.capitalize_following_word()
+
+    def alt_f(self):
         self._line.cursor_word_forward()
 
     def alt_b(self):
@@ -248,13 +257,21 @@ class EmacsInputStreamHandler(InputStreamHandler):
         """
         Delete the Word after the cursor.
         """
+        data = ClipboardData(self._line.delete_word())
+        self._line.set_clipboard(data)
+
+    def alt_l(self):
+        """
+        Lowercase the current (or following) word.
+        """
+        self._line.lowercase_following_word()
 
     def ctrl_u(self):
         """
         Clears the line before the cursor position. If you are at the end of
         the line, clears the entire line.
         """
-        pass
+        self._line.delete_from_start_of_line()
 
     def ctrl_w(self):
         """
@@ -266,10 +283,17 @@ class EmacsInputStreamHandler(InputStreamHandler):
         Swap the last two words before the cursor.
         """
 
+    def alt_u(self):
+        """
+        Uppercase the current (or following) word.
+        """
+        self._line.uppercase_following_word()
+
     def ctrl_underscore(self):
         """
         Undo.
         """
+        self._line.undo()
 
     def alt_backslash(self):
         """
@@ -309,6 +333,8 @@ class ViInputStreamHandler(InputStreamHandler):
         self._arg_count = None # Usually for repeats
         self._all_navigation_handles = self._get_navigation_mode_handles()
 
+        # Hook for several actions in navigation mode which require an
+        # additional key to be typed before they execute.
         self._one_character_callback = None
 
     def escape(self):
@@ -329,7 +355,7 @@ class ViInputStreamHandler(InputStreamHandler):
         """
         Create a dictionary that maps the vi key binding to their handlers.
         """
-        handles = { }
+        handles = {}
         line = self._line
 
         def handle(key):

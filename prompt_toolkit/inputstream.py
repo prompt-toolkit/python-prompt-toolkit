@@ -50,6 +50,7 @@ class InputStream(object):
         '\x18': 'ctrl_x', # Control-X
         '\x19': 'ctrl_y', # Control-Y (25)
         '\x1a': 'ctrl_z', # Control-Z
+        '\x1f': 'ctrl_underscore', # Control-underscore
         '\x7f': 'backspace', # (127) Backspace
            ### '\x1b': 'escape',
         '\x1b[A': 'arrow_up',

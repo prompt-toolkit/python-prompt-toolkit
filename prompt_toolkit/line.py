@@ -282,6 +282,9 @@ class Line(object):
 
     @_quit_reverse_search_when_called
     def cursor_to_end_of_line(self):
+        """
+        Move cursor to the end of the current line.
+        """
         while self.document.current_char and self.document.current_char != '\n':
             self.cursor_right()
 
@@ -340,7 +343,9 @@ class Line(object):
 
     @_quit_reverse_search_when_called
     def delete_until_end_of_line(self):
-        """ Delete all input until the end of this line. Return deleted text. """
+        """
+        Delete all input until the end of this line. Return deleted text.
+        """
         endpos = self.text[self.cursor_position:].find('\n')
         if endpos == -1:
             endpos = None
@@ -351,6 +356,21 @@ class Line(object):
         self.text = self.text[:self.cursor_position] + ('' if endpos is None else self.text[endpos:])
         self.cursor_position -= 1
         return deleted
+
+    @_quit_reverse_search_when_called
+    def delete_from_start_of_line(self):
+        """
+        Delete all input from the start of the line until the current
+        character. Return deleted text.
+        (Actually, this is the same as pressing backspace until the start of
+        the line.)
+        """
+        text_to_delete = self.document.current_line_before_cursor
+
+        self.text = self.text[:self.cursor_position - len(text_to_delete)] + \
+                        self.text[self.cursor_position:]
+        self.cursor_position -= len(text_to_delete)
+        return text_to_delete
 
     @_quit_reverse_search_when_called
     def delete_current_line(self):
@@ -370,6 +390,40 @@ class Line(object):
         self.cursor_position -= len(before_cursor)
 
         return deleted
+
+    def uppercase_following_word(self):
+        """ Uppercase the current (or following) word.  """
+        self.transform_following_word(lambda word: word.upper())
+
+    def lowercase_following_word(self):
+        """ Lowercase the current (or following) word.  """
+        self.transform_following_word(lambda word: word.lower())
+
+    def capitalize_following_word(self):
+        """ Lowercase the current (or following) word.  """
+        self.transform_following_word(lambda word: word.capitalize())
+
+    @_quit_reverse_search_when_called
+    def transform_following_word(self, transform_func):
+        """
+        Apply text transform function to the following word.
+        e.g.::
+
+            transform_following_word(lambda word: word.lower())
+        """
+        # Move over non-word characters
+        while self.document.current_char and not self.document.current_char.isalnum():
+            self.cursor_position += 1
+
+        # Find word
+        word = ''
+        for c in self.document.current_line_after_cursor:
+            if c.isalnum():
+                word += c
+            else:
+                break
+
+        self.insert_text(transform_func(word), overwrite=True)
 
     @_quit_reverse_search_when_called
     def join_next_line(self):
