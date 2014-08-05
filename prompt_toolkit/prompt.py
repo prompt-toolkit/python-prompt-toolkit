@@ -6,7 +6,19 @@ from __future__ import unicode_literals
 from pygments.token import Token
 from .enums import ReverseSearchDirection
 
-__all__ = ('PromptBase', 'Prompt', )
+__all__ = (
+    'PromptBase',
+    'Prompt',
+    'Dynamic',
+)
+
+
+class Dynamic(object):
+    """
+    Dynamic part in a prompt.
+    """
+    def callback(self):
+        yield (Token.Prompt, '<dynamic>')
 
 
 class PromptBase(object):

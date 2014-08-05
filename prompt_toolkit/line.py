@@ -624,7 +624,12 @@ class Line(object):
         """
         if self._clipboard and self._clipboard.text:
             if self._clipboard.type == ClipboardDataType.CHARACTERS:
-                self.insert_text(self._clipboard.text)
+                if before:
+                    self.insert_text(self._clipboard.text)
+                else:
+                    self.cursor_right()
+                    self.insert_text(self._clipboard.text)
+                    self.cursor_left()
 
             elif self._clipboard.type == ClipboardDataType.LINES:
                 if before:
