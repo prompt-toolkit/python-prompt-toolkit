@@ -159,8 +159,9 @@ class InputStreamHandler(object):
         """
         Delete the word before the cursor.
         """
-        for i in range(self._arg_count or 1):
-            self._line.delete_word_before_cursor()
+        data = ClipboardData(''.join(
+            self._line.delete_word_before_cursor() for i in range(self._arg_count or 1)))
+        self._line.set_clipboard(data)
 
     def ctrl_x(self):
         pass
@@ -190,7 +191,7 @@ class InputStreamHandler(object):
     def arrow_down(self):
         self._line.auto_down()
 
-    def backspace(self):
+    def backspace(self): # XXX: in vi navigation mode, same as cursor_left.
         self._line.delete_character_before_cursor()
 
     def delete(self):
@@ -307,28 +308,39 @@ class EmacsInputStreamHandler(InputStreamHandler):
         """
         Capitalize the current (or following) word.
         """
-        words = self._line.document.get_following_words(self._arg_count or 1, consume_nonword_before=True)
-        self._line.insert_text(words.capitalize(), overwrite=True)
+        for i in range(self._arg_count or 1):
+            pos = self._line.document.find_end_of_next_word()
+            words = self._line.document.text_after_cursor[:pos]
+            self._line.insert_text(words.title(), overwrite=True)
 
     def alt_f(self):
-        self._line.cursor_word_forward()
+        """
+        Cursor to end of next word.
+        """
+        pos = self._line.document.find_end_of_next_word()
+        if pos:
+            self._line.cursor_position += pos
 
     def alt_b(self):
+        """ Cursor to start of previous word. """
         self._line.cursor_word_back()
 
     def alt_d(self):
         """
-        Delete the Word after the cursor.
+        Delete the Word after the cursor. (Delete until end of word.)
         """
-        data = ClipboardData(self._line.delete_word())
+        pos = self._line.document.find_end_of_next_word()
+        data = ClipboardData(self._line.delete(pos))
         self._line.set_clipboard(data)
 
     def alt_l(self):
         """
         Lowercase the current (or following) word.
         """
-        words = self._line.document.get_following_words(self._arg_count or 1, consume_nonword_before=True)
-        self._line.insert_text(words.lower(), overwrite=True)
+        for i in range(self._arg_count or 1): # XXX: not DRY: see alt_c and alt_u!!
+            pos = self._line.document.find_end_of_next_word()
+            words = self._line.document.text_after_cursor[:pos]
+            self._line.insert_text(words.lower(), overwrite=True)
 
     def alt_t(self):
         """
@@ -340,9 +352,10 @@ class EmacsInputStreamHandler(InputStreamHandler):
         """
         Uppercase the current (or following) word.
         """
-        words = self._line.document.get_following_words(self._arg_count or 1,
-                                        consume_nonword_before=True)
-        self._line.insert_text(words.upper(), overwrite=True)
+        for i in range(self._arg_count or 1):
+            pos = self._line.document.find_end_of_next_word()
+            words = self._line.document.text_after_cursor[:pos]
+            self._line.insert_text(words.upper(), overwrite=True)
 
     def ctrl_underscore(self):
         """
@@ -394,8 +407,6 @@ class ViInputStreamHandler(InputStreamHandler):
     # Overview of Readline Vi commands:
     # http://www.catonmat.net/download/bash-vi-editing-mode-cheat-sheet.pdf
     """
-    # TODO: In case of navigation mode, we should not be able to move the
-    # cursor after the last character of a line.
     def _reset(self):
         super(ViInputStreamHandler, self)._reset()
         self._vi_mode = ViMode.INSERT
@@ -404,6 +415,18 @@ class ViInputStreamHandler(InputStreamHandler):
         # Hook for several actions in navigation mode which require an
         # additional key to be typed before they execute.
         self._one_character_callback = None
+
+    def __call__(self, name, *a):
+        super(ViInputStreamHandler, self).__call__(name, *a)
+
+        # After every command, make sure that if we are in navigation mode, we
+        # never put the cursor after the last character of a line. (Unless it's
+        # an empty line.)
+        if (
+                self._vi_mode == ViMode.NAVIGATION and
+                self._line.document.cursor_at_the_end_of_line and
+                len(self._line.document.current_line) > 0):
+            self._line.cursor_position -= 1
 
     def escape(self):
         """ Escape goes to vi navigation mode. """
@@ -465,9 +488,16 @@ class ViInputStreamHandler(InputStreamHandler):
 
         @handle('cc')
         @handle('S')
-        def _(arg):
-            # TODO: Change current line (equivalent to 0c$).
-            pass
+        def _(arg): # TODO: implement 'arg'
+            """ Change current line """
+            # We copy the whole line.
+            data = ClipboardData(line.document.current_line, ClipboardDataType.LINES)
+            line.set_clipboard(data)
+
+            # But we delete after the whitespace
+            line.cursor_to_start_of_line(after_whitespace=True)
+            line.delete_until_end_of_line()
+            self._vi_mode = ViMode.INSERT
 
         @handle('cw')
         @handle('ce')
@@ -510,15 +540,17 @@ class ViInputStreamHandler(InputStreamHandler):
             # cursor to the next occurance of character. 'x'.
             def cb(char):
                 for i in range(arg):
-                    line.go_to_character_in_line(char)
+                    line.go_to_substring(char, in_current_line=True)
             self._one_character_callback = cb
 
         @handle('F')
         def _(arg):
             # Go to previous occurance of character. Typing 'Fx' will move the
             # cursor to the previous occurance of character. 'x'.
-            # TODO
-            pass
+            def cb(char):
+                for i in range(arg):
+                    line.go_to_substring(char, in_current_line=True, backwards=True)
+            self._one_character_callback = cb
 
         @handle('G')
         def _(arg):
@@ -545,7 +577,7 @@ class ViInputStreamHandler(InputStreamHandler):
         @handle('I')
         def _(arg):
             self._vi_mode = ViMode.INSERT
-            line.cursor_to_start_of_line()
+            line.cursor_to_start_of_line(after_whitespace=True)
 
         @handle('j')
         def _(arg):
@@ -622,15 +654,18 @@ class ViInputStreamHandler(InputStreamHandler):
             # Move right to the next occurance of c, then one char backward.
             def cb(char):
                 for i in range(arg):
-                    line.go_to_character_in_line(char)
+                    line.go_to_substring(char, in_current_line=True)
                 line.cursor_left()
             self._one_character_callback = cb
 
         @handle('T')
         def _(arg):
             # Move left to the previous occurance of c, then one char forward.
-            # TODO
-            pass
+            def cb(char):
+                for i in range(arg):
+                    line.go_to_substring(char, in_current_line=True, backwards=True)
+                line.cursor_right()
+            self._one_character_callback = cb
 
         @handle('u')
         def _(arg):
@@ -682,7 +717,6 @@ class ViInputStreamHandler(InputStreamHandler):
 
         @handle('$')
         def _(arg):
-            # TODO: This should not move after but *on* the last character.
             line.cursor_to_end_of_line()
 
         @handle('%')
@@ -714,13 +748,21 @@ class ViInputStreamHandler(InputStreamHandler):
 
         @handle('>>')
         def _(arg):
-            # TODO: Indent current line.
-            pass
+            # Indent current line.
+            line.set_current_line('    ' + line.document.current_line)
+            line.cursor_to_start_of_line(after_whitespace=True)
 
         @handle('<<')
         def _(arg):
-            # TODO: Unindent current line.
-            pass
+            # Unindent current line.
+            text = line.document.current_line
+            if text.startswith('    '):
+                text = text[4:]
+            else:
+                text = text.lstrip()
+
+            line.set_current_line(text)
+            line.cursor_to_start_of_line(after_whitespace=True)
 
         @handle('O')
         def _(arg):
@@ -746,8 +788,7 @@ class ViInputStreamHandler(InputStreamHandler):
         def _(arg):
             # Move to the n-th column (you may specify the argument n by typing
             # it on number keys, for example, 20|).
-            # TODO
-            pass
+            line.go_to_column(arg)
 
         @handle('/')
         def _(arg):

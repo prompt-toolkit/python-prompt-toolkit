@@ -108,6 +108,15 @@ class _PythonInputStreamHandlerMixin(object):
         elif cursor_at_the_end and (self._line.document.text_before_cursor[-1:] == '\\'):
             self._line.multiline = True
 
+    def tab(self):
+        # When the 'tab' key is pressed with only whitespace character before the
+        # cursor, do autocompletion. Otherwise, insert indentation.
+        current_char = self._line.document.current_line_before_cursor
+        if not current_char or current_char.isspace():
+            self._line.insert_text('    ')
+        else:
+            super(_PythonInputStreamHandlerMixin, self).tab()
+
 
 class PythonViInputStreamHandler(_PythonInputStreamHandlerMixin, ViInputStreamHandler):
     def enter(self):
@@ -210,40 +219,40 @@ class PythonLine(Line):
                 for x in range(4):
                     insert_text(' ')
 
-    def delete_character_before_cursor(self):
-        """
-        Backspace.
-        When we have only spaces at the current line before the cursor, delete
-        spaces until we're at previous indentation level. (Probably delete four
-        spaces.)
-        """
-        before_cursor = self.document.current_line_before_cursor
-        deleted = ''
+   # def delete_character_before_cursor(self, count): # TODO: implement count
+   #     """
+   #     Backspace.
+   #     When we have only spaces at the current line before the cursor, delete
+   #     spaces until we're at previous indentation level. (Probably delete four
+   #     spaces.)
+   #     """
+   #     before_cursor = self.document.current_line_before_cursor
+   #     deleted = ''
 
-        if before_cursor and before_cursor.isspace():
-            # Delete until previous indentation level.
-            to_delete = 1 + (len(before_cursor) - 1) % 4
-            for i in range(to_delete):
-                deleted += super(PythonLine, self).delete_character_before_cursor()
-        else:
-            # Just delete one character.
-            deleted += super(PythonLine, self).delete_character_before_cursor()
+   #     if before_cursor and before_cursor.isspace():
+   #         # Delete until previous indentation level.
+   #         to_delete = 1 + (len(before_cursor) - 1) % 4
+   #         for i in range(to_delete):
+   #             deleted += super(PythonLine, self).delete_character_before_cursor()
+   #     else:
+   #         # Just delete one character.
+   #         deleted += super(PythonLine, self).delete_character_before_cursor()
 
-        return deleted
+   #     return deleted
 
-    def insert_text(self, data, overwrite=False, safe_current_in_undo_buffer=True, move_cursor=True):
-        """
-        If a space has been typed at the start of the line (and not in paste
-        mode), insert spaces until the next indentation level.
-        """
-        if not self.paste_mode and not self._in_isearch and data == ' ' and not overwrite:
-            before_cursor = self.document.current_line_before_cursor
+  #  def insert_text(self, data, overwrite=False, safe_current_in_undo_buffer=True, move_cursor=True):
+  #      """
+  #      If a space has been typed at the start of the line (and not in paste
+  #      mode), insert spaces until the next indentation level.
+  #      """
+  #      if not self.paste_mode and not self._in_isearch and data == ' ' and not overwrite:
+  #          before_cursor = self.document.current_line_before_cursor
 
-            if not before_cursor or before_cursor.isspace():
-                data = ' ' * (4 - len(before_cursor) % 4)
+  #          if not before_cursor or before_cursor.isspace():
+  #              data = ' ' * (4 - len(before_cursor) % 4)
 
-        super(PythonLine, self).insert_text(data, overwrite=overwrite,
-                safe_current_in_undo_buffer=safe_current_in_undo_buffer, move_cursor=move_cursor)
+  #      super(PythonLine, self).insert_text(data, overwrite=overwrite,
+  #              safe_current_in_undo_buffer=safe_current_in_undo_buffer, move_cursor=move_cursor)
 
     def cursor_left(self):
         """
@@ -314,20 +323,26 @@ class PythonPrompt(Prompt):
 
     def get_isearch_prompt(self):
         yield self._prefix
-        for t in super(PythonPrompt, self).get_isearch_prompt():
-            yield t
+        yield (Token.Prompt, ': ')
 
-    def get_arg_prompt(self, text):
+    def get_arg_prompt(self):
         yield self._prefix
-        for t in super(PythonPrompt, self).get_arg_prompt(text):
-            yield t
+        yield (Token.Prompt, ': ')
 
     def get_help_tokens(self):
         """
         When inside functions, show signature.
         """
         result = []
-        result.extend(self._get_signature_tokens())
+        result.append((Token, '\n'))
+
+        if self.line._in_isearch:
+            result.extend(list(super(PythonPrompt, self).get_isearch_prompt()))
+        elif self.line._arg_prompt_text:
+            result.extend(list(super(PythonPrompt, self).get_arg_prompt()))
+        else:
+            result.extend(self._get_signature_tokens())
+
         result.extend(self._get_toolbar_tokens())
         return result
 
@@ -347,7 +362,7 @@ class PythonPrompt(Prompt):
         if signatures:
             sig = signatures[0] # Always take the first one.
 
-            append((Token, '\n           '))
+            append((Token, '           '))
             append((Signature, sig.full_name))
             append((Signature.Operator, '('))
 
@@ -360,8 +375,6 @@ class PythonPrompt(Prompt):
 
             result.pop() # Pop last comma
             append((Signature.Operator, ')'))
-        else:
-            append((Token, '\n'))
 
         return result
 

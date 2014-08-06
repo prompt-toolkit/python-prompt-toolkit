@@ -75,7 +75,7 @@ class Prompt(PromptBase):
         if self.line._in_isearch:
             return self.get_isearch_prompt()
         elif self.line._arg_prompt_text:
-            return self.get_arg_prompt(self.line._arg_prompt_text)
+            return self.get_arg_prompt()
         else:
             return self.get_default_prompt()
 
@@ -85,12 +85,12 @@ class Prompt(PromptBase):
         """
         yield (Token.Prompt, '> ')
 
-    def get_arg_prompt(self, text):
+    def get_arg_prompt(self):
         """
         Yield the tokens for the arg-prompt.
         """
         yield (Token.Prompt.Arg, '(arg: ')
-        yield (Token.Prompt.ArgText, str(text))
+        yield (Token.Prompt.ArgText, str(self.line._arg_prompt_text))
         yield (Token.Prompt.Arg, ') ')
 
     def get_isearch_prompt(self):

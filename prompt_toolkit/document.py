@@ -2,6 +2,16 @@
 """
 from __future__ import unicode_literals
 
+import re
+
+__all__ = ('Document',)
+
+
+# Regex for finding the "words" in documents. (We consider a group of alnum
+# characters a word, but also a group of special characters a word, as long as
+# it doesn't contain a space.)
+_FIND_WORD_RE =  re.compile('([a-zA-Z0-9_]+|[^a-zA-Z0-9_\s]+)')
+
 
 class Document(object):
     """
@@ -111,33 +121,82 @@ class Document(object):
         """ True when the cursor is at the end of the text. """
         return self.cursor_position == len(self.text)
 
-    def get_following_words(self, count=1, consume_nonword_before=False): # TODO: unittest
+    @property
+    def cursor_at_the_end_of_line(self):
+        """ True when the cursor is at the end of this line. """
+        return self.cursor_position_col == len(self.current_line)
+
+    def find(self, sub, in_current_line=False):
         """
-        Return the text porting that contains the `count` words following after
-        the cursor.
+        Find `text` after the cursor, return position relative to the cursor
+        position. Return `None` if nothing was found.
         """
-        text = self.text_after_cursor
-        pos = 0
+        if in_current_line:
+            after_cursor = self.current_line_after_cursor[1:]
+        else:
+            after_cursor = self.text_after_cursor[1:]
 
-        def more_text():
-            return pos < len(text)
+        index = after_cursor.find(sub)
 
-        def current_isalnum():
-            return text[pos].isalnum()
+        if index >= 0:
+            return index + 1
 
-        for i in range(count):
-            if consume_nonword_before:
-                # Consume non-word characters
-                while more_text() and not current_isalnum():
-                    pos += 1
+    def find_backwards(self, sub, in_current_line=False):
+        """
+        Find `text` before the cursor, return position relative to the cursor
+        position. Return `None` if nothing was found.
+        """
+        if in_current_line:
+            before_cursor = self.current_line_before_cursor
+        else:
+            before_cursor = self.text_before_cursor
 
-            # Consume word characters
-            while more_text() and current_isalnum():
-                pos += 1
+        index = before_cursor.rfind(sub)
 
-            if not consume_nonword_before:
-                # Consume non-word characters
-                while more_text() and not current_isalnum():
-                    pos += 1
+        if index >= 0:
+            return index - len(before_cursor)
 
-        return text[:pos]
+    def find_start_of_previous_word(self):
+        """
+        Return an index relative to the cursor position pointing to the start
+        of the previous word. Return `None` if nothing was found.
+        """
+        # Reverse the text before the cursor, in order to do an efficient
+        # backwards search.
+        text_before_cursor = self.text_before_cursor[::-1]
+
+        match = _FIND_WORD_RE.search(text_before_cursor)
+
+        if match:
+            return - match.end(1)
+
+    def find_start_of_next_word(self): # TODO: rename to find_next_word_beginning
+        """
+        Return an index relative to the cursor position pointing to the start
+        of the next word. Return `None` if nothing was found.
+        """
+        iterable = _FIND_WORD_RE.finditer(self.text_after_cursor)
+
+        try:
+            # Take first match, unless it's the word on which we're right now.
+            result = next(iterable).start(1)
+
+            if result > 0:
+                return result
+            else:
+                return next(iterable).start(1)
+
+        except StopIteration:
+            pass
+
+    def find_end_of_next_word(self): # TODO: rename to find_next_word_ending
+        """
+        Return an index relative to the cursor position pointing to the end
+        of the next word. Return `None` if nothing was found.
+        """
+        iterable = _FIND_WORD_RE.finditer(self.text_after_cursor)
+
+        try:
+            return next(iterable).end(1)
+        except StopIteration:
+            pass

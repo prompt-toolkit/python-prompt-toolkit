@@ -130,8 +130,20 @@ class Line(object):
         # Remember current text in the undo stack.
         if safe_current_in_undo_buffer:
             self._undo_stack.append((self.text, self.cursor_position))
+                                # TODO: call undo_stack saves from input_handler, not automatically
 
         self._text = value
+
+    def set_current_line(self, value):
+        """
+        Replace current line (Does not touch other lines in multi-line input.)
+        """
+        # Move cursor to start of line.
+        self.cursor_to_start_of_line(after_whitespace=False)
+
+        # Replace text
+        self.delete_until_end_of_line()
+        self.insert_text(value, move_cursor=False)
 
     @property
     def document(self):
@@ -158,12 +170,12 @@ class Line(object):
 
     @_quit_reverse_search_when_called
     def cursor_left(self):
-        if self.cursor_position > 0:
+        if self.document.cursor_position_col > 0:
             self.cursor_position -= 1
 
     @_quit_reverse_search_when_called
     def cursor_right(self):
-        if self.cursor_position < len(self.text):
+        if not self.document.cursor_at_the_end_of_line:
             self.cursor_position += 1
 
     @_quit_reverse_search_when_called
@@ -240,85 +252,63 @@ class Line(object):
     def cursor_word_back(self):
         """ Move the cursor to the start of the previous word. """
         # Move at least one character to the left.
-        self.cursor_left()
-
-        # Move over whitespace.
-        while self.cursor_position > 0 and (self.document.current_char or ' ').isspace():
-            self.cursor_left()
-
-        # Move to beginning of word.
-        while self.cursor_position > 0 and (self.document._get_char_relative_to_cursor(-1) or 'x').isalnum():
-            self.cursor_left()
+        self.cursor_position += (self.document.find_start_of_previous_word() or 0)
 
     @_quit_reverse_search_when_called
     def cursor_word_forward(self):
         """ Move the cursor to the start of the following word. """
-        # Move at least one character to the right.
-        self.cursor_right()
-
-        # Move over word characters.
-        while self.cursor_position < len(self.text) and (self.document.current_char or ' ').isalnum():
-            self.cursor_right()
-
-        # Move over whitespace to the start of the next word.
-        while self.cursor_position < len(self.text) and (self.document.current_char or 'x').isspace():
-            self.cursor_right()
+        self.cursor_position += (self.document.find_start_of_next_word() or 0)
 
     @_quit_reverse_search_when_called
     def cursor_to_end_of_word(self):
+        """
+        Move the cursor right before the last character of the next word
+        ending.
+        """
+        # Move at least one character. # XXX: not entirely correct.
         self.cursor_right()
 
-        # Move over non-alnum characters.
-        while not (self.document.current_char or 'x').isalnum():
-            self.cursor_position += 1
-
-        # We're on a word now. Move to the last character of this word.
-        while True:
-            c = self.document._get_char_relative_to_cursor(1)
-            if c and c.isalnum():
-                self.cursor_position += 1
-            else:
-                break
+        end = self.document.find_end_of_next_word()
+        if end > 1:
+            self.cursor_position += end - 1
 
     @_quit_reverse_search_when_called
     def cursor_to_end_of_line(self):
         """
         Move cursor to the end of the current line.
         """
-        while self.document.current_char and self.document.current_char != '\n':
-            self.cursor_right()
+        self.cursor_position += len(self.document.current_line_after_cursor)
 
     @_quit_reverse_search_when_called
     def cursor_to_start_of_line(self, after_whitespace=False):
-        while self.cursor_position > 0 and self.document._get_char_relative_to_cursor(-1) != '\n':
-            self.cursor_left()
+        """ Move the cursor to the first character of the current line. """
+        self.cursor_position -= len(self.document.current_line_before_cursor)
 
-        # When the `after_whitespace` flag is `True`, ignore the whitespace at
-        # the start of the line.
         if after_whitespace:
-            while self.document.current_char.isspace():
-                self.cursor_right()
+            text_after_cursor = self.document.current_line_after_cursor
+            self.cursor_position += len(text_after_cursor) - len(text_after_cursor.lstrip())
 
-    @_quit_reverse_search_when_called
-    def delete_character_before_cursor(self): # TODO: unittest return type
+
+    # NOTE: don't _quit_reverse_search_when_called: we can delete in i-search.
+    def delete_character_before_cursor(self, count=1): # TODO: unittest return type
         """ Delete character before cursor, return deleted character. """
-        char = ''
+        assert count > 0
+        deleted = ''
 
         if self._in_isearch:
-            self._isearch_text = self._isearch_text[:-1]
+            self._isearch_text = self._isearch_text[:-count]
         else:
             if self.cursor_position > 0:
-                char = self.document.current_char or ''
-                self.text = self.text[:self.cursor_position - 1] + self.text[self.cursor_position:]
-                self.cursor_position -= 1
+                deleted = self.text[self.cursor_position - count:self.cursor_position]
+                self.text = self.text[:self.cursor_position - count] + self.text[self.cursor_position:]
+                self.cursor_position -= len(deleted)
 
-        return char
+        return deleted
 
     @_quit_reverse_search_when_called
     def delete(self, count=1): # TODO: unittest `count`
         """ Delete one character. Return deleted character. """
         if self.cursor_position < len(self.text):
-#1aoeu#            3deleted = self.document.current_char
             deleted = self.document.text_after_cursor[:count]
             self.text = self.text[:self.cursor_position] + \
                     self.text[self.cursor_position + len(deleted):]
@@ -329,25 +319,14 @@ class Line(object):
     @_quit_reverse_search_when_called
     def delete_word(self):
         """ Delete one word. Return deleted word. """
-        deleted = self.document.get_following_words(consume_nonword_before=False)
-        self.delete(count=len(deleted))
-        return deleted
+        to_delete = self.document.find_start_of_next_word()
+        return self.delete(count=to_delete)
 
     @_quit_reverse_search_when_called
     def delete_word_before_cursor(self): # TODO: unittest
-                                         # TODO: rewrite using document.get_words_before_cursor.
         """ Delete one word before cursor. Return deleted word. """
-        deleted = ''
-
-        # Delete whitespace before cursor.
-        while self.document.char_before_cursor and self.document.char_before_cursor.isspace():
-            deleted += self.delete_character_before_cursor()
-
-        # Delete word before cursor.
-        while self.document.char_before_cursor and self.document.char_before_cursor.isalnum():
-            deleted += self.delete_character_before_cursor()
-
-        return deleted
+        to_delete = self.document.find_start_of_previous_word() or 0
+        return self.delete_character_before_cursor(-to_delete)
 
     @_quit_reverse_search_when_called
     def delete_until_end(self):
@@ -369,7 +348,6 @@ class Line(object):
 
         deleted = self.text[self.cursor_position:endpos]
         self.text = self.text[:self.cursor_position] + ('' if endpos is None else self.text[endpos:])
-        self.cursor_position -= 1
         return deleted
 
     @_quit_reverse_search_when_called
@@ -458,13 +436,30 @@ class Line(object):
                         self.cursor_position -= (i + 1)
                         break
 
-    def go_to_character_in_line(self, char):
-        assert len(char) == 1
+    @_quit_reverse_search_when_called
+    def go_to_substring(self, sub, in_current_line=False, backwards=False):
+        """
+        Find next occurence of this substring, and move cursor position there.
+        """
+        if backwards:
+            index = self.document.find_backwards(sub, in_current_line=in_current_line)
+        else:
+            index = self.document.find(sub, in_current_line=in_current_line)
 
-        after_cursor = self.document.current_line_after_cursor[1:]
+        if index:
+            self.cursor_position += index
 
-        if char in after_cursor:
-            self.cursor_position += 1 + after_cursor.find(char)
+    @_quit_reverse_search_when_called
+    def go_to_column(self, column):
+        """
+        Go to this column on the current line. (Go to the end column > length
+        of the line.)
+        """
+        line_length = len(self.document.current_line)
+        current_column = self.document.cursor_position_col
+        column = max(0, min(line_length, column))
+
+        self.cursor_position += column - current_column
 
     def _create_code_obj(self):
         return self.code_cls(self.document)
@@ -498,8 +493,8 @@ class Line(object):
             # In case of reverse search, render reverse search prompt.
             if self._in_isearch_history_index < len(self._history_lines):
                 line = self._history_lines[self._in_isearch_history_index]
-                pos = max(0, self._history_lines[self._in_isearch_history_index].find(
-                                self._isearch_text))
+                pos = self._history_lines[self._in_isearch_history_index].find(
+                                self._isearch_text)
             else:
                 line = ''
                 pos = 0
@@ -507,7 +502,7 @@ class Line(object):
             document = Document(line, pos)
             code = self.code_cls(document)
 
-            if line:
+            if line and pos >= 0:
                 highlight_regions = [
                     (document.translate_index_to_position(pos),
                     document.translate_index_to_position(pos + len(self._isearch_text))) ]
