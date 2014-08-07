@@ -1,14 +1,16 @@
 #!/usr/bin/env python
-"""Usage:
-    python-repl [ --vi ]
-    python-repl -h | --help
+"""
+ptpython: Interactive Python shell.
+Usage:
+    ptpython [ --vi ]
+    ptpython -h | --help
 
 Options:
     --vi      : Use Vi keybindings instead of Emacs bindings.
 """
 import docopt
 
-from prompt_toolkit.contrib.repl.python import embed
+from prompt_toolkit.contrib.repl import embed
 
 def _run_repl():
     a = docopt.docopt(__doc__)

@@ -3,9 +3,8 @@ Utility for creating a Python repl.
 
 ::
 
-    from prompt_toolkit.contrib.python import PythonCommandLine
-    cli = PythonCommandLine()
-    cli.read_input()
+    from prompt_toolkit.contrib.repl import embed
+    embed(globals(), locals(), vi_mode=False)
 
 """
 from __future__ import print_function
@@ -219,41 +218,6 @@ class PythonLine(Line):
                 for x in range(4):
                     insert_text(' ')
 
-   # def delete_character_before_cursor(self, count): # TODO: implement count
-   #     """
-   #     Backspace.
-   #     When we have only spaces at the current line before the cursor, delete
-   #     spaces until we're at previous indentation level. (Probably delete four
-   #     spaces.)
-   #     """
-   #     before_cursor = self.document.current_line_before_cursor
-   #     deleted = ''
-
-   #     if before_cursor and before_cursor.isspace():
-   #         # Delete until previous indentation level.
-   #         to_delete = 1 + (len(before_cursor) - 1) % 4
-   #         for i in range(to_delete):
-   #             deleted += super(PythonLine, self).delete_character_before_cursor()
-   #     else:
-   #         # Just delete one character.
-   #         deleted += super(PythonLine, self).delete_character_before_cursor()
-
-   #     return deleted
-
-  #  def insert_text(self, data, overwrite=False, safe_current_in_undo_buffer=True, move_cursor=True):
-  #      """
-  #      If a space has been typed at the start of the line (and not in paste
-  #      mode), insert spaces until the next indentation level.
-  #      """
-  #      if not self.paste_mode and not self._in_isearch and data == ' ' and not overwrite:
-  #          before_cursor = self.document.current_line_before_cursor
-
-  #          if not before_cursor or before_cursor.isspace():
-  #              data = ' ' * (4 - len(before_cursor) % 4)
-
-  #      super(PythonLine, self).insert_text(data, overwrite=overwrite,
-  #              safe_current_in_undo_buffer=safe_current_in_undo_buffer, move_cursor=move_cursor)
-
     def cursor_left(self):
         """
         When moving the cursor left in the left indentation margin, move four
@@ -288,24 +252,6 @@ class PythonLine(Line):
 
         for i in range(count):
             super(PythonLine, self).cursor_right()
-
-#    def delete(self, count=1): # TODO: implement `count`
-#        """
-#        When pressing delete in the left margin, delete until the first
-#        non-whitespace character.
-#        """
-#        before_cursor = self.document.current_line_before_cursor
-#        after_cursor = self.document.current_line_after_cursor
-#
-#        # Count space characters, after the cursor.
-#        after_cursor_space_count = len(after_cursor) - len(after_cursor.lstrip())
-#
-#        if not self.paste_mode and not self._in_isearch and (not before_cursor or before_cursor.isspace()):
-#            to_delete = max(1, after_cursor_space_count)
-#        else:
-#            to_delete = 1
-#
-#        return ''.join(super(PythonLine, self).delete() for i in range(to_delete))
 
 
 class PythonPrompt(Prompt):
@@ -557,4 +503,13 @@ class PythonCommandLine(CommandLine):
 
 
 def embed(globals=None, locals=None, vi_mode=False):
+    """
+    Call this to embed  Python shell at the current point in your program.
+    It's similar to `IPython.embed` and `bpython.embed`. ::
+
+        from prompt_toolkit.contrib.repl import embed
+        embed(globals(), locals(), vi_mode=False)
+
+    :param vi_mode: Boolean. Use Vi instead of Emacs key bindings.
+    """
     PythonCommandLine(globals, locals, vi_mode=vi_mode).start_repl()

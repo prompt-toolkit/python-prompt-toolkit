@@ -15,8 +15,12 @@ setup(
         long_description='',
         packages=['prompt_toolkit'],
         install_requires = [ 'pygments', 'docopt', 'six' ],
-        #install_requires = [ 'pygments', 'docopt', 'wcwidth', ], # TODO: add wcwidth when released on pypi
+        #install_requires = [  'wcwidth', ], # TODO: add wcwidth when released on pypi
+        extra_requires=[
+            # Required for the Python repl
+            'jedi'
+        ],
         scripts = [
-            'bin/prompt-toolkit-python-repl',
+            'bin/ptpython',
         ]
 )
