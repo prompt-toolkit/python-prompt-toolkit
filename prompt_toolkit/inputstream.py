@@ -96,7 +96,7 @@ class InputStream(object):
         """
         State machine for the input parser.
         """
-        shift_buffer = ''
+        shift_buffer = '' # TODO: rename to 'buffer'
 
         while True:
             options = self.CALLBACKS

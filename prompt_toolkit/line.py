@@ -145,10 +145,37 @@ class Line(object):
         self.delete_until_end_of_line()
         self.insert_text(value, move_cursor=False)
 
+    def transform_lines(self, line_index_iterator, transform_callback):
+        """
+        Transforms the text on a range of lines.
+        When the iterator yield an index not in the range of lines that the
+        document contains, it skips them silently.
+
+        To uppercase some lines::
+
+            transform_lines(range(5,10), lambda text: text.upper())
+
+        :param line_index_iterator: Iterator of line numbers (int)
+        :param transform_callback: callable that takes the original text of a
+                                   line, and return the new text for this line.
+        """
+        # Split lines
+        lines = self.text.split('\n')
+
+        # Apply transformation
+        for index in line_index_iterator:
+            try:
+                lines[index] = transform_callback(lines[index])
+            except IndexError:
+                pass
+
+        self.text = '\n'.join(lines)
+
     @property
     def document(self):
         """ Return :class:`.Document` instance from the current text and cursor
         position. """
+        # TODO: this can be cached as long self.text does not change.
         return Document(self.text, self.cursor_position)
 
     def set_arg_prompt(self, arg):
@@ -181,45 +208,20 @@ class Line(object):
     @_quit_reverse_search_when_called
     def cursor_up(self):
         """
-        (only for multiline edit). Move cursor to the previous line.
+        (for multiline edit). Move cursor to the previous line.
         """
-        document = self.document
-
-        if '\n' in document.text_before_cursor:
-            lines = document.text_before_cursor.split('\n')
-            current_line = lines[-1] # before the cursor
-            previous_line = lines[-2]
-
-            # When the current line is longer then the previous, move to the
-            # last character of the previous line.
-            if len(current_line) > len(previous_line):
-                self.cursor_position -= len(current_line) + 1
-
-            # Otherwise find the corresponding position in the previous line.
-            else:
-                self.cursor_position -= len(previous_line) + 1
+        new_pos = self.document.cursor_up_position
+        if new_pos is not None:
+            self.cursor_position = new_pos
 
     @_quit_reverse_search_when_called
     def cursor_down(self):
         """
-        (only for multiline edit). Move cursor to the next line.
+        (for multiline edit). Move cursor to the next line.
         """
-        document = self.document
-
-        if '\n' in document.text_after_cursor:
-            pos = len(document.text_before_cursor.split('\n')[-1])
-            lines = document.text_after_cursor.split('\n')
-            current_line = lines[0] # after the cursor
-            next_line = lines[1]
-
-            # When the current line is longer then the previous, move to the
-            # last character of the next line.
-            if pos > len(next_line):
-                self.cursor_position += len(current_line) + len(next_line) + 1
-
-            # Otherwise find the corresponding position in the next line.
-            else:
-                self.cursor_position += len(current_line) + pos + 1
+        new_pos = self.document.cursor_down_position
+        if new_pos is not None:
+            self.cursor_position = new_pos
 
     @_quit_reverse_search_when_called
     def auto_up(self):
@@ -288,7 +290,6 @@ class Line(object):
             text_after_cursor = self.document.current_line_after_cursor
             self.cursor_position += len(text_after_cursor) - len(text_after_cursor.lstrip())
 
-
     # NOTE: don't _quit_reverse_search_when_called: we can delete in i-search.
     def delete_character_before_cursor(self, count=1): # TODO: unittest return type
         """ Delete character before cursor, return deleted character. """
@@ -325,8 +326,8 @@ class Line(object):
     @_quit_reverse_search_when_called
     def delete_word_before_cursor(self): # TODO: unittest
         """ Delete one word before cursor. Return deleted word. """
-        to_delete = self.document.find_start_of_previous_word() or 0
-        return self.delete_character_before_cursor(-to_delete)
+        to_delete = - (self.document.find_start_of_previous_word() or 0)
+        return self.delete_character_before_cursor(to_delete)
 
     @_quit_reverse_search_when_called
     def delete_until_end(self):
@@ -336,34 +337,23 @@ class Line(object):
         return deleted
 
     @_quit_reverse_search_when_called
-    def delete_until_end_of_line(self): # TODO: rewrite using document.text_until_end_of_line
+    def delete_until_end_of_line(self): # TODO: unittest.
         """
         Delete all input until the end of this line. Return deleted text.
         """
-        endpos = self.text[self.cursor_position:].find('\n')
-        if endpos == -1:
-            endpos = None
-        else:
-            endpos += self.cursor_position
-
-        deleted = self.text[self.cursor_position:endpos]
-        self.text = self.text[:self.cursor_position] + ('' if endpos is None else self.text[endpos:])
-        return deleted
+        to_delete = len(self.document.current_line_after_cursor)
+        return self.delete(count=to_delete)
 
     @_quit_reverse_search_when_called
-    def delete_from_start_of_line(self): # TODO: rewrite using document.text_from_start_of_line
+    def delete_from_start_of_line(self): # TODO: unittest.
         """
         Delete all input from the start of the line until the current
         character. Return deleted text.
         (Actually, this is the same as pressing backspace until the start of
         the line.)
         """
-        text_to_delete = self.document.current_line_before_cursor
-
-        self.text = self.text[:self.cursor_position - len(text_to_delete)] + \
-                        self.text[self.cursor_position:]
-        self.cursor_position -= len(text_to_delete)
-        return text_to_delete
+        to_delete = len(self.document.current_line_before_cursor)
+        return self.delete_character_before_cursor(to_delete)
 
     @_quit_reverse_search_when_called
     def delete_current_line(self):
@@ -383,6 +373,7 @@ class Line(object):
         # Move cursor.
         before_cursor = document.current_line_before_cursor
         self.cursor_position -= len(before_cursor)
+        self.cursor_to_start_of_line(after_whitespace=True)
 
         return deleted
 
@@ -392,12 +383,8 @@ class Line(object):
         Join the next line to the current one by deleting the line ending after
         the current line.
         """
-        # Find the first \n after the cursor
-        after_cursor = self.document.text_after_cursor
-
-        if '\n' in after_cursor:
-            i = after_cursor.index('\n')
-            self.text = self.document.text_before_cursor + after_cursor[:i] + after_cursor[i+1:]
+        self.cursor_to_end_of_line()
+        self.delete()
 
     @_quit_reverse_search_when_called
     def swap_characters_before_cursor(self):

@@ -150,7 +150,8 @@ class InputStreamHandler(object):
         Clears the line before the cursor position. If you are at the end of
         the line, clears the entire line.
         """
-        self._line.delete_from_start_of_line()
+        data = self._line.delete_from_start_of_line()
+        self._line.set_clipboard(ClipboardData(data))
 
     def ctrl_v(self):
         pass
@@ -726,42 +727,62 @@ class ViInputStreamHandler(InputStreamHandler):
 
         @handle('+')
         def _(arg):
-            # TODO: move to first non whitespace of next line
-            pass
+            # Move to first non whitespace of next line
+            for i in range(arg):
+                line.cursor_down()
+            line.cursor_to_start_of_line(after_whitespace=True)
 
         @handle('-')
         def _(arg):
-            # TODO: move to first non whitespace of previous line
-            pass
+            # Move to first non whitespace of previous line
+            for i in range(arg):
+                line.cursor_up()
+            line.cursor_to_start_of_line(after_whitespace=True)
 
         @handle('{')
         def _(arg):
-            # TODO: Move to previous blank-line separated section.
-            #while not line.current_line.isspace():
-            #    line.cursor_up()
-            pass
+            # Move to previous blank-line separated section.
+            for i in range(arg):
+                index = line.document.find_previous_matching_line(
+                                lambda text: not text or text.isspace())
+
+                if index is not None:
+                    for i in range(-index):
+                        line.cursor_up()
 
         @handle('}')
         def _(arg):
-            # TODO: move to next blank-line separated section.
-            pass
+            # Move to next blank-line separated section.
+            for i in range(arg):
+                index = line.document.find_next_matching_line(
+                                lambda text: not text or text.isspace())
+
+                if index is not None:
+                    for i in range(index):
+                        line.cursor_down()
 
         @handle('>>')
         def _(arg):
-            # Indent current line.
-            line.set_current_line('    ' + line.document.current_line)
+            # Indent lines.
+            current_line = line.document.cursor_position_row
+            line_range = range(current_line, current_line + arg)
+            line.transform_lines(line_range, lambda l: '    ' + l)
+
             line.cursor_to_start_of_line(after_whitespace=True)
 
         @handle('<<')
         def _(arg):
             # Unindent current line.
-            text = line.document.current_line
-            if text.startswith('    '):
-                text = text[4:]
-            else:
-                text = text.lstrip()
+            current_line = line.document.cursor_position_row
+            line_range = range(current_line, current_line + arg)
 
-            line.set_current_line(text)
+            def transform(text):
+                if text.startswith('    '):
+                    return text[4:]
+                else:
+                    return text.lstrip()
+
+            line.transform_lines(line_range, transform)
             line.cursor_to_start_of_line(after_whitespace=True)
 
         @handle('O')

@@ -117,6 +117,47 @@ class Document(object):
         return row, col
 
     @property
+    def cursor_up_position(self):
+        """
+        Return the cursor position (character index) where we would be if the
+        user pressed the arrow-up button.
+        """
+        if '\n' in self.text_before_cursor:
+            lines = self.text_before_cursor.split('\n')
+            current_line = lines[-1] # before the cursor
+            previous_line = lines[-2]
+
+            # When the current line is longer then the previous, move to the
+            # last character of the previous line.
+            if len(current_line) > len(previous_line):
+                return self.cursor_position - len(current_line) - 1
+
+            # Otherwise find the corresponding position in the previous line.
+            else:
+                return self.cursor_position - len(previous_line) - 1
+
+    @property
+    def cursor_down_position(self):
+        """
+        Return the cursor position (character index) where we would be if the
+        user pressed the arrow-down button.
+        """
+        if '\n' in self.text_after_cursor:
+            pos = len(self.text_before_cursor.split('\n')[-1])
+            lines = self.text_after_cursor.split('\n')
+            current_line = lines[0] # after the cursor
+            next_line = lines[1]
+
+            # When the current line is longer then the previous, move to the
+            # last character of the next line.
+            if pos > len(next_line):
+                return self.cursor_position + len(current_line) + len(next_line) + 1
+
+            # Otherwise find the corresponding position in the next line.
+            else:
+                return self.cursor_position + len(current_line) + pos + 1
+
+    @property
     def cursor_at_the_end(self):
         """ True when the cursor is at the end of the text. """
         return self.cursor_position == len(self.text)
@@ -200,3 +241,21 @@ class Document(object):
             return next(iterable).end(1)
         except StopIteration:
             pass
+
+    def find_next_matching_line(self, match_func): # TODO: unittest.
+        """
+        Look downwards for empty lines.
+        Return the line index, relative to the current line.
+        """
+        for index, line in enumerate(self.lines[self.cursor_position_row + 1:]):
+            if match_func(line):
+                return 1 + index
+
+    def find_previous_matching_line(self, match_func): # TODO: unittest.
+        """
+        Look upwards for empty lines.
+        Return the line index, relative to the current line.
+        """
+        for index, line in enumerate(self.lines[:self.cursor_position_row][::-1]):
+            if match_func(line):
+                return -1 - index
