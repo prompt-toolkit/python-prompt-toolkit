@@ -222,7 +222,7 @@ class Document(object):
         if match:
             return - match.end(1)
 
-    def find_start_of_next_word(self): # TODO: rename to find_next_word_beginning
+    def find_next_word_beginning(self):
         """
         Return an index relative to the cursor position pointing to the start
         of the next word. Return `None` if nothing was found.
@@ -241,15 +241,26 @@ class Document(object):
         except StopIteration:
             pass
 
-    def find_end_of_next_word(self): # TODO: rename to find_next_word_ending
+    def find_next_word_ending(self, include_current_position=False):
         """
         Return an index relative to the cursor position pointing to the end
         of the next word. Return `None` if nothing was found.
         """
-        iterable = _FIND_WORD_RE.finditer(self.text_after_cursor)
+        if include_current_position:
+            text = self.text_after_cursor
+        else:
+            text = self.text_after_cursor[1:]
+
+        iterable = _FIND_WORD_RE.finditer(text)
 
         try:
-            return next(iterable).end(1)
+            value = next(iterable).end(1)
+
+            if include_current_position:
+                return value
+            else:
+                return value + 1
+
         except StopIteration:
             pass
 

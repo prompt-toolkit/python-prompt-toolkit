@@ -291,7 +291,7 @@ class Line(object):
     @_quit_reverse_search_when_called
     def cursor_word_forward(self):
         """ Move the cursor to the start of the following word. """
-        self.cursor_position += (self.document.find_start_of_next_word() or 0)
+        self.cursor_position += (self.document.find_next_word_beginning() or 0)
 
     @_quit_reverse_search_when_called
     def cursor_to_end_of_word(self):
@@ -299,10 +299,7 @@ class Line(object):
         Move the cursor right before the last character of the next word
         ending.
         """
-        # Move at least one character. # XXX: not entirely correct.
-        self.cursor_right()
-
-        end = self.document.find_end_of_next_word()
+        end = self.document.find_next_word_ending(include_current_position=False)
         if end > 1:
             self.cursor_position += end - 1
 
@@ -352,7 +349,7 @@ class Line(object):
     @_quit_reverse_search_when_called
     def delete_word(self):
         """ Delete one word. Return deleted word. """
-        to_delete = self.document.find_start_of_next_word()
+        to_delete = self.document.find_next_word_beginning()
         return self.delete(count=to_delete)
 
     @_quit_reverse_search_when_called

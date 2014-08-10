@@ -79,7 +79,9 @@ class TerminalCodes:
 
 
 class Char(object):
-    def __init__(self, char=' ', style=None): # TODO: add __slots__
+    __slots__ = ('char', 'style')
+
+    def __init__(self, char=' ', style=None):
         self.char = char
         self.style = style # TODO: maybe we should still use `token` instead of
                            #       `style` and use the actual style in the last step of the renderer.
