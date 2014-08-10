@@ -262,7 +262,6 @@ class Renderer(object):
         self._style = style or DefaultStyle
 
         # Reset position
-        self._lines_in_use = 0
         self._cursor_line = 0
 
     def get_width(self):
@@ -321,7 +320,6 @@ class Renderer(object):
 
         # Move cursor to correct position.
         if render_context.accept or render_context.abort:
-            self._lines_in_use = 0
             self._cursor_line = 0
             write(TerminalCodes.CRLF)
         else:
@@ -336,7 +334,6 @@ class Renderer(object):
             if screen._x < cursor_x:
                 write(TerminalCodes.CURSOR_FORWARD(cursor_x - screen._x))
 
-            self._lines_in_use = screen._y
             self._cursor_line = cursor_y
 
         return ''.join(output)
@@ -350,6 +347,9 @@ class Renderer(object):
         self._stdout.write(TerminalCodes.CRLF)
         for line in self._in_columns([ c.display for c in completions ]):
             self._stdout.write('%s\r\n' % line)
+
+        # Reset position
+        self._cursor_line = 0
 
         return
         if many: # TODO: Implement paging
