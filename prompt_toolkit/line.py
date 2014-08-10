@@ -125,7 +125,7 @@ class Line(object):
         #: history.
         self._working_lines = self._history_lines[:]
         self._working_lines.append('')
-        self._working_index = len(self._working_lines) - 1
+        self.__working_index = len(self._working_lines) - 1
 
     @property
     def text(self):
@@ -133,15 +133,36 @@ class Line(object):
 
     @text.setter
     def text(self, value):
-        self.set_text(value)
-
-    def set_text(self, value, safe_current_in_undo_buffer=True):
-        # Remember current text in the undo stack.
-        if safe_current_in_undo_buffer:
-            self._undo_stack.append((self.text, self.cursor_position))
-                                # TODO: call undo_stack saves from input_handler, not automatically
-
         self._working_lines[self._working_index] = value
+        self._text_changed()
+
+    @property
+    def _working_index(self):
+        return self.__working_index
+
+    @_working_index.setter
+    def _working_index(self, value):
+        self.__working_index = value
+        self._text_changed()
+
+    def _text_changed(self):
+        """
+        Not implemented. Override to capture when the current visible text
+        changes.
+        """
+        pass
+
+    def save_to_undo_stack(self):
+        """
+        Safe current state (input text and cursor position), so that we can
+        restore it by calling undo.
+        """
+        state = (self.text, self.cursor_position)
+
+        # Safe if the text is different from the text at the top of the stack
+        # is different.
+        if not self._undo_stack or self._undo_stack[-1][0] != state[0]:
+            self._undo_stack.append(state)
 
     def set_current_line(self, value):
         """
@@ -551,11 +572,10 @@ class Line(object):
         self.cursor_to_end_of_line()
         self.insert_text(insert)
 
-    def insert_text(self, data, overwrite=False, safe_current_in_undo_buffer=True, move_cursor=True):
+    def insert_text(self, data, overwrite=False, move_cursor=True):
         """
         Insert characters at cursor position.
         """
-        # TODO: deprecate safe_current_in_undo_buffer parameter
         if self.in_isearch:
             self._isearch_text += data
 
@@ -563,17 +583,15 @@ class Line(object):
                 self.search_next(self.isearch_direction)
         else:
             # In insert/text mode.
-            set_text = lambda value: self.set_text(value, safe_current_in_undo_buffer)
-
             if overwrite:
                 # Don't overwrite the newline itself. Just before the line ending, it should act like insert mode.
                 overwritten_text = self.text[self.cursor_position:self.cursor_position+len(data)]
                 if '\n' in overwritten_text:
                     overwritten_text = overwritten_text[:overwritten_text.find('\n')]
 
-                set_text(self.text[:self.cursor_position] + data + self.text[self.cursor_position+len(overwritten_text):])
+                self.text = self.text[:self.cursor_position] + data + self.text[self.cursor_position+len(overwritten_text):]
             else:
-                set_text(self.text[:self.cursor_position] + data + self.text[self.cursor_position:])
+                self.text = self.text[:self.cursor_position] + data + self.text[self.cursor_position:]
 
             if move_cursor:
                 self.cursor_position += len(data)
@@ -607,14 +625,14 @@ class Line(object):
                 else:
                     self.cursor_to_end_of_line()
                     self.insert_text('\n')
-                    self.insert_text(self._clipboard.text, move_cursor=False, safe_current_in_undo_buffer=False)
+                    self.insert_text(self._clipboard.text, move_cursor=False)
 
     @_quit_reverse_search_when_called
     def undo(self):
         if self._undo_stack:
             text, pos = self._undo_stack.pop()
 
-            self.set_text(text, safe_current_in_undo_buffer=False)
+            self.text = text
             self.cursor_position = pos
 
     @_quit_reverse_search_when_called
@@ -751,7 +769,7 @@ class Line(object):
 
         # Read content again.
         with open(filename, 'rb') as f:
-            self.set_text(f.read().decode('utf-8'))
+            self.text = f.read().decode('utf-8')
         self.cursor_position = len(self.text)
 
         # Clean up temp file.

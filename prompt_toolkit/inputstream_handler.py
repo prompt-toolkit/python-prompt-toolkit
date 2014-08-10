@@ -61,6 +61,10 @@ class InputStreamHandler(object):
         # Call actual handler
         method = getattr(self, name, None)
         if method:
+            # First, safe current state to undo stack
+            if self._needs_to_save(name):
+                self._line.save_to_undo_stack()
+
             try:
                 method(*a)
             except (Abort, ReturnInput):
@@ -71,6 +75,14 @@ class InputStreamHandler(object):
         # Keep track of what the last called method was.
         if not name.startswith('_'):
             self._last_call = name
+
+    def _needs_to_save(self, current_method):
+        """
+        `True` when we need to save the line of the line before calling this method.
+        """
+        # But don't create an entry in the history buffer for every single typed
+        # character. (Undo should undo multiple typed characters at once.)
+        return not (current_method == 'insert_char' and self._last_call == 'insert_char')
 
     def home(self):
         self._line.home()
@@ -209,15 +221,10 @@ class InputStreamHandler(object):
         else:
             self._second_tab = not self._line.complete()
 
-    def insert_char(self, data, overwrite=False):
+    def insert_char(self, data):
         """ Insert data at cursor position.  """
         assert len(data) == 1
-
-        # Don't create an entry in the history buffer for every single typed
-        # character. (Undo should undo multiple typed characters at once.)
-        safe = self._last_call != 'insert_char'
-
-        self._line.insert_text(data, overwrite=overwrite, safe_current_in_undo_buffer=safe)
+        self._line.insert_text(data)
 
     def enter(self):
         if self._line.in_isearch:
@@ -290,9 +297,16 @@ class EmacsInputStreamHandler(InputStreamHandler):
         if name != 'ctrl_x':
             self._ctrl_x_pressed = False
 
-    def insert_char(self, data, overwrite=False):
+    def _needs_to_save(self, current_method):
+        # Don't save the current state at the undo-stack for following methods.
+        if current_method in ('ctrl_x_ctrl_u', 'ctrl_underscore'):
+            return False
+
+        return super(EmacsInputStreamHandler, self)._needs_to_save(current_method)
+
+    def insert_char(self, data):
         for i in range(self._arg_count or 1):
-            super(EmacsInputStreamHandler, self).insert_char(data, overwrite=overwrite)
+            super(EmacsInputStreamHandler, self).insert_char(data)
 
     def alt_ctrl_j(self):
         """ ALT + Newline """
@@ -851,6 +865,11 @@ class ViInputStreamHandler(InputStreamHandler):
                 arg_count = self._arg_count
                 self._arg_count = None
 
+                # Safe state (except if we called the 'undo' action.)
+                if data != 'u':
+                    self._line.save_to_undo_stack()
+
+                # Call handler
                 self._current_handles[data](arg_count or 1)
                 self._current_handles = self._all_navigation_handles
 
@@ -866,7 +885,7 @@ class ViInputStreamHandler(InputStreamHandler):
 
         # In replace/text mode.
         elif self._vi_mode == ViMode.REPLACE:
-            super(ViInputStreamHandler, self).insert_char(data, overwrite=True)
+            self._line.insert_text(data, overwrite=True)
 
         # In insert/text mode.
         elif self._vi_mode == ViMode.INSERT:

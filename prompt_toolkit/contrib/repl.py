@@ -161,9 +161,8 @@ class PythonLine(Line):
         #: newline, and it is required to use [Alt+Enter] execute commands.
         self.multiline = False
 
-    def set_text(self, value, safe_current_in_undo_buffer=True):
-        super(PythonLine, self).set_text(value, safe_current_in_undo_buffer)
-        self.multiline = '\n' in value
+    def _text_changed(self):
+        self.multiline = '\n' in self.text
 
     def _colon_before_cursor(self):
         return self.document.text_before_cursor[-1:] == ':'
