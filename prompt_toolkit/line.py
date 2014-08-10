@@ -8,7 +8,7 @@ from functools import wraps
 
 from .code import Code
 from .document import Document
-from .enums import ReverseSearchDirection
+from .enums import IncrementalSearchDirection
 from .prompt import Prompt
 from .render_context import RenderContext
 
@@ -94,7 +94,10 @@ class Line(object):
         self.renderer = renderer
         self.code_cls = code_cls
         self.prompt_cls = prompt_cls
+
+        #: The history. A list to which we only append.
         self._history_lines = [] # Implement loader (history.load/save)
+
         self._clipboard = ClipboardData()
 
         #: Readline argument text (for displaying in the prompt.)
@@ -105,22 +108,28 @@ class Line(object):
 
     def reset(self):
         self.cursor_position = 0
-        self._in_isearch = False
+
+        # Incremental-search
+        self.in_isearch = False
         self._isearch_text = ''
-        self._isearch_direction = ReverseSearchDirection.FORWARD
+        self.isearch_direction = IncrementalSearchDirection.FORWARD
+        self._before_isearch_cursor_position = 0
+        self._before_isearch_working_index = 0
+
         self._undo_stack = [] # Stack of (text, cursor_position)
 
-        # Start new, empty input.
-        if len(self._history_lines) == 0 or self._history_lines[-1] != '':
-            self._history_lines.append('')
-        self._history_index = len(self._history_lines) - 1
-
-        #: The current text (we edit here instead of `_history_lines[_history_index]`)
-        self._text = ''
+        #: The working lines. Similar to history, except that this can be
+        #: modified. The user can press arrow_up and edit previous entries.
+        #: Ctrl-C should reset this, and copy the whole history back in here.
+        #: Enter should process the current command and append to the real
+        #: history.
+        self._working_lines = self._history_lines[:]
+        self._working_lines.append('')
+        self._working_index = len(self._working_lines) - 1
 
     @property
     def text(self):
-        return self._text
+        return self._working_lines[self._working_index]
 
     @text.setter
     def text(self, value):
@@ -132,7 +141,7 @@ class Line(object):
             self._undo_stack.append((self.text, self.cursor_position))
                                 # TODO: call undo_stack saves from input_handler, not automatically
 
-        self._text = value
+        self._working_lines[self._working_index] = value
 
     def set_current_line(self, value):
         """
@@ -173,8 +182,10 @@ class Line(object):
 
     @property
     def document(self):
-        """ Return :class:`.Document` instance from the current text and cursor
-        position. """
+        """
+        Return :class:`.Document` instance from the current text and cursor
+        position.
+        """
         # TODO: this can be cached as long self.text does not change.
         return Document(self.text, self.cursor_position)
 
@@ -243,11 +254,11 @@ class Line(object):
         if self.document.cursor_position_row < self.document.line_count - 1:
             self.cursor_down()
         else:
-            old_index = self._history_index
+            old_index = self._working_index
             self.history_forward()
 
             # If we moved to the next line, place the cursor at the beginning.
-            if old_index != self._history_index:
+            if old_index != self._working_index:
                 self.cursor_position = 0
 
     @_quit_reverse_search_when_called
@@ -296,7 +307,7 @@ class Line(object):
         assert count > 0
         deleted = ''
 
-        if self._in_isearch:
+        if self.in_isearch:
             self._isearch_text = self._isearch_text[:-count]
         else:
             if self.cursor_position > 0:
@@ -476,23 +487,14 @@ class Line(object):
         """
         Return a `RenderContext` object, to pass the current state to the renderer.
         """
-        if self._in_isearch:
+        if self.in_isearch:
             # In case of reverse search, render reverse search prompt.
-            if self._in_isearch_history_index < len(self._history_lines):
-                line = self._history_lines[self._in_isearch_history_index]
-                pos = self._history_lines[self._in_isearch_history_index].find(
-                                self._isearch_text)
-            else:
-                line = ''
-                pos = 0
+            code = self.code_cls(self.document)
 
-            document = Document(line, pos)
-            code = self.code_cls(document)
-
-            if line and pos >= 0:
+            if self.document.has_match_at_current_position(self._isearch_text):
                 highlight_regions = [
-                    (document.translate_index_to_position(pos),
-                    document.translate_index_to_position(pos + len(self._isearch_text))) ]
+                        (self.document.translate_index_to_position(self.cursor_position),
+                        self.document.translate_index_to_position(self.cursor_position + len(self._isearch_text))) ]
             else:
                 highlight_regions = [ ]
 
@@ -508,28 +510,16 @@ class Line(object):
 
     @_quit_reverse_search_when_called
     def history_forward(self):
-        if self._history_index < len(self._history_lines) - 1:
-            # Save current edited text in history.
-            if self._text:
-                self._history_lines[self._history_index] = self._text
-
-            # Go back in history, and update _text/cursor_position.
-            self._history_index += 1
-            self.set_text(self._history_lines[self._history_index],
-                                    safe_current_in_undo_buffer=False)
+        if self._working_index < len(self._working_lines) - 1:
+            # Go forward in history, and update cursor_position.
+            self._working_index += 1
             self.cursor_position = len(self.text)
 
     @_quit_reverse_search_when_called
     def history_backward(self):
-        if self._history_index > 0:
-            # Save current edited text in history.
-            if self._text:
-                self._history_lines[self._history_index] = self._text
-
-            # Go back in history, and update _text/cursor_position.
-            self._history_index -= 1
-            self.set_text(self._history_lines[self._history_index],
-                                    safe_current_in_undo_buffer=False)
+        if self._working_index > 0:
+            # Go back in history, and update cursor_position.
+            self._working_index -= 1
             self.cursor_position = len(self.text)
 
     @_quit_reverse_search_when_called
@@ -565,15 +555,12 @@ class Line(object):
         """
         Insert characters at cursor position.
         """
-        if self._in_isearch:
+        # TODO: deprecate safe_current_in_undo_buffer parameter
+        if self.in_isearch:
             self._isearch_text += data
 
-            if self._isearch_text not in self._history_lines[self._in_isearch_history_index]:
-                if self._isearch_direction == ReverseSearchDirection.BACKWARD:
-                    self.reverse_search()
-                else:
-                    self.forward_search()
-
+            if not self.document.has_match_at_current_position(self._isearch_text):
+                self.search_next(self.isearch_direction)
         else:
             # In insert/text mode.
             set_text = lambda value: self.set_text(value, safe_current_in_undo_buffer)
@@ -656,11 +643,10 @@ class Line(object):
         code = self._create_code_obj()
         text = self.text
 
-        # Save at the tail of the history. (But remove tail if we have a
-        # duplate entry in the history.)
-        self._history_lines[-1] = text
-        if len(self._history_lines) > 1 and self._history_lines[-1] == self._history_lines[-2]:
-            self._history_lines.pop()
+        # Save at the tail of the history. (But don't if the last entry the
+        # history is already the same.)
+        if not self._history_lines or self._history_lines[-1] != text:
+            self._history_lines.append(text)
 
         render_context = self.get_render_context(_accept=True)
 
@@ -671,48 +657,78 @@ class Line(object):
         """
         Enter i-search mode, or if already entered, go to the previous match.
         """
-        self._isearch_direction = ReverseSearchDirection.BACKWARD
+        self.isearch_direction = IncrementalSearchDirection.BACKWARD
 
-        if self._in_isearch:
-            # Go looking for something in the history matching this text.
-            for i in range(len(self._history_lines)):
-                i2 = (self._in_isearch_history_index - 1 - i) % len(self._history_lines)
-                if self._isearch_text in self._history_lines[i2]:
-                    self._in_isearch_history_index = i2
-                    break
+        if self.in_isearch:
+            self.search_next(self.isearch_direction)
         else:
-            self._in_isearch = True
-            self._in_isearch_history_index = len(self._history_lines) - 1
+            self._start_isearch()
 
     def forward_search(self):
         """
         Enter i-search mode, or if already entered, go to the following match.
         """
-        self._isearch_direction = ReverseSearchDirection.FORWARD
+        self.isearch_direction = IncrementalSearchDirection.FORWARD
 
-        if self._in_isearch:
-            # Go looking for something in the history matching this text.
-            for i in range(len(self._history_lines)):
-                i2 = (self._in_isearch_history_index + 1 + i) % len(self._history_lines)
-                if self._isearch_text in self._history_lines[i2]:
-                    self._in_isearch_history_index = i2
-                    break
+        if self.in_isearch:
+            self.search_next(self.isearch_direction)
         else:
-            self._in_isearch = True
-            self._in_isearch_history_index = len(self._history_lines) - 1
+            self._start_isearch()
+
+    def _start_isearch(self):
+        self.in_isearch = True
+        self._isearch_text = ''
+
+        self._before_isearch_cursor_position = self.cursor_position
+        self._before_isearch_working_index = self._working_index
+
+    def search_next(self, direction):
+        if not self._isearch_text:
+            return
+
+        if direction == IncrementalSearchDirection.BACKWARD:
+            # Try find at the current input.
+            new_index = self.document.find_backwards(self._isearch_text)
+
+            if new_index is not None:
+                self.cursor_position += new_index
+            else:
+                # No match, go back in the history.
+                for i in range(len(self._working_lines)):
+                    i2 = (self._working_index - i - 1) % len(self._working_lines)
+                    document = Document(self._working_lines[i2], len(self._working_lines[i2]))
+                    new_index = document.find_backwards(self._isearch_text)
+                    if new_index is not None:
+                        self._working_index = i2
+                        self.cursor_position = len(self._working_lines[i2]) + new_index
+                        break
+        else:
+            # Try find at the current input.
+            new_index = self.document.find(self._isearch_text)
+
+            if new_index is not None:
+                self.cursor_position += new_index
+            else:
+                # No match, go forward in the history.
+                for i in range(len(self._working_lines)):
+                    i2 = (self._working_index + i + 1) % len(self._working_lines)
+                    document = Document(self._working_lines[i2], 0)
+                    new_index = document.find(self._isearch_text, include_current_position=True)
+                    if new_index is not None:
+                        self._working_index = i2
+                        self.cursor_position = new_index
+                        break
 
     def exit_isearch(self, restore_original_line=False):
         """
         Exit i-search mode.
         """
-        if self._in_isearch:
-            if not restore_original_line:
-                # Take the matching line from the history.
-                self.text = self._history_lines[self._in_isearch_history_index]
-                self.cursor_position = len(self._isearch_text)
+        if self.in_isearch:
+            if restore_original_line:
+                self._before_isearch_cursor_position = self.cursor_position
+                self._working_index = self._before_isearch_working_index
 
-            self._in_isearch = False
-            self._isearch_text = ''
+            self.in_isearch = False
 
     @_quit_reverse_search_when_called
     def clear(self):

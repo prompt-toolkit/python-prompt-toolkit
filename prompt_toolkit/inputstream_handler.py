@@ -10,6 +10,7 @@ This module implements Vi and Emacs keybindings.
 """
 from __future__ import unicode_literals
 from .line import ReturnInput, Abort, ClipboardData, ClipboardDataType
+from .enums import IncrementalSearchDirection
 
 __all__ = (
     'InputStreamHandler',
@@ -219,7 +220,12 @@ class InputStreamHandler(object):
         self._line.insert_text(data, overwrite=overwrite, safe_current_in_undo_buffer=safe)
 
     def enter(self):
-        self._line.return_input()
+        if self._line.in_isearch:
+            # When enter pressed in isearch, quit isearch mode. (Multiline
+            # isearch would be too complicated.)
+            self._line.exit_isearch()
+        else:
+            self._line.newline()
 
     def alt_enter(self): # ESC-enter should always accept. -> enter in VI
                          # insert mode should insert a newline. For emacs not
@@ -441,7 +447,7 @@ class ViInputStreamHandler(InputStreamHandler):
         if self._vi_mode == ViMode.NAVIGATION:
             self._line.return_input()
         else:
-            self._line.newline()
+            super(ViInputStreamHandler, self).enter()
 
     def ctrl_v(self):
         # TODO: Insert a character literally (quoted insert).
@@ -609,14 +615,15 @@ class ViInputStreamHandler(InputStreamHandler):
         @handle('n')
         def _(arg):
             # Repeat search in the same direction as previous.
-            # TODO
-            pass
+            line.search_next(line.isearch_direction)
 
         @handle('N')
         def _(arg):
             # Repeat search in the opposite direction as previous.
-            # TODO
-            pass
+            if line.isearch_direction == IncrementalSearchDirection.FORWARD:
+                line.search_next(IncrementalSearchDirection.BACKWARD)
+            else:
+                line.search_next(IncrementalSearchDirection.FORWARD)
 
         @handle('p')
         def _(arg):
@@ -813,13 +820,15 @@ class ViInputStreamHandler(InputStreamHandler):
 
         @handle('/')
         def _(arg):
-            # TODO: Search history backward for a command matching string.
-            pass
+            # Search history backward for a command matching string.
+            self._line.reverse_search()
+            self._vi_mode = ViMode.INSERT # We have to be able to insert the search string.
 
         @handle('?')
         def _(arg):
-            # TODO: Search history forward for a command matching string.
-            pass
+            # Search history forward for a command matching string.
+            self._line.forward_search()
+            self._vi_mode = ViMode.INSERT # We have to be able to insert the search string.
 
         return handles
 

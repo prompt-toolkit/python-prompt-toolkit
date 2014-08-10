@@ -4,7 +4,7 @@ Prompt representation.
 from __future__ import unicode_literals
 
 from pygments.token import Token
-from .enums import ReverseSearchDirection
+from .enums import IncrementalSearchDirection
 
 __all__ = (
     'PromptBase',
@@ -72,7 +72,7 @@ class Prompt(PromptBase):
     :attr code: :class:`~prompt_toolkit.code.Code` instance.
     """
     def get_prompt(self):
-        if self.line._in_isearch:
+        if self.line.in_isearch:
             return self.get_isearch_prompt()
         elif self.line._arg_prompt_text:
             return self.get_arg_prompt()
@@ -99,7 +99,7 @@ class Prompt(PromptBase):
         """
         yield (Token.Prompt.ISearch.Bracket, '(')
 
-        if self.line._isearch_direction == ReverseSearchDirection.BACKWARD:
+        if self.line.isearch_direction == IncrementalSearchDirection.BACKWARD:
             yield (Token.Prompt.ISearch, 'reverse-i-search')
         else:
             yield (Token.Prompt.ISearch, 'i-search')

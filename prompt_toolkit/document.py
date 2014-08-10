@@ -167,20 +167,31 @@ class Document(object):
         """ True when the cursor is at the end of this line. """
         return self.cursor_position_col == len(self.current_line)
 
-    def find(self, sub, in_current_line=False):
+    def has_match_at_current_position(self, sub):
+        """
+        `True` when this substring is found at the cursor position.
+        """
+        return self.text[self.cursor_position:].find(sub) == 0
+
+    def find(self, sub, in_current_line=False, include_current_position=False):
         """
         Find `text` after the cursor, return position relative to the cursor
         position. Return `None` if nothing was found.
         """
         if in_current_line:
-            after_cursor = self.current_line_after_cursor[1:]
+            text = self.current_line_after_cursor
         else:
-            after_cursor = self.text_after_cursor[1:]
+            text = self.text_after_cursor
 
-        index = after_cursor.find(sub)
+        if not include_current_position:
+            text = text[1:]
+
+        index = text.find(sub)
 
         if index >= 0:
-            return index + 1
+            if not include_current_position:
+                index += 1
+            return index
 
     def find_backwards(self, sub, in_current_line=False):
         """

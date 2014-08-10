@@ -1,5 +1,5 @@
 
-class ReverseSearchDirection:
+class IncrementalSearchDirection:
     FORWARD = 'forward'
     BACKWARD = 'backward'
 

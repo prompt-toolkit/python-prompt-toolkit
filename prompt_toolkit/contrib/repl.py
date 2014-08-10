@@ -83,10 +83,10 @@ class _PythonInputStreamHandlerMixin(object):
         self._line.multiline = not self._line.multiline
 
     def enter(self):
-        self._enable_multiline_on_enter()
+        self._auto_enable_multiline()
         super(_PythonInputStreamHandlerMixin, self).enter()
 
-    def _enable_multiline_on_enter(self):
+    def _auto_enable_multiline(self):
         """
         (Temporarily) enable multiline when pressing enter.
         When:
@@ -119,7 +119,7 @@ class _PythonInputStreamHandlerMixin(object):
 
 class PythonViInputStreamHandler(_PythonInputStreamHandlerMixin, ViInputStreamHandler):
     def enter(self):
-        self._enable_multiline_on_enter()
+        self._auto_enable_multiline()
 
         if self._line.multiline:
             if self._vi_mode == ViMode.NAVIGATION:
@@ -134,7 +134,7 @@ class PythonViInputStreamHandler(_PythonInputStreamHandlerMixin, ViInputStreamHa
 
 class PythonEmacsInputStreamHandler(_PythonInputStreamHandlerMixin, EmacsInputStreamHandler):
     def enter(self):
-        self._enable_multiline_on_enter()
+        self._auto_enable_multiline()
 
         if self._line.multiline:
             self._line.newline()
@@ -225,7 +225,7 @@ class PythonLine(Line):
         """
         before_cursor = self.document.current_line_before_cursor
 
-        if not self.paste_mode and not self._in_isearch and before_cursor.isspace():
+        if not self.paste_mode and not self.in_isearch and before_cursor.isspace():
             count = 1 + (len(before_cursor) - 1) % 4
         else:
             count = 1
@@ -244,7 +244,7 @@ class PythonLine(Line):
         # Count space characters, after the cursor.
         after_cursor_space_count = len(after_cursor) - len(after_cursor.lstrip())
 
-        if (not self.paste_mode and not self._in_isearch and
+        if (not self.paste_mode and not self.in_isearch and
                     (not before_cursor or before_cursor.isspace()) and after_cursor_space_count):
             count = min(4, after_cursor_space_count)
         else:
@@ -282,7 +282,7 @@ class PythonPrompt(Prompt):
         result = []
         result.append((Token, '\n'))
 
-        if self.line._in_isearch:
+        if self.line.in_isearch:
             result.extend(list(super(PythonPrompt, self).get_isearch_prompt()))
         elif self.line._arg_prompt_text:
             result.extend(list(super(PythonPrompt, self).get_arg_prompt()))
