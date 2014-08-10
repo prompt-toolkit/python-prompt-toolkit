@@ -205,7 +205,7 @@ class InputStreamHandler(object):
     def arrow_down(self):
         self._line.auto_down()
 
-    def backspace(self): # XXX: in vi navigation mode, same as cursor_left.
+    def backspace(self):
         self._line.delete_character_before_cursor()
 
     def delete(self):
@@ -250,17 +250,38 @@ class EmacsInputStreamHandler(InputStreamHandler):
     def _reset(self):
         super(EmacsInputStreamHandler, self)._reset()
         self._escape_pressed = False
+        self._ctrl_a_pressed = False
         self._ctrl_x_pressed = False
 
     def escape(self):
         # Escape is the same as the 'alt-' prefix.
         self._escape_pressed = True
 
+    def ctrl_a(self):
+        self._ctrl_a_pressed = True
+
+    def ctrl_n(self):
+        self._line.auto_down()
+
+    def ctrl_o(self):
+        """ Insert newline, but don't move the cursor. """
+        self._line.insert_text('\n', move_cursor=False)
+
+    def ctrl_p(self):
+        self._line.auto_up()
+
     def ctrl_x(self):
         self._ctrl_x_pressed = True
 
+    def ctrl_y(self):
+        """ Paste before cursor. """
+        self._line.paste_from_clipboard(before=True)
+
     def __call__(self, name, *a):
         reset_arg_count_after_call = True
+
+        if name in ('ctrl_x', 'ctrl_a'):
+            reset_arg_count_after_call = False
 
         # When escape was pressed, call the `alt_`-function instead.
         # (This is emacs-mode behaviour. The alt-prefix is equal to the escape
@@ -283,6 +304,8 @@ class EmacsInputStreamHandler(InputStreamHandler):
         # If Ctrl-x was pressed. Prepend ctrl_x prefix to hander name.
         if self._ctrl_x_pressed:
             name = 'ctrl_x_%s' % name
+        elif self._ctrl_a_pressed:
+            name = 'ctrl_a_%s' % name
 
         super(EmacsInputStreamHandler, self).__call__(name, *a)
 
@@ -293,9 +316,11 @@ class EmacsInputStreamHandler(InputStreamHandler):
         if reset_arg_count_after_call:
             self._arg_count = None
 
-        # Reset _ctrl_x_pressed state.
+        # Reset ctrl_x/ctrl_a state.
         if name != 'ctrl_x':
             self._ctrl_x_pressed = False
+        if name != 'ctrl_a':
+            self._ctrl_a_pressed = False
 
     def _needs_to_save(self, current_method):
         # Don't save the current state at the undo-stack for following methods.
@@ -324,6 +349,10 @@ class EmacsInputStreamHandler(InputStreamHandler):
 
     def alt_enter(self):
         pass
+
+    def alt_backspace(self):
+        """ Delete word backwards. """
+        self._line.delete_word_before_cursor()
 
     def alt_c(self):
         """
@@ -414,6 +443,12 @@ class EmacsInputStreamHandler(InputStreamHandler):
         else:
             self._line.cursor_to_end_of_line()
 
+    def ctrl_a_ctrl_k(self):
+        """ Yank line. """
+        text = '\n'.join(self._line.document.lines_from_current[:self._arg_count or 1])
+        data = ClipboardData(text, ClipboardDataType.LINES)
+        self._line.set_clipboard(data)
+
 
 class ViMode(object):
     NAVIGATION = 'navigation'
@@ -462,6 +497,13 @@ class ViInputStreamHandler(InputStreamHandler):
             self._line.return_input()
         else:
             super(ViInputStreamHandler, self).enter()
+
+    def backspace(self):
+        # In Vi-mode, either move cursor or delete character.
+        if self._vi_mode == ViMode.INSERT:
+            self._line.delete_character_before_cursor()
+        else:
+            self._line.cursor_left()
 
     def ctrl_v(self):
         # TODO: Insert a character literally (quoted insert).
@@ -717,8 +759,7 @@ class ViInputStreamHandler(InputStreamHandler):
         @handle('yy')
         def _(arg):
             # Yank the whole line.
-            text = '\n'.join(line.document.lines
-                [line.document.cursor_position_row:line.document.cursor_position_row + arg])
+            text = '\n'.join(line.document.lines_from_current[:arg])
 
             data = ClipboardData(text, ClipboardDataType.LINES)
             line.set_clipboard(data)

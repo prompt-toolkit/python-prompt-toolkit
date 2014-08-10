@@ -66,6 +66,13 @@ class Document(object):
         return self.text.split('\n')
 
     @property
+    def lines_from_current(self):
+        """
+        Array of the lines starting from the current line, until the last line.
+        """
+        return self.lines[self.cursor_position_row:]
+
+    @property
     def line_count(self):
         """ Return the number of lines in this document. If the document ends
         with a trailing \n, that counts as the beginning of a new line. """
