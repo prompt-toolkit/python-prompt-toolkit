@@ -577,8 +577,8 @@ class ViInputStreamHandler(InputStreamHandler):
         def _(arg):
             # Move to the history line n (you may specify the argument n by
             # typing it on number keys, for example, 15G)
-            # TODO
-            pass
+            if arg < len(line._working_lines) + 1:
+                line._working_index = arg - 1
 
         @handle('h')
         def _(arg):

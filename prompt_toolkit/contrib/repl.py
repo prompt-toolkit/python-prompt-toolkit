@@ -346,6 +346,9 @@ class PythonPrompt(Prompt):
             append((TB.Mode, '(emacs)'))
             append((TB, ' '))
 
+        # Position in history.
+        result.append((TB, '%i/%i ' % (self.line._working_index + 1, len(self.line._working_lines))))
+
         if self.line.paste_mode:
             append((TB.On, '[F6] Paste mode. (on)  '))
         else:
