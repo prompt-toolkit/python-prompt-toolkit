@@ -330,7 +330,7 @@ class EmacsInputStreamHandler(InputStreamHandler):
         Capitalize the current (or following) word.
         """
         for i in range(self._arg_count or 1):
-            pos = self._line.document.find_end_of_next_word()
+            pos = self._line.document.find_next_word_ending()
             words = self._line.document.text_after_cursor[:pos]
             self._line.insert_text(words.title(), overwrite=True)
 
@@ -338,7 +338,7 @@ class EmacsInputStreamHandler(InputStreamHandler):
         """
         Cursor to end of next word.
         """
-        pos = self._line.document.find_end_of_next_word()
+        pos = self._line.document.find_next_word_ending()
         if pos:
             self._line.cursor_position += pos
 
@@ -350,7 +350,7 @@ class EmacsInputStreamHandler(InputStreamHandler):
         """
         Delete the Word after the cursor. (Delete until end of word.)
         """
-        pos = self._line.document.find_end_of_next_word()
+        pos = self._line.document.find_next_word_ending()
         data = ClipboardData(self._line.delete(pos))
         self._line.set_clipboard(data)
 
@@ -359,7 +359,7 @@ class EmacsInputStreamHandler(InputStreamHandler):
         Lowercase the current (or following) word.
         """
         for i in range(self._arg_count or 1): # XXX: not DRY: see alt_c and alt_u!!
-            pos = self._line.document.find_end_of_next_word()
+            pos = self._line.document.find_next_word_ending()
             words = self._line.document.text_after_cursor[:pos]
             self._line.insert_text(words.lower(), overwrite=True)
 
@@ -374,7 +374,7 @@ class EmacsInputStreamHandler(InputStreamHandler):
         Uppercase the current (or following) word.
         """
         for i in range(self._arg_count or 1):
-            pos = self._line.document.find_end_of_next_word()
+            pos = self._line.document.find_next_word_ending()
             words = self._line.document.text_after_cursor[:pos]
             self._line.insert_text(words.upper(), overwrite=True)
 
