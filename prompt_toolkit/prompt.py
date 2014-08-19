@@ -4,7 +4,7 @@ Prompt representation.
 from __future__ import unicode_literals
 
 from pygments.token import Token
-from .enums import IncrementalSearchDirection
+from .enums import IncrementalSearchDirection, LineMode
 
 __all__ = (
     'PromptBase',
@@ -72,7 +72,7 @@ class Prompt(PromptBase):
     :attr code: :class:`~prompt_toolkit.code.Code` instance.
     """
     def get_prompt(self):
-        if self.line.in_isearch:
+        if self.line.mode == LineMode.INCREMENTAL_SEARCH:
             return self.get_isearch_prompt()
         elif self.line._arg_prompt_text:
             return self.get_arg_prompt()
@@ -107,6 +107,6 @@ class Prompt(PromptBase):
         yield (Token.Prompt.ISearch.Bracket, ')')
 
         yield (Token.Prompt.ISearch.Backtick, '`')
-        yield (Token.Prompt.ISearch.Text, self.line._isearch_text)
+        yield (Token.Prompt.ISearch.Text, self.line.isearch_state.isearch_text)
         yield (Token.Prompt.ISearch.Backtick, '`')
         yield (Token.Prompt.ISearch.Backtick, ': ')

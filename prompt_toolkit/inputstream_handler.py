@@ -10,7 +10,7 @@ This module implements Vi and Emacs keybindings.
 """
 from __future__ import unicode_literals
 from .line import ReturnInput, Abort, ClipboardData, ClipboardDataType
-from .enums import IncrementalSearchDirection
+from .enums import IncrementalSearchDirection, LineMode
 
 __all__ = (
     'InputStreamHandler',
@@ -227,7 +227,7 @@ class InputStreamHandler(object):
         self._line.insert_text(data)
 
     def enter(self):
-        if self._line.in_isearch:
+        if self._line.mode == LineMode.INCREMENTAL_SEARCH:
             # When enter pressed in isearch, quit isearch mode. (Multiline
             # isearch would be too complicated.)
             self._line.exit_isearch()

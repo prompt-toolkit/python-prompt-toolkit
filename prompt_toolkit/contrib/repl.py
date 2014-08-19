@@ -17,6 +17,7 @@ from pygments.token import Keyword, Operator, Number, Name, Error, Comment, Toke
 
 from prompt_toolkit import CommandLine
 from prompt_toolkit.code import Completion, Code
+from prompt_toolkit.enums import LineMode
 from prompt_toolkit.inputstream_handler import ViInputStreamHandler, EmacsInputStreamHandler, ViMode
 from prompt_toolkit.line import Exit, Line
 from prompt_toolkit.prompt import Prompt
@@ -123,7 +124,7 @@ class _PythonInputStreamHandlerMixin(object):
             self._line.complete_next()
 
     def backtab(self):
-        if self._line.in_complete_mode:
+        if self._line.mode == LineMode.COMPLETE:
             self._line.complete_previous()
 
 class PythonViInputStreamHandler(_PythonInputStreamHandlerMixin, ViInputStreamHandler):
@@ -233,7 +234,7 @@ class PythonLine(Line):
         """
         before_cursor = self.document.current_line_before_cursor
 
-        if not self.paste_mode and not self.in_isearch and before_cursor.isspace():
+        if not self.paste_mode and not self.mode == LineMode.INCREMENTAL_SEARCH and before_cursor.isspace():
             count = 1 + (len(before_cursor) - 1) % 4
         else:
             count = 1
@@ -252,7 +253,7 @@ class PythonLine(Line):
         # Count space characters, after the cursor.
         after_cursor_space_count = len(after_cursor) - len(after_cursor.lstrip())
 
-        if (not self.paste_mode and not self.in_isearch and
+        if (not self.paste_mode and not self.mode == LineMode.INCREMENTAL_SEARCH and
                     (not before_cursor or before_cursor.isspace()) and after_cursor_space_count):
             count = min(4, after_cursor_space_count)
         else:
@@ -290,7 +291,7 @@ class PythonPrompt(Prompt):
         result = []
         result.append((Token, '\n'))
 
-        if self.line.in_isearch:
+        if self.line.mode == LineMode.INCREMENTAL_SEARCH:
             result.extend(list(super(PythonPrompt, self).get_isearch_prompt()))
         elif self.line._arg_prompt_text:
             result.extend(list(super(PythonPrompt, self).get_arg_prompt()))
