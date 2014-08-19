@@ -283,6 +283,11 @@ class EmacsInputStreamHandler(InputStreamHandler):
         if name in ('ctrl_x', 'ctrl_a'):
             reset_arg_count_after_call = False
 
+                # TODO: implement these states (alt-prefix, ctrl_x and ctrl_a prefix)
+                #       in separate InputStreamHandler classes.If a method, like (ctl_x)
+                #       is called and returns an object. That should become the
+                #       new handler.
+
         # When escape was pressed, call the `alt_`-function instead.
         # (This is emacs-mode behaviour. The alt-prefix is equal to the escape
         # key, and in VI mode, that's used to go from insert to navigation mode.)
@@ -455,6 +460,11 @@ class ViMode(object):
     INSERT = 'insert'
     REPLACE = 'replace'
 
+    # TODO: Not supported. But maybe for some day...
+    VISUAL = 'visual'
+    VISUAL_LINE = 'visual-line'
+    VISUAL_BLOCK = 'visual-block'
+
 
 class ViInputStreamHandler(InputStreamHandler):
     """
@@ -508,6 +518,12 @@ class ViInputStreamHandler(InputStreamHandler):
     def ctrl_v(self):
         # TODO: Insert a character literally (quoted insert).
         pass
+
+    def ctrl_n(self):
+        self._line.complete_next()
+
+    def ctrl_p(self):
+        self._line.complete_previous()
 
     def _get_navigation_mode_handles(self):
         """

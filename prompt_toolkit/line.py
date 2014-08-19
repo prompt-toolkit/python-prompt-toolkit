@@ -69,7 +69,7 @@ class ClipboardData(object):
         self.type = type
 
 
-def _quit_reverse_search_when_called(func):
+def _quit_reverse_search_when_called(func): # XXX: rename to: '_quit_incremental_search_when_called'
     """
     When this method of the `Line` object is called. Make sure to exit
     reverse/forward search mode.
@@ -79,6 +79,23 @@ def _quit_reverse_search_when_called(func):
         self.exit_isearch()
         return func(self, *a, **kw)
     return wrapper
+
+
+class CompletionState(object):
+    def __init__(self, original_cursor_position=0, current_completions=None):
+        #: Cursor position in the input where the completion started.
+        self.original_cursor_position = original_cursor_position
+
+        #: List of all the current Completion instances which are possible at
+        #: this point.
+        self.current_completions = current_completions or []
+
+        #: Position in the `current_completions` array.
+        self.complete_index = 0 # Position in the `_completions` array.
+
+    @property
+    def current_completion_text(self):
+        return self.current_completions[self.complete_index].suffix
 
 
 class Line(object):
@@ -100,6 +117,8 @@ class Line(object):
 
         self._clipboard = ClipboardData()
 
+        self.__cursor_position = 0
+
         #: Readline argument text (for displaying in the prompt.)
         #: https://www.gnu.org/software/bash/manual/html_node/Readline-Arguments.html
         self._arg_prompt_text = ''
@@ -110,13 +129,19 @@ class Line(object):
         self.cursor_position = 0
 
         # Incremental-search
-        self.in_isearch = False
-        self._isearch_text = ''
+        self.in_isearch = False # XXX: rename to in_isearch_mode
         self.isearch_direction = IncrementalSearchDirection.FORWARD
+
+        self._isearch_text = ''
         self._before_isearch_cursor_position = 0
         self._before_isearch_working_index = 0
 
-        self._undo_stack = [] # Stack of (text, cursor_position)
+        # Complete browser
+        self.in_complete_mode = False
+        self.complete_state = None
+
+        # Undo stack
+        self._undo_stack = []# Stack of (text, cursor_position)
 
         #: The working lines. Similar to history, except that this can be
         #: modified. The user can press arrow_up and edit previous entries.
@@ -127,6 +152,8 @@ class Line(object):
         self._working_lines.append('')
         self.__working_index = len(self._working_lines) - 1
 
+    ### <getters/setters>
+
     @property
     def text(self):
         return self._working_lines[self._working_index]
@@ -134,7 +161,22 @@ class Line(object):
     @text.setter
     def text(self, value):
         self._working_lines[self._working_index] = value
+
+        # Always quit autocomplete mode when the cursor position changes.
+        self.in_complete_mode = False
+
         self._text_changed()
+
+    @property
+    def cursor_position(self):
+        return self.__cursor_position
+
+    @cursor_position.setter
+    def cursor_position(self, value):
+        self.__cursor_position = value
+
+        # Always quit autocomplete mode when the cursor position changes.
+        self.in_complete_mode = False
 
     @property
     def _working_index(self):
@@ -142,8 +184,13 @@ class Line(object):
 
     @_working_index.setter
     def _working_index(self, value):
+        # Always quit autocomplete mode when the working index changes.
+        self.in_complete_mode = False
+
         self.__working_index = value
         self._text_changed()
+
+    ### End of <getters/setters>
 
     def _text_changed(self):
         """
@@ -261,7 +308,9 @@ class Line(object):
         If we're not on the first line (of a multiline input) go a line up,
         otherwise go back in history.
         """
-        if self.document.cursor_position_row > 0:
+        if self.in_complete_mode:
+            self.complete_previous()
+        elif self.document.cursor_position_row > 0:
             self.cursor_up()
         else:
             self.history_backward()
@@ -272,7 +321,9 @@ class Line(object):
         If we're not on the last line (of a multiline input) go a line down,
         otherwise go forward in history.
         """
-        if self.document.cursor_position_row < self.document.line_count - 1:
+        if self.in_complete_mode:
+            self.complete_next()
+        elif self.document.cursor_position_row < self.document.line_count - 1:
             self.cursor_down()
         else:
             old_index = self._working_index
@@ -482,7 +533,9 @@ class Line(object):
 
     @_quit_reverse_search_when_called
     def list_completions(self):
-        # Get and show all completions
+        """
+        Get and show all completions
+        """
         results = list(self._create_code_obj().get_completions())
 
         if results and self.renderer:
@@ -500,6 +553,64 @@ class Line(object):
             return True
         else:
             return False
+
+    @_quit_reverse_search_when_called
+    def complete_next(self):
+        """
+        Enter complete mode and browse through the completions.
+        """
+        if not self.in_complete_mode:
+            self._start_complete()
+        else:
+            index = (self.complete_state.complete_index + 1) % len(self.complete_state.current_completions)
+            self._go_to_completion(index)
+
+    @_quit_reverse_search_when_called
+    def complete_previous(self):
+        """
+        Enter complete mode and browse through the completions.
+        """
+        if not self.in_complete_mode:
+            self._start_complete()
+
+        index = (self.complete_state.complete_index - 1) % len(self.complete_state.current_completions)
+        self._go_to_completion(index)
+
+
+    def _start_complete(self):
+        """
+        Start completions. (Generate list of completions and initialize.)
+        """
+        # Generate list of all completions.
+        current_completions = list(self._create_code_obj().get_completions())
+
+        if current_completions:
+            self.complete_state = CompletionState(
+                        original_cursor_position=self.cursor_position,
+                        current_completions=current_completions)
+            self.insert_text(self.complete_state.current_completion_text)
+            self.in_complete_mode = True
+
+        else:
+            self.in_complete_mode = False
+            self.complete_state = None
+
+    def _go_to_completion(self, index):
+        """
+        Select a completion from the list of current completions.
+        """
+        assert self.in_complete_mode
+
+        # Undo previous completion
+        count = len(self.complete_state.current_completion_text)
+        if count:
+            self.delete_character_before_cursor(count=len(self.complete_state.current_completion_text))
+
+        # Set new completion
+        self.complete_state.complete_index = index
+        self.insert_text(self.complete_state.current_completion_text)
+
+        self.in_complete_mode = True
 
     def get_render_context(self, _abort=False, _accept=False):
         """
@@ -524,6 +635,7 @@ class Line(object):
         prompt = self.prompt_cls(self, code)
 
         return RenderContext(prompt, code, highlight_regions=highlight_regions,
+                        complete_state=self.complete_state,
                         abort=_abort, accept=_accept)
 
     @_quit_reverse_search_when_called

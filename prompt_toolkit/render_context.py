@@ -10,7 +10,7 @@ class RenderContext(object):
     :param highlight_regions: `None` or list of (start,len) tuples of the
                               characters to highlight.
     """
-    def __init__(self, prompt, code_obj, accept=False, abort=False, highlight_regions=None):
+    def __init__(self, prompt, code_obj, accept=False, abort=False, highlight_regions=None, complete_state=None):
         assert not (accept and abort)
 
         self.prompt = prompt
@@ -18,3 +18,4 @@ class RenderContext(object):
         self.accept = accept
         self.abort = abort
         self.highlight_regions = highlight_regions
+        self.complete_state = None
