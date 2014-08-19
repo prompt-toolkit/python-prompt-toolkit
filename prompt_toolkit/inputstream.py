@@ -66,6 +66,7 @@ class InputStream(object):
         '\x1b[6~': 'page_down',
         '\x1b[7~': 'home', # xrvt
         '\x1b[8~': 'end', # xrvt
+        '\x1b[Z': 'backtab', # shift + tab
 
         '\x1bOP': 'F1',
         '\x1bOQ': 'F2',
@@ -148,5 +149,4 @@ class InputStream(object):
         assert isinstance(data, six.text_type)
 
         for c in data:
-            #print(repr(c))
             self._input_parser.send(c)

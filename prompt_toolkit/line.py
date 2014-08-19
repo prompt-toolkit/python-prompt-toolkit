@@ -82,9 +82,9 @@ def _quit_reverse_search_when_called(func): # XXX: rename to: '_quit_incremental
 
 
 class CompletionState(object):
-    def __init__(self, original_cursor_position=0, current_completions=None):
-        #: Cursor position in the input where the completion started.
-        self.original_cursor_position = original_cursor_position
+    def __init__(self, original_document, current_completions=None):
+        #: Document as it was when the completion started.
+        self.original_document = original_document
 
         #: List of all the current Completion instances which are possible at
         #: this point.
@@ -92,6 +92,10 @@ class CompletionState(object):
 
         #: Position in the `current_completions` array.
         self.complete_index = 0 # Position in the `_completions` array.
+
+    @property
+    def original_cursor_position(self):
+        self.original_document.cursor_position
 
     @property
     def current_completion_text(self):
@@ -129,7 +133,7 @@ class Line(object):
         self.cursor_position = 0
 
         # Incremental-search
-        self.in_isearch = False # XXX: rename to in_isearch_mode
+        self.in_isearch = False # XXX: rename to in_isearch_mode OR make bundle all modes in a `mode` variable.
         self.isearch_direction = IncrementalSearchDirection.FORWARD
 
         self._isearch_text = ''
@@ -573,9 +577,9 @@ class Line(object):
         if not self.in_complete_mode:
             self._start_complete()
 
-        index = (self.complete_state.complete_index - 1) % len(self.complete_state.current_completions)
-        self._go_to_completion(index)
-
+        if self.complete_state:
+            index = (self.complete_state.complete_index - 1) % len(self.complete_state.current_completions)
+            self._go_to_completion(index)
 
     def _start_complete(self):
         """
@@ -586,7 +590,7 @@ class Line(object):
 
         if current_completions:
             self.complete_state = CompletionState(
-                        original_cursor_position=self.cursor_position,
+                        original_document=self.document,
                         current_completions=current_completions)
             self.insert_text(self.complete_state.current_completion_text)
             self.in_complete_mode = True
@@ -633,9 +637,10 @@ class Line(object):
 
         # Create prompt instance.
         prompt = self.prompt_cls(self, code)
+        complete_state = (self.complete_state if self.in_complete_mode and not _abort and not _accept else None)
 
         return RenderContext(prompt, code, highlight_regions=highlight_regions,
-                        complete_state=self.complete_state,
+                        complete_state=complete_state,
                         abort=_abort, accept=_accept)
 
     @_quit_reverse_search_when_called

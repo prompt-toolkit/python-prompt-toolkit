@@ -180,14 +180,7 @@ class Screen(object):
 
         # Insertion of a 'visible' character.
         else:
-            # Get style
-            try:
-                style = self._style.style_for_token(token)
-            except KeyError:
-                style = None
-
-            # Add char to buffer
-            self._buffer[self._y][self._x] = Char(char=char, style=style)
+            self.write_at_pos(self._y, self._x, char, token)
 
             # Move cursor position
             if is_input:
@@ -198,6 +191,31 @@ class Screen(object):
                 self._x = 0
             else:
                 self._x += char_width
+
+    def write_at_pos(self, y, x, char, token):
+        """
+        Write character at position (y, x).
+        (Truncate when character is outside margin.)
+        """
+        # Get style
+        try:
+            style = self._style.style_for_token(token)
+        except KeyError:
+            style = None
+
+        # Add char to buffer
+        if y < self._columns:
+            self._buffer[y][x] = Char(char=char, style=style)
+
+    def write_highlighted_at_pos(self, y, x, data):
+        """
+        Write (Token, text) tuples at position (y, x).
+        (Truncate when character is outside margin.)
+        """
+        for token, text in data:
+            for c in text:
+                self.write_at_pos(y, x, c, token)
+                x += wcwidth(c)
 
     def write_highlighted(self, data, is_input=True):
         """
@@ -235,9 +253,13 @@ class Screen(object):
                             }
 
     def output(self):
+        """
+        Return (string, last_y, last_x) tuple.
+        """
         result = []
 
         rows = max(self._buffer.keys()) + 1
+        c = 0
 
         for y, r in enumerate(range(0, rows)):
             line_data = self._buffer[r]
@@ -252,7 +274,64 @@ class Screen(object):
             if y != rows - 1:
                 result.append(TerminalCodes.CRLF)
 
-        return ''.join(result)
+        return ''.join(result), y, c
+
+
+class _CompletionMenu(object):
+    """
+    Helper for drawing the complete menu to the screen.
+    """
+    def __init__(self, screen, complete_state, max_height=7):
+        self.screen = screen
+        self.complete_state = complete_state
+        self.max_height = max_height
+
+    def _get_origin(self):
+        """
+        Return the position of the menu.
+        We calculate this by mapping the cursor position (from the
+        complete_state) in the _cursor_mappings of the screen object.
+        """
+        return self.screen._cursor_mappings[
+                (self.complete_state.original_document.cursor_position_row,
+                 self.complete_state.original_document.cursor_position_col)]
+
+    def write(self):
+        """
+        Write the menu to the screen object.
+        """
+        # Get position of the menu.
+        y, x = self._get_origin()
+        y += 1
+        x = max(0, x - 1)
+
+        # Calculate width of completions menu.
+        menu_width = max(len(c.display) for c in self.complete_state.current_completions)
+
+        # Decide which slice of completions to show.
+        completions = self.complete_state.current_completions
+        index = self.complete_state.complete_index
+
+        if len(completions) > self.max_height and index > self.max_height / 2:
+            shift = min(
+                        index - self.max_height / 2, # In the middle.
+                        len(completions) - self.max_height # At the bottom.
+                    )
+            completions = completions[shift:]
+            index -= shift
+
+        # Write completions to screen.
+        for i, c in enumerate(completions[:self.max_height]):
+            if i == index:
+                token = Token.CompletionMenu.CurrentCompletion
+            else:
+                token = Token.CompletionMenu.Completion
+
+            self.screen.write_highlighted_at_pos(y+i, x, [
+                        (Token, ' '),
+                        (token, ' %%-%is ' % menu_width % c.display),
+                        (Token, ' '),
+                        ])
 
 
 class Renderer(object):
@@ -302,6 +381,10 @@ class Renderer(object):
                 for i in range(start_column, end_column):
                     screen.highlight_character(start_row-1, i, bgcolor='444444', color='eeeeee')
 
+        # Write completion menu.
+        if render_context.complete_state:
+            _CompletionMenu(screen, render_context.complete_state).write()
+
         return screen
 
     def _render_to_str(self, render_context):
@@ -318,7 +401,8 @@ class Renderer(object):
 
         # Generate the output of the new screen.
         screen = self._get_new_screen(render_context)
-        write(screen.output())
+        o, last_y, last_x = screen.output()
+        write(o)
 
         # Move cursor to correct position.
         if render_context.accept or render_context.abort:
@@ -329,12 +413,12 @@ class Renderer(object):
                             render_context.code_obj.document.cursor_position_row,
                             render_context.code_obj.document.cursor_position_col]
 
-            if screen._y - cursor_y:
-                write(TerminalCodes.CURSOR_UP(screen._y - cursor_y))
-            if screen._x > cursor_x:
-                write(TerminalCodes.CURSOR_BACKWARD(screen._x - cursor_x))
-            if screen._x < cursor_x:
-                write(TerminalCodes.CURSOR_FORWARD(cursor_x - screen._x))
+            if last_y - cursor_y:
+                write(TerminalCodes.CURSOR_UP(last_y - cursor_y))
+            if last_x > cursor_x:
+                write(TerminalCodes.CURSOR_BACKWARD(last_x - cursor_x))
+            if last_x < cursor_x:
+                write(TerminalCodes.CURSOR_FORWARD(cursor_x - last_x))
 
             self._cursor_line = cursor_y
 

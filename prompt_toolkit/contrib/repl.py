@@ -64,6 +64,10 @@ class PythonStyle(Style):
         Token.Toolbar.On:      'bg:#222222 #ffffff',
         Token.Toolbar.Mode:    'bg:#222222 #ffffaa',
 
+        # Completion menu
+        Token.CompletionMenu.CurrentCompletion: 'bg:#dddddd #000000',
+        Token.CompletionMenu.Completion:        'bg:#888888 #ffff88',
+
         # Grayed
         Token.Aborted:    '#aaaaaa',
     }
@@ -114,8 +118,11 @@ class _PythonInputStreamHandlerMixin(object):
         if not current_char or current_char.isspace():
             self._line.insert_text('    ')
         else:
-            super(_PythonInputStreamHandlerMixin, self).tab()
+            self._line.complete_next()
 
+    def backtab(self):
+        if self._line.in_complete_mode:
+            self._line.complete_previous()
 
 class PythonViInputStreamHandler(_PythonInputStreamHandlerMixin, ViInputStreamHandler):
     def enter(self):

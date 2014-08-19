@@ -18,4 +18,4 @@ class RenderContext(object):
         self.accept = accept
         self.abort = abort
         self.highlight_regions = highlight_regions
-        self.complete_state = None
+        self.complete_state = complete_state
