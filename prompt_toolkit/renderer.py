@@ -300,6 +300,9 @@ class _CompletionMenu(object):
         """
         Write the menu to the screen object.
         """
+        completions = self.complete_state.current_completions
+        index = self.complete_state.complete_index
+
         # Get position of the menu.
         y, x = self._get_origin()
         y += 1
@@ -309,27 +312,39 @@ class _CompletionMenu(object):
         menu_width = max(len(c.display) for c in self.complete_state.current_completions)
 
         # Decide which slice of completions to show.
-        completions = self.complete_state.current_completions
-        index = self.complete_state.complete_index
-
         if len(completions) > self.max_height and index > self.max_height / 2:
-            shift = min(
+            slice_from = min(
                         index - self.max_height / 2, # In the middle.
                         len(completions) - self.max_height # At the bottom.
                     )
-            completions = completions[shift:]
-            index -= shift
+        else:
+            slice_from = 0
+
+        slice_to = min(slice_from + self.max_height, len(completions))
+
+        # Create a function which decides at which positions the scroll button should be shown.
+        def is_scroll_button(row):
+            items_per_row = float(len(completions)) / min(len(completions), self.max_height)
+            items_on_this_row_from = row * items_per_row
+            items_on_this_row_to = (row + 1) * items_per_row
+            return items_on_this_row_from <= self.complete_state.complete_index < items_on_this_row_to
 
         # Write completions to screen.
-        for i, c in enumerate(completions[:self.max_height]):
-            if i == index:
+        for i, c in enumerate(completions[slice_from:slice_to]):
+            if i + slice_from == index:
                 token = Token.CompletionMenu.CurrentCompletion
             else:
                 token = Token.CompletionMenu.Completion
 
+            if is_scroll_button(i):
+                button = (Token.CompletionMenu.ProgressButton, ' ')
+            else:
+                button = (Token.CompletionMenu.ProgressBar, ' ')
+
             self.screen.write_highlighted_at_pos(y+i, x, [
                         (Token, ' '),
                         (token, ' %%-%is ' % menu_width % c.display),
+                        button,
                         (Token, ' '),
                         ])
 

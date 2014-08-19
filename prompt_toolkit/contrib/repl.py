@@ -67,6 +67,8 @@ class PythonStyle(Style):
         # Completion menu
         Token.CompletionMenu.CurrentCompletion: 'bg:#dddddd #000000',
         Token.CompletionMenu.Completion:        'bg:#888888 #ffff88',
+        Token.CompletionMenu.ProgressButton:    'bg:#000000',
+        Token.CompletionMenu.ProgressBar:       'bg:#aaaaaa',
 
         # Grayed
         Token.Aborted:    '#aaaaaa',
