@@ -125,9 +125,10 @@ class _IncrementalSearchState(object):
 
 class Line(object):
     """
-    Data structure that holds the text and cursor position of the current input
-    line and implements all text manupulations on top of it. It also implements
-    the history and undo stack, and reverse search.
+    The core data structure that holds the text and cursor position of the
+    current input line and implements all text manupulations on top of it. It
+    also implements the history, undo stack, reverse search and the completion
+    state.
 
     :attr code_cls: :class:`~prompt_toolkit.code.CodeBase` class.
     :attr prompt_cls: :class:`~prompt_toolkit.prompt.PromptBase` class.
@@ -566,11 +567,11 @@ class Line(object):
             self.renderer.render_completions(results)
 
     @_to_mode(LineMode.NORMAL)
-    def complete(self):
+    def complete(self): # TODO: rename to complete_common
         """ Autocomplete.
         Returns true if there was a completion. """
         # On the first tab press, try to find one completion and complete.
-        result = self._create_code_obj().complete()
+        result = self._create_code_obj().complete() # XXX: rename to get_common_completion()
         if result:
             self.text = self.text[:self.cursor_position] + result + self.text[self.cursor_position:]
             self.cursor_position += len(result)
