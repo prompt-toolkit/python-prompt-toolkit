@@ -91,6 +91,7 @@ class CompletionState(object):
         self.current_completions = current_completions or []
 
         #: Position in the `current_completions` array.
+        #: This can be `None` to indicate "no completion", the original text.
         self.complete_index = 0 # Position in the `_completions` array.
 
     @property
@@ -99,7 +100,10 @@ class CompletionState(object):
 
     @property
     def current_completion_text(self):
-        return self.current_completions[self.complete_index].suffix
+        if self.complete_index is None:
+            return ''
+        else:
+            return self.current_completions[self.complete_index].suffix
 
 
 class Line(object):
@@ -566,7 +570,12 @@ class Line(object):
         if not self.in_complete_mode:
             self._start_complete()
         else:
-            index = (self.complete_state.complete_index + 1) % len(self.complete_state.current_completions)
+            if self.complete_state.complete_index is None:
+                index = 0
+            elif self.complete_state.complete_index == len(self.complete_state.current_completions) - 1:
+                index = None
+            else:
+                index = self.complete_state.complete_index + 1
             self._go_to_completion(index)
 
     @_quit_reverse_search_when_called
@@ -578,7 +587,13 @@ class Line(object):
             self._start_complete()
 
         if self.complete_state:
-            index = (self.complete_state.complete_index - 1) % len(self.complete_state.current_completions)
+            if self.complete_state.complete_index == 0:
+                index = None
+            elif self.complete_state.complete_index is None:
+                index = len(self.complete_state.current_completions) - 1
+            else:
+                index = self.complete_state.complete_index - 1
+
             self._go_to_completion(index)
 
     def _start_complete(self):
