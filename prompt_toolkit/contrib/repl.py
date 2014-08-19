@@ -89,10 +89,6 @@ class _PythonInputStreamHandlerMixin(object):
     def F7(self):
         self._line.multiline = not self._line.multiline
 
-    def enter(self):
-        self._auto_enable_multiline()
-        super(_PythonInputStreamHandlerMixin, self).enter()
-
     def _auto_enable_multiline(self):
         """
         (Temporarily) enable multiline when pressing enter.

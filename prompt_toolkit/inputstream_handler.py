@@ -232,7 +232,7 @@ class InputStreamHandler(object):
             # isearch would be too complicated.)
             self._line.exit_isearch()
         else:
-            self._line.newline()
+            self._line.return_input()
 
     def alt_enter(self): # ESC-enter should always accept. -> enter in VI
                          # insert mode should insert a newline. For emacs not

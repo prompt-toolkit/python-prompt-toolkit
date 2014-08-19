@@ -69,16 +69,25 @@ class ClipboardData(object):
         self.type = type
 
 
-def _quit_reverse_search_when_called(func): # XXX: rename to: '_quit_incremental_search_when_called'
+def _to_mode(*modes):
     """
-    When this method of the `Line` object is called. Make sure to exit
-    reverse/forward search mode.
+    When this method of the `Line` object is called. Make sure that we are in
+    the correct LineMode.  (Quit reverse search / complete mode when
+    necessary.)
     """
-    @wraps(func)
-    def wrapper(self, *a, **kw):
-        self.exit_isearch()
-        return func(self, *a, **kw)
-    return wrapper
+    def mode_decorator(func):
+        @wraps(func)
+        def wrapper(self, *a, **kw):
+            if self.mode not in modes:
+                if self.mode == LineMode.INCREMENTAL_SEARCH:
+                    self.exit_isearch()
+
+                elif self.mode == LineMode.COMPLETE:
+                    self.mode = LineMode.NORMAL
+
+            return func(self, *a, **kw)
+        return wrapper
+    return mode_decorator
 
 
 class CompletionState(object):
@@ -280,25 +289,25 @@ class Line(object):
         """
         self._arg_prompt_text = arg
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def home(self):
         self.cursor_position = 0
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def end(self):
         self.cursor_position = len(self.text)
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def cursor_left(self):
         if self.document.cursor_position_col > 0:
             self.cursor_position -= 1
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def cursor_right(self):
         if not self.document.cursor_at_the_end_of_line:
             self.cursor_position += 1
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def cursor_up(self):
         """
         (for multiline edit). Move cursor to the previous line.
@@ -307,7 +316,7 @@ class Line(object):
         if new_pos is not None:
             self.cursor_position = new_pos
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def cursor_down(self):
         """
         (for multiline edit). Move cursor to the next line.
@@ -316,7 +325,7 @@ class Line(object):
         if new_pos is not None:
             self.cursor_position = new_pos
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL, LineMode.COMPLETE)
     def auto_up(self):
         """
         If we're not on the first line (of a multiline input) go a line up,
@@ -329,7 +338,7 @@ class Line(object):
         else:
             self.history_backward()
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL, LineMode.COMPLETE)
     def auto_down(self):
         """
         If we're not on the last line (of a multiline input) go a line down,
@@ -347,18 +356,18 @@ class Line(object):
             if old_index != self._working_index:
                 self.cursor_position = 0
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def cursor_word_back(self):
         """ Move the cursor to the start of the previous word. """
         # Move at least one character to the left.
         self.cursor_position += (self.document.find_start_of_previous_word() or 0)
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def cursor_word_forward(self):
         """ Move the cursor to the start of the following word. """
         self.cursor_position += (self.document.find_next_word_beginning() or 0)
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def cursor_to_end_of_word(self):
         """
         Move the cursor right before the last character of the next word
@@ -368,14 +377,14 @@ class Line(object):
         if end > 1:
             self.cursor_position += end - 1
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def cursor_to_end_of_line(self):
         """
         Move cursor to the end of the current line.
         """
         self.cursor_position += len(self.document.current_line_after_cursor)
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def cursor_to_start_of_line(self, after_whitespace=False):
         """ Move the cursor to the first character of the current line. """
         self.cursor_position -= len(self.document.current_line_before_cursor)
@@ -384,7 +393,8 @@ class Line(object):
             text_after_cursor = self.document.current_line_after_cursor
             self.cursor_position += len(text_after_cursor) - len(text_after_cursor.lstrip())
 
-    # NOTE: don't _quit_reverse_search_when_called: we can delete in i-search.
+    # NOTE: We can delete in i-search!
+    @_to_mode(LineMode.NORMAL, LineMode.INCREMENTAL_SEARCH)
     def delete_character_before_cursor(self, count=1): # TODO: unittest return type
         """ Delete character before cursor, return deleted character. """
         assert count > 0
@@ -400,7 +410,7 @@ class Line(object):
 
         return deleted
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def delete(self, count=1): # TODO: unittest `count`
         """ Delete one character. Return deleted character. """
         if self.cursor_position < len(self.text):
@@ -411,26 +421,26 @@ class Line(object):
         else:
             return ''
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def delete_word(self):
         """ Delete one word. Return deleted word. """
         to_delete = self.document.find_next_word_beginning()
         return self.delete(count=to_delete)
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def delete_word_before_cursor(self): # TODO: unittest
         """ Delete one word before cursor. Return deleted word. """
         to_delete = - (self.document.find_start_of_previous_word() or 0)
         return self.delete_character_before_cursor(to_delete)
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def delete_until_end(self):
         """ Delete all input until the end. Return deleted text. """
         deleted = self.text[self.cursor_position:]
         self.text = self.text[:self.cursor_position]
         return deleted
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def delete_until_end_of_line(self): # TODO: unittest.
         """
         Delete all input until the end of this line. Return deleted text.
@@ -438,7 +448,7 @@ class Line(object):
         to_delete = len(self.document.current_line_after_cursor)
         return self.delete(count=to_delete)
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def delete_from_start_of_line(self): # TODO: unittest.
         """
         Delete all input from the start of the line until the current
@@ -449,7 +459,7 @@ class Line(object):
         to_delete = len(self.document.current_line_before_cursor)
         return self.delete_character_before_cursor(to_delete)
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def delete_current_line(self):
         """
         Delete current line. Return deleted text.
@@ -471,7 +481,7 @@ class Line(object):
 
         return deleted
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def join_next_line(self):
         """
         Join the next line to the current one by deleting the line ending after
@@ -480,7 +490,7 @@ class Line(object):
         self.cursor_to_end_of_line()
         self.delete()
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def swap_characters_before_cursor(self):
         """
         Swap the last two characters before the cursor.
@@ -493,7 +503,7 @@ class Line(object):
 
             self.text = self.text[:pos-2] + b + a + self.text[pos:]
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def go_to_matching_bracket(self):
         """ Go to matching [, (, { or < bracket. """
         stack = 1
@@ -517,7 +527,7 @@ class Line(object):
                         self.cursor_position -= (i + 1)
                         break
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def go_to_substring(self, sub, in_current_line=False, backwards=False):
         """
         Find next occurence of this substring, and move cursor position there.
@@ -530,7 +540,7 @@ class Line(object):
         if index:
             self.cursor_position += index
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def go_to_column(self, column):
         """
         Go to this column on the current line. (Go to the end column > length
@@ -545,7 +555,7 @@ class Line(object):
     def _create_code_obj(self):
         return self.code_cls(self.document)
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def list_completions(self):
         """
         Get and show all completions
@@ -555,7 +565,7 @@ class Line(object):
         if results and self.renderer:
             self.renderer.render_completions(results)
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def complete(self):
         """ Autocomplete.
         Returns true if there was a completion. """
@@ -568,7 +578,7 @@ class Line(object):
         else:
             return False
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL, LineMode.COMPLETE)
     def complete_next(self):
         """
         Enter complete mode and browse through the completions.
@@ -584,7 +594,7 @@ class Line(object):
                 index = self.complete_state.complete_index + 1
             self._go_to_completion(index)
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL, LineMode.COMPLETE)
     def complete_previous(self):
         """
         Enter complete mode and browse through the completions.
@@ -668,21 +678,21 @@ class Line(object):
                         complete_state=complete_state,
                         abort=_abort, accept=_accept)
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def history_forward(self):
         if self._working_index < len(self._working_lines) - 1:
             # Go forward in history, and update cursor_position.
             self._working_index += 1
             self.cursor_position = len(self.text)
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def history_backward(self):
         if self._working_index > 0:
             # Go back in history, and update cursor_position.
             self._working_index -= 1
             self.cursor_position = len(self.text)
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def newline(self):
         self.insert_text('\n')
 
@@ -743,7 +753,7 @@ class Line(object):
         """
         self._clipboard = clipboard_data
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def paste_from_clipboard(self, before=False):
         """
         Insert the data from the clipboard.
@@ -766,7 +776,7 @@ class Line(object):
                     self.insert_text('\n')
                     self.insert_text(self._clipboard.text, move_cursor=False)
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def undo(self):
         if self._undo_stack:
             text, pos = self._undo_stack.pop()
@@ -774,7 +784,7 @@ class Line(object):
             self.text = text
             self.cursor_position = pos
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def abort(self):
         """
         Abort input. (Probably Ctrl-C press)
@@ -784,7 +794,7 @@ class Line(object):
         self.reset()
         raise Abort(render_context)
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def exit(self):
         """
         Quit command line. (Probably Ctrl-D press.)
@@ -792,7 +802,7 @@ class Line(object):
         render_context = self.get_render_context(_abort=True)
         raise Exit(render_context)
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def return_input(self):
         """
         Return the current line to the `CommandLine.read_input` call.
@@ -810,6 +820,7 @@ class Line(object):
         self.reset()
         raise ReturnInput(code, render_context)
 
+    @_to_mode(LineMode.NORMAL, LineMode.INCREMENTAL_SEARCH)
     def reverse_search(self):
         """
         Enter i-search mode, or if already entered, go to the previous match.
@@ -821,6 +832,7 @@ class Line(object):
         else:
             self._start_isearch()
 
+    @_to_mode(LineMode.NORMAL, LineMode.INCREMENTAL_SEARCH)
     def forward_search(self):
         """
         Enter i-search mode, or if already entered, go to the following match.
@@ -838,6 +850,7 @@ class Line(object):
                 original_cursor_position = self.cursor_position,
                 original_working_index = self._working_index)
 
+    @_to_mode(LineMode.NORMAL, LineMode.INCREMENTAL_SEARCH)
     def search_next(self, direction):
         if not (self.mode == LineMode.INCREMENTAL_SEARCH and self.isearch_state.isearch_text):
             return
@@ -889,7 +902,7 @@ class Line(object):
             self.mode = LineMode.NORMAL
             self.isearch_state = None
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def clear(self):
         """
         Clear renderer screen, usually as a result of Ctrl-L.
@@ -897,7 +910,7 @@ class Line(object):
         if self.renderer:
             self.renderer.clear()
 
-    @_quit_reverse_search_when_called
+    @_to_mode(LineMode.NORMAL)
     def open_in_editor(self):
         """ Open code in editor. """
         # Write to temporary file
