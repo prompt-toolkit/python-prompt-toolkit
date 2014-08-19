@@ -336,6 +336,10 @@ class _CompletionMenu(object):
 
 class Renderer(object):
     highlight_current_line = False
+
+    #: Boolean to indicate whether or not the completion menu should be shown.
+    show_complete_menu = True
+
     screen_cls = Screen
 
     def __init__(self, stdout=None, style=None):
@@ -382,7 +386,7 @@ class Renderer(object):
                     screen.highlight_character(start_row-1, i, bgcolor='444444', color='eeeeee')
 
         # Write completion menu.
-        if render_context.complete_state:
+        if self.show_complete_menu and render_context.complete_state:
             _CompletionMenu(screen, render_context.complete_state).write()
 
         return screen
