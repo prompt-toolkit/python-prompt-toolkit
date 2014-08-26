@@ -11,6 +11,7 @@ from .document import Document
 from .enums import IncrementalSearchDirection, LineMode
 from .prompt import Prompt
 from .render_context import RenderContext
+from .history import History
 
 import os
 import tempfile
@@ -132,14 +133,15 @@ class Line(object):
 
     :attr code_cls: :class:`~prompt_toolkit.code.CodeBase` class.
     :attr prompt_cls: :class:`~prompt_toolkit.prompt.PromptBase` class.
+    :attr history: :class:`~prompt_toolkit.history.History` instance.
     """
-    def __init__(self, renderer=None, code_cls=Code, prompt_cls=Prompt):
+    def __init__(self, renderer=None, code_cls=Code, prompt_cls=Prompt, history_cls=History):
         self.renderer = renderer
         self.code_cls = code_cls
         self.prompt_cls = prompt_cls
 
-        #: The history. A list to which we only append.
-        self._history_lines = [] # Implement loader (history.load/save)
+        #: The command line history.
+        self._history = history_cls()
 
         self._clipboard = ClipboardData()
 
@@ -169,7 +171,7 @@ class Line(object):
         #: Ctrl-C should reset this, and copy the whole history back in here.
         #: Enter should process the current command and append to the real
         #: history.
-        self._working_lines = self._history_lines[:]
+        self._working_lines = self._history.strings[:]
         self._working_lines.append('')
         self.__working_index = len(self._working_lines) - 1
 
@@ -580,23 +582,25 @@ class Line(object):
             return False
 
     @_to_mode(LineMode.NORMAL, LineMode.COMPLETE)
-    def complete_next(self):
+    def complete_next(self, count=1):
         """
         Enter complete mode and browse through the completions.
         """
         if not self.mode == LineMode.COMPLETE:
             self._start_complete()
         else:
+            completions_count = len(self.complete_state.current_completions)
+
             if self.complete_state.complete_index is None:
                 index = 0
-            elif self.complete_state.complete_index == len(self.complete_state.current_completions) - 1:
+            elif self.complete_state.complete_index == completions_count - 1:
                 index = None
             else:
-                index = self.complete_state.complete_index + 1
+                index = min(completions_count-1, self.complete_state.complete_index + count)
             self._go_to_completion(index)
 
     @_to_mode(LineMode.NORMAL, LineMode.COMPLETE)
-    def complete_previous(self):
+    def complete_previous(self, count=1):
         """
         Enter complete mode and browse through the completions.
         """
@@ -609,7 +613,7 @@ class Line(object):
             elif self.complete_state.complete_index is None:
                 index = len(self.complete_state.current_completions) - 1
             else:
-                index = self.complete_state.complete_index - 1
+                index = max(0, self.complete_state.complete_index - count)
 
             self._go_to_completion(index)
 
@@ -813,8 +817,9 @@ class Line(object):
 
         # Save at the tail of the history. (But don't if the last entry the
         # history is already the same.)
-        if not self._history_lines or self._history_lines[-1] != text:
-            self._history_lines.append(text)
+        if not len(self._history) or self._history[-1] != text:
+            if text:
+                self._history.append(text)
 
         render_context = self.get_render_context(_accept=True)
 

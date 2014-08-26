@@ -1,19 +1,17 @@
 #!/usr/bin/env python
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup, find_packages
+
 
 setup(
         name='prompt_toolkit',
         author='Jonathan Slenders',
-        version='0.1',
+        version='0.3',
         license='LICENSE.txt',
         url='https://github.com/jonathanslenders/python-prompt-toolkit',
 
         description='',
         long_description='',
-        packages=['prompt_toolkit'],
+        packages=find_packages('.'),
         install_requires = [ 'pygments', 'docopt', 'six' ],
         #install_requires = [  'wcwidth', ], # TODO: add wcwidth when released on pypi
         extra_requires=[

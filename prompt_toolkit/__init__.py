@@ -17,6 +17,7 @@ from .line import Line, Exit, ReturnInput, Abort
 from .prompt import Prompt
 from .renderer import Renderer
 from .utils import raw_mode, call_on_sigwinch
+from .history import History
 
 
 class CommandLine(object):
@@ -46,6 +47,9 @@ class CommandLine(object):
     #: `pygments.style.Style` class for the syntax highlighting.
     style_cls = None
 
+    #: `History` class.
+    history_cls = History
+
     def __init__(self, stdin=None, stdout=None):
         self.stdin = stdin or sys.stdin
         self.stdout = stdout or sys.stdout
@@ -58,7 +62,8 @@ class CommandLine(object):
 
         self._renderer = self.renderer_cls(self.stdout, style=self.style_cls)
         self._line = self.line_cls(renderer=self._renderer,
-                        code_cls=self.code_cls, prompt_cls=self.prompt_cls)
+                        code_cls=self.code_cls, prompt_cls=self.prompt_cls,
+                        history_cls=self.history_cls)
         self._inputstream_handler = self.inputstream_handler_cls(self._line)
 
     def read_input(self):

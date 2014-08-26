@@ -18,6 +18,7 @@ from pygments.token import Keyword, Operator, Number, Name, Error, Comment, Toke
 from prompt_toolkit import CommandLine
 from prompt_toolkit.code import Completion, Code
 from prompt_toolkit.enums import LineMode
+from prompt_toolkit.history import FileHistory, History
 from prompt_toolkit.inputstream_handler import ViInputStreamHandler, EmacsInputStreamHandler, ViMode
 from prompt_toolkit.line import Exit, Line
 from prompt_toolkit.prompt import Prompt
@@ -129,7 +130,7 @@ class PythonViInputStreamHandler(_PythonInputStreamHandlerMixin, ViInputStreamHa
 
         if self._line.multiline:
             if self._vi_mode == ViMode.NAVIGATION:
-                # We are in VI-navigation mode after pressing `Alt`.
+                # We are in VI-navigation mode after pressing `Meta`.
                 self._line.return_input()
             else:
                 self._line.newline()
@@ -148,7 +149,7 @@ class PythonEmacsInputStreamHandler(_PythonInputStreamHandlerMixin, EmacsInputSt
             # In single line input, always execute when pressing enter.
             self._line.return_input()
 
-    def alt_enter(self):
+    def meta_enter(self):
         self._line.return_input()
 
 
@@ -164,7 +165,7 @@ class PythonLine(Line):
         self.paste_mode = False
 
         #: Boolean `multiline` flag. If True, [Enter] will always insert a
-        #: newline, and it is required to use [Alt+Enter] execute commands.
+        #: newline, and it is required to use [Meta+Enter] execute commands.
         self.multiline = False
 
     def _text_changed(self):
@@ -337,14 +338,18 @@ class PythonPrompt(Prompt):
         append((Token, '\n  '))
         append((TB, '  '))
 
-        if self._pythonline.vi_mode:
+        # Mode
+        if self.line.mode == LineMode.INCREMENTAL_SEARCH:
+            append((TB.Mode, '(SEARCH)'))
+            append((TB, '  '))
+        elif self._pythonline.vi_mode:
             mode = self._pythonline._inputstream_handler._vi_mode
             if mode == ViMode.NAVIGATION:
-                append((TB.Mode, '(NAV)    '))
-                append((TB, '    '))
+                append((TB.Mode, '(NAV)'))
+                append((TB, '     '))
             elif mode == ViMode.INSERT:
-                append((TB.Mode, '(INSERT) '))
-                append((TB, ' '))
+                append((TB.Mode, '(INSERT)'))
+                append((TB, '  '))
             elif mode == ViMode.REPLACE:
                 append((TB.Mode, '(REPLACE)'))
                 append((TB, ' '))
@@ -355,20 +360,25 @@ class PythonPrompt(Prompt):
         # Position in history.
         result.append((TB, '%i/%i ' % (self.line._working_index + 1, len(self.line._working_lines))))
 
-        if self.line.paste_mode:
-            append((TB.On, '[F6] Paste mode. (on)  '))
+        # Shortcuts.
+        if self.line.mode == LineMode.INCREMENTAL_SEARCH:
+            append((TB, '[Ctrl-G] Cancel search'))
         else:
-            append((TB.Off, '[F6] Paste mode. (off) '))
+            if self.line.paste_mode:
+                append((TB.On, '[F6] Paste mode (on)  '))
+            else:
+                append((TB.Off, '[F6] Paste mode (off) '))
 
-        if self.line.multiline:
-            append((TB.On, '[F7] Multiline (on)  '))
-        else:
-            append((TB.Off, '[F7] Multiline (off) '))
+            if self.line.multiline:
+                append((TB.On, '[F7] Multiline (on)  '))
+            else:
+                append((TB.Off, '[F7] Multiline (off) '))
 
-        if self.line.multiline:
-            append((TB, '[Alt+Enter] Execute.'))
-        else:
-            append((TB, '                    '))
+            if self.line.multiline:
+                append((TB, '[Meta+Enter] Execute'))
+            else:
+                append((TB, '                    '))
+
         append((TB, '  '))
 
         return result
@@ -431,6 +441,12 @@ class PythonCommandLine(CommandLine):
     line_cls = PythonLine
     style_cls = PythonStyle
 
+    def history_cls(self):
+        if self.history_filename:
+            return FileHistory(self.history_filename)
+        else:
+            return History()
+
     @property
     def inputstream_handler_cls(self):
         if self.vi_mode:
@@ -438,10 +454,11 @@ class PythonCommandLine(CommandLine):
         else:
             return PythonEmacsInputStreamHandler
 
-    def __init__(self, globals=None, locals=None, vi_mode=False, stdin=None, stdout=None):
+    def __init__(self, globals=None, locals=None, vi_mode=False, stdin=None, stdout=None, history_filename=None):
         self.globals = globals or {}
         self.globals.update({ k: getattr(__builtins__, k) for k in dir(__builtins__) })
         self.locals = locals or {}
+        self.history_filename = history_filename
 
         self.vi_mode = vi_mode
 
@@ -510,7 +527,7 @@ class PythonCommandLine(CommandLine):
         print('\rKeyboardInterrupt')
 
 
-def embed(globals=None, locals=None, vi_mode=False):
+def embed(globals=None, locals=None, vi_mode=False, history_filename=None):
     """
     Call this to embed  Python shell at the current point in your program.
     It's similar to `IPython.embed` and `bpython.embed`. ::
@@ -520,4 +537,5 @@ def embed(globals=None, locals=None, vi_mode=False):
 
     :param vi_mode: Boolean. Use Vi instead of Emacs key bindings.
     """
-    PythonCommandLine(globals, locals, vi_mode=vi_mode).start_repl()
+    cli = PythonCommandLine(globals, locals, vi_mode=vi_mode, history_filename=history_filename)
+    cli.start_repl()

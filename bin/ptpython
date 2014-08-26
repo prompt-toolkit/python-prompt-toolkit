@@ -2,13 +2,14 @@
 """
 ptpython: Interactive Python shell.
 Usage:
-    ptpython [ --vi ]
+    ptpython [ --vi ] [( --history FILENAME )]
     ptpython -h | --help
 
 Options:
-    --vi      : Use Vi keybindings instead of Emacs bindings.
+    --vi               : Use Vi keybindings instead of Emacs bindings.
 """
 import docopt
+import os
 
 from prompt_toolkit.contrib.repl import embed
 
@@ -20,8 +21,14 @@ def _run_repl():
     # Create globals/locals dict.
     globals_, locals_ = {}, {}
 
+    if a['FILENAME']:
+        history_filename = os.path.expanduser(a['FILENAME'])
+    else:
+        history_filename = os.path.expanduser('~/.ptpython_history')
+
+
     # Run interactive shell.
-    embed(globals_, locals_, vi_mode=vi_mode)
+    embed(globals_, locals_, vi_mode=vi_mode, history_filename=history_filename)
 
 if __name__ == '__main__':
     _run_repl()

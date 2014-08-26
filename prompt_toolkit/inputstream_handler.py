@@ -188,10 +188,16 @@ class InputStreamHandler(object):
         pass
 
     def page_up(self):
-        self._line.history_backward()
+        if self._line.mode == LineMode.COMPLETE:
+            self._line.complete_previous(5)
+        else:
+            self._line.history_backward()
 
     def page_down(self):
-        self._line.history_forward()
+        if self._line.mode == LineMode.COMPLETE:
+            self._line.complete_next(5)
+        else:
+            self._line.history_forward()
 
     def arrow_left(self):
         self._line.cursor_left()
@@ -234,7 +240,7 @@ class InputStreamHandler(object):
         else:
             self._line.return_input()
 
-    def alt_enter(self): # ESC-enter should always accept. -> enter in VI
+    def meta_enter(self): # ESC-enter should always accept. -> enter in VI
                          # insert mode should insert a newline. For emacs not
                          # sure yet.
         self._line.newline()
@@ -254,7 +260,7 @@ class EmacsInputStreamHandler(InputStreamHandler):
         self._ctrl_x_pressed = False
 
     def escape(self):
-        # Escape is the same as the 'alt-' prefix.
+        # Escape is the same as the 'meta-' prefix.
         self._escape_pressed = True
 
     def ctrl_a(self):
@@ -283,27 +289,27 @@ class EmacsInputStreamHandler(InputStreamHandler):
         if name in ('ctrl_x', 'ctrl_a'):
             reset_arg_count_after_call = False
 
-                # TODO: implement these states (alt-prefix, ctrl_x and ctrl_a prefix)
+                # TODO: implement these states (meta-prefix, ctrl_x and ctrl_a prefix)
                 #       in separate InputStreamHandler classes.If a method, like (ctl_x)
                 #       is called and returns an object. That should become the
                 #       new handler.
 
-        # When escape was pressed, call the `alt_`-function instead.
-        # (This is emacs-mode behaviour. The alt-prefix is equal to the escape
+        # When escape was pressed, call the `meta_`-function instead.
+        # (This is emacs-mode behaviour. The meta-prefix is equal to the escape
         # key, and in VI mode, that's used to go from insert to navigation mode.)
         if self._escape_pressed:
             if name == 'insert_char':
-                # Handle Alt + digit in the `alt_digit` method.
+                # Handle Alt + digit in the `meta_digit` method.
                 if a[0] in '0123456789' or (a[0] == '-' and self._arg_count == None):
-                    name = 'alt_digit'
+                    name = 'meta_digit'
                     reset_arg_count_after_call = False
 
-                # Handle Alt + char in their respective `alt_X` method.
+                # Handle Alt + char in their respective `meta_X` method.
                 else:
-                    name = 'alt_' + a[0]
+                    name = 'meta_' + a[0]
                     a = []
             else:
-                name = 'alt_' + name
+                name = 'meta_' + name
             self._escape_pressed = False
 
         # If Ctrl-x was pressed. Prepend ctrl_x prefix to hander name.
@@ -338,28 +344,28 @@ class EmacsInputStreamHandler(InputStreamHandler):
         for i in range(self._arg_count or 1):
             super(EmacsInputStreamHandler, self).insert_char(data)
 
-    def alt_ctrl_j(self):
+    def meta_ctrl_j(self):
         """ ALT + Newline """
-        # Alias for alt_enter
-        self.alt_enter()
+        # Alias for meta_enter
+        self.meta_enter()
 
-    def alt_ctrl_m(self):
+    def meta_ctrl_m(self):
         """ ALT + Carriage return """
-        # Alias for alt_enter
-        self.alt_enter()
+        # Alias for meta_enter
+        self.meta_enter()
 
-    def alt_digit(self, digit):
+    def meta_digit(self, digit):
         """ ALT + digit or '-' pressed. """
         self._arg_count = _arg_count_append(self._arg_count, digit)
 
-    def alt_enter(self):
+    def meta_enter(self):
         pass
 
-    def alt_backspace(self):
+    def meta_backspace(self):
         """ Delete word backwards. """
         self._line.delete_word_before_cursor()
 
-    def alt_c(self):
+    def meta_c(self):
         """
         Capitalize the current (or following) word.
         """
@@ -368,7 +374,7 @@ class EmacsInputStreamHandler(InputStreamHandler):
             words = self._line.document.text_after_cursor[:pos]
             self._line.insert_text(words.title(), overwrite=True)
 
-    def alt_f(self):
+    def meta_f(self):
         """
         Cursor to end of next word.
         """
@@ -376,11 +382,11 @@ class EmacsInputStreamHandler(InputStreamHandler):
         if pos:
             self._line.cursor_position += pos
 
-    def alt_b(self):
+    def meta_b(self):
         """ Cursor to start of previous word. """
         self._line.cursor_word_back()
 
-    def alt_d(self):
+    def meta_d(self):
         """
         Delete the Word after the cursor. (Delete until end of word.)
         """
@@ -388,22 +394,22 @@ class EmacsInputStreamHandler(InputStreamHandler):
         data = ClipboardData(self._line.delete(pos))
         self._line.set_clipboard(data)
 
-    def alt_l(self):
+    def meta_l(self):
         """
         Lowercase the current (or following) word.
         """
-        for i in range(self._arg_count or 1): # XXX: not DRY: see alt_c and alt_u!!
+        for i in range(self._arg_count or 1): # XXX: not DRY: see meta_c and meta_u!!
             pos = self._line.document.find_next_word_ending()
             words = self._line.document.text_after_cursor[:pos]
             self._line.insert_text(words.lower(), overwrite=True)
 
-    def alt_t(self):
+    def meta_t(self):
         """
         Swap the last two words before the cursor.
         """
         # TODO
 
-    def alt_u(self):
+    def meta_u(self):
         """
         Uppercase the current (or following) word.
         """
@@ -418,15 +424,15 @@ class EmacsInputStreamHandler(InputStreamHandler):
         """
         self._line.undo()
 
-    def alt_backslash(self):
+    def meta_backslash(self):
         """
         Delete all spaces and tabs around point.
         (delete-horizontal-space)
         """
 
-    def alt_star(self):
+    def meta_star(self):
         """
-        `alt-*`: Insert all possible completions of the preceding text.
+        `meta-*`: Insert all possible completions of the preceding text.
         """
 
     def ctrl_x_ctrl_e(self):

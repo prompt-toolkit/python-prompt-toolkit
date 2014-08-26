@@ -78,6 +78,16 @@ class InputStream(object):
         '\x1b[19~': 'F8',
         '\x1b[20~': 'F9',
         '\x1b[21~': 'F10',
+        '\x1b[23~': 'F11',
+        '\x1b[24~': 'F12',
+        '\x1b[25~': 'F13',
+        '\x1b[26~': 'F14',
+        '\x1b[28~': 'F15',
+        '\x1b[29~': 'F16',
+        '\x1b[31~': 'F17',
+        '\x1b[32~': 'F18',
+        '\x1b[33~': 'F19',
+        '\x1b[34~': 'F20',
     }
 
     def __init__(self, handler, stdout=None):
@@ -147,6 +157,8 @@ class InputStream(object):
         Feed the input stream.
         """
         assert isinstance(data, six.text_type)
+
+        #print(repr(data))
 
         for c in data:
             self._input_parser.send(c)
