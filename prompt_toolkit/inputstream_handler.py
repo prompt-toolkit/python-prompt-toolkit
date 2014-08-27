@@ -243,6 +243,8 @@ class InputStreamHandler(object):
     def meta_enter(self): # ESC-enter should always accept. -> enter in VI
                          # insert mode should insert a newline. For emacs not
                          # sure yet.
+
+        # XXX: we never come here, I think...
         self._line.newline()
 
 
@@ -256,15 +258,11 @@ class EmacsInputStreamHandler(InputStreamHandler):
     def _reset(self):
         super(EmacsInputStreamHandler, self)._reset()
         self._escape_pressed = False
-        self._ctrl_a_pressed = False
         self._ctrl_x_pressed = False
 
     def escape(self):
         # Escape is the same as the 'meta-' prefix.
         self._escape_pressed = True
-
-    def ctrl_a(self):
-        self._ctrl_a_pressed = True
 
     def ctrl_n(self):
         self._line.auto_down()
@@ -276,6 +274,10 @@ class EmacsInputStreamHandler(InputStreamHandler):
     def ctrl_p(self):
         self._line.auto_up()
 
+    def ctrl_w(self):
+        # TODO: cut current region.
+        pass
+
     def ctrl_x(self):
         self._ctrl_x_pressed = True
 
@@ -286,10 +288,10 @@ class EmacsInputStreamHandler(InputStreamHandler):
     def __call__(self, name, *a):
         reset_arg_count_after_call = True
 
-        if name in ('ctrl_x', 'ctrl_a'):
+        if name == 'ctrl_x':
             reset_arg_count_after_call = False
 
-                # TODO: implement these states (meta-prefix, ctrl_x and ctrl_a prefix)
+                # TODO: implement these states (meta-prefix and  ctrl_x)
                 #       in separate InputStreamHandler classes.If a method, like (ctl_x)
                 #       is called and returns an object. That should become the
                 #       new handler.
@@ -315,8 +317,6 @@ class EmacsInputStreamHandler(InputStreamHandler):
         # If Ctrl-x was pressed. Prepend ctrl_x prefix to hander name.
         if self._ctrl_x_pressed:
             name = 'ctrl_x_%s' % name
-        elif self._ctrl_a_pressed:
-            name = 'ctrl_a_%s' % name
 
         super(EmacsInputStreamHandler, self).__call__(name, *a)
 
@@ -327,15 +327,13 @@ class EmacsInputStreamHandler(InputStreamHandler):
         if reset_arg_count_after_call:
             self._arg_count = None
 
-        # Reset ctrl_x/ctrl_a state.
+        # Reset ctrl_x state.
         if name != 'ctrl_x':
             self._ctrl_x_pressed = False
-        if name != 'ctrl_a':
-            self._ctrl_a_pressed = False
 
     def _needs_to_save(self, current_method):
         # Don't save the current state at the undo-stack for following methods.
-        if current_method in ('ctrl_x_ctrl_u', 'ctrl_underscore'):
+        if current_method in ('ctrl_x', 'ctrl_x_ctrl_u', 'ctrl_underscore'):
             return False
 
         return super(EmacsInputStreamHandler, self)._needs_to_save(current_method)
@@ -365,6 +363,13 @@ class EmacsInputStreamHandler(InputStreamHandler):
         """ Delete word backwards. """
         self._line.delete_word_before_cursor()
 
+    def meta_a(self):
+        """
+        Previous sentence.
+        """
+        # TODO:
+        pass
+
     def meta_c(self):
         """
         Capitalize the current (or following) word.
@@ -373,6 +378,11 @@ class EmacsInputStreamHandler(InputStreamHandler):
             pos = self._line.document.find_next_word_ending()
             words = self._line.document.text_after_cursor[:pos]
             self._line.insert_text(words.title(), overwrite=True)
+
+    def meta_e(self):
+        """ Move to end of sentence. """
+        # TODO:
+        pass
 
     def meta_f(self):
         """
@@ -418,6 +428,19 @@ class EmacsInputStreamHandler(InputStreamHandler):
             words = self._line.document.text_after_cursor[:pos]
             self._line.insert_text(words.upper(), overwrite=True)
 
+    def meta_w(self):
+        """
+        Copy current region.
+        """
+        # TODO
+
+    def ctrl_space(self):
+        """
+        Select region.
+        """
+        # TODO
+        pass
+
     def ctrl_underscore(self):
         """
         Undo.
@@ -454,12 +477,6 @@ class EmacsInputStreamHandler(InputStreamHandler):
         else:
             self._line.cursor_to_end_of_line()
 
-    def ctrl_a_ctrl_k(self):
-        """ Yank line. """
-        text = '\n'.join(self._line.document.lines_from_current[:self._arg_count or 1])
-        data = ClipboardData(text, ClipboardDataType.LINES)
-        self._line.set_clipboard(data)
-
 
 class ViMode(object):
     NAVIGATION = 'navigation'
@@ -488,7 +505,25 @@ class ViInputStreamHandler(InputStreamHandler):
         # additional key to be typed before they execute.
         self._one_character_callback = None
 
+        # Remember the last 'F' or 'f' command.
+        self._last_character_find = None # (char, backwards) tuple
+
+        # Macros.
+        self._macro_recording_register = None
+        self._macro_recording_calls = [] # List of currently recording commands.
+        self._macros = {} # Maps macro char to commands.
+        self._playing_macro = False
+
+    @property
+    def is_recording_macro(self):
+        """ True when we are currently recording a macro. """
+        return bool(self._macro_recording_register)
+
     def __call__(self, name, *a):
+        # Save in macro, if we are recording.
+        if self._macro_recording_register:
+            self._macro_recording_calls.append( (name,) + a)
+
         super(ViInputStreamHandler, self).__call__(name, *a)
 
         # After every command, make sure that if we are in navigation mode, we
@@ -500,6 +535,14 @@ class ViInputStreamHandler(InputStreamHandler):
                 len(self._line.document.current_line) > 0):
             self._line.cursor_position -= 1
 
+    def _needs_to_save(self, current_method):
+        # Don't create undo entries in the middle of executing a macro.
+        # (We want to be able to undo the macro in its whole.)
+        if self._playing_macro:
+            return False
+
+        return super(ViInputStreamHandler, self)._needs_to_save(current_method)
+
     def escape(self):
         """ Escape goes to vi navigation mode. """
         self._vi_mode = ViMode.NAVIGATION
@@ -509,7 +552,9 @@ class ViInputStreamHandler(InputStreamHandler):
         self._arg_count = None
 
     def enter(self):
-        if self._vi_mode == ViMode.NAVIGATION:
+        if self._line.mode == LineMode.INCREMENTAL_SEARCH:
+            self._line.exit_isearch(restore_original_line=False)
+        elif self._vi_mode == ViMode.NAVIGATION:
             self._line.return_input()
         else:
             super(ViInputStreamHandler, self).enter()
@@ -624,6 +669,8 @@ class ViInputStreamHandler(InputStreamHandler):
             # Go to next occurance of character. Typing 'fx' will move the
             # cursor to the next occurance of character. 'x'.
             def cb(char):
+                self._last_character_find = (char, False)
+
                 for i in range(arg):
                     line.go_to_substring(char, in_current_line=True)
             self._one_character_callback = cb
@@ -633,6 +680,8 @@ class ViInputStreamHandler(InputStreamHandler):
             # Go to previous occurance of character. Typing 'Fx' will move the
             # cursor to the previous occurance of character. 'x'.
             def cb(char):
+                self._last_character_find = (char, True)
+
                 for i in range(arg):
                     line.go_to_substring(char, in_current_line=True, backwards=True)
             self._one_character_callback = cb
@@ -692,16 +741,24 @@ class ViInputStreamHandler(InputStreamHandler):
 
         @handle('n')
         def _(arg):
-            # Repeat search in the same direction as previous.
-            line.search_next(line.isearch_direction)
+            # TODO:
+            pass
+
+            # if line.isearch_state:
+            #     # Repeat search in the same direction as previous.
+            #     line.search_next(line.isearch_state.isearch_direction)
 
         @handle('N')
         def _(arg):
-            # Repeat search in the opposite direction as previous.
-            if line.isearch_direction == IncrementalSearchDirection.FORWARD:
-                line.search_next(IncrementalSearchDirection.BACKWARD)
-            else:
-                line.search_next(IncrementalSearchDirection.FORWARD)
+            # TODO:
+            pass
+
+            #if line.isearch_state:
+            #    # Repeat search in the opposite direction as previous.
+            #    if line.isearch_state.isearch_direction == IncrementalSearchDirection.FORWARD:
+            #        line.search_next(IncrementalSearchDirection.BACKWARD)
+            #    else:
+            #        line.search_next(IncrementalSearchDirection.FORWARD)
 
         @handle('p')
         def _(arg):
@@ -881,6 +938,35 @@ class ViInputStreamHandler(InputStreamHandler):
             line.insert_line_below()
             self._vi_mode = ViMode.INSERT
 
+        @handle('q')
+        def _(arg):
+            # Start/stop recording macro.
+            if self._macro_recording_register:
+                # Save macro.
+                self._macros[self._macro_recording_register] = self._macro_recording_calls
+                self._macro_recording_register = None
+            else:
+                # Start new macro.
+                def cb(char):
+                    self._macro_recording_register = char
+                    self._macro_recording_calls = []
+
+                self._one_character_callback = cb
+
+        @handle('@')
+        def _(arg):
+            # Execute macro.
+            def cb(char):
+                if char in self._macros:
+                    self._playing_macro = True
+
+                    for command in self._macros[char]:
+                        self(*command)
+
+                    self._playing_macro = False
+
+            self._one_character_callback = cb
+
         @handle('~')
         def _(arg):
             """ Reverse case of current character and move cursor forward. """
@@ -906,6 +992,15 @@ class ViInputStreamHandler(InputStreamHandler):
             # Search history forward for a command matching string.
             self._line.forward_search()
             self._vi_mode = ViMode.INSERT # We have to be able to insert the search string.
+
+        @handle(';')
+        def _(arg):
+            # Repeat the last 'f' or 'F' command.
+            if self._last_character_find:
+                char, backwards = self._last_character_find
+
+                for i in range(arg):
+                    line.go_to_substring(char, in_current_line=True, backwards=backwards)
 
         return handles
 

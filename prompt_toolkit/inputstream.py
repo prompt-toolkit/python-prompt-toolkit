@@ -24,6 +24,7 @@ class InputStream(object):
     """
     # Lookup table of ANSI escape sequences for a VT100 terminal
     CALLBACKS = {
+        '\x00': 'ctrl_space', # Control-Space
         '\x01': 'ctrl_a', # Control-A (home)
         '\x02': 'ctrl_b', # Control-B (emacs cursor left)
         '\x03': 'ctrl_c', # Control-C (interrupt)

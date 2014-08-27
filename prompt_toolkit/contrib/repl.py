@@ -128,7 +128,10 @@ class PythonViInputStreamHandler(_PythonInputStreamHandlerMixin, ViInputStreamHa
     def enter(self):
         self._auto_enable_multiline()
 
-        if self._line.multiline:
+        if self._line.mode == LineMode.INCREMENTAL_SEARCH:
+            self._line.exit_isearch(restore_original_line=False)
+
+        elif self._line.multiline:
             if self._vi_mode == ViMode.NAVIGATION:
                 # We are in VI-navigation mode after pressing `Meta`.
                 self._line.return_input()
@@ -143,8 +146,12 @@ class PythonEmacsInputStreamHandler(_PythonInputStreamHandlerMixin, EmacsInputSt
     def enter(self):
         self._auto_enable_multiline()
 
-        if self._line.multiline:
+        if self._line.mode == LineMode.INCREMENTAL_SEARCH:
+            self._line.exit_isearch(restore_original_line=False)
+
+        elif self._line.multiline:
             self._line.newline()
+
         else:
             # In single line input, always execute when pressing enter.
             self._line.return_input()
@@ -301,14 +308,17 @@ class PythonPrompt(Prompt):
     def _get_signature_tokens(self):
         result = []
         append = result.append
-        script = self.code._get_jedi_script()
         Signature = Token.Signature
+        script = self.code._get_jedi_script()
 
         # Show signatures in help text.
-        try:
-            signatures = script.call_signatures()
-        except ValueError:
-            # e.g. in case of an invalid \x escape.
+        if script:
+            try:
+                signatures = script.call_signatures()
+            except ValueError:
+                # e.g. in case of an invalid \x escape.
+                signatures = []
+        else:
             signatures = []
 
         if signatures:
@@ -353,6 +363,11 @@ class PythonPrompt(Prompt):
             elif mode == ViMode.REPLACE:
                 append((TB.Mode, '(REPLACE)'))
                 append((TB, ' '))
+
+            if self._pythonline._inputstream_handler.is_recording_macro:
+                append((TB.Mode, 'recording'))
+                append((TB, ' '))
+
         else:
             append((TB.Mode, '(emacs)'))
             append((TB, ' '))
@@ -423,18 +438,24 @@ class PythonCode(Code):
         return result
 
     def _get_jedi_script(self):
-        return jedi.Interpreter(self.text,
-                column=self.document.cursor_position_col,
-                line=self.document.cursor_position_row + 1,
-                path='input-text',
-                namespaces=[ self._locals, self._globals ])
+        try:
+            return jedi.Interpreter(self.text,
+                    column=self.document.cursor_position_col,
+                    line=self.document.cursor_position_row + 1,
+                    path='input-text',
+                    namespaces=[ self._locals, self._globals ])
+
+        except jedi.common.MultiLevelStopIteration:
+            # This happens when the document is just a backslash.
+            return None
 
     def get_completions(self, recursive=False):
         """ Ask jedi to complete. """
         script = self._get_jedi_script()
 
-        for c in script.completions():
-            yield Completion(c.name, c.complete)
+        if script:
+            for c in script.completions():
+                yield Completion(c.name, c.complete)
 
 
 class PythonCommandLine(CommandLine):

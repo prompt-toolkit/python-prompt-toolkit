@@ -99,7 +99,7 @@ class Prompt(PromptBase):
         """
         yield (Token.Prompt.ISearch.Bracket, '(')
 
-        if self.line.isearch_direction == IncrementalSearchDirection.BACKWARD:
+        if self.line.isearch_state.isearch_direction == IncrementalSearchDirection.BACKWARD:
             yield (Token.Prompt.ISearch, 'reverse-i-search')
         else:
             yield (Token.Prompt.ISearch, 'i-search')

@@ -734,7 +734,7 @@ class Line(object):
             self.isearch_state.isearch_text += data
 
             if not self.document.has_match_at_current_position(self.isearch_state.isearch_text):
-                self.search_next(self.isearch_direction)
+                self.search_next(self.isearch_state.isearch_direction)
         else:
             # In insert/text mode.
             if overwrite:
@@ -831,35 +831,38 @@ class Line(object):
         """
         Enter i-search mode, or if already entered, go to the previous match.
         """
-        self.isearch_direction = IncrementalSearchDirection.BACKWARD
+        direction = IncrementalSearchDirection.BACKWARD
 
         if self.mode == LineMode.INCREMENTAL_SEARCH:
-            self.search_next(self.isearch_direction)
+            self.search_next(direction)
         else:
-            self._start_isearch()
+            self._start_isearch(direction)
 
     @_to_mode(LineMode.NORMAL, LineMode.INCREMENTAL_SEARCH)
     def forward_search(self):
         """
         Enter i-search mode, or if already entered, go to the following match.
         """
-        self.isearch_direction = IncrementalSearchDirection.FORWARD
+        direction = IncrementalSearchDirection.FORWARD
 
         if self.mode == LineMode.INCREMENTAL_SEARCH:
-            self.search_next(self.isearch_direction)
+            self.search_next(direction)
         else:
-            self._start_isearch()
+            self._start_isearch(direction)
 
-    def _start_isearch(self):
+    def _start_isearch(self, direction):
         self.mode = LineMode.INCREMENTAL_SEARCH
         self.isearch_state = _IncrementalSearchState(
                 original_cursor_position = self.cursor_position,
                 original_working_index = self._working_index)
+        self.isearch_state.isearch_direction = direction
 
     @_to_mode(LineMode.NORMAL, LineMode.INCREMENTAL_SEARCH)
     def search_next(self, direction):
         if not (self.mode == LineMode.INCREMENTAL_SEARCH and self.isearch_state.isearch_text):
             return
+
+        self.isearch_state.isearch_direction = direction
 
         isearch_text = self.isearch_state.isearch_text
 
@@ -906,7 +909,6 @@ class Line(object):
                 self.cursor_position = self.isearch_state.original_cursor_position
 
             self.mode = LineMode.NORMAL
-            self.isearch_state = None
 
     @_to_mode(LineMode.NORMAL)
     def clear(self):
