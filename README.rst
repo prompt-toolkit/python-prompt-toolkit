@@ -1,7 +1,7 @@
 Python Prompt Toolkit
 =====================
 
-(WORK IN PROGRESS)
+(This is work in progress. Many things work, but APIs can change.)
 
 
 `prompt_toolkit` is a Library for building interactive command lines in Python.
@@ -14,13 +14,26 @@ advanced features:
 - Advanced code completion
 - Both Emacs and Vi keybindings (Similar to readline), including
   reverse and forward incremental search
+- Both Python 2.7 and Python 3
+- Works well with Unicode double width characters. (Chinese input.)
+
+
+Installation
+------------
+
+::
+
+    pip install prompt-toolkit
 
 
 The Python repl
 ---------------
 
-Run `./bin/prompt-toolkit-python-repl` to get an interactive Python prompt with
-syntaxt highlighting, code completion, etc...
+Run `ptpython` to get an interactive Python prompt with syntaxt highlighting,
+code completion, etc...
+
+If you prefer to have Vi keybindings (which currently are more completely
+implemented than the Emacs bindings), run `ptpython --vi`.
 
 
 Example
