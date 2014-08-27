@@ -39,7 +39,7 @@ class FileHistory(History):
                 self.strings.append(string)
 
         if os.path.exists(self.filename):
-            with open(self.filename, 'r') as f:
+            with open(self.filename, 'rb') as f:
                 for line in f:
                     line = line.decode('utf-8')
 
@@ -56,7 +56,7 @@ class FileHistory(History):
         super(FileHistory, self).append(string)
 
         # Save to file.
-        with open(self.filename, 'a') as f:
+        with open(self.filename, 'ab') as f:
             write = lambda t: f.write(t.encode('utf-8'))
 
             write('\n# %s\n' % datetime.datetime.now())
