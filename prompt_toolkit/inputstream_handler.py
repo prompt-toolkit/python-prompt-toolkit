@@ -551,6 +551,10 @@ class ViInputStreamHandler(InputStreamHandler):
         # Reset arg count.
         self._arg_count = None
 
+        # Quit incremental search (if enabled.)
+        if self._line.mode == LineMode.INCREMENTAL_SEARCH:
+            self._line.exit_isearch()
+
     def enter(self):
         if self._line.mode == LineMode.INCREMENTAL_SEARCH:
             self._line.exit_isearch(restore_original_line=False)
@@ -1011,6 +1015,9 @@ class ViInputStreamHandler(InputStreamHandler):
         if self._one_character_callback:
             self._one_character_callback(data)
             self._one_character_callback = False
+
+        elif self._line.mode == LineMode.INCREMENTAL_SEARCH:
+            self._line.insert_text(data)
 
         elif self._vi_mode == ViMode.NAVIGATION:
             # Always handle numberics to build the arg
