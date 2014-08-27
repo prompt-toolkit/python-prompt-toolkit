@@ -41,6 +41,8 @@ class FileHistory(History):
         if os.path.exists(self.filename):
             with open(self.filename, 'r') as f:
                 for line in f:
+                    line = line.decode('utf-8')
+
                     if line.startswith('+'):
                         lines.append(line[1:])
                     else:
@@ -55,8 +57,10 @@ class FileHistory(History):
 
         # Save to file.
         with open(self.filename, 'a') as f:
-            f.write('\n# %s\n' % datetime.datetime.now())
+            write = lambda t: f.write(t.encode('utf-8'))
+
+            write('\n# %s\n' % datetime.datetime.now())
             for line in string.split('\n'):
-                f.write('+%s\n' % line)
+                write('+%s\n' % line)
 
 
