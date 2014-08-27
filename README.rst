@@ -4,7 +4,8 @@ Python Prompt Toolkit
 (This is work in progress. Many things work, but APIs can change.)
 
 
-`prompt_toolkit` is a Library for building interactive command lines in Python.
+`prompt_toolkit` is a Library for building powerful interactive command lines
+in Python.
 
 It could be a replacement for `readline`. It's Pure Python, and has some
 advanced features:
@@ -34,6 +35,13 @@ code completion, etc...
 
 If you prefer to have Vi keybindings (which currently are more completely
 implemented than the Emacs bindings), run ``ptpython --vi``.
+
+If you want to embed the repl inside your application at one point, do:
+
+.. code:: python
+
+    from prompt_toolkit.contrib.repl import embed
+    embed(globals(), locals(), vi_mode=False, history_filename=None)
 
 
 Using as a library

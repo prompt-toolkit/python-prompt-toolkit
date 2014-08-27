@@ -74,6 +74,10 @@ class CommandLine(object):
         # create input stream
         stream = self.inputstream_cls(self._inputstream_handler, stdout=self.stdout)
 
+        # TODO: create renderer here. (We want a new rendere instance for each input.)
+        #       `_line` should not need the renderer instance...
+        #       (use exceptions there to print completion pagers.)
+
         def render():
             self._renderer.render(self._line.get_render_context())
 
