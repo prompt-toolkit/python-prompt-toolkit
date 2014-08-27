@@ -369,6 +369,9 @@ class Renderer(object):
         return cols
 
     def  _get_new_screen(self, render_context):
+        """
+        Create a `Screen` instance and draw all the characters on the screen.
+        """
         screen = self.screen_cls(style=self._style, columns=self.get_width(), grayed=render_context.abort)
 
         # Write prompt.

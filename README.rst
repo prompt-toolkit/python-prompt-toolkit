@@ -29,15 +29,21 @@ Installation
 The Python repl
 ---------------
 
-Run `ptpython` to get an interactive Python prompt with syntaxt highlighting,
+Run ``ptpython`` to get an interactive Python prompt with syntaxt highlighting,
 code completion, etc...
 
 If you prefer to have Vi keybindings (which currently are more completely
-implemented than the Emacs bindings), run `ptpython --vi`.
+implemented than the Emacs bindings), run ``ptpython --vi``.
 
 
-Example
--------
+Using as a library
+------------------
+
+This is a library which allows you to build highly customizable input prompts.
+Every step (from key bindings, to line behaviour until the renderer can be
+customized.)
+
+The simplest example looks like this:
 
 .. code:: python
 
