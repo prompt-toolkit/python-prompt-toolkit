@@ -24,7 +24,7 @@ class InputStream(object):
     """
     # Lookup table of ANSI escape sequences for a VT100 terminal
     CALLBACKS = {
-        '\x00': 'ctrl_space', # Control-Space
+        '\x00': 'ctrl_space', # Control-Space (Also for Ctrl-@)
         '\x01': 'ctrl_a', # Control-A (home)
         '\x02': 'ctrl_b', # Control-B (emacs cursor left)
         '\x03': 'ctrl_c', # Control-C (interrupt)
@@ -35,8 +35,8 @@ class InputStream(object):
         '\x08': 'ctrl_h', # Control-H (8) (Identical to '\b')
         '\x09': 'ctrl_i', # Control-I (9) (Identical to '\t')
         '\x0a': 'ctrl_j', # Control-J (10) (Identical to '\n')
-        '\x0b': 'ctrl_k', # Control-K (delete until end of line)
-        '\x0c': 'ctrl_l', # Control-L (clear)
+        '\x0b': 'ctrl_k', # Control-K (delete until end of line; vertical tab)
+        '\x0c': 'ctrl_l', # Control-L (clear; form feed)
         '\x0d': 'ctrl_m', # Control-M (13) (Identical to '\r')
         '\x0e': 'ctrl_n', # Control-N (14) (history forward)
         '\x0f': 'ctrl_o', # Control-O (15)
@@ -51,7 +51,10 @@ class InputStream(object):
         '\x18': 'ctrl_x', # Control-X
         '\x19': 'ctrl_y', # Control-Y (25)
         '\x1a': 'ctrl_z', # Control-Z
-        '\x1f': 'ctrl_underscore', # Control-underscore
+        '\x1c': 'ctrl_backslash', # Both Control-\ and Ctrl-|
+        '\x1d': 'ctrl_square_close', # Control-]
+        '\x1e': 'ctrl_circumflex', # Control-^
+        '\x1f': 'ctrl_underscore', # Control-underscore (Also for Ctrl-hypen.)
         '\x7f': 'backspace', # (127) Backspace
            ### '\x1b': 'escape',
         '\x1b[A': 'arrow_up',

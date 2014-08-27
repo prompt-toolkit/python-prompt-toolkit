@@ -448,6 +448,10 @@ class PythonCode(Code):
         except jedi.common.MultiLevelStopIteration:
             # This happens when the document is just a backslash.
             return None
+        except ValueError:
+            # Invalid cursor position.
+            # ValueError('`column` parameter is not in a valid range.')
+            return None
 
     def get_completions(self, recursive=False):
         """ Ask jedi to complete. """
