@@ -123,6 +123,13 @@ class Document(object):
 
         return row, col
 
+    def translate_row_col_to_index(self, row, col): # TODO: unit test
+        """
+        Given a (row, col) tuple, return the corresponding index.
+        (Row and col params are 0-based.)
+        """
+        return len('\n'.join(self.lines[:row])) + len('\n') + col
+
     @property
     def cursor_up_position(self):
         """

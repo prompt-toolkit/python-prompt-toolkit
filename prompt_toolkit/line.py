@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 from functools import wraps
 
-from .code import Code
+from .code import Code, ValidationError
 from .document import Document
 from .enums import IncrementalSearchDirection, LineMode
 from .prompt import Prompt
@@ -153,9 +153,12 @@ class Line(object):
 
         self.reset()
 
-    def reset(self):
+    def reset(self, initial_value=''):
         self.mode = LineMode.NORMAL
-        self.cursor_position = 0
+        self.cursor_position = len(initial_value)
+
+        # `ValidationError` instance. (Will be set when the input is wrong.)
+        self.validation_error = None
 
         # State of Incremental-search
         self.isearch_state = None
@@ -172,7 +175,7 @@ class Line(object):
         #: Enter should process the current command and append to the real
         #: history.
         self._working_lines = self._history.strings[:]
-        self._working_lines.append('')
+        self._working_lines.append(initial_value)
         self.__working_index = len(self._working_lines) - 1
 
     ### <getters/setters>
@@ -185,9 +188,12 @@ class Line(object):
     def text(self, value):
         self._working_lines[self._working_index] = value
 
-        # Always quit autocomplete mode when the cursor position changes.
+        # Always quit autocomplete mode when the text changes.
         if self.mode == LineMode.COMPLETE:
             self.mode = LineMode.NORMAL
+
+        # Remove any validation errors.
+        self.validation_error = None
 
         self._text_changed()
 
@@ -202,6 +208,9 @@ class Line(object):
         # Always quit autocomplete mode when the cursor position changes.
         if self.mode == LineMode.COMPLETE:
             self.mode = LineMode.NORMAL
+
+        # Remove any validation errors.
+        self.validation_error = None
 
     @property
     def _working_index(self):
@@ -681,7 +690,8 @@ class Line(object):
         # Create prompt instance.
         return RenderContext(prompt, code, highlight_regions=highlight_regions,
                         complete_state=complete_state,
-                        abort=_abort, accept=_accept)
+                        abort=_abort, accept=_accept,
+                        validation_error=self.validation_error)
 
     @_to_mode(LineMode.NORMAL)
     def history_forward(self):
@@ -814,6 +824,15 @@ class Line(object):
         """
         code = self._create_code_obj()
         text = self.text
+
+        # Validate first. If not valid, set validation exception.
+        try:
+            code.validate()
+            self.validation_error = None
+        except ValidationError as e:
+            self.cursor_position = self.document.translate_row_col_to_index(e.line, e.column)
+            self.validation_error  = e
+            return
 
         # Save at the tail of the history. (But don't if the last entry the
         # history is already the same.)

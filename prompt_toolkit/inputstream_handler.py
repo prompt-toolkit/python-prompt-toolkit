@@ -558,7 +558,9 @@ class ViInputStreamHandler(InputStreamHandler):
     def enter(self):
         if self._line.mode == LineMode.INCREMENTAL_SEARCH:
             self._line.exit_isearch(restore_original_line=False)
+
         elif self._vi_mode == ViMode.NAVIGATION:
+            self._vi_mode = ViMode.INSERT
             self._line.return_input()
         else:
             super(ViInputStreamHandler, self).enter()

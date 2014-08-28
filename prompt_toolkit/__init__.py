@@ -66,7 +66,7 @@ class CommandLine(object):
                         history_cls=self.history_cls)
         self._inputstream_handler = self.inputstream_handler_cls(self._line)
 
-    def read_input(self):
+    def read_input(self, initial_value=''):
         """
         Read input from command line.
         This can raise `Exit`, when the user presses Ctrl-D.
@@ -77,6 +77,9 @@ class CommandLine(object):
         # TODO: create renderer here. (We want a new rendere instance for each input.)
         #       `_line` should not need the renderer instance...
         #       (use exceptions there to print completion pagers.)
+
+        # Reset line
+        self._line.reset(initial_value=initial_value)
 
         def render():
             self._renderer.render(self._line.get_render_context())

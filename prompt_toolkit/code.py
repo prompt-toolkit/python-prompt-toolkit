@@ -6,9 +6,10 @@ from __future__ import unicode_literals
 from pygments.token import Token
 
 __all__ = (
-    'CodeBase',
     'Code',
+    'CodeBase',
     'Completion'
+    'ValidationError',
 )
 
 
@@ -19,6 +20,14 @@ class Completion(object):
 
     def __repr__(self):
         return 'Completion(display=%r, suffix=%r)' % (self.display, self.suffix)
+
+
+class ValidationError(Exception):
+    def __init__(self, line, column, message=''):
+        self.line = line
+        self.column = column
+        self.message = message
+
 
 
 class CodeBase(object):
@@ -46,6 +55,14 @@ class CodeBase(object):
         """ Yield `Completion` instances. """
         if False:
             yield
+
+    def validate(self):
+        """
+        Validate the input.
+        If invalid, this should raise `self.validation_error`.
+        """
+        pass
+
 
 
 class Code(CodeBase):

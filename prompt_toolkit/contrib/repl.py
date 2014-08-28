@@ -16,7 +16,7 @@ from pygments.style import Style
 from pygments.token import Keyword, Operator, Number, Name, Error, Comment, Token
 
 from prompt_toolkit import CommandLine
-from prompt_toolkit.code import Completion, Code
+from prompt_toolkit.code import Completion, Code, ValidationError
 from prompt_toolkit.enums import LineMode
 from prompt_toolkit.history import FileHistory, History
 from prompt_toolkit.inputstream_handler import ViInputStreamHandler, EmacsInputStreamHandler, ViMode
@@ -74,6 +74,8 @@ class PythonStyle(Style):
 
         # Grayed
         Token.Aborted:    '#aaaaaa',
+
+        Token.ValidationError:    'bg:#aa0000 #ffffff',
     }
 
 
@@ -134,11 +136,13 @@ class PythonViInputStreamHandler(_PythonInputStreamHandlerMixin, ViInputStreamHa
         elif self._line.multiline:
             if self._vi_mode == ViMode.NAVIGATION:
                 # We are in VI-navigation mode after pressing `Meta`.
+                self._vi_mode = ViMode.INSERT
                 self._line.return_input()
             else:
                 self._line.newline()
         else:
             # In single line input, always execute when pressing enter.
+            self._vi_mode = ViMode.INSERT
             self._line.return_input()
 
 
@@ -164,8 +168,8 @@ class PythonLine(Line):
     """
     Custom `Line` class with some helper functions.
     """
-    def reset(self):
-        super(PythonLine, self).reset()
+    def reset(self, *a, **kw):
+        super(PythonLine, self).reset(*a, **kw)
 
         #: Boolean `paste` flag. If True, don't insert whitespace after a
         #: newline.
@@ -299,6 +303,8 @@ class PythonPrompt(Prompt):
             result.extend(list(super(PythonPrompt, self).get_isearch_prompt()))
         elif self.line._arg_prompt_text:
             result.extend(list(super(PythonPrompt, self).get_arg_prompt()))
+        elif self.line.validation_error:
+            result.extend(self._get_error_tokens())
         else:
             result.extend(self._get_signature_tokens())
 
@@ -339,6 +345,16 @@ class PythonPrompt(Prompt):
             append((Signature.Operator, ')'))
 
         return result
+
+    def _get_error_tokens(self):
+        if self.line.validation_error:
+            text = '%s (line=%s column=%s)' % (
+                    self.line.validation_error.message,
+                    self.line.validation_error.line + 1,
+                    self.line.validation_error.column + 1)
+            return [(Token.ValidationError, text)]
+        else:
+            return []
 
     def _get_toolbar_tokens(self):
         result = []
@@ -406,6 +422,13 @@ class PythonCode(Code):
         self._globals = globals
         self._locals = locals
         super(PythonCode, self).__init__(document)
+
+    def validate(self):
+        """ Check input for Python syntax errors. """
+        try:
+            compile(self.text, '<input>', 'exec')
+        except SyntaxError as e:
+            raise ValidationError(e.lineno - 1, e.offset - 1, 'Syntax Error')
 
     def _get_tokens(self):
         """ Overwrite parent function, to change token types of non-matching

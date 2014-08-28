@@ -301,7 +301,7 @@ class _CompletionMenu(object):
         Write the menu to the screen object.
         """
         completions = self.complete_state.current_completions
-        index = self.complete_state.complete_index
+        index = self.complete_state.complete_index # Can be None!
 
         # Get position of the menu.
         y, x = self._get_origin()
@@ -312,9 +312,9 @@ class _CompletionMenu(object):
         menu_width = max(len(c.display) for c in self.complete_state.current_completions)
 
         # Decide which slice of completions to show.
-        if len(completions) > self.max_height and index > self.max_height / 2:
+        if len(completions) > self.max_height and (index or 0) > self.max_height / 2:
             slice_from = min(
-                        index - self.max_height / 2, # In the middle.
+                        (index or 0) - self.max_height // 2, # In the middle.
                         len(completions) - self.max_height # At the bottom.
                     )
         else:
@@ -327,7 +327,7 @@ class _CompletionMenu(object):
             items_per_row = float(len(completions)) / min(len(completions), self.max_height)
             items_on_this_row_from = row * items_per_row
             items_on_this_row_to = (row + 1) * items_per_row
-            return items_on_this_row_from <= self.complete_state.complete_index < items_on_this_row_to
+            return items_on_this_row_from <= (index or 0) < items_on_this_row_to
 
         # Write completions to screen.
         for i, c in enumerate(completions[slice_from:slice_to]):
