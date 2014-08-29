@@ -1,14 +1,14 @@
 Python Prompt Toolkit
 =====================
 
-(This is work in progress. Many things work, but APIs can change.)
+(Work in progress. Many things work, but APIs can change.)
 
 
 `prompt_toolkit` is a Library for building powerful interactive command lines
-in Python.
+in Python. It ships with a nice Python shell built on top of the library.
 
-It could be a replacement for `readline`. It's Pure Python, and has some
-advanced features:
+`prompt_toolkit` can be a replacement for `readline`. It's Pure Python, and has
+some advanced features:
 
 - Syntax highlighting of the input while typing. (Usually with a Pygments lexer.)
 - Multiline input
@@ -44,6 +44,18 @@ If you want to embed the repl inside your application at one point, do:
 
     from prompt_toolkit.contrib.repl import embed
     embed(globals(), locals(), vi_mode=False, history_filename=None)
+
+
+Multiline editing
+*****************
+
+Usually, multiline editing mode will automatically turn on when you press enter
+after a colon, however you can always turn it on by pressing F7.
+
+To execute the input in multiline mode, you can either press ``Alt+Enter``, or
+``Esc`` followed by ``Enter``. (If you want the first to work in the OS X
+terminal, you have to check the "Use option as meta key" checkbox in your
+terminal settings.)
 
 
 Using as a library

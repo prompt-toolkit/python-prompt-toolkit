@@ -162,9 +162,6 @@ class PythonEmacsInputStreamHandler(_PythonInputStreamHandlerMixin, EmacsInputSt
             # In single line input, always execute when pressing enter.
             self._line.return_input()
 
-    def meta_enter(self):
-        self._line.return_input()
-
 
 class PythonLine(Line):
     """

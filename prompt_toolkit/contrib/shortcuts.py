@@ -5,10 +5,10 @@ from __future__ import unicode_literals
 
 from .. import CommandLine, AbortAction
 from ..prompt import Prompt
-from ..line import Exit, Abort
+from ..inputstream_handler import EmacsInputStreamHandler
 
 
-def get_input(message, raise_exception_on_abort=False):
+def get_input(message, raise_exception_on_abort=False, multiline=False):
     """
     Replacement for `raw_input`.
     Ask for input, return the answer.
@@ -17,8 +17,14 @@ def get_input(message, raise_exception_on_abort=False):
     class CustomPrompt(Prompt):
         default_prompt_text = message
 
+
+    class CustomInputStreamHandler(EmacsInputStreamHandler):
+        multiline_editing = multiline
+
+
     class CLI(CommandLine):
         prompt_cls = CustomPrompt
+        inputstream_handler_cls = CustomInputStreamHandler
 
     cli = CLI()
 

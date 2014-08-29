@@ -26,6 +26,10 @@ class InputStreamHandler(object):
 
     :attr line: :class:`~prompt_toolkit.line.Line` class.
     """
+    #: Boolean for enabling multiline editing. When True, [Enter] will insert a
+    #: newline, and [Meta+Enter] is required to return the input.
+    multiline_editing = False
+
     def __init__(self, line):
         self._line = line
         self._reset()
@@ -241,15 +245,11 @@ class InputStreamHandler(object):
             # When enter pressed in isearch, quit isearch mode. (Multiline
             # isearch would be too complicated.)
             self._line.exit_isearch()
+
+        elif self.multiline_editing:
+            self._line.newline()
         else:
             self._line.return_input()
-
-    def meta_enter(self): # ESC-enter should always accept. -> enter in VI
-                         # insert mode should insert a newline. For emacs not
-                         # sure yet.
-
-        # XXX: we never come here, I think...
-        self._line.newline()
 
 
 class EmacsInputStreamHandler(InputStreamHandler):
@@ -361,7 +361,8 @@ class EmacsInputStreamHandler(InputStreamHandler):
         self._arg_count = _arg_count_append(self._arg_count, digit)
 
     def meta_enter(self):
-        pass
+        """ Alt + Enter. Should always accept input. """
+        self._line.return_input()
 
     def meta_backspace(self):
         """ Delete word backwards. """
