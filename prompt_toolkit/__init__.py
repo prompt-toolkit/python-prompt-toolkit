@@ -20,6 +20,7 @@ import os
 import select
 import six
 import sys
+import errno
 
 from .code import Code
 from .inputstream import InputStream
@@ -30,6 +31,10 @@ from .renderer import Renderer
 from .utils import raw_mode, call_on_sigwinch
 from .history import History
 
+__all__ = (
+        'AbortAction',
+        'CommandLine',
+)
 
 class AbortAction:
     """
@@ -128,7 +133,7 @@ class CommandLine(object):
         timeout = .5
 
         while True:
-            r, w, x = select.select([self.stdin, self._redraw_pipe[0]], [], [], timeout)
+            r, w, x = _select([self.stdin, self._redraw_pipe[0]], [], [], timeout)
 
             if self.stdin in r:
                 # Read the input and return it.
@@ -227,3 +232,21 @@ class CommandLine(object):
         if self._redraw_pipe:
             os.close(self._redraw_pipe[0])
             os.close(self._redraw_pipe[1])
+
+
+def _select(*args, **kwargs):
+    """
+    Wrapper around select.select.
+
+    When the SIGWINCH signal is handled, other system calls, like select
+    are aborted in Python. This wrapper will retry the system call.
+    """
+    while True:
+        try:
+            return select.select(*args, **kwargs)
+        except Exception as e:
+            # Retry select call when EINTR
+            if e.args and e.args[0] == errno.EINTR:
+                continue
+            else:
+                raise
