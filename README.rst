@@ -20,6 +20,7 @@ Features:
 - Reverse and forward incremental search
 - Both Python 3 and Python 2.7 support
 - Works well with Unicode double width characters. (Chinese input.)
+- Code written with love.
 
 
 Limitations:
@@ -54,6 +55,15 @@ If you want to embed the repl inside your application at one point, do:
 
     from prompt_toolkit.contrib.repl import embed
     embed(globals(), locals(), vi_mode=False, history_filename=None)
+
+Autocompletion
+**************
+
+``Tab`` and ``shift+tab`` complete the input. (Thanks to the `Jedi
+<http://jedi.jedidjah.ch/en/latest/>`_ autocompletion library.)
+In Vi-mode, you can also use ``Ctrl+N`` and ``Ctrl+P``.
+
+.. image :: docs/images/ptpython-complete-menu.png
 
 
 Multiline editing
