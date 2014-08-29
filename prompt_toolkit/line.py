@@ -897,13 +897,12 @@ class Line(object):
                 self.cursor_position += new_index
             else:
                 # No match, go back in the history.
-                for i in range(len(self._working_lines)):
-                    i2 = (self._working_index - i - 1) % len(self._working_lines)
-                    document = Document(self._working_lines[i2], len(self._working_lines[i2]))
+                for i in range(self._working_index - 1, -1, -1):
+                    document = Document(self._working_lines[i], len(self._working_lines[i]))
                     new_index = document.find_backwards(isearch_text)
                     if new_index is not None:
-                        self._working_index = i2
-                        self.cursor_position = len(self._working_lines[i2]) + new_index
+                        self._working_index = i
+                        self.cursor_position = len(self._working_lines[i]) + new_index
                         break
         else:
             # Try find at the current input.
@@ -913,12 +912,11 @@ class Line(object):
                 self.cursor_position += new_index
             else:
                 # No match, go forward in the history.
-                for i in range(len(self._working_lines)):
-                    i2 = (self._working_index + i + 1) % len(self._working_lines)
-                    document = Document(self._working_lines[i2], 0)
+                for i in range(self._working_index + 1, len(self._working_lines)):
+                    document = Document(self._working_lines[i], 0)
                     new_index = document.find(isearch_text, include_current_position=True)
                     if new_index is not None:
-                        self._working_index = i2
+                        self._working_index = i
                         self.cursor_position = new_index
                         break
 
