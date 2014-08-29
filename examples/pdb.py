@@ -1,17 +1,22 @@
 #!/usr/bin/env python
+"""
+
+Work in progress version of a PDB prompt.
+
+"""
 
 from pygments.style import Style
 from pygments.token import Token
 from pygments.token import Keyword, Operator, Number, Name, Error, Comment
 
-from prompt_toolkit import CommandLine
+from prompt_toolkit import CommandLine, AbortAction
 from prompt_toolkit.contrib.shell.code import ShellCode
 from prompt_toolkit.contrib.shell.prompt import ShellPrompt
 from prompt_toolkit.contrib.shell.rules import Any, Sequence, Literal, Variable, Repeat
 from prompt_toolkit.line import Exit
 from prompt_toolkit.prompt import Prompt
 
-from prompt_toolkit.contrib.repl.python import PythonCode
+from prompt_toolkit.contrib.repl import PythonCode
 
 
 class PdbCode(ShellCode):
@@ -248,8 +253,7 @@ if __name__ == '__main__':
 
     try:
         while True:
-            code = cli.read_input()
-#            print(code.get_parse_info())
+            code = cli.read_input(on_exit=AbortAction.RAISE_EXCEPTION)
 
             if code.is_pdb_statement:
                 print ('PDB command: %r' % code.get_parse_info().get_variables())

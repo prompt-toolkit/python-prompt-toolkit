@@ -154,7 +154,7 @@ class CommandLine(object):
                 self.on_input_timeout(self._line.create_code_obj())
                 timeout = None
 
-    def read_input(self, initial_value='', on_abort=AbortAction.RETRY, on_exit=AbortAction.RETURN_NONE):
+    def read_input(self, initial_value='', on_abort=AbortAction.RETRY, on_exit=AbortAction.IGNORE):
         """
         Read input from command line.
         This can raise `Exit`, when the user presses Ctrl-D.

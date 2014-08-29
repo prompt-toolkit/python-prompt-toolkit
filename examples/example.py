@@ -1,8 +1,16 @@
 #!/usr/bin/env python
+"""
+
+Work in progress.
+
+Alternative for a shell (like Bash).
+
+"""
+
 from pygments.style import Style
 from pygments.token import Token
 
-from prompt_toolkit import CommandLine
+from prompt_toolkit import CommandLine, AbortAction
 from prompt_toolkit.contrib.shell.code import ShellCode
 from prompt_toolkit.contrib.shell.completers import Path
 from prompt_toolkit.contrib.shell.prompt import ShellPrompt
@@ -12,25 +20,24 @@ from prompt_toolkit.line import Exit
 
 class OurGitCode(ShellCode):
     rule = Any([
-            # None: Sequence([ Variable(Path, placeholder='<path>'), Variable(Path, placeholder='<path2>') ]),
             Sequence([
                 Any([
                     Literal('cd'),
-                    Literal('rm'),
                     Literal('ls'),
+                    Literal('pushd'),
                     ]),
                     Variable(Path, placeholder='<directory>') ]),
-          #  Sequence([Literal('rm'), Variable(Path, placeholder='<file>') ]),
-          #  Sequence([Literal('ls'), Variable(Path, placeholder='<directory>') ]),
-            Sequence([Literal('abc'), Literal('efg'), Variable(Path, placeholder='<path>'), ]),
-          #  Sequence([Literal('cp'), Variable(Path, placeholder='<from>'), Variable(Path, placeholder='<to>') ]),
-            Sequence([Literal('cp'), Repeat(Variable(Path, placeholder='<from>')), Variable(Path, placeholder='<to>') ]),
+
+            Literal('pwd'),
+            Sequence([Literal('rm'), Variable(Path, placeholder='<file>') ]),
+            Sequence([Literal('cp'), Variable(Path, placeholder='<from>'), Variable(Path, placeholder='<to>') ]),
+            #Sequence([Literal('cp'), Repeat(Variable(Path, placeholder='<from>')), Variable(Path, placeholder='<to>') ]),
             Sequence([Literal('git'), Repeat(
                 Any([
                     #Sequence([]),
                     Literal('--version'),
                     Sequence([Literal('-c'), Variable(placeholder='<name>=<value>')]),
-                    Sequence([Literal('--exec-path'), Variable(placeholder='<path>')]),
+                    Sequence([Literal('--exec-path'), Variable(Path, placeholder='<path>')]),
                     Literal('--help'),
                     ])
                 ),
@@ -40,13 +47,9 @@ class OurGitCode(ShellCode):
                     Sequence([ Literal('diff'), Variable(placeholder='<commit>') ]),
                     ]),
                 ]),
-          #  Sequence([Literal('echo'), Variable(placeholder='<text>'), ]),
             Sequence([Literal('echo'), Repeat(Variable(placeholder='<text>')), ]),
     ])
 
-
-
-##A = Token.Example
 
 
 class ExampleStyle(Style):
@@ -56,7 +59,6 @@ class ExampleStyle(Style):
             Token.Placeholder.Variable: "#aa8888",
             Token.Placeholder.Bracket: "bold #ff7777",
             Token.Placeholder.Separator: "#ee7777",
-#            A.Action:  '#4444aa bg:#aaaaff',
 #            A.Path:    '#0044aa',
 #            A.Param:   '#ff00ff',
             Token.Aborted:    '#aaaaaa',
@@ -74,9 +76,11 @@ if __name__ == '__main__':
 
     try:
         while True:
-            shell_code = cli.read_input()
-            #handlers.process(line)
-            #handler.parse(
-            print ('You said: %r' % shell_code.get_parse_info())
+            shell_code = cli.read_input(on_exit=AbortAction.RAISE_EXCEPTION)
+            parse_info = shell_code.get_parse_info()
+
+            print ('You said: %r' % parse_info)
+            print(parse_info.get_variables())
+
     except Exit:
         pass
