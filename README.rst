@@ -13,9 +13,9 @@ some advanced features:
 - Syntax highlighting of the input while typing. (For instance, with a Pygments lexer.)
 - Multiline input editing
 - Advanced code completion
-- Both Emacs and Vi keybindings (Similar to readline), including
+- Both Emacs and Vi keybindings (Similar to readline)
 - Reverse and forward incremental search
-- Both Python 2.7 and Python 3
+- Both Python 3 and Python 2.7 support
 - Works well with Unicode double width characters. (Chinese input.)
 
 
@@ -50,7 +50,7 @@ Multiline editing
 *****************
 
 Usually, multiline editing mode will automatically turn on when you press enter
-after a colon, however you can always turn it on by pressing F7.
+after a colon, however you can always turn it on by pressing ``F7``.
 
 To execute the input in multiline mode, you can either press ``Alt+Enter``, or
 ``Esc`` followed by ``Enter``. (If you want the first to work in the OS X
@@ -65,11 +65,11 @@ This is a library which allows you to build highly customizable input prompts.
 Every step (from key bindings, to line behaviour until the renderer can be
 customized.)
 
-The simplest example looks like this:
+A simple example looks like this:
 
 .. code:: python
 
-    from prompt_toolkit import CommandLine
+    from prompt_toolkit import CommandLine, AbortAction
     from prompt_toolkit.line import Exit
 
     def main():
@@ -78,7 +78,7 @@ The simplest example looks like this:
 
         try:
             while True:
-                code_obj = cli.read_input()
+                code_obj = cli.read_input(on_exit=AbortAction.RAISE_EXCEPTION)
                 print('You said: ' + code_obj.text)
 
         except Exit: # Quit on Ctrl-D keypress
