@@ -13,9 +13,13 @@ Author: Jonathan Slenders
 
 """
 from __future__ import unicode_literals
-import sys
+
 import codecs
+import fcntl
+import os
+import select
 import six
+import sys
 
 from .code import Code
 from .inputstream import InputStream
@@ -69,6 +73,10 @@ class CommandLine(object):
     #: `History` class.
     history_cls = History
 
+    #: Boolean to indicate whether we will have other threads communicating
+    #: with the input event loop.
+    enable_concurency = False
+
     def __init__(self, stdin=None, stdout=None):
         self.stdin = stdin or sys.stdin
         self.stdout = stdout or sys.stdout
@@ -85,11 +93,74 @@ class CommandLine(object):
                         history_cls=self.history_cls)
         self._inputstream_handler = self.inputstream_handler_cls(self._line)
 
+        # Pipe for inter thread communication.
+        self._redraw_pipe = None
+
+    def request_redraw(self):
+        """
+        Thread safe way of sending a repaint trigger to the input event loop.
+        """
+        if self._redraw_pipe:
+            os.write(self._redraw_pipe[1], b'x')
+
+    def _redraw(self):
+        """
+        Render the command line again. (Not thread safe!)
+        (From other threads, or if unsure, use `request_redraw`.)
+        """
+        self._renderer.render(self._line.get_render_context())
+
+    def on_input_timeout(self, code_obj):
+        """
+        Called when there is no input for x seconds.
+        """
+        # At this place, you can for instance start a background thread to
+        # generate information about the input. E.g. the code signature of the
+        # function below the cursor position in the case of a REPL.
+        pass
+
+    def _get_char_loop(self):
+        """
+        The input 'event loop'.
+
+        This should return the next character to process.
+        """
+        timeout = .5
+
+        while True:
+            r, w, x = select.select([self.stdin, self._redraw_pipe[0]], [], [], timeout)
+
+            if self.stdin in r:
+                # Read the input and return it.
+                # Note: the following works better than wrapping `self.stdin` like
+                #       `codecs.getreader('utf-8')(stdin)` and doing `read(1)`.
+                #       Somehow that causes some latency when the escape
+                #       character is pressed.
+                return os.read(self.stdin.fileno(), 1024).decode('utf-8')
+
+            # If we receive something on our redraw pipe, render again.
+            elif self._redraw_pipe[0] in r:
+                # Flush all the pipe content and repaint.
+                os.read(self._redraw_pipe[0], 1024)
+                self._redraw()
+                timeout = None
+            else:
+                #
+                self.on_input_timeout(self._line.create_code_obj())
+                timeout = None
+
     def read_input(self, initial_value='', on_abort=AbortAction.RETRY, on_exit=AbortAction.RETURN_NONE):
         """
         Read input from command line.
         This can raise `Exit`, when the user presses Ctrl-D.
         """
+        # Create a pipe for inter thread communication.
+        if self.enable_concurency:
+            self._redraw_pipe = os.pipe()
+
+            # Make the read-end of this pipe non blocking.
+            fcntl.fcntl(self._redraw_pipe[0], fcntl.F_SETFL, os.O_NONBLOCK)
+
         # TODO: create renderer here. (We want a new rendere instance for each input.)
         #       `_line` should not need the renderer instance...
         #       (use exceptions there to print completion pagers.)
@@ -100,52 +171,59 @@ class CommandLine(object):
             # Reset line
             self._line.reset(initial_value=initial_value)
 
-        def render():
-            self._renderer.render(self._line.get_render_context())
-
         with raw_mode(self.stdin):
             reset_line()
-            render()
+            self._redraw()
 
-            with call_on_sigwinch(render):
+            with call_on_sigwinch(self._redraw):
                 while True:
-                    c = self.stdin.read(1)
+                    if self.enable_concurency:
+                        c = self._get_char_loop()
+                    else:
+                        c = self.stdin.read(1)
 
-                    try:
-                        # Feed one character at a time. Feeding can cause the
-                        # `Line` object to raise Exit/Abort/ReturnInput
-                        stream.feed(c)
+                    # If we got a character, feed it to the input stream. If we
+                    # got none, it means we got a repaint request.
+                    if c:
+                        try:
+                            # Feed one character at a time. Feeding can cause the
+                            # `Line` object to raise Exit/Abort/ReturnInput
+                            stream.feed(c)
 
-                    except Exit as e:
-                        # Handle exit.
-                        if on_exit != AbortAction.IGNORE:
-                            self._renderer.render(e.render_context)
+                        except Exit as e:
+                            # Handle exit.
+                            if on_exit != AbortAction.IGNORE:
+                                self._renderer.render(e.render_context)
 
-                        if on_exit == AbortAction.RAISE_EXCEPTION:
-                            raise
-                        elif on_exit == AbortAction.RETURN_NONE:
-                            return None
-                        elif on_exit == AbortAction.RETRY:
-                            reset_line()
+                            if on_exit == AbortAction.RAISE_EXCEPTION:
+                                raise
+                            elif on_exit == AbortAction.RETURN_NONE:
+                                return None
+                            elif on_exit == AbortAction.RETRY:
+                                reset_line()
 
-                    except Abort as abort:
-                        # Handle abort.
-                        if on_abort != AbortAction.IGNORE:
-                            self._renderer.render(abort.render_context)
+                        except Abort as abort:
+                            # Handle abort.
+                            if on_abort != AbortAction.IGNORE:
+                                self._renderer.render(abort.render_context)
 
-                        if on_abort == AbortAction.RAISE_EXCEPTION:
-                            raise
-                        elif on_abort == AbortAction.RETURN_NONE:
-                            return None
-                        elif on_abort == AbortAction.RETRY:
-                            reset_line()
+                            if on_abort == AbortAction.RAISE_EXCEPTION:
+                                raise
+                            elif on_abort == AbortAction.RETURN_NONE:
+                                return None
+                            elif on_abort == AbortAction.RETRY:
+                                reset_line()
 
-                    except ReturnInput as input:
-                        self._renderer.render(input.render_context)
-                        return input.document
+                        except ReturnInput as input:
+                            self._renderer.render(input.render_context)
+                            return input.document
 
                     # TODO: completions should be 'rendered' as well through an exception.
 
                     # Now render the current prompt to the output.
                     # TODO: unless `select` tells us that there's another character to feed.
-                    render()
+                    self._redraw()
+
+        if self._redraw_pipe:
+            os.close(self._redraw_pipe[0])
+            os.close(self._redraw_pipe[1])

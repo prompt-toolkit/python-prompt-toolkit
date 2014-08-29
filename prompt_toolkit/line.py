@@ -564,7 +564,10 @@ class Line(object):
 
         self.cursor_position += column - current_column
 
-    def _create_code_obj(self):
+    def create_code_obj(self):
+        """
+        Create `Code` instance from the current input.
+        """
         return self.code_cls(self.document)
 
     @_to_mode(LineMode.NORMAL)
@@ -572,7 +575,7 @@ class Line(object):
         """
         Get and show all completions
         """
-        results = list(self._create_code_obj().get_completions())
+        results = list(self.create_code_obj().get_completions())
 
         if results and self.renderer:
             self.renderer.render_completions(results)
@@ -582,7 +585,7 @@ class Line(object):
         """ Autocomplete.
         Returns true if there was a completion. """
         # On the first tab press, try to find one completion and complete.
-        result = self._create_code_obj().complete() # XXX: rename to get_common_completion()
+        result = self.create_code_obj().complete() # XXX: rename to get_common_completion()
         if result:
             self.text = self.text[:self.cursor_position] + result + self.text[self.cursor_position:]
             self.cursor_position += len(result)
@@ -631,7 +634,7 @@ class Line(object):
         Start completions. (Generate list of completions and initialize.)
         """
         # Generate list of all completions.
-        current_completions = list(self._create_code_obj().get_completions())
+        current_completions = list(self.create_code_obj().get_completions())
 
         if current_completions:
             self.complete_state = CompletionState(
@@ -677,7 +680,7 @@ class Line(object):
                 highlight_regions = [ ]
 
         else:
-            code = self._create_code_obj()
+            code = self.create_code_obj()
             highlight_regions = [ ]
 
         # Complete state
@@ -820,7 +823,7 @@ class Line(object):
         """
         Return the current line to the `CommandLine.read_input` call.
         """
-        code = self._create_code_obj()
+        code = self.create_code_obj()
         text = self.text
 
         # Validate first. If not valid, set validation exception.

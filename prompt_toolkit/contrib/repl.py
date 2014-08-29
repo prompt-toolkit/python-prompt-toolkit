@@ -29,6 +29,8 @@ import jedi
 import os
 import re
 import traceback
+import threading
+
 
 __all__ = ('PythonCommandLine', 'embed')
 
@@ -179,6 +181,9 @@ class PythonLine(Line):
         #: newline, and it is required to use [Meta+Enter] execute commands.
         self.multiline = False
 
+        # Code signatures. (This is set asynchronously after a timeout.)
+        self.signatures = []
+
     def _text_changed(self):
         self.multiline = '\n' in self.text
 
@@ -315,20 +320,9 @@ class PythonPrompt(Prompt):
         result = []
         append = result.append
         Signature = Token.Signature
-        script = self.code._get_jedi_script()
 
-        # Show signatures in help text.
-        if script:
-            try:
-                signatures = script.call_signatures()
-            except ValueError:
-                # e.g. in case of an invalid \x escape.
-                signatures = []
-        else:
-            signatures = []
-
-        if signatures:
-            sig = signatures[0] # Always take the first one.
+        if self.line.signatures:
+            sig = self.line.signatures[0] # Always take the first one.
 
             append((Token, '           '))
             append((Signature, sig.full_name))
@@ -489,6 +483,8 @@ class PythonCommandLine(CommandLine):
     line_cls = PythonLine
     style_cls = PythonStyle
 
+    enable_concurency = True
+
     def history_cls(self):
         if self.history_filename:
             return FileHistory(self.history_filename)
@@ -509,6 +505,7 @@ class PythonCommandLine(CommandLine):
         self.history_filename = history_filename
 
         self.vi_mode = vi_mode
+        self.get_signatures_thread_running = False
 
         #: Incremeting integer counting the current statement.
         self.current_statement_index = 1
@@ -522,6 +519,42 @@ class PythonCommandLine(CommandLine):
         self.prompt_cls = lambda line, code: PythonPrompt(line, code, self)
 
         super(PythonCommandLine, self).__init__(stdin=stdin, stdout=stdout)
+
+    def on_input_timeout(self, code_obj):
+        """
+        When there is no input activity,
+        in another thread, get the signature of the current code.
+        """
+        # Never run multiple get-signature threads.
+        if self.get_signatures_thread_running:
+            return
+        self.get_signatures_thread_running = True
+
+        class GetSignatureThread(threading.Thread):
+            def run(t):
+                script = code_obj._get_jedi_script()
+
+                # Show signatures in help text.
+                if script:
+                    try:
+                        signatures = script.call_signatures()
+                    except ValueError:
+                        # e.g. in case of an invalid \x escape.
+                        signatures = []
+                else:
+                    signatures = []
+
+                self.get_signatures_thread_running = False
+
+                # Set signatures and redraw if the text didn't change in the
+                # meantime. Otherwise request new signatures.
+                if self._line.text == code_obj.text:
+                    self._line.signatures = signatures
+                    self.request_redraw()
+                else:
+                    self.on_input_timeout(self._line.create_code_obj())
+
+        GetSignatureThread().start()
 
     def start_repl(self):
         """

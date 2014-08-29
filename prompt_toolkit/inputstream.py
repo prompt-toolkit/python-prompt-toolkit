@@ -173,7 +173,8 @@ class InputStream(object):
         try:
             for c in data:
                 self._input_parser.send(c)
-        finally:
+        except Exception as e:
             # Restart the parser in case of an exception.
             # (The parse coroutine will go into `StopIteration` otherwise.)
             self._start_parser()
+            raise
