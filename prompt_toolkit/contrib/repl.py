@@ -478,7 +478,6 @@ class PythonCode(Code):
 
 class PythonCommandLine(CommandLine):
     line_cls = PythonLine
-    style_cls = PythonStyle
 
     enable_concurency = True
 
@@ -495,11 +494,12 @@ class PythonCommandLine(CommandLine):
         else:
             return PythonEmacsInputStreamHandler
 
-    def __init__(self, globals=None, locals=None, vi_mode=False, stdin=None, stdout=None, history_filename=None):
+    def __init__(self, globals=None, locals=None, vi_mode=False, stdin=None, stdout=None, history_filename=None, style_cls=PythonStyle):
         self.globals = globals or {}
         self.globals.update({ k: getattr(__builtins__, k) for k in dir(__builtins__) })
         self.locals = locals or {}
         self.history_filename = history_filename
+        self.style_cls = style_cls
 
         self.vi_mode = vi_mode
         self.get_signatures_thread_running = False
@@ -607,7 +607,7 @@ class PythonCommandLine(CommandLine):
         print('\rKeyboardInterrupt')
 
 
-def embed(globals=None, locals=None, vi_mode=False, history_filename=None):
+def embed(globals=None, locals=None, vi_mode=False, history_filename=None, no_colors=False):
     """
     Call this to embed  Python shell at the current point in your program.
     It's similar to `IPython.embed` and `bpython.embed`. ::
@@ -617,5 +617,6 @@ def embed(globals=None, locals=None, vi_mode=False, history_filename=None):
 
     :param vi_mode: Boolean. Use Vi instead of Emacs key bindings.
     """
-    cli = PythonCommandLine(globals, locals, vi_mode=vi_mode, history_filename=history_filename)
+    cli = PythonCommandLine(globals, locals, vi_mode=vi_mode, history_filename=history_filename,
+            style_cls=(None if no_colors else PythonStyle))
     cli.start_repl()

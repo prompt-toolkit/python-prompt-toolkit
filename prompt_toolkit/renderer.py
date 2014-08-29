@@ -11,7 +11,7 @@ from .libs.wcwidth import wcwidth
 from collections import defaultdict
 
 from pygments.formatters.terminal256 import Terminal256Formatter, EscapeSequence
-from pygments.styles.default import DefaultStyle
+from pygments.style import Style
 from pygments.token import Token
 
 # Global variable to keep the colour table in memory.
@@ -359,7 +359,7 @@ class Renderer(object):
 
     def __init__(self, stdout=None, style=None):
         self._stdout = (stdout or sys.stdout)
-        self._style = style or DefaultStyle
+        self._style = style or Style
 
         # Reset position
         self._cursor_line = 0

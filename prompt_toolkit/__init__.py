@@ -31,6 +31,8 @@ from .renderer import Renderer
 from .utils import raw_mode, call_on_sigwinch
 from .history import History
 
+from pygments.styles.default import DefaultStyle
+
 __all__ = (
         'AbortAction',
         'CommandLine',
@@ -73,7 +75,7 @@ class CommandLine(object):
     renderer_cls = Renderer
 
     #: `pygments.style.Style` class for the syntax highlighting.
-    style_cls = None
+    style_cls = DefaultStyle
 
     #: `History` class.
     history_cls = History

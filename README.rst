@@ -10,11 +10,11 @@ in Python. It ships with a nice Python shell built on top of the library.
 `prompt_toolkit` can be a replacement for `readline`. It's Pure Python, and has
 some advanced features:
 
-- Syntax highlighting of the input while typing. (Usually with a Pygments lexer.)
-- Multiline input
+- Syntax highlighting of the input while typing. (For instance, with a Pygments lexer.)
+- Multiline input editing
 - Advanced code completion
 - Both Emacs and Vi keybindings (Similar to readline), including
-  reverse and forward incremental search
+- Reverse and forward incremental search
 - Both Python 2.7 and Python 3
 - Works well with Unicode double width characters. (Chinese input.)
 

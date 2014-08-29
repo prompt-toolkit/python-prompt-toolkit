@@ -2,7 +2,7 @@
 """
 ptpython: Interactive Python shell.
 Usage:
-    ptpython [ --vi ] [( --history FILENAME )]
+    ptpython [ --vi ] [( --history FILENAME )] [ --no-colors ]
     ptpython -h | --help
 
 Options:
@@ -17,6 +17,7 @@ def _run_repl():
     a = docopt.docopt(__doc__)
 
     vi_mode = bool(a['--vi'])
+    no_colors = bool(a['--no-colors'])
 
     # Create globals/locals dict.
     globals_, locals_ = {}, {}
@@ -28,7 +29,7 @@ def _run_repl():
 
 
     # Run interactive shell.
-    embed(globals_, locals_, vi_mode=vi_mode, history_filename=history_filename)
+    embed(globals_, locals_, vi_mode=vi_mode, history_filename=history_filename, no_colors=no_colors)
 
 if __name__ == '__main__':
     _run_repl()
