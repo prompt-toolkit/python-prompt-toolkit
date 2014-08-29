@@ -135,6 +135,11 @@ class Line(object):
     :attr prompt_cls: :class:`~prompt_toolkit.prompt.PromptBase` class.
     :attr history: :class:`~prompt_toolkit.history.History` instance.
     """
+    #: Boolean to indicate whether we should consider this line a multiline input.
+    #: If so, the `InputStreamHandler` can decide to insert newlines when pressing [Enter].
+    #: (Instead of accepting the input.)
+    is_multiline = False
+
     def __init__(self, renderer=None, code_cls=Code, prompt_cls=Prompt, history_cls=History):
         self.renderer = renderer
         self.code_cls = code_cls

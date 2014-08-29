@@ -26,10 +26,6 @@ class InputStreamHandler(object):
 
     :attr line: :class:`~prompt_toolkit.line.Line` class.
     """
-    #: Boolean for enabling multiline editing. When True, [Enter] will insert a
-    #: newline, and [Meta+Enter] is required to return the input.
-    multiline_editing = False
-
     def __init__(self, line):
         self._line = line
         self._reset()
@@ -246,7 +242,7 @@ class InputStreamHandler(object):
             # isearch would be too complicated.)
             self._line.exit_isearch()
 
-        elif self.multiline_editing:
+        elif self._line.is_multiline:
             self._line.newline()
         else:
             self._line.return_input()
@@ -567,6 +563,7 @@ class ViInputStreamHandler(InputStreamHandler):
         elif self._vi_mode == ViMode.NAVIGATION:
             self._vi_mode = ViMode.INSERT
             self._line.return_input()
+
         else:
             super(ViInputStreamHandler, self).enter()
 

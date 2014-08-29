@@ -89,10 +89,10 @@ class _PythonInputStreamHandlerMixin(object):
         """ Enable/Disable paste mode. """
         self._line.paste_mode = not self._line.paste_mode
         if self._line.paste_mode:
-            self._line.multiline = True
+            self._line.is_multiline = True
 
     def F7(self):
-        self._line.multiline = not self._line.multiline
+        self._line.is_multiline = not self._line.is_multiline
 
     def _auto_enable_multiline(self):
         """
@@ -108,12 +108,12 @@ class _PythonInputStreamHandlerMixin(object):
         # If we just typed a colon, or still have open brackets, always insert a real newline.
         if cursor_at_the_end and (self._line._colon_before_cursor() or
                                   self._line._has_unclosed_brackets()):
-            self._line.multiline = True
+            self._line.is_multiline = True
 
         # If the character before the cursor is a backslash (line continuation
         # char), insert a new line.
         elif cursor_at_the_end and (self._line.document.text_before_cursor[-1:] == '\\'):
-            self._line.multiline = True
+            self._line.is_multiline = True
 
     def tab(self):
         # When the 'tab' key is pressed with only whitespace character before the
@@ -128,39 +128,17 @@ class _PythonInputStreamHandlerMixin(object):
         if self._line.mode == LineMode.COMPLETE:
             self._line.complete_previous()
 
-class PythonViInputStreamHandler(_PythonInputStreamHandlerMixin, ViInputStreamHandler):
     def enter(self):
         self._auto_enable_multiline()
+        super(_PythonInputStreamHandlerMixin, self).enter()
 
-        if self._line.mode == LineMode.INCREMENTAL_SEARCH:
-            self._line.exit_isearch(restore_original_line=False)
 
-        elif self._line.multiline:
-            if self._vi_mode == ViMode.NAVIGATION:
-                # We are in VI-navigation mode after pressing `Meta`.
-                self._vi_mode = ViMode.INSERT
-                self._line.return_input()
-            else:
-                self._line.newline()
-        else:
-            # In single line input, always execute when pressing enter.
-            self._vi_mode = ViMode.INSERT
-            self._line.return_input()
+class PythonViInputStreamHandler(_PythonInputStreamHandlerMixin, ViInputStreamHandler):
+    pass
 
 
 class PythonEmacsInputStreamHandler(_PythonInputStreamHandlerMixin, EmacsInputStreamHandler):
-    def enter(self):
-        self._auto_enable_multiline()
-
-        if self._line.mode == LineMode.INCREMENTAL_SEARCH:
-            self._line.exit_isearch(restore_original_line=False)
-
-        elif self._line.multiline:
-            self._line.newline()
-
-        else:
-            # In single line input, always execute when pressing enter.
-            self._line.return_input()
+    pass
 
 
 class PythonLine(Line):
@@ -176,13 +154,13 @@ class PythonLine(Line):
 
         #: Boolean `multiline` flag. If True, [Enter] will always insert a
         #: newline, and it is required to use [Meta+Enter] execute commands.
-        self.multiline = False
+        self.is_multiline = False
 
         # Code signatures. (This is set asynchronously after a timeout.)
         self.signatures = []
 
     def _text_changed(self):
-        self.multiline = '\n' in self.text
+        self.is_multiline = '\n' in self.text
 
     def _colon_before_cursor(self):
         return self.document.text_before_cursor[-1:] == ':'
@@ -391,12 +369,12 @@ class PythonPrompt(Prompt):
             else:
                 append((TB.Off, '[F6] Paste mode (off) '))
 
-            if self.line.multiline:
+            if self.line.is_multiline:
                 append((TB.On, '[F7] Multiline (on)  '))
             else:
                 append((TB.Off, '[F7] Multiline (off) '))
 
-            if self.line.multiline:
+            if self.line.is_multiline:
                 append((TB, '[Meta+Enter] Execute'))
             else:
                 append((TB, '                    '))
