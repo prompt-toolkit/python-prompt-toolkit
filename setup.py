@@ -12,11 +12,14 @@ setup(
         description='',
         long_description='',
         packages=find_packages('.'),
-        install_requires = [ 'pygments', 'docopt', 'six' ],
-        #install_requires = [  'wcwidth', ], # TODO: add wcwidth when released on pypi
-        extra_requires=[
+        install_requires = [
+            'pygments', 'docopt', 'six',
+
+            # TODO: add wcwidth when released and stable on pypi
+            # 'wcwidth',
+
             # Required for the Python repl
-            'jedi'
+            'jedi',
         ],
         scripts = [
             'bin/ptpython',

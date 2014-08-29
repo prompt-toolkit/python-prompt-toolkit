@@ -33,6 +33,8 @@ The Python repl
 Run ``ptpython`` to get an interactive Python prompt with syntaxt highlighting,
 code completion, etc...
 
+.. image :: docs/images/ptpython-screenshot.png
+
 If you prefer to have Vi keybindings (which currently are more completely
 implemented than the Emacs bindings), run ``ptpython --vi``.
 
