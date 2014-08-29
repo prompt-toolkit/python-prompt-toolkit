@@ -15,7 +15,7 @@ from pygments.lexers import PythonLexer, PythonTracebackLexer
 from pygments.style import Style
 from pygments.token import Keyword, Operator, Number, Name, Error, Comment, Token
 
-from prompt_toolkit import CommandLine
+from prompt_toolkit import CommandLine, AbortAction
 from prompt_toolkit.code import Completion, Code, ValidationError
 from prompt_toolkit.enums import LineMode
 from prompt_toolkit.history import FileHistory, History
@@ -530,7 +530,9 @@ class PythonCommandLine(CommandLine):
         try:
             while True:
                 # Read
-                document = self.read_input()
+                document = self.read_input(
+                                on_abort=AbortAction.RETRY,
+                                on_exit=AbortAction.RAISE_EXCEPTION)
                 line = document.text
 
                 if line and not line.isspace():

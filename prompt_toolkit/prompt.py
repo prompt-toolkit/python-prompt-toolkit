@@ -71,6 +71,8 @@ class Prompt(PromptBase):
     :attr line: :class:`~prompt_toolkit.line.Line` instance.
     :attr code: :class:`~prompt_toolkit.code.Code` instance.
     """
+    default_prompt_text = '> '
+
     def get_prompt(self):
         if self.line.mode == LineMode.INCREMENTAL_SEARCH:
             return self.get_isearch_prompt()
@@ -83,7 +85,7 @@ class Prompt(PromptBase):
         """
         Yield the tokens for the default prompt.
         """
-        yield (Token.Prompt, '> ')
+        yield (Token.Prompt, self.default_prompt_text)
 
     def get_arg_prompt(self):
         """

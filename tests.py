@@ -374,20 +374,6 @@ class LineTest(unittest.TestCase):
 
         self.assertEqual(self.cli.text, 'hello wrold')
 
-    def test_go_to_character_in_line(self):
-        self.cli.insert_text('hello world')
-        self.cli.cursor_position = 0
-
-        self.cli.go_to_character_in_line('o')
-        self.assertEqual(self.cli.cursor_position, len('hello') - 1)
-
-        self.cli.go_to_character_in_line('o')
-        self.assertEqual(self.cli.cursor_position, len('hello wo') - 1)
-
-        # No more 'o' found. Cursor should not move further.
-        self.cli.go_to_character_in_line('o')
-        self.assertEqual(self.cli.cursor_position, len('hello wo') - 1)
-
 
 class DocumentTest(unittest.TestCase):
     def setUp(self):

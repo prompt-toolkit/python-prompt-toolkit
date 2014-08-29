@@ -102,7 +102,11 @@ class InputStreamHandler(object):
         self._line.abort()
 
     def ctrl_d(self):
-        self._line.exit()
+        # When there is text, act as delete, otherwise call exit.
+        if self._line.text:
+            self._line.delete()
+        else:
+            self._line.exit()
 
     def ctrl_e(self):
         self._line.cursor_to_end_of_line()

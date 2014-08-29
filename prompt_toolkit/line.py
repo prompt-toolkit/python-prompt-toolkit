@@ -120,8 +120,8 @@ class _IncrementalSearchState(object):
         self.isearch_direction = IncrementalSearchDirection.FORWARD
         self.isearch_text = ''
 
-        self.original_cursor_position = original_cursor_position
         self.original_working_index = original_working_index
+        self.original_cursor_position = original_cursor_position
 
 
 class Line(object):
@@ -203,7 +203,7 @@ class Line(object):
 
     @cursor_position.setter
     def cursor_position(self, value):
-        self.__cursor_position = value
+        self.__cursor_position = max(0, value)
 
         # Always quit autocomplete mode when the cursor position changes.
         if self.mode == LineMode.COMPLETE:
@@ -805,8 +805,6 @@ class Line(object):
         Abort input. (Probably Ctrl-C press)
         """
         render_context = self.get_render_context(_abort=True)
-
-        self.reset()
         raise Abort(render_context)
 
     @_to_mode(LineMode.NORMAL)
@@ -830,8 +828,11 @@ class Line(object):
             code.validate()
             self.validation_error = None
         except ValidationError as e:
-            self.cursor_position = self.document.translate_row_col_to_index(e.line, e.column)
-            self.validation_error  = e
+            # Set cursor position (don't allow invalid values.)
+            cursor_position = self.document.translate_row_col_to_index(e.line, e.column)
+            self.cursor_position = min(max(0, cursor_position), len(self.text))
+
+            self.validation_error = e
             return
 
         # Save at the tail of the history. (But don't if the last entry the

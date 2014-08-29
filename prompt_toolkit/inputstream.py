@@ -95,8 +95,7 @@ class InputStream(object):
     }
 
     def __init__(self, handler, stdout=None):
-        self._input_parser = self._input_parser_generator()
-        self._input_parser.send(None)
+        self._start_parser()
         self._handler = handler
 
         # Put the terminal in cursor mode. (Instead of application mode.)
@@ -107,19 +106,26 @@ class InputStream(object):
         # Put the terminal in application mode.
         #print('\x1b[?1h')
 
+    def _start_parser(self):
+        """
+        Start the parser coroutine.
+        """
+        self._input_parser = self._input_parser_generator()
+        self._input_parser.send(None)
+
     def _input_parser_generator(self):
         """
-        State machine for the input parser.
+        Coroutine (state machine) for the input parser.
         """
-        shift_buffer = '' # TODO: rename to 'buffer'
+        buffer = ''
 
         while True:
             options = self.CALLBACKS
             prefix = ''
 
             while True:
-                if shift_buffer:
-                    c, shift_buffer = shift_buffer[0], shift_buffer[1:]
+                if buffer:
+                    c, buffer = buffer[0], buffer[1:]
                 else:
                     c = yield
 
@@ -142,7 +148,7 @@ class InputStream(object):
                     else:
                         self._call_handler('insert_char', prefix[0])
 
-                    shift_buffer = prefix[1:] + c
+                    buffer = prefix[1:] + c
                     break # Reset. Go back to outer loop
 
                 # Handle letter (no match was found.)
@@ -164,5 +170,10 @@ class InputStream(object):
 
         #print(repr(data))
 
-        for c in data:
-            self._input_parser.send(c)
+        try:
+            for c in data:
+                self._input_parser.send(c)
+        finally:
+            # Restart the parser in case of an exception.
+            # (The parse coroutine will go into `StopIteration` otherwise.)
+            self._start_parser()

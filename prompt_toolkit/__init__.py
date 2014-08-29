@@ -1,9 +1,16 @@
 """
+
+prompt_toolkit
+--------------
+
 Pure Python alternative to readline.
 
 Still experimental and incomplete. It should be able to handle RAW vt100 input
 sequences for a command line and construct a command line with autocompletion
 there.
+
+Author: Jonathan Slenders
+
 """
 from __future__ import unicode_literals
 import sys
@@ -20,10 +27,22 @@ from .utils import raw_mode, call_on_sigwinch
 from .history import History
 
 
+class AbortAction:
+    """
+    Actions to take on an Exit or Abort exception.
+    """
+    IGNORE = 'ignore'
+    RETRY = 'retry'
+    RAISE_EXCEPTION = 'raise-exception'
+    RETURN_NONE = 'return-none'
+
+
 class CommandLine(object):
     """
     Wrapper around all the other classes, tying everything together.
     """
+            # TODO: rename `_cls` suffixes to `_factory`
+
     #: The `Line` class which implements the text manipulation.
     line_cls = Line
 
@@ -66,25 +85,26 @@ class CommandLine(object):
                         history_cls=self.history_cls)
         self._inputstream_handler = self.inputstream_handler_cls(self._line)
 
-    def read_input(self, initial_value=''):
+    def read_input(self, initial_value='', on_abort=AbortAction.RETRY, on_exit=AbortAction.RETURN_NONE):
         """
         Read input from command line.
         This can raise `Exit`, when the user presses Ctrl-D.
         """
-        # create input stream
-        stream = self.inputstream_cls(self._inputstream_handler, stdout=self.stdout)
-
         # TODO: create renderer here. (We want a new rendere instance for each input.)
         #       `_line` should not need the renderer instance...
         #       (use exceptions there to print completion pagers.)
 
-        # Reset line
-        self._line.reset(initial_value=initial_value)
+        stream = self.inputstream_cls(self._inputstream_handler, stdout=self.stdout)
+
+        def reset_line():
+            # Reset line
+            self._line.reset(initial_value=initial_value)
 
         def render():
             self._renderer.render(self._line.get_render_context())
 
         with raw_mode(self.stdin):
+            reset_line()
             render()
 
             with call_on_sigwinch(render):
@@ -97,12 +117,28 @@ class CommandLine(object):
                         stream.feed(c)
 
                     except Exit as e:
-                        self._renderer.render(e.render_context)
-                        raise
+                        # Handle exit.
+                        if on_exit != AbortAction.IGNORE:
+                            self._renderer.render(e.render_context)
+
+                        if on_exit == AbortAction.RAISE_EXCEPTION:
+                            raise
+                        elif on_exit == AbortAction.RETURN_NONE:
+                            return None
+                        elif on_exit == AbortAction.RETRY:
+                            reset_line()
 
                     except Abort as abort:
-                        self._renderer.render(abort.render_context)
-                        stream = InputStream(self._inputstream_handler) # XXX: should we make the stream reusable???
+                        # Handle abort.
+                        if on_abort != AbortAction.IGNORE:
+                            self._renderer.render(abort.render_context)
+
+                        if on_abort == AbortAction.RAISE_EXCEPTION:
+                            raise
+                        elif on_abort == AbortAction.RETURN_NONE:
+                            return None
+                        elif on_abort == AbortAction.RETRY:
+                            reset_line()
 
                     except ReturnInput as input:
                         self._renderer.render(input.render_context)
