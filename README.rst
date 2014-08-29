@@ -4,10 +4,10 @@ Python Prompt Toolkit
 (Work in progress. Many things work, but APIs can change.)
 
 
-`prompt_toolkit` is a Library for building powerful interactive command lines
+``prompt_toolkit`` is a Library for building powerful interactive command lines
 in Python. It ships with a nice Python shell built on top of the library.
 
-`prompt_toolkit` can be a replacement for `readline`. It's Pure Python, and has
+``prompt_toolkit`` can be a replacement for ``readline``. It's Pure Python, and has
 some advanced features:
 
 - Syntax highlighting of the input while typing. (For instance, with a Pygments lexer.)
