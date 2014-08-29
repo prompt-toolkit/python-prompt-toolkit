@@ -9,16 +9,7 @@ from .enums import IncrementalSearchDirection, LineMode
 __all__ = (
     'PromptBase',
     'Prompt',
-    'Dynamic',
 )
-
-
-class Dynamic(object):
-    """
-    Dynamic part in a prompt.
-    """
-    def callback(self):
-        yield (Token.Prompt, '<dynamic>')
 
 
 class PromptBase(object):
