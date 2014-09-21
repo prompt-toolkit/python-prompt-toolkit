@@ -140,6 +140,7 @@ def basic_bindings(registry, cli_ref):
         line.swap_characters_before_cursor()
 
     @handle(Keys.ControlU, in_mode=InputMode.INSERT)
+    @handle(Keys.ControlU, in_mode=InputMode.COMPLETE)
     def _(event):
         """
         Clears the line before the cursor position. If you are at the end of
@@ -149,6 +150,7 @@ def basic_bindings(registry, cli_ref):
         line.set_clipboard(ClipboardData(deleted))
 
     @handle(Keys.ControlW, in_mode=InputMode.INSERT)
+    @handle(Keys.ControlW, in_mode=InputMode.COMPLETE)
     def _(event):
         """
         Delete the word before the cursor.
