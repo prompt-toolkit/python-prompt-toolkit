@@ -579,6 +579,9 @@ class Prompt(object):
             # Calculate the position where the cursor was, the moment that we pressed the complete button (tab).
             complete_cursor_position = screen._cursor_mappings[self.line.complete_state.original_document.cursor_position]
 
+            # Go to completion mode. (If we're not there yet.)
+            if self.commandline.input_processor.input_mode != InputMode.COMPLETE:
+                self.commandline.input_processor.push_input_mode(InputMode.COMPLETE)
             self.completion_menu.write(screen, complete_cursor_position, self.line.complete_state)
 
     def write_to_screen(self, screen, min_available_height, accept=False, abort=False):
