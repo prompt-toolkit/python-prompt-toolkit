@@ -14,11 +14,12 @@ Author: Jonathan Slenders
 """
 from __future__ import unicode_literals
 
+import errno
 import fcntl
 import os
 import select
+import six
 import sys
-import errno
 import threading
 
 from codecs import getincrementaldecoder
@@ -79,7 +80,7 @@ class CommandLineInterface(object):
     # can also be instance methods that pass some additional parameters to the
     # class.
 
-    #: When to call the `on_input_timeout` callback.
+    #: When to trigger the `onInputTimeout` event.
     input_timeout = .5
 
     stdin_decoder_cls = getincrementaldecoder('utf-8')
@@ -392,7 +393,7 @@ class CommandLineInterface(object):
         # Run system command.
         with cooked_mode(self.stdin.fileno()):
             os.system(command.encode('utf-8'))
-            raw_input('\nPress ENTER to continue...')
+            (input if six.PY3 else raw_input)('\nPress ENTER to continue...')
 
         self.renderer.reset()
         self.renderer.request_absolute_cursor_position()
