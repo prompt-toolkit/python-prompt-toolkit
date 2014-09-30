@@ -450,7 +450,6 @@ class PythonCompleter(Completer):
                 compgen = script.completions()
             except TypeError:
                 # bad syntax.
-                print('PREVENTED ERROR')
                 pass
             else:
                 for c in compgen:
