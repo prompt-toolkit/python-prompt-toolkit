@@ -449,7 +449,7 @@ class PythonCompleter(Completer):
             try:
                 compgen = script.completions()
             except TypeError:
-                # bad syntax.
+                # Issue #9: bad syntax causes completions() to fail in jedi.
                 pass
             else:
                 for c in compgen:
