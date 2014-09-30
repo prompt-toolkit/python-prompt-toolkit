@@ -446,9 +446,15 @@ class PythonCompleter(Completer):
         script = get_jedi_script_from_document(document, self.get_locals(), self.get_globals())
 
         if script:
-            for c in script.completions():
-                yield Completion(c.name_with_symbols, len(c.complete) - len(c.name_with_symbols),
-                                 display=c.name_with_symbols)
+            try:
+                compgen = script.completions()
+            except TypeError:
+                # Issue #9: bad syntax causes completions() to fail in jedi.
+                pass
+            else:
+                for c in compgen:
+                    yield Completion(c.name_with_symbols, len(c.complete) - len(c.name_with_symbols),
+                                     display=c.name_with_symbols)
 
 
 class PythonCommandLineInterface(CommandLineInterface):
