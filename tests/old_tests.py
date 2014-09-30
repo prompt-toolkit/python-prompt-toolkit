@@ -42,9 +42,12 @@ import unittest
 from prompt_toolkit.contrib.shell.lexer import ParametersLexer, TextToken
 from pygments.token import Token
 
+
 class ParameterLexerTest(unittest.TestCase):
     def setUp(self):
-        self.lexer = ParametersLexer(stripnl=False, stripall=False, ensurenl=False)
+        self.lexer = ParametersLexer(stripnl=False,
+                                     stripall=False,
+                                     ensurenl=False)
 
     def test_simple(self):
         t = list(self.lexer.get_tokens('aaa bbb ccc'))
@@ -57,7 +60,8 @@ class ParameterLexerTest(unittest.TestCase):
 
     def test_complex(self):
         t = list(self.lexer.get_tokens('''a'a 'a " b "bb ccc\\'''))
-        # The tokenizer separates text and whitespace, but keeps all the characters.
+        # The tokenizer separates text and whitespace,
+        # but keeps all the characters.
         self.assertEqual(t, [
             (Token.Text, "a'a 'a"),
             (Token.WhiteSpace, ' '),
@@ -117,9 +121,10 @@ class TextTokenTest(unittest.TestCase):
 
 from prompt_toolkit.contrib.shell.rules import TokenStream
 
+
 class TokenStreamTest(unittest.TestCase):
     def test_tokenstream(self):
-        s = TokenStream([ 'aaa', 'bbb', 'ccc',  ])
+        s = TokenStream([ 'aaa', 'bbb', 'ccc' ])
 
         # Test top
         self.assertEqual(s.first_token, 'aaa')
@@ -147,6 +152,7 @@ class TokenStreamTest(unittest.TestCase):
 
 from prompt_toolkit.contrib.shell.rules import Literal
 from prompt_toolkit.contrib.shell.nodes import LiteralNode
+
 
 class LiteralTest(unittest.TestCase):
     def setUp(self):
@@ -177,5 +183,5 @@ class LiteralTest(unittest.TestCase):
 
 #class VariableTest(unittest.TestCase):
 #    def setUp(self):
-#        self.variable = Variable(placeholder='my-variable', dest='destination')
-
+#        self.variable = Variable(placeholder='my-variable',
+#                                 dest='destination')
