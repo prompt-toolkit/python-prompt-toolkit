@@ -17,6 +17,9 @@ from prompt_toolkit import Exit
 from IPython.terminal.embed import InteractiveShellEmbed as _InteractiveShellEmbed
 from IPython.terminal.ipapp import load_default_config
 
+from IPython.core.inputsplitter import IPythonInputSplitter
+
+
 from pygments.lexers import PythonLexer, BashLexer, TextLexer
 
 
@@ -26,22 +29,15 @@ class IPythonLeftMargin(PythonLeftMargin):
 
 
 class IPythonValidator(PythonValidator):
+
+    def __init__(self, *args, **kwargs):
+        super(IPythonValidator, self).__init__(*args,**kwargs)
+        self.isp = IPythonInputSplitter()
+
     def validate(self, document):
-        # Accept magic functions as valid input.
-        if document.text.lstrip().startswith('%'):
-            return
 
-        # Accept shell input and shell assignments.
-        # In Ipython you can do "a = !ls" or just "!ls"
-        if '!' in document.text:
-            return
+        document.text = self.isp.transform_cell(document.text)
 
-        # Accept text ending with '?' or '??'
-        # (IPython object inspection.)
-        if document.text.rstrip().endswith('?'):
-            return
-
-        # Only other, validate as valid Python code.
         super(IPythonValidator, self).validate(document)
 
 
