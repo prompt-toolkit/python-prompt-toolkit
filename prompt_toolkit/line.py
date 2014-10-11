@@ -84,7 +84,10 @@ class CompletionState(object):
                 before = self.original_text_before_cursor
             else:
                 before = self.original_text_before_cursor[:c.start_position]
-            return before + c.text + self.original_text_after_cursor, len(before) + len(c.text)
+
+            new_text = before + c.text + self.original_text_after_cursor
+            new_cursor_position = len(before) + len(c.text)
+            return new_text, new_cursor_position
 
 
 class _IncrementalSearchState(object):
@@ -452,6 +455,7 @@ class Line(object):
             else:
                 completions = []
 
+        # Set `complete_state`.
         if completions:
             self.complete_state = CompletionState(
                 original_document=self.document,
@@ -689,7 +693,7 @@ class Line(object):
                 self.validator.validate(self.document)
             except ValidationError as e:
                 # Set cursor position (don't allow invalid values.)
-                cursor_position = self.document.translate_row_col_to_index(e.line, e.column)
+                cursor_position = e.index
                 self.cursor_position = min(max(0, cursor_position), len(self.text))
 
                 self.validation_error = e

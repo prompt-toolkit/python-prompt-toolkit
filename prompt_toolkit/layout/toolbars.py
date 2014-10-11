@@ -228,10 +228,11 @@ class ValidationToolbar(Toolbar):
 
     def get_tokens(self, cli, width):
         if cli.line.validation_error:
+            row, column = cli.line.document.translate_index_to_position(
+                cli.line.validation_error.index)
+
             text = '%s (line=%s column=%s)' % (
-                cli.line.validation_error.message,
-                cli.line.validation_error.line + 1,
-                cli.line.validation_error.column + 1)
+                cli.line.validation_error.message, row, column)
             return [(self.token, text)]
         else:
             return []

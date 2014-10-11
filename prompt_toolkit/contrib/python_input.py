@@ -31,6 +31,11 @@ from prompt_toolkit.selection import SelectionType
 from prompt_toolkit.validation import Validator, ValidationError
 from prompt_toolkit.layout.margins import LeftMarginWithLineNumbers
 
+from .regular_languages.grammar import Regex, Literal, Variable, Repeat
+from .regular_languages.compiler import compile as compile_grammar
+from .regular_languages.completion import GrammarCompleter
+from .completers import PathCompleter
+
 import jedi
 import platform
 import re
@@ -441,10 +446,11 @@ class PythonValidator(Validator):
             # Note, the 'or 1' for offset is required because Python 2.7
             # gives `None` as offset in case of '4=4' as input. (Looks like
             # fixed in Python 3.)
-            raise ValidationError(e.lineno - 1, (e.offset or 1) - 1, 'Syntax Error')
+            index = document.translate_row_col_to_index(e.lineno - 1,  (e.offset or 1) - 1)
+            raise ValidationError(index, 'Syntax Error')
         except TypeError as e:
             # e.g. "compile() expected string without null bytes"
-            raise ValidationError(0, 0, str(e))
+            raise ValidationError(0, str(e))
 
 
 def get_jedi_script_from_document(document, locals, globals):
@@ -479,8 +485,65 @@ class PythonCompleter(Completer):
         self.get_globals = get_globals
         self.get_locals = get_locals
 
+        self._path_completer = self._create_path_completer()
+
+    def _create_path_completer(self):
+        def unwrapper(text):
+            return re.sub(r'\\(.)', r'\1', text)
+
+        def single_quoted_wrapper(text):
+            return text.replace('\\', '\\\\').replace("'", "\\'")
+
+        def double_quoted_wrapper(text):
+            return text.replace('\\', '\\\\').replace('"', '\\"')
+
+        grammar = (
+            # Ignore everything before the current (the last) string.
+            Repeat(
+                Regex('''[^'"#]''') |  # Not quote characters.
+                Regex('""".*"""') |  # Inside triple double quoted strings.
+                Regex("'''.*'''") |   # Inside triple single quoted strings.
+                Regex('''#[^\n]*''') |  # Comment.
+                Regex(r'"(?:[^"\\]|\\.)*"') |  # Inside double quoted strings.
+                Regex(r"'(?:[^'\\]|\\.)*'")  # Inside single quoted strings.
+            ) +
+            (
+                # Inside a double quoted string.
+                (Literal('"') + Variable(
+                    Repeat(Regex(r'[^\n"\\]') | (Regex(r'\\') + Regex('.'))),
+                    #Repeat(Regex(r'[^"]')),
+                    completer=PathCompleter(),
+                    wrapper=double_quoted_wrapper,
+                    unwrapper=unwrapper,
+                ))
+                |
+                # Inside a single quoted string.
+                (Literal("'") + Variable(
+                    #Repeat(Regex(r"[^\n'\\]") | (Regex(r'\\') + Regex('.'))),
+                    #Repeat(Regex(r"[^\n'\\\\]") | Regex(r'\\.')),
+                    Repeat(Regex(r"(?:[^'\\\\]|\\.)")),
+                    #Repeat(Regex(r"[^']")),
+                    completer=PathCompleter(),
+                    wrapper=single_quoted_wrapper,
+                    unwrapper=unwrapper,
+                ))
+            )
+        )
+        g = compile_grammar(grammar)
+        return GrammarCompleter(g)
+
     def get_completions(self, document):
         """ Ask jedi to complete. """
+        # Do Path completions
+        found_path_completions = False
+        for c in self._path_completer.get_completions(document):
+            found_path_completions = True
+            yield c
+
+        if found_path_completions:
+            return
+
+        # Do Jedi Python completions.
         script = get_jedi_script_from_document(document, self.get_locals(), self.get_globals())
 
         if script:

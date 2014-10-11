@@ -240,8 +240,16 @@ class Layout(object):
 
         # Show completion menu.
         if not is_done and self._need_to_show_completion_menu(cli):
-            y, x = temp_screen._cursor_mappings[self._line(cli).complete_state.original_document.cursor_position]
-            self.menus[0].write(screen, (y - self.vertical_scroll + top_margin, x + left_margin_width), self._line(cli).complete_state)
+            try:
+                y, x = temp_screen._cursor_mappings[self._line(cli).complete_state.original_document.cursor_position]
+            except KeyError:
+                # This happens when the new, completed string is shorter than
+                # the original string. (e.g. in case of useless backslash
+                # escaping that is removed by the autocompleter.)
+                # Not worth fixing at the moment. Just don't show the menu.
+                pass
+            else:
+                self.menus[0].write(screen, (y - self.vertical_scroll + top_margin, x + left_margin_width), self._line(cli).complete_state)
 
         return_value = max([min_height + top_margin, screen.current_height])
 

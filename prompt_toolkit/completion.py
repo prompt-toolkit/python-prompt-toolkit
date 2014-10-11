@@ -35,6 +35,16 @@ class Completion(object):
     def __repr__(self):
         return 'Completion(text=%r, start_position=%r)' % (self.text, self.start_position)
 
+    def __eq__(self, other):
+        return (
+            self.text == other.text and
+            self.start_position == other.start_position and
+            self.display == other.display and
+            self.display_meta == other.display_meta)
+
+    def __hash__(self):
+        return hash((self.text, self.start_position, self.display, self.display_meta))
+
 
 class Completer(object):
     """
