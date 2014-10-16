@@ -50,6 +50,7 @@ class Keys(object):
     ControlSpace       = Key('<C-Space>')
     ControlBackslash   = Key('<C-Backslash>')
     ControlSquareClose = Key('<C-SquareClose>')
+    ControlSquareOpen  = Key('<C-SquareOpen>')
     ControlCircumflex  = Key('<C-Circumflex>')
     ControlUnderscore  = Key('<C-Underscore>')
 

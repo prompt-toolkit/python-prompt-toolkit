@@ -76,6 +76,7 @@ def vi_bindings(registry, cli_ref):
             line.cursor_position -= 1
 
     @handle(Keys.Escape)
+    @handle(Keys.ControlSquareOpen)
     def _(event):
         """
         Escape goes to vi navigation mode.
