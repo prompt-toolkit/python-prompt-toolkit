@@ -501,6 +501,7 @@ class PythonCommandLineInterface(CommandLineInterface):
                  style=PythonStyle,
                  autocompletion_style=AutoCompletionStyle.POPUP_MENU,
                  always_multiline=False,
+                 left_margin=PythonLeftMargin(),
 
                  # For internal use.
                  _completer=None,
@@ -518,7 +519,7 @@ class PythonCommandLineInterface(CommandLineInterface):
             input_processors=[BracketsMismatchProcessor()],
             min_height=7,
             lexer=PythonLexer,
-            left_margin=PythonLeftMargin(),
+            left_margin=left_margin,
             menus=[CompletionsMenu()] if autocompletion_style == AutoCompletionStyle.POPUP_MENU else [],
             bottom_toolbars=[
                 ArgToolbar(),
