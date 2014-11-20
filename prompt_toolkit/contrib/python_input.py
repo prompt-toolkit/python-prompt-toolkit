@@ -491,6 +491,8 @@ class PythonCompleter(Completer):
                 # Issue #43: UnicodeDecodeError on OpenBSD
                 # https://github.com/jonathanslenders/python-prompt-toolkit/issues/43
                 pass
+            except AttributeError:
+                pass
             else:
                 for c in completions:
                     yield Completion(c.name_with_symbols, len(c.complete) - len(c.name_with_symbols),
