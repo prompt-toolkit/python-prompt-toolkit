@@ -389,8 +389,7 @@ class CommandLineInterface(object):
                 return
 
             # Don't automatically complete on empty inputs.
-            char = document.char_before_cursor
-            if not line.text or char.isspace():
+            if not line.text:
                 return
 
             # Otherwise, get completions in other thread.

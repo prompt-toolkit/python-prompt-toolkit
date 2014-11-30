@@ -534,6 +534,10 @@ class PythonCompleter(Completer):
 
     def get_completions(self, document):
         """ Ask jedi to complete. """
+        # Don't complete when the character before the cursor is a space.
+        if not document.text or document.char_before_cursor.isspace():
+            return
+
         # Do Path completions
         found_path_completions = False
         for c in self._path_completer.get_completions(document):

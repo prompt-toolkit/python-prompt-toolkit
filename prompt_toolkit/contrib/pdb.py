@@ -30,11 +30,12 @@ from prompt_toolkit.layout.menus import CompletionsMenu
 from prompt_toolkit.layout.prompt import DefaultPrompt
 from prompt_toolkit.line import Line
 
-import sys
-import pdb
-import weakref
-import platform
+import bdb
 import linecache
+import pdb
+import platform
+import sys
+import weakref
 
 __all__ = (
     'set_trace',
@@ -102,7 +103,9 @@ completion_hints = [
     (('enable', 'disable'), '<bpnumber>...'),
     (('ignore', ), '<bpnumber> <count>'),
     (('condition', ), '<bpnumber> <str_condition>'),
-    (('alias', 'unalias'), '[<name> [<command> [<parameter>...]]]'),
+    (('alias', ), '<name> [<command> [<parameter>...]]'),
+    (('unalias', ), '<name>'),
+    (('break', 'tbreak'), '([<file>:]<lineno> | <function>) [, <condition>]'),
 ]
 
 
@@ -131,11 +134,34 @@ class CompletionHint(object):
         hint.
         """
         def highlight_char(c):
-            if c in '[:]|.':
+            if c in '[:]|.()':
                 return Token.CompletionHint.Symbol, c
             else:
                 return Token.CompletionHint.Parameter, c
         return [highlight_char(c) for c in text]
+
+
+class BreakPointListCompleter(WordCompleter):
+    """
+    Complter for breakpoint numbers.
+    """
+    def __init__(self, only_disabled=False, only_enabled=False):
+        commands = []
+        meta_dict = {}
+
+        for bp in bdb.Breakpoint.bpbynumber:
+            if bp:
+                if only_disabled and bp.enabled:
+                    continue
+                if only_enabled and not bp.enabled:
+                    continue
+
+                commands.append('%s' % bp.number)
+                meta_dict['%s' % bp.number] = '%s:%s' % (bp.file, bp.line)
+
+        super(BreakPointListCompleter, self).__init__(
+                commands,
+                meta_dict=meta_dict)
 
 
 def create_pdb_grammar(pdb):
@@ -168,6 +194,26 @@ def create_pdb_grammar(pdb):
             Variable(Repeat1(Regex(r'.')), completer=python_completer, lexer=PythonLexer, validator=PythonValidator())
         ) |
         (
+            # Enable breakpoints.
+            Variable(Literal('enable'), token=Token.PdbCommand) +
+            required_whitespace +
+            Variable(Repeat1(Regex(r'.')), completer=BreakPointListCompleter(only_disabled=True))
+        ) |
+        (
+            # Disable breakpoints.
+            Variable(Literal('disable'), token=Token.PdbCommand) +
+            required_whitespace +
+            Variable(Repeat1(Regex(r'.')), completer=BreakPointListCompleter(only_enabled=True))
+        ) |
+        (
+            # Condition
+            Variable(Literal('condition'), token=Token.PdbCommand) +
+            required_whitespace +
+            Variable(Repeat1(Regex(r'[0-9]')), completer=BreakPointListCompleter()) +
+            required_whitespace +
+            Variable(Repeat1(Regex(r'.')), completer=python_completer, lexer=PythonLexer, validator=PythonValidator())
+        ) |
+        (
             # Help, is followed by a commands completer.
             Variable(Literal('h') | Literal('help'), token=Token.PdbCommand) +
             required_whitespace +
@@ -191,6 +237,10 @@ class SourceCodeToolbar(TextToolbar):
             text=self._get_source_code(pdb_ref))
 
     def _get_source_code(self, pdb_ref):
+        """
+        Return source code around current line as string.
+        (Partly taken from Pdb.do_list.)
+        """
         pdb = pdb_ref()
 
         filename = pdb.curframe.f_code.co_filename
