@@ -21,7 +21,7 @@ from prompt_toolkit.contrib.regular_languages.completion import GrammarCompleter
 from prompt_toolkit.contrib.regular_languages.validation import GrammarValidator
 from prompt_toolkit.contrib.regular_languages.grammar import CharacterSet, Regex, Variable, Repeat, Repeat1, Literal
 from prompt_toolkit.contrib.regular_languages.lexer import GrammarLexer
-from prompt_toolkit.layout.toolbars import SystemToolbar, ValidationToolbar
+from prompt_toolkit.layout.toolbars import SystemToolbar, ValidationToolbar, TextToolbar
 from prompt_toolkit.layout.toolbars import Toolbar
 
 from prompt_toolkit.history import History
@@ -34,6 +34,7 @@ import sys
 import pdb
 import weakref
 import platform
+import linecache
 
 __all__ = (
     'set_trace',
@@ -182,6 +183,41 @@ def create_pdb_grammar(pdb):
     return compile(grammar)
 
 
+class SourceCodeToolbar(TextToolbar):
+    def __init__(self, pdb_ref):
+        super(SourceCodeToolbar, self).__init__(
+            lexer=PythonLexer,
+            height=7,
+            text=self._get_source_code(pdb_ref))
+
+    def _get_source_code(self, pdb_ref):
+        pdb = pdb_ref()
+
+        filename = pdb.curframe.f_code.co_filename
+        breaklist = pdb.get_file_breaks(filename)
+
+        first = max(1,  pdb.curframe.f_lineno - 3)
+        last = first + 6
+
+        result = []
+
+        for lineno in range(first, last+1):
+            line = linecache.getline(filename, lineno, pdb.curframe.f_globals)
+            if not line:
+                line = '[EOF]'
+                break
+            else:
+                s = repr(lineno).rjust(3)
+                if len(s) < 4: s = s + ' '
+                if lineno in breaklist: s = s + 'B'
+                else: s = s + ' '
+                if lineno == pdb.curframe.f_lineno:
+                    s = s + '->'
+
+                result.append(s + ' ' + line)
+
+        return ''.join(result)
+
 class PdbStatusToolbar(Toolbar):
     """
     Toolbar which shows the Pdb status. (current line and line number.)
@@ -261,14 +297,19 @@ class PtPdb(pdb.Pdb):
         """
         g = create_pdb_grammar(self)
 
+        empty_line = TextToolbar()
         status_toolbar = PdbStatusToolbar(weakref.ref(self))
+        source_code_toolbar = SourceCodeToolbar(weakref.ref(self))
 
         cli = CommandLineInterface(
             layout=Layout(before_input=DefaultPrompt('(pdb) '),
+                          show_tildes=True,
+                          min_height=15,
                           lexer=GrammarLexer(g),
                           after_input=CompletionHint(),
                           menus=[CompletionsMenu()],
-                          bottom_toolbars=[SystemToolbar(), ValidationToolbar(), status_toolbar]),
+                          top_toolbars=[empty_line],
+                          bottom_toolbars=[source_code_toolbar, SystemToolbar(), ValidationToolbar(), status_toolbar]),
             line=Line(
                 completer=GrammarCompleter(g),
                 history=self._command_line_history,

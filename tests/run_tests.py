@@ -7,6 +7,7 @@ from inputstream_tests import *
 from key_binding_tests import *
 from screen_tests import *
 from regular_languages_tests import *
+from layout_tests import *
 
 import unittest
 

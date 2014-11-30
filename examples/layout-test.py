@@ -71,7 +71,7 @@ def main():
         before_input=DefaultPrompt(text='Before input >> '),
         after_input=Prompt(' << after input'),
         top_toolbars=[
-            TextToolbar('This is a top toolbar', token=Token.TopToolbar1),
+            TextToolbar('This is a top toolbar\n(second line)\n(third line)', token=Token.TopToolbar1, height=3),
             TextToolbar('This is another top toolbar', token=Token.TopToolbar2),
         ],
         bottom_toolbars=[
@@ -79,7 +79,7 @@ def main():
             SearchToolbar(),
             CompletionsToolbar(),
             TextToolbar('This is a bottom toolbar', token=Token.BottomToolbar1),
-            TextToolbar('This is another bottom toolbar', token=Token.BottomToolbar2),
+            TextToolbar('This is a multiline bottom toolbar\n(second line)\n(third line)', token=Token.BottomToolbar2, height=3),
         ],
         show_tildes=True,
         menus=[CompletionsMenu()])

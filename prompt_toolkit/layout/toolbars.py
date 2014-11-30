@@ -6,9 +6,8 @@ from pygments.token import Token
 from ..enums import InputMode, IncrementalSearchDirection
 from ..layout import Layout
 from ..layout.prompt import Prompt
-from ..renderer import Point
 
-from .utils import TokenList
+from .utils import TokenList, fit_tokens_in_size
 
 __all__ = (
     'ArgToolbar',
@@ -21,48 +20,56 @@ __all__ = (
 
 
 class Toolbar(object):
-    def __init__(self, token=None):
+    def __init__(self, token=None, height=1):
         self.token = token or Token.Toolbar
+        self.height = height
 
     def write(self, cli, screen):
         width = screen.size.columns
         tokens = self.get_tokens(cli, width)
-        tokens = self._adjust_width(tokens, screen.size.columns)
-        screen.write_highlighted(tokens)
+
+        # Make sure that this list of tokens fit the amount of columns and rows.
+        token_lines = fit_tokens_in_size(
+            tokens, width=screen.size.columns, height=self.height,
+            default_token=self.token)
+
+        # Write to screen.
+        y = screen._y
+        for i, tokens in enumerate(token_lines):
+            screen._y = y + i
+            screen._x = 0
+            screen.write_highlighted(tokens)
 
     def is_visible(self, cli):
         return not (cli.is_exiting or cli.is_aborting or cli.is_returning)
-
-    def _adjust_width(self, tokens, columns):
-        """
-        Make sure that this list of tokens fit the amount of columns.
-        Trim or extend with `toolbar_token`.
-        """
-        result = TokenList(tokens)
-
-        if len(result) > columns:
-            # Trim toolbar
-            result = result[:columns - 3]
-            result.append((self.token, ' > '))
-        else:
-            # Extend toolbar until the page width.
-            result.append((self.token, ' ' * (columns - len(result))))
-
-        return result
 
     def get_tokens(self, cli, width):
         return []
 
 
 class TextToolbar(Toolbar):
-    def __init__(self, text='', token=None):
-        super(TextToolbar, self).__init__(token=token)
+    """
+    :param text: The text to be displayed.
+    :param token: Default token for the text.
+    :param lexer: (optional) Pygments lexer for highlighting of the text.
+    """
+    def __init__(self, text='', token=None, height=1, lexer=None):
+        super(TextToolbar, self).__init__(token=token, height=height)
         self.text = text
 
+        if lexer:
+            self.lexer = lexer(
+                stripnl=False,
+                stripall=False,
+                ensurenl=False)
+        else:
+            self.lexer = None
+
     def get_tokens(self, cli, width):
-        return [
-            (self.token, self.text),
-        ]
+        if self.lexer is None:
+            return [(self.token, self.text)]
+        else:
+            return list(self.lexer.get_tokens(self.text))
 
 
 class ArgToolbar(Toolbar):
