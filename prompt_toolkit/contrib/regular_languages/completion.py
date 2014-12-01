@@ -24,15 +24,17 @@ class GrammarCompleter(Completer):
         assert isinstance(compiled_grammar, _CompiledGrammar)
         self.compiled_grammar = compiled_grammar
 
-    def get_completions(self, document):
+    def get_completions(self, document, complete_event):
         m = self.compiled_grammar.match_prefix(document.text_before_cursor)
 
         if m:
-            completions = self._remove_duplicates(self._get_completions_for_match(m))
+            completions = self._remove_duplicates(
+                self._get_completions_for_match(m, complete_event))
+
             for c in completions:
                 yield c
 
-    def _get_completions_for_match(self, match):
+    def _get_completions_for_match(self, match, complete_event):
         """
         Yield all the possible completions for this input string.
         (The completer assumes that the cursor position was at the end of the
@@ -49,7 +51,7 @@ class GrammarCompleter(Completer):
                 document = Document(unwrapped_text, len(unwrapped_text))
 
                 # Call completer
-                for completion in node.completer.get_completions(document):
+                for completion in node.completer.get_completions(document, complete_event):
                     new_text = unwrapped_text[:len(text) + completion.start_position] + completion.text
 
                     # Wrap again.

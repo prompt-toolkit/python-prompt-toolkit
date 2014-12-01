@@ -511,7 +511,6 @@ class PythonCompleter(Completer):
                 # Inside a double quoted string.
                 (Literal('"') + Variable(
                     Repeat(Regex(r'[^\n"\\]') | (Regex(r'\\') + Regex('.'))),
-                    #Repeat(Regex(r'[^"]')),
                     completer=PathCompleter(),
                     wrapper=double_quoted_wrapper,
                     unwrapper=unwrapper,
@@ -519,10 +518,7 @@ class PythonCompleter(Completer):
                 |
                 # Inside a single quoted string.
                 (Literal("'") + Variable(
-                    #Repeat(Regex(r"[^\n'\\]") | (Regex(r'\\') + Regex('.'))),
-                    #Repeat(Regex(r"[^\n'\\\\]") | Regex(r'\\.')),
-                    Repeat(Regex(r"(?:[^'\\\\]|\\.)")),
-                    #Repeat(Regex(r"[^']")),
+                    Repeat(Regex(r"[^\n'\\]") | (Regex(r'\\') + Regex('.'))),
                     completer=PathCompleter(),
                     wrapper=single_quoted_wrapper,
                     unwrapper=unwrapper,
@@ -532,42 +528,52 @@ class PythonCompleter(Completer):
         g = compile_grammar(grammar)
         return GrammarCompleter(g)
 
-    def get_completions(self, document):
-        """ Ask jedi to complete. """
-        # Don't complete when the character before the cursor is a space.
-        if not document.text or document.char_before_cursor.isspace():
-            return
+    def _complete_path_while_typing(self, document):
+        char_before_cursor = document.char_before_cursor
+        return document.text and (
+            char_before_cursor.isalnum() or char_before_cursor in '/.~')
 
+    def _complete_python_while_typing(self, document):
+        char_before_cursor = document.char_before_cursor
+        return document.text and (
+            char_before_cursor.isalnum() or char_before_cursor in '_.')
+
+    def get_completions(self, document, complete_event):
+        """
+        Get Python completions.
+        """
         # Do Path completions
-        found_path_completions = False
-        for c in self._path_completer.get_completions(document):
-            found_path_completions = True
-            yield c
+        if complete_event.completion_requested or self._complete_path_while_typing(document):
+            found_path_completions = False
+            for c in self._path_completer.get_completions(document, complete_event):
+                found_path_completions = True
+                yield c
 
-        if found_path_completions:
-            return
+            if found_path_completions:
+                return
 
         # Do Jedi Python completions.
-        script = get_jedi_script_from_document(document, self.get_locals(), self.get_globals())
+        if complete_event.completion_requested or self._complete_python_while_typing(document):
+            script = get_jedi_script_from_document(document, self.get_locals(), self.get_globals())
 
-        if script:
-            try:
-                completions = script.completions()
-            except TypeError:
-                # Issue #9: bad syntax causes completions() to fail in jedi.
-                # https://github.com/jonathanslenders/python-prompt-toolkit/issues/9
-                pass
-            except UnicodeDecodeError:
-                # Issue #43: UnicodeDecodeError on OpenBSD
-                # https://github.com/jonathanslenders/python-prompt-toolkit/issues/43
-                pass
-            except AttributeError:
-                # Jedi issue #513: https://github.com/davidhalter/jedi/issues/513
-                pass
-            else:
-                for c in completions:
-                    yield Completion(c.name_with_symbols, len(c.complete) - len(c.name_with_symbols),
-                                     display=c.name_with_symbols)
+            if script:
+                try:
+                    completions = script.completions()
+                except TypeError:
+                    # Issue #9: bad syntax causes completions() to fail in jedi.
+                    # https://github.com/jonathanslenders/python-prompt-toolkit/issues/9
+                    pass
+                except UnicodeDecodeError:
+                    # Issue #43: UnicodeDecodeError on OpenBSD
+                    # https://github.com/jonathanslenders/python-prompt-toolkit/issues/43
+                    pass
+                except AttributeError:
+                    # Jedi issue #513: https://github.com/davidhalter/jedi/issues/513
+                    pass
+                else:
+                    for c in completions:
+                        yield Completion(c.name_with_symbols, len(c.complete) - len(c.name_with_symbols),
+                                         display=c.name_with_symbols)
 
 
 class PythonCommandLineInterface(CommandLineInterface):

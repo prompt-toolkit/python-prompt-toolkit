@@ -21,7 +21,7 @@ from prompt_toolkit.contrib.regular_languages.completion import GrammarCompleter
 from prompt_toolkit.contrib.regular_languages.validation import GrammarValidator
 from prompt_toolkit.contrib.regular_languages.grammar import CharacterSet, Regex, Variable, Repeat, Repeat1, Literal
 from prompt_toolkit.contrib.regular_languages.lexer import GrammarLexer
-from prompt_toolkit.layout.toolbars import SystemToolbar, ValidationToolbar, TextToolbar
+from prompt_toolkit.layout.toolbars import SystemToolbar, ValidationToolbar, TextToolbar, ArgToolbar
 from prompt_toolkit.layout.toolbars import Toolbar
 
 from prompt_toolkit.history import History
@@ -105,7 +105,7 @@ completion_hints = [
     (('condition', ), '<bpnumber> <str_condition>'),
     (('alias', ), '<name> [<command> [<parameter>...]]'),
     (('unalias', ), '<name>'),
-    (('break', 'tbreak'), '([<file>:]<lineno> | <function>) [, <condition>]'),
+    (('b', 'break', 'tbreak'), '([<file>:]<lineno> | <function>) [, <condition>]'),
 ]
 
 
@@ -160,8 +160,15 @@ class BreakPointListCompleter(WordCompleter):
                 meta_dict['%s' % bp.number] = '%s:%s' % (bp.file, bp.line)
 
         super(BreakPointListCompleter, self).__init__(
-                commands,
-                meta_dict=meta_dict)
+            commands,
+            meta_dict=meta_dict)
+
+
+class AliasCompleter(WordCompleter):
+    def __init__(self, pdb):
+        super(AliasCompleter, self).__init__(
+            pdb.aliases.keys(),
+            meta_dict=pdb.aliases)
 
 
 def create_pdb_grammar(pdb):
@@ -182,49 +189,88 @@ def create_pdb_grammar(pdb):
     python_completer = PythonCompleter(lambda: curframe.f_globals, lambda: curframe.f_locals)
 
     # Whitespace.
-    whitespace = Repeat(CharacterSet(' \t'))
+    optional_whitespace = Repeat(CharacterSet(' \t'))
     required_whitespace = Repeat1(CharacterSet(' \t'))
 
-    grammar = (
-        whitespace +
-        (
-            # Help, is followed by a commands completer.
-            Variable(Literal('p') | Literal('pp') | Literal('whatis'), token=Token.PdbCommand) +
-            required_whitespace +
-            Variable(Repeat1(Regex(r'.')), completer=python_completer, lexer=PythonLexer, validator=PythonValidator())
-        ) |
-        (
-            # Enable breakpoints.
-            Variable(Literal('enable'), token=Token.PdbCommand) +
-            required_whitespace +
-            Variable(Repeat1(Regex(r'.')), completer=BreakPointListCompleter(only_disabled=True))
-        ) |
-        (
-            # Disable breakpoints.
-            Variable(Literal('disable'), token=Token.PdbCommand) +
-            required_whitespace +
-            Variable(Repeat1(Regex(r'.')), completer=BreakPointListCompleter(only_enabled=True))
-        ) |
-        (
-            # Condition
-            Variable(Literal('condition'), token=Token.PdbCommand) +
-            required_whitespace +
-            Variable(Repeat1(Regex(r'[0-9]')), completer=BreakPointListCompleter()) +
-            required_whitespace +
-            Variable(Repeat1(Regex(r'.')), completer=python_completer, lexer=PythonLexer, validator=PythonValidator())
-        ) |
-        (
-            # Help, is followed by a commands completer.
-            Variable(Literal('h') | Literal('help'), token=Token.PdbCommand) +
-            required_whitespace +
-            Variable(Repeat1(CharacterSet(r'^\s')), completer=pdb_commands_completer)
-        ) |
-        (
-            # Catch all for all other autocompletions.
-            Variable(Repeat1(CharacterSet(r'a-zA-Z')), completer=pdb_commands_completer, token=Token.PdbCommand) +
-            required_whitespace +
-            Repeat1(Regex('.'))
+    def create_g(recursive=True):
+        return (
+            (
+                # Help, is followed by a commands completer.
+                Variable(Literal('p') | Literal('pp') | Literal('whatis'), token=Token.PdbCommand) +
+                required_whitespace +
+                Variable(Repeat1(Regex(r'.')), completer=python_completer, lexer=PythonLexer, validator=PythonValidator())
+            ) |
+            (
+                # Enable breakpoints.
+                Variable(Literal('enable'), token=Token.PdbCommand) +
+                required_whitespace +
+                Variable(Repeat1(Regex(r'.')), completer=BreakPointListCompleter(only_disabled=True))
+            ) |
+            (
+                # Disable breakpoints.
+                Variable(Literal('disable'), token=Token.PdbCommand) +
+                required_whitespace +
+                Variable(Repeat1(Regex(r'.')), completer=BreakPointListCompleter(only_enabled=True))
+            ) |
+            (
+                # Condition
+                Variable(Literal('condition'), token=Token.PdbCommand) +
+                required_whitespace +
+                Variable(Repeat1(Regex(r'[0-9]')), completer=BreakPointListCompleter()) +
+                required_whitespace +
+                Variable(Repeat1(Regex(r'.')), completer=python_completer, lexer=PythonLexer, validator=PythonValidator())
+            ) |
+            (
+                # Break
+                Variable(Literal('break') | Literal('b') | Literal('tbreak'), token=Token.PdbCommand) +
+                required_whitespace +
+                Repeat1(CharacterSet(r'^\s')) +
+                optional_whitespace +
+                Literal(',') +
+                optional_whitespace +
+                Variable(Repeat1(Regex(r'.')), completer=python_completer, lexer=PythonLexer, validator=PythonValidator())
+            ) |
+            (
+                # Igore
+                Variable(Literal('ignore'), token=Token.PdbCommand) +
+                required_whitespace +
+                Variable(Repeat1(Regex(r'[0-9]')), completer=BreakPointListCompleter()) +
+                required_whitespace +
+                Repeat1(Regex(r'[0-9]'))
+            ) |
+            (
+                # Alias
+                Variable(Literal('alias'), token=Token.PdbCommand) +
+                required_whitespace +
+                Repeat1(CharacterSet(r'^\s')) +
+                required_whitespace +
+                # (recursive grammar)
+                (create_g(False) if recursive else Repeat1(Regex('.')))
+            ) |
+            (
+                # Unalias
+                Variable(Literal('unalias'), token=Token.PdbCommand) +
+                required_whitespace +
+                Variable(Repeat1(CharacterSet(r'^\s')), completer=AliasCompleter(pdb))
+            ) |
+            (
+                # Help, is followed by a commands completer.
+                Variable(Literal('h') | Literal('help'), token=Token.PdbCommand) +
+                required_whitespace +
+                Variable(Repeat1(CharacterSet(r'^\s')), completer=pdb_commands_completer)
+            ) |
+            (
+                # Catch all for all other autocompletions.
+                Variable(Repeat1(CharacterSet(r'a-zA-Z')), completer=pdb_commands_completer, token=Token.PdbCommand) +
+                required_whitespace +
+                Repeat1(Regex('.'))
+            )
         )
+
+    grammar = (
+        optional_whitespace +
+        create_g() +
+        optional_whitespace
     )
     return compile(grammar)
 
@@ -258,15 +304,19 @@ class SourceCodeToolbar(TextToolbar):
                 break
             else:
                 s = repr(lineno).rjust(3)
-                if len(s) < 4: s = s + ' '
-                if lineno in breaklist: s = s + 'B'
-                else: s = s + ' '
+                if len(s) < 4:
+                    s = s + ' '
+                if lineno in breaklist:
+                    s = s + 'B'
+                else:
+                    s = s + ' '
                 if lineno == pdb.curframe.f_lineno:
                     s = s + '->'
 
                 result.append(s + ' ' + line)
 
         return ''.join(result)
+
 
 class PdbStatusToolbar(Toolbar):
     """
@@ -359,7 +409,13 @@ class PtPdb(pdb.Pdb):
                           after_input=CompletionHint(),
                           menus=[CompletionsMenu()],
                           top_toolbars=[empty_line],
-                          bottom_toolbars=[source_code_toolbar, SystemToolbar(), ValidationToolbar(), status_toolbar]),
+                          bottom_toolbars=[
+                              SystemToolbar(),
+                              ArgToolbar(),
+                              source_code_toolbar,
+                              ValidationToolbar(),
+                              status_toolbar
+                          ]),
             line=Line(
                 completer=GrammarCompleter(g),
                 history=self._command_line_history,

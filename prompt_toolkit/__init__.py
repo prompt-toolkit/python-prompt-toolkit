@@ -5,22 +5,22 @@ Author: Jonathan Slenders
 """
 from __future__ import unicode_literals
 
-import errno
 import os
 import six
 import sys
 import signal
 
-from .key_binding import InputProcessor
+from .completion import CompleteEvent
 from .enums import InputMode
+from .history import History
+from .key_binding import InputProcessor
 from .key_binding import Registry
 from .key_bindings.emacs import emacs_bindings
-from .line import Line
 from .layout import Layout
 from .layout.prompt import DefaultPrompt
+from .line import Line
 from .renderer import Renderer
 from .utils import EventHook, DummyContext
-from .history import History
 
 from pygments.styles.default import DefaultStyle
 
@@ -114,9 +114,9 @@ class CommandLineInterface(object):
 
         # Handle events.
         if create_async_autocompleters:
-            for n, l in self.lines.items():
+            for l in self.lines.values():
                 if l.completer:
-                    l.onTextInsert += self._create_async_completer(n)
+                    l.onTextInsert += self._create_async_completer(l)
 
         self._reset()
 
@@ -369,12 +369,11 @@ class CommandLineInterface(object):
         """
         return self._return_value is not None
 
-    def _create_async_completer(self, line_name):
+    def _create_async_completer(self, line):
         """
         Create function for asynchronous autocompletion while typing.
         (Autocomplete in other thread.)
         """
-        line = self.lines[line_name]
         complete_thread_running = [False]  # By ref.
 
         def async_completer():
@@ -396,7 +395,9 @@ class CommandLineInterface(object):
             complete_thread_running[0] = True
 
             def run():
-                completions = list(line.completer.get_completions(document))
+                completions = list(line.completer.get_completions(
+                    document,
+                    CompleteEvent(text_inserted=True)))
                 complete_thread_running[0] = False
 
                 def callback():

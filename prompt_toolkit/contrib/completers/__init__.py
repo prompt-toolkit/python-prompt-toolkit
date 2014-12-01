@@ -17,7 +17,7 @@ class WordCompleter(Completer):
         if ignore_case:
             self.words = [w.lower() for w in self.words]
 
-    def get_completions(self, document):
+    def get_completions(self, document, complete_event):
         word_before_cursor = document.get_word_before_cursor()
 
         if self.ignore_case:
@@ -36,7 +36,7 @@ class PathCompleter(Completer):
     def __init__(self, include_files=True):
         self.include_files = include_files
 
-    def get_completions(self, document):
+    def get_completions(self, document, complete_event):
         text = document.text_before_cursor
         try:
             directory = os.path.dirname(text) or '.'

@@ -4,13 +4,13 @@ It holds the text, cursor position, history, etc...
 """
 from __future__ import unicode_literals
 
-from .completion import Completion
-from .validation import ValidationError
+from .completion import Completion, CompleteEvent, get_common_complete_suffix
 from .document import Document
 from .enums import IncrementalSearchDirection
 from .history import History
 from .selection import SelectionType, SelectionState
 from .utils import EventHook
+from .validation import ValidationError
 
 import os
 import six
@@ -391,7 +391,10 @@ class Line(object):
         """
         # On the first tab press, try to find one completion and complete.
         if self.completer:
-            result = self.completer.get_common_complete_suffix(self.document)
+            result = get_common_complete_suffix(
+                self.completer, self.document,
+                CompleteEvent(completion_requested=True))
+
             if result:
                 self.insert_text(result)
                 return True
@@ -451,7 +454,10 @@ class Line(object):
         # Generate list of all completions.
         if completions is None:
             if self.completer:
-                completions = list(self.completer.get_completions(self.document))
+                completions = list(self.completer.get_completions(
+                    self.document,
+                    CompleteEvent(completion_requested=True)
+                ))
             else:
                 completions = []
 

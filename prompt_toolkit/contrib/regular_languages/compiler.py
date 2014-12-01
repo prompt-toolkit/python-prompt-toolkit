@@ -70,7 +70,7 @@ class _CompiledGrammar(object):
                     ('' if node.max_repeat is None else str(node.max_repeat)))
 
             else:
-                raise TypeError('Got %r' % node)
+                raise TypeError('Got %r' % (node, ))
 
         return transform(root_node)
 
