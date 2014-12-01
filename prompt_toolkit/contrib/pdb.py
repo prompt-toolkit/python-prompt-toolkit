@@ -312,6 +312,8 @@ class SourceCodeToolbar(TextToolbar):
                     s = s + ' '
                 if lineno == pdb.curframe.f_lineno:
                     s = s + '->'
+                else:
+                    s = s + '  '
 
                 result.append(s + ' ' + line)
 
