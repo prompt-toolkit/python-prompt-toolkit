@@ -190,7 +190,7 @@ def get_input(message='',
 
     # Read input and return it.
     on_abort = AbortAction.RAISE_EXCEPTION if raise_exception_on_abort else AbortAction.RETURN_NONE
-    document = cli.read_input(on_abort=on_abort, on_exit=AbortAction.IGNORE)
+    document = cli.read_input(on_abort=on_abort, on_exit=AbortAction.RETURN_NONE)
 
     if document:
         return document.text
