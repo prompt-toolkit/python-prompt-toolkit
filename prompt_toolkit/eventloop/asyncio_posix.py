@@ -31,7 +31,7 @@ class PosixAsyncioEventLoop(BaseAsyncioEventLoop):
     def wait_for_input(self, f_ready):
         def stdin_ready():
             data = self._read_from_stdin()
-            self._inputstream.feed_and_flush(data)
+            self._inputstream.feed(data)
 
             f_ready.set_result(None)  # Quit coroutine
             self.loop.remove_reader(self.stdin.fileno())
