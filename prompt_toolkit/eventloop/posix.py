@@ -51,7 +51,7 @@ class PosixEventLoop(BaseEventLoop):
             if self.stdin in r:
                 # Feed input text.
                 data = self._read_from_stdin()
-                self.inputstream.feed_and_flush(data)
+                self.inputstream.feed(data)
                 return
 
             # If we receive something on our "call_from_executor" pipe, process
@@ -65,6 +65,10 @@ class PosixEventLoop(BaseEventLoop):
                 for c in calls_from_executor:
                     c()
             else:
+                # When an input timeout occured, always flush the VT100
+                # inputstream.
+                self.inputstream.flush()  # TODO: Shouldn't we always request a redraw after flush???
+
                 # Fire input timeout event.
                 self.onInputTimeout.fire()
                 timeout = None
