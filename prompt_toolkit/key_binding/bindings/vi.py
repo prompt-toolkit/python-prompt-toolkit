@@ -574,6 +574,22 @@ def load_vi_bindings(registry, vi_state, filter=None):
         # TODO: go to end of sentence.
         pass
 
+    @handle(Keys.ControlA, filter=insert_mode)
+    def _(event):
+        """
+        Move to first non whitespace of current line
+        """
+        buffer = event.current_buffer
+        buffer.cursor_position += buffer.document.get_start_of_line_position(after_whitespace=True)
+
+    @handle(Keys.ControlE, filter=insert_mode)
+    def _(event):
+        """
+        Move to last charater of current line
+        """
+        buffer = event.current_buffer
+        buffer.cursor_position += buffer.document.get_end_of_line_position()
+
     def change_delete_move_yank_handler(*keys, **kw):
         """
         Register a change/delete/move/yank handlers. e.g.  'dw'/'cw'/'w'/'yw'
