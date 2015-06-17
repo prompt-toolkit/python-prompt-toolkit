@@ -197,7 +197,7 @@ def load_basic_bindings(registry, filter=Always()):
             return
         elif p == len(b.text) or b.text[p] == '\n':
             b.swap_characters_before_cursor()
-        elif b.document.get_start_of_line_position:
+        else:
             b.cursor_position += b.document.get_cursor_right_position()
             b.swap_characters_before_cursor()
 
