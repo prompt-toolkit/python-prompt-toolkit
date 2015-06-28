@@ -276,7 +276,7 @@ def get_input(message='', **kwargs):
     If you want to keep your history across several ``get_input`` calls, you
     have to create a :class:`History` instance and pass it every time.
     """
-    eventloop = create_eventloop()
+    eventloop = kwargs.pop('eventloop', None) or create_eventloop()
 
     # Create CommandLineInterface
     cli = CommandLineInterface(
