@@ -17,6 +17,7 @@ __all__ = (
     'BracketsMismatchProcessor',
     'BeforeInput',
     'AfterInput',
+    'AppendAutoSuggestion',
     'ConditionalProcessor',
     'ShowLeadingWhiteSpaceProcessor',
     'ShowTrailingWhiteSpaceProcessor',
@@ -28,7 +29,7 @@ class Processor(with_metaclass(ABCMeta, object)):
     Manipulate the tokenstream for a `BufferControl`.
     """
     @abstractmethod
-    def run(self, cli, document, tokens):
+    def run(self, cli, buffer, tokens):
         return tokens, lambda i: i
 
     def has_focus(self, cli):
@@ -38,7 +39,7 @@ class Processor(with_metaclass(ABCMeta, object)):
         """
         return False
 
-    def invalidation_hash(self, cli, document):
+    def invalidation_hash(self, cli, buffer):
         return None
 
 
@@ -64,9 +65,10 @@ class HighlightSearchProcessor(Processor):
         else:
             return cli.search_state.text
 
-    def run(self, cli, document, tokens):
+    def run(self, cli, buffer, tokens):
         search_text = self._get_search_text(cli)
         ignore_case = cli.is_ignoring_case
+        document = buffer.document
 
         if search_text and not cli.is_returning:
             # For each search match, replace the Token.
@@ -81,7 +83,7 @@ class HighlightSearchProcessor(Processor):
 
         return tokens, lambda i: i
 
-    def invalidation_hash(self, cli, document):
+    def invalidation_hash(self, cli, buffer):
         search_text = self._get_search_text(cli)
 
         # When the search state changes, highlighting will be different.
@@ -92,7 +94,7 @@ class HighlightSearchProcessor(Processor):
             # When we search for text, and the cursor position changes. The
             # processor has to be applied every time again, because the current
             # match is highlighted in another color.
-            (search_text and document.cursor_position),
+            (search_text and buffer.document.cursor_position),
         )
 
 
@@ -100,9 +102,9 @@ class HighlightSelectionProcessor(Processor):
     """
     Processor that highlights the selection in the document.
     """
-    def run(self, cli, document, tokens):
+    def run(self, cli, buffer, tokens):
         # In case of selection, highlight all matches.
-        selection_range = document.selection_range()
+        selection_range = buffer.document.selection_range()
 
         if selection_range:
             from_, to = selection_range
@@ -112,10 +114,10 @@ class HighlightSelectionProcessor(Processor):
 
         return tokens, lambda i: i
 
-    def invalidation_hash(self, cli, document):
+    def invalidation_hash(self, cli, buffer):
         # When the search state changes, highlighting will be different.
         return (
-            document.selection_range(),
+            buffer.document.selection_range(),
         )
 
 
@@ -126,7 +128,7 @@ class PasswordProcessor(Processor):
     def __init__(self, char='*'):
         self.char = char
 
-    def run(self, cli, document, tokens):
+    def run(self, cli, buffer, tokens):
         # Returns (new_token_list, cursor_index_to_token_index_f)
         return [(token, self.char * len(text)) for token, text in tokens], lambda i: i
 
@@ -141,7 +143,7 @@ class HighlightMatchingBracketProcessor(Processor):
     def __init__(self, chars='[](){}<>'):
         self.chars = chars
 
-    def run(self, cli, document, tokens):
+    def run(self, cli, buffer, tokens):
         def replace_token(pos):
             """ Replace token in list of tokens. """
             tokens[pos] = (Token.MatchingBracket, tokens[pos][1])
@@ -157,16 +159,17 @@ class HighlightMatchingBracketProcessor(Processor):
                     return True
 
         # Apply for character below cursor.
-        applied = apply_for_document(document)
+        applied = apply_for_document(buffer.document)
 
         # Otherwise, apply for character before cursor.
-        d = document
+        d = buffer.document
         if not applied and d.cursor_position > 0 and d.char_before_cursor in self._closing_braces:
             apply_for_document(Document(d.text, d.cursor_position - 1))
 
         return tokens, lambda i: i
 
-    def invalidation_hash(self, cli, document):
+    def invalidation_hash(self, cli, buffer):
+        document = buffer.document
         on_brace = document.current_char in self.chars
         after_brace = document.char_before_cursor in self.chars
 
@@ -187,7 +190,7 @@ class BracketsMismatchProcessor(Processor):
     """
     error_token = Token.Error
 
-    def run(self, cli, document, tokens):
+    def run(self, cli, buffer, tokens):
         stack = []  # Pointers to the result array
 
         for index, (token, text) in enumerate(tokens):
@@ -222,7 +225,7 @@ class BeforeInput(Processor):
         assert callable(get_tokens)
         self.get_tokens = get_tokens
 
-    def run(self, cli, document, tokens):
+    def run(self, cli, buffer, tokens):
         tokens_before = self.get_tokens(cli)
         shift_position = token_list_len(tokens_before)
 
@@ -238,7 +241,7 @@ class BeforeInput(Processor):
         return '%s(get_tokens=%r)' % (
             self.__class__.__name__, self.get_tokens)
 
-    def invalidation_hash(self, cli, document):
+    def invalidation_hash(self, cli, buffer):
         # Redraw when the given tokens change.
         return tuple(self.get_tokens(cli))
 
@@ -251,7 +254,7 @@ class AfterInput(Processor):
         assert callable(get_tokens)
         self.get_tokens = get_tokens
 
-    def run(self, cli, document, tokens):
+    def run(self, cli, buffer, tokens):
         return tokens + self.get_tokens(cli), lambda i: i
 
     @classmethod
@@ -264,9 +267,28 @@ class AfterInput(Processor):
         return '%s(get_tokens=%r)' % (
             self.__class__.__name__, self.get_tokens)
 
-    def invalidation_hash(self, cli, document):
+    def invalidation_hash(self, cli, buffer):
         # Redraw when the given tokens change.
         return tuple(self.get_tokens(cli))
+
+
+class AppendAutoSuggestion(Processor):
+    """
+    Append the auto suggestion to the input.
+    (The user can then press the right arrow the insert the suggestion.)
+    """
+    def run(self, cli, buffer, tokens):
+        if buffer.suggestion and buffer.document.is_cursor_at_the_end:
+            suggestion = buffer.suggestion.text
+        else:
+            suggestion = ''
+
+        return tokens + [(Token.AutoSuggestion, suggestion)], lambda i: i
+
+    def invalidation_hash(self, cli, buffer):
+        # Redraw when the suggestion changes.
+        if buffer.suggestion and buffer.document.is_cursor_at_the_end:
+            return buffer.suggestion.text
 
 
 class ShowLeadingWhiteSpaceProcessor(Processor):
@@ -277,7 +299,7 @@ class ShowLeadingWhiteSpaceProcessor(Processor):
         self.token = token
         self.char = char
 
-    def run(self, cli, document, tokens):
+    def run(self, cli, buffer, tokens):
         # Walk through all te tokens.
         t = (self.token, self.char)
         is_start_of_line = True
@@ -302,7 +324,7 @@ class ShowTrailingWhiteSpaceProcessor(Processor):
         self.token = token
         self.char = char
 
-    def run(self, cli, document, tokens):
+    def run(self, cli, buffer, tokens):
         # Walk backwards through all te tokens.
         t = (self.token, self.char)
         is_end_of_line = True
@@ -340,10 +362,10 @@ class ConditionalProcessor(Processor):
         self.processor = processor
         self.filter = to_cli_filter(filter)
 
-    def run(self, cli, document, tokens):
+    def run(self, cli, buffer, tokens):
         # Run processor when enabled.
         if self.filter(cli):
-            return self.processor.run(cli, document, tokens)
+            return self.processor.run(cli, buffer, tokens)
         else:
             return tokens, lambda i: i
 
@@ -353,11 +375,11 @@ class ConditionalProcessor(Processor):
         else:
             return False
 
-    def invalidation_hash(self, cli, document):
+    def invalidation_hash(self, cli, buffer):
         # When enabled, use the hash of the processor. Otherwise, just use
         # False.
         if self.filter(cli):
-            return (True, self.processor.invalidation_hash(cli, document))
+            return (True, self.processor.invalidation_hash(cli, buffer))
         else:
             return False
 
