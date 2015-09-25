@@ -973,6 +973,7 @@ def load_vi_bindings(registry, vi_state, enable_visual_key=Always(), filter=None
         return CursorRegion(pos)
 
     @handle('z', '+', filter=navigation_mode|selection_mode)
+    @handle('z', 't', filter=navigation_mode|selection_mode)
     @handle('z', Keys.ControlJ, filter=navigation_mode|selection_mode)
     def _(event):
         """
@@ -992,6 +993,7 @@ def load_vi_bindings(registry, vi_state, enable_visual_key=Always(), filter=None
 
 
     @handle('z', '-', filter=navigation_mode|selection_mode)
+    @handle('z', 'b', filter=navigation_mode|selection_mode)
     def _(event):
         """
         Scrolls the window to makes the current line the last line in the visible region.
