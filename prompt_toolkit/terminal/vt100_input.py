@@ -341,22 +341,29 @@ class raw_mode(object):
     """
     def __init__(self, fileno):
         self.fileno = fileno
-        self.attrs_before = termios.tcgetattr(fileno)
+        try:
+            self.attrs_before = termios.tcgetattr(fileno)
+        except termios.error:
+            self.attrs_before = None
 
     def __enter__(self):
         # NOTE: On os X systems, using pty.setraw() fails. Therefor we are using this:
-        newattr = termios.tcgetattr(self.fileno)
-        newattr[tty.LFLAG] = self._patch(newattr[tty.LFLAG])
-        termios.tcsetattr(self.fileno, termios.TCSANOW, newattr)
+        try:
+            newattr = termios.tcgetattr(self.fileno)
+            newattr[tty.LFLAG] = self._patch(newattr[tty.LFLAG])
+            termios.tcsetattr(self.fileno, termios.TCSANOW, newattr)
 
-        # Put the terminal in cursor mode. (Instead of application mode.)
-        os.write(self.fileno, b'\x1b[?1l')
+            # Put the terminal in cursor mode. (Instead of application mode.)
+            os.write(self.fileno, b'\x1b[?1l')
+        except termios.error:
+            pass
 
     def _patch(self, attrs):
         return attrs & ~(termios.ECHO | termios.ICANON | termios.IEXTEN | termios.ISIG)
 
     def __exit__(self, *a, **kw):
-        termios.tcsetattr(self.fileno, termios.TCSANOW, self.attrs_before)
+        if self.attrs_before is not None:
+            termios.tcsetattr(self.fileno, termios.TCSANOW, self.attrs_before)
 
         # # Put the terminal in application mode.
         # self._stdout.write('\x1b[?1h')
