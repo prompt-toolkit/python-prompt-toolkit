@@ -42,6 +42,9 @@ class PathCompleter(Completer):
             return
 
         try:
+            if self.expanduser:
+                text = os.path.expanduser(text)
+
             # Directories where to look.
             dirname = os.path.dirname(text)
             if dirname:
