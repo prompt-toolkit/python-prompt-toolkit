@@ -42,6 +42,7 @@ class PathCompleter(Completer):
             return
 
         try:
+            # Do tilde expansion.
             if self.expanduser:
                 text = os.path.expanduser(text)
 
@@ -59,10 +60,6 @@ class PathCompleter(Completer):
             # Get all filenames.
             filenames = []
             for directory in directories:
-                # Do tilde expansion.
-                if self.expanduser:
-                    directory = os.path.expanduser(directory)
-
                 # Look for matches in this directory.
                 if os.path.isdir(directory):
                     for filename in os.listdir(directory):
