@@ -7,6 +7,8 @@ import shutil
 import tempfile
 import unittest
 
+from six import text_type
+
 from prompt_toolkit.completion import CompleteEvent
 from prompt_toolkit.document import Document
 from prompt_toolkit.contrib.completers.filesystem import PathCompleter
@@ -30,7 +32,7 @@ def write_test_files(test_dir, names=None):
     names = names or range(10)
     for i in names:
         with open(os.path.join(test_dir, str(i)), 'wb') as out:
-            out.write(bytes(''))
+            out.write(''.encode('UTF-8'))
 
 
 class PathCompleterTest(unittest.TestCase):
@@ -68,7 +70,7 @@ class PathCompleterTest(unittest.TestCase):
 
     def test_pathcompleter_completes_files_in_absolute_directory(self):
         # setup: create a test dir with 10 files
-        test_dir = tempfile.mkdtemp().decode('utf-8')
+        test_dir = tempfile.mkdtemp()
         write_test_files(test_dir)
 
         expected = sorted([str(i) for i in range(10)])
@@ -76,9 +78,10 @@ class PathCompleterTest(unittest.TestCase):
         test_dir = os.path.abspath(test_dir)
         if not test_dir.endswith(os.path.sep):
             test_dir += os.path.sep
-
+        
         completer = PathCompleter()
-        doc_text = test_dir
+        # force unicode
+        doc_text = text_type(test_dir)
         doc = Document(doc_text, len(doc_text))
         event = CompleteEvent()
         completions = list(completer.get_completions(doc, event))
