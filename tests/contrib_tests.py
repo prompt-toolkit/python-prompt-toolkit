@@ -27,7 +27,7 @@ class chdir(object):
 
 class PathCompleterTest(unittest.TestCase):
 
-    def test_pathcompleter_completes_on_current_directory(self):
+    def test_pathcompleter_completes_in_current_directory(self):
         completer = PathCompleter()
         doc_text = ''
         doc = Document(doc_text, len(doc_text))
@@ -37,15 +37,15 @@ class PathCompleterTest(unittest.TestCase):
 
     def test_pathcompleter_completes_files_in_current_directory(self):
         # setup: create a test dir with 10 files
-        test_dir = unicode(tempfile.mkdtemp())
+        test_dir = tempfile.mkdtemp()
         if not test_dir.endswith(os.path.sep):
             test_dir += os.path.sep
 
         for i in range(10):
-            with open(os.path.join(test_dir, unicode(str(i))), 'wb') as out:
+            with open(os.path.join(test_dir, str(i)), 'wb') as out:
                 out.write('')
 
-        expected = sorted([unicode(i) for i in range(10)])
+        expected = sorted([str(i) for i in range(10)])
 
         with chdir(test_dir):
             completer = PathCompleter()
@@ -62,16 +62,16 @@ class PathCompleterTest(unittest.TestCase):
 
     def test_pathcompleter_completes_files_in_absolute_directory(self):
         # setup: create a test dir with 10 files
-        test_dir = unicode(tempfile.mkdtemp())
+        test_dir = tempfile.mkdtemp().decode('utf-8')
         test_dir = os.path.abspath(test_dir)
         if not test_dir.endswith(os.path.sep):
             test_dir += os.path.sep
 
         for i in range(10):
-            with open(os.path.join(test_dir, unicode(str(i))), 'wb') as out:
+            with open(os.path.join(test_dir, str(i)), 'wb') as out:
                 out.write('')
 
-        expected = sorted([unicode(i) for i in range(10)])
+        expected = sorted([str(i) for i in range(10)])
 
         completer = PathCompleter()
         doc_text = test_dir
@@ -86,11 +86,11 @@ class PathCompleterTest(unittest.TestCase):
 
     def test_pathcompleter_completes_directories_with_only_directories(self):
         # setup: create a test dir with 10 files
-        test_dir = unicode(tempfile.mkdtemp())
+        test_dir = tempfile.mkdtemp()
         if not test_dir.endswith(os.path.sep):
             test_dir += os.path.sep
         for i in range(10):
-            with open(os.path.join(test_dir, unicode(str(i))), 'wb') as out:
+            with open(os.path.join(test_dir, str(i)), 'wb') as out:
                 out.write('')
 
         # create a sub directory there
@@ -119,10 +119,10 @@ class PathCompleterTest(unittest.TestCase):
 
     def test_pathcompleter_respects_completions_under_min_input_len(self):
         # setup: create a test dir with 10 files
-        test_dir = unicode(tempfile.mkdtemp())
+        test_dir = tempfile.mkdtemp()
 
         for i in range(10):
-            with open(os.path.join(test_dir, unicode(i)), 'wb') as out:
+            with open(os.path.join(test_dir, str(i)), 'wb') as out:
                 out.write('')
 
         # min len:1 and no text
@@ -156,7 +156,7 @@ class PathCompleterTest(unittest.TestCase):
 
         # create 10 files with a 2 char long name
         for i in range(10):
-            with open(os.path.join(test_dir, unicode(i) * 2), 'wb') as out:
+            with open(os.path.join(test_dir, str(i) * 2), 'wb') as out:
                 out.write('')
 
         # min len:1 and text of len 1
@@ -199,10 +199,10 @@ class PathCompleterTest(unittest.TestCase):
 
     def test_pathcompleter_can_apply_file_filter(self):
         # setup: create a test dir with 10 files
-        test_dir = unicode(tempfile.mkdtemp())
+        test_dir = tempfile.mkdtemp()
 
         for i in range(10):
-            with open(os.path.join(test_dir, unicode(i)), 'wb') as out:
+            with open(os.path.join(test_dir, str(i)), 'wb') as out:
                 out.write('')
         # add a .csv file
         with open(os.path.join(test_dir, 'my.csv'), 'wb') as out:
@@ -224,16 +224,16 @@ class PathCompleterTest(unittest.TestCase):
 
     def test_pathcompleter_get_paths_constrains_path(self):
         # setup: create a test dir with 10 files
-        test_dir = unicode(tempfile.mkdtemp())
+        test_dir = tempfile.mkdtemp()
         for i in range(10):
-            with open(os.path.join(test_dir, unicode(i)), 'wb') as out:
+            with open(os.path.join(test_dir, str(i)), 'wb') as out:
                 out.write('')
 
         # add a subdir with 10 other files with different names
         subdir = os.path.join(test_dir, 'subdir')
         os.mkdir(subdir)
         for i in 'abcdefghij':
-            with open(os.path.join(subdir, unicode(i)), 'wb') as out:
+            with open(os.path.join(subdir, i), 'wb') as out:
                 out.write('')
 
         get_paths = lambda: ['subdir']
