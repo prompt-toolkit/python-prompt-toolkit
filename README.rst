@@ -6,6 +6,8 @@ Python Prompt Toolkit
 ``prompt_toolkit`` is a library for building powerful interactive command lines
 in Python.
 
+Docs: https://python-prompt-toolkit.readthedocs.org/
+
 Looking for ptpython, the Python REPL?
 **************************************
 
