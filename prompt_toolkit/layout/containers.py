@@ -24,7 +24,8 @@ __all__ = (
     'Window',
     'WindowRenderInfo',
     'ConditionalContainer',
-    'ScrollOffsets'
+    'ScrollOffsets',
+    'cursor',
 )
 
 Transparent = Token.Transparent
@@ -284,6 +285,8 @@ class FloatContainer(Container):
                                 y=cursor_position.y - write_position.ypos)
 
         for fl in self.floats:
+            #if isinstance(fl.left, Cursor):
+            #   fl.left = fl.left.delta+cursor_position.x
             # Left & width given.
             if fl.left is not None and fl.width is not None:
                 xpos = fl.left
@@ -296,13 +299,17 @@ class FloatContainer(Container):
             elif fl.width is not None and fl.right is not None:
                 xpos = write_position.width - fl.right - fl.width
                 width = fl.width
-            elif fl.xcursor:
+            elif fl.xcursor or isinstance(fl.left, Cursor):
                 width = fl.width
                 if width is None:
                     width = fl.content.preferred_width(cli, write_position.width).preferred
                     width = min(write_position.width, width)
+                xpos = 0
+                if isinstance(fl.left, Cursor):
+                    xpos += fl.left.delta + cursor_position.x
+                else:
+                    xpos = cursor_position.x
 
-                xpos = cursor_position.x
                 if xpos + width > write_position.width:
                     xpos = max(0, write_position.width - width)
             # Only width given -> center horizontally.
@@ -336,8 +343,10 @@ class FloatContainer(Container):
                 ypos = write_position.height - fl.height - fl.bottom
                 height = fl.height
             # Near cursor
-            elif fl.ycursor:
+            elif fl.ycursor or isinstance(fl.top, Cursor):
                 ypos = cursor_position.y + 1
+                if isinstance(fl.top, Cursor):
+                    ypos += fl.top.delta
 
                 height = fl.height
                 if height is None:
@@ -390,6 +399,19 @@ class FloatContainer(Container):
         for f in self.floats:
             for i in f.content.walk():
                 yield i
+
+class Cursor(object):
+
+    def __init__(self, delta=0):
+        self.delta = delta
+
+    def __add__(self, other):
+        return Cursor(self.delta+other)
+    
+    def __sub__(self, other):
+        return Cursor(self.delta-other)
+
+cursor = Cursor()
 
 
 class Float(object):
