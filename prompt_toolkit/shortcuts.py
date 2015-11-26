@@ -29,7 +29,7 @@ from .history import InMemoryHistory
 from .interface import CommandLineInterface, Application, AbortAction, AcceptAction
 from .key_binding.manager import KeyBindingManager
 from .layout import Window, HSplit, VSplit, FloatContainer, Float
-from .layout.containers import ConditionalContainer
+from .layout.containers import ConditionalContainer, cursor
 from .layout.controls import BufferControl, TokenListControl
 from .layout.dimension import LayoutDimension
 from .layout.lexers import PygmentsLexer
@@ -274,8 +274,8 @@ def create_prompt_layout(message='', lexer=None, is_password=False,
                               scroll_offset=1,
                               extra_filter=HasFocus(DEFAULT_BUFFER) &
                                            ~display_completions_in_columns)),
-                    Float(xcursor=True,
-                          ycursor=True,
+                    Float(left=cursor,
+                          top=cursor,
                           content=MultiColumnCompletionsMenu(
                               extra_filter=HasFocus(DEFAULT_BUFFER) &
                                            display_completions_in_columns,
