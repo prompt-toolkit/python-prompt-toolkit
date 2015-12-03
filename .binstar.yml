@@ -8,7 +8,7 @@ engine:
  - python=3.5
 
 script:
-  - conda build -c melund recipe
+  - conda build -c xonsh recipe
 
 after_success:
    - conda convert -p all /opt/miniconda/conda-bld/linux-64/prompt_toolkit*.tar.bz2 -o /opt/miniconda/conda-bld
