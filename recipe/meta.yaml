@@ -1,0 +1,27 @@
+package:
+  name: prompt_toolkit
+  version: {{ environ['GIT_DESCRIBE_TAG'] }}
+
+source:
+   path: ../
+
+build:
+  script: python setup.py install
+  number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
+
+requirements:
+  build:
+    - python
+    - pygments
+    - wcwidth
+    - six
+  run:
+    - python
+    - pygments
+    - wcwidth
+    - six
+
+
+about:
+  home: https://github.com/jonathanslenders/python-prompt-toolkit
+  summary: prompt_toolkit is a library for building powerful interactive command lines in Python.
