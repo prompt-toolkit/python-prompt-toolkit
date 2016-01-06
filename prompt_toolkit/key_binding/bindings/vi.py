@@ -9,11 +9,14 @@ from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout.utils import find_window_for_buffer_name
 from prompt_toolkit.selection import SelectionType
 
+import prompt_toolkit.filters as filters
+
 from .utils import create_handle_decorator
 from .scroll import scroll_forward, scroll_backward, scroll_half_page_up, scroll_half_page_down, scroll_one_line_up, scroll_one_line_down, scroll_page_up, scroll_page_down
 
-import prompt_toolkit.filters as filters
 import codecs
+import six
+import string
 
 __all__ = (
     'load_vi_bindings',
@@ -21,6 +24,11 @@ __all__ = (
     'load_vi_system_bindings',
     'load_extra_vi_page_navigation_bindings',
 )
+
+if six.PY2:
+    ascii_lowercase = string.ascii_lowercase.decode('ascii')
+else:
+    ascii_lowercase = string.ascii_lowercase
 
 
 class ViStateFilter(Filter):
@@ -380,6 +388,28 @@ def load_vi_bindings(registry, get_vi_state, enable_visual_key=Always(), get_sea
             before=True,
             count=event.arg)
 
+    def paste_named_register_handler(c):
+        @handle('"', c, 'p')
+        def _(event):
+            " Paste from named register. "
+            named_registers = get_vi_state(event.cli).named_registers
+            if c in named_registers:
+                event.current_buffer.paste_clipboard_data(
+                    named_registers[c],
+                    count=event.arg)
+
+        @handle('"', c, 'P')
+        def _(event):
+            " Paste (before) from named register. "
+            named_registers = get_vi_state(event.cli).named_registers
+            if c in named_registers:
+                event.current_buffer.paste_clipboard_data(
+                    named_registers[c],
+                    before=True,
+                    count=event.arg)
+
+    map(paste_named_register_handler, ascii_lowercase)
+
     @handle('r', Keys.Any, filter=navigation_mode)
     def _(event):
         """
@@ -511,6 +541,15 @@ def load_vi_bindings(registry, get_vi_state, enable_visual_key=Always(), get_sea
         """
         clipboard_data = event.current_buffer.copy_selection()
         event.cli.clipboard.set_data(clipboard_data)
+
+    def create_yank_selection_handler(c):
+        @handle('"', c, 'y', filter=selection_mode)
+        def _(event):
+            " Yank selection to named register 'c'. "
+            data = event.current_buffer.copy_selection()
+            get_vi_state(event.cli).named_registers[c] = data
+
+    map(create_yank_selection_handler, ascii_lowercase)
 
     @handle('X', filter=navigation_mode)
     def _(event):
@@ -699,25 +738,46 @@ def load_vi_bindings(registry, get_vi_state, enable_visual_key=Always(), get_sea
                     # Move cursor
                     buffer.cursor_position += (region.end or region.start)
 
-            for k, f in vi_transform_functions:
-                create_transform_handler(f, *k)
-
-            @handle('y', *keys, filter=navigation_mode)
-            def yank_handler(event):
-                """ Create yank handler. """
+            def yank(event):
+                " Yank from buffer and return the yanked string. "
                 region = func(event)
                 buffer = event.current_buffer
 
                 start, end = region.sorted()
-                substring = buffer.text[buffer.cursor_position + start: buffer.cursor_position + end]
+                return buffer.text[buffer.cursor_position + start: buffer.cursor_position + end]
+
+            for k, f in vi_transform_functions:
+                create_transform_handler(f, *k)
+
+            def create_yank_named_register_handler(c):
+                @handle('"', c, 'y', *keys, filter=navigation_mode)
+                def _(event):
+                    " Yank to named register 'c'. "
+                    substring = yank(event)
+                    named_registers = get_vi_state(event.cli).named_registers
+                    named_registers[c] = ClipboardData(substring, SelectionType.CHARACTERS)
+
+            map(create_yank_named_register_handler, ascii_lowercase)
+
+            @handle('y', *keys, filter=navigation_mode)
+            def yank_handler(event):
+                """ Create yank handler. """
+                substring = yank(event)
 
                 if substring:
                     event.cli.clipboard.set_text(substring)
 
-            def create(delete_only):
-                """ Create delete and change handlers. """
-                @handle('cd'[delete_only], *keys, filter=navigation_mode & ~IsReadOnly())
-                @handle('cd'[delete_only], *keys, filter=navigation_mode & ~IsReadOnly())
+            def create_delete_change(delete_only, reg_name=None):
+                """
+                Create delete/change handlers. When `reg_name` is given, save
+                to the named register instead of the clipboard.
+                """
+                if reg_name:
+                    handler_keys = ('"', reg_name, 'cd'[delete_only]) + keys
+                else:
+                    handler_keys = ('cd'[delete_only], ) + keys
+
+                @handle(*handler_keys, filter=navigation_mode & ~IsReadOnly())
                 def _(event):
                     region = func(event)
                     deleted = ''
@@ -732,16 +792,23 @@ def load_vi_bindings(registry, get_vi_state, enable_visual_key=Always(), get_sea
                         # Delete until end of region.
                         deleted = buffer.delete(count=end-start)
 
-                    # Set deleted/changed text to clipboard.
+                    # Set deleted/changed text to clipboard or named register.
                     if deleted:
-                        event.cli.clipboard.set_text(deleted)
+                        if reg_name:
+                            data = ClipboardData(deleted)
+                            get_vi_state(event.cli).named_registers[reg_name] = data
+                        else:
+                            event.cli.clipboard.set_text(deleted)
 
                     # Only go back to insert mode in case of 'change'.
                     if not delete_only:
                         get_vi_state(event.cli).input_mode = InputMode.INSERT
 
-            create(True)
-            create(False)
+            # Create a handler for all delete/change and register name combinations.
+            for c in tuple(ascii_lowercase) + (None, ):
+                create_delete_change(True, c);
+                create_delete_change(False, c)
+
             return func
         return decorator
 
