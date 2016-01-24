@@ -342,7 +342,7 @@ class BufferControl(UIControl):
                  preview_search=False,
                  search_buffer_name=SEARCH_BUFFER,
                  get_search_state=None,
-                 wrap_lines=True,
+                 wrap_lines=True,  # XXX: remove wrap_lines attribute. This becomes a property of Window.
                  menu_position=None,
                  default_char=None,
                  focus_on_click=False):
@@ -518,14 +518,13 @@ class BufferControl(UIControl):
                     for num, line in line_generator:
                         cache[num] = line
                         if num == i:
-                            return line
+                            return line  # XXX: Apply line transformations here.
                 return []
 
             return get_line
 
         def _create_screen():
             line_count = document.text.count('\n') + 1
-
 
 #            screen = Screen(self.default_char, initial_width=width)
 
