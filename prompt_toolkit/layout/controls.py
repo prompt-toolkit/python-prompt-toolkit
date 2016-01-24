@@ -19,7 +19,7 @@ from prompt_toolkit.utils import get_cwidth
 from .highlighters import Highlighter
 from .lexers import Lexer, SimpleLexer
 from .processors import Processor, Transformation
-from .screen import Screen, Char, Point
+from .screen import Char, Point
 from .utils import token_list_width, split_lines
 from .lazyscreen import LazyScreen
 
@@ -182,6 +182,7 @@ class TokenListControl(UIControl):
         return max(line_lengths)
 
     def preferred_height(self, cli, width):
+        return None # XXXXXXXXXXXXXXXXXX
         screen = self.create_screen(cli, width, None)
         return screen.height
 
@@ -217,27 +218,38 @@ class TokenListControl(UIControl):
         key = (default_char.char, default_char.token,
                 tuple(tokens_with_mouse_handlers), width, wrap_lines, right, center)
         params = (default_char, tokens, width, wrap_lines, right, center)
-        screen, self._pos_to_indexes = self._screen_cache.get(key, lambda: self._get_screen(*params))
+#        screen, self._pos_to_indexes = self._screen_cache.get(key, lambda: self._get_screen(*params))
+        screen = self._screen_cache.get(key, lambda: self._get_screen(*params))
+        self._pos_to_indexes = {}
+
 
         self._tokens = tokens_with_mouse_handlers
         return screen
 
     @classmethod
     def _get_screen(cls, default_char, tokens, width, wrap_lines, right, center):
-        screen = Screen(default_char, initial_width=width)
+        lines = list(split_lines(tokens))  # XXX: reuse 'split_lines' from above...
+        screen = LazyScreen(get_line=lambda i: lines[i],
+                            get_line_count=lambda: len(lines),
+                            default_char=default_char)
+        return screen
 
-        # Only call write_data when we actually have tokens.
-        # (Otherwise the screen height will go up from 0 to 1 while we don't
-        # want that. -- An empty control should not take up any space.)
-        if tokens:
-            write_data_result = screen.write_data(tokens, width=(width if wrap_lines else None))
 
-            indexes_to_pos = write_data_result.indexes_to_pos
-            pos_to_indexes = _LazyReverseDict(indexes_to_pos)
-        else:
-            pos_to_indexes = {}
 
-        return screen, pos_to_indexes
+#        screen = Screen(default_char, initial_width=width)
+
+#        # Only call write_data when we actually have tokens.
+#        # (Otherwise the screen height will go up from 0 to 1 while we don't
+#        # want that. -- An empty control should not take up any space.)
+#        if tokens:
+#            write_data_result = screen.write_data(tokens, width=(width if wrap_lines else None))
+#
+#            indexes_to_pos = write_data_result.indexes_to_pos
+#            pos_to_indexes = _LazyReverseDict(indexes_to_pos)
+#        else:
+#            pos_to_indexes = {}
+#
+#        return screen, pos_to_indexes
 
     @classmethod
     def static(cls, tokens):
@@ -299,7 +311,11 @@ class FillControl(UIControl):
 
     def create_screen(self, cli, width, height):
         char = Char(self.character, self.token)
-        screen = Screen(char, initial_width=width)
+        def get_line(i):
+            return []
+        def get_line_count():
+            return 0
+        screen = LazyScreen(get_line=get_line, get_line_count=get_line_count, default_char=char)#, initial_width=width)
         return screen
 
 
@@ -405,30 +421,31 @@ class BufferControl(UIControl):
                          searching through the history. (Buffer.document_for_search)
         """
         def get():
+      #      tokens = [(Token, document.text)]
             # Call lexer.
-            tokens = self.lexer.get_tokens(cli, document.text)
+            tokens = list(self.lexer.get_tokens(cli, document.text))
 
-            # 'Explode' tokens in characters. (And turn generator into a list.)
-            # (Some input processors -- like search/selection highlighter --
-            # rely on that each item in the tokens array only contains one
-            # character.)
-            tokens = [(token, c) for token, text in tokens for c in text]
+       #     # 'Explode' tokens in characters. (And turn generator into a list.)
+       #     # (Some input processors -- like search/selection highlighter --
+       #     # rely on that each item in the tokens array only contains one
+       #     # character.)
+       #     tokens = [(token, c) for token, text in tokens for c in text]
 
             # Run all processors over the input.
             # (They can transform both the tokens and the cursor position.)
             source_to_display_functions = []
             display_to_source_functions = []
 
-            d_ = document  # Each processor receives the document of the previous one.
+#            d_ = document  # Each processor receives the document of the previous one.
 
-            for p in self.input_processors:
-                transformation  = p.apply_transformation(cli, d_, tokens)
-                d_ = transformation.document
-                assert isinstance(transformation, Transformation)
-
-                tokens = transformation.tokens
-                source_to_display_functions.append(transformation.source_to_display)
-                display_to_source_functions.append(transformation.display_to_source)
+#            for p in self.input_processors:
+#                transformation  = p.apply_transformation(cli, d_, tokens)
+#                d_ = transformation.document
+#                assert isinstance(transformation, Transformation)
+#
+#                tokens = transformation.tokens
+#                source_to_display_functions.append(transformation.source_to_display)
+#                display_to_source_functions.append(transformation.display_to_source)
 
             # Chain cursor transformation (movement) functions.
 
@@ -450,7 +467,7 @@ class BufferControl(UIControl):
             document.text,
 
             # Include invalidation_hashes from all processors.
-            tuple(p.invalidation_hash(cli, document) for p in self.input_processors),
+#            tuple(p.invalidation_hash(cli, document) for p in self.input_processors),
         )
 
         return self._token_cache.get(key, get)
@@ -483,18 +500,44 @@ class BufferControl(UIControl):
         # Wrap.
         wrap_width = width if self.wrap_lines(cli) else None
 
+        def create_get_line_func():
+            """
+            Create a function that returns the tokens for a given line number.
+            This is optimized in a way that it doesn't require the lexer to
+            parse the whole document if we only need to display the first 80
+            lines.
+            """
+            cache = {}
+            line_generator = enumerate(split_lines(self.lexer.get_tokens(cli, document.text)))
+
+            def get_line(i):
+                " Return the tokens for a given line number. "
+                try:
+                    return cache[i]
+                except KeyError:
+                    for num, line in line_generator:
+                        cache[num] = line
+                        if num == i:
+                            return line
+                return []
+
+            return get_line
+
         def _create_screen():
+            line_count = document.text.count('\n') + 1
+
 
 #            screen = Screen(self.default_char, initial_width=width)
 
             # Get tokens
             # Note: we add the space character at the end, because that's where
             #       the cursor can also be.
-            input_tokens, source_to_display, display_to_source = self._get_input_tokens(cli, document)
-            input_tokens += [(self.default_char.token, ' ')]
+#            input_tokens, source_to_display, display_to_source = self._get_input_tokens(cli, document)
+#            input_tokens += [(self.default_char.token, ' ')]
 
-            lines = list(split_lines(input_tokens))
-            screen = LazyScreen(lambda i: lines[i], lambda: len(lines),
+#            lines = list(split_lines(input_tokens))
+            screen = LazyScreen(get_line=create_get_line_func(), ## lambda i: lines[i],
+                                get_line_count=lambda: line_count,
                                 cursor_position=Point(document.cursor_position_row, document.cursor_position_col))
 
 
@@ -574,7 +617,7 @@ class BufferControl(UIControl):
                 assert isinstance(menu_position, int)
                 x, y = cursor_position_to_xy(menu_position)
                 screen.menu_position = Point(y=y, x=x)
-            elif buffer.complete_state:
+            elif False:#buffer.complete_state:
                 # Position for completion menu.
                 # Note: We use 'min', because the original cursor position could be
                 #       behind the input string when the actual completion is for

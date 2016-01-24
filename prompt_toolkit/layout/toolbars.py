@@ -9,7 +9,7 @@ from .dimension import LayoutDimension
 from .controls import BufferControl, TokenListControl, UIControl
 from .containers import Window, ConditionalContainer
 from .utils import token_list_len
-from .screen import Screen
+from .lazyscreen import LazyScreen
 from prompt_toolkit.enums import SEARCH_BUFFER, SYSTEM_BUFFER
 from prompt_toolkit.filters import HasFocus, HasArg, HasCompletions, HasValidationError, HasSearch, Always, IsDone
 from prompt_toolkit.token import Token
@@ -152,9 +152,10 @@ class CompletionsToolbarControl(UIControl):
         else:
             all_tokens = []
 
-        screen = Screen(initial_width=width)
-        screen.write_data(all_tokens, width)
-        return screen
+        def get_line(i):
+            return all_tokens
+
+        return LazyScreen(get_line=get_line, get_line_count=lambda: 1)
 
 
 class CompletionsToolbar(ConditionalContainer):

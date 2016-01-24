@@ -11,7 +11,8 @@ from six import with_metaclass
 from .controls import UIControl, TokenListControl
 from .dimension import LayoutDimension, sum_layout_dimensions, max_layout_dimensions
 from .margins import Margin
-from .screen import Point, WritePosition, Char
+from .screen import Point, WritePosition, Char, _CHAR_CACHE
+from .lazyscreen import LazyScreen
 from .utils import token_list_to_text
 from prompt_toolkit.cache import SimpleCache
 from prompt_toolkit.filters import to_cli_filter
@@ -582,7 +583,8 @@ class WindowRenderInfo(object):
     """
     def __init__(self, original_screen, horizontal_scroll, vertical_scroll,
                  window_width, window_height, cursor_position,
-                 configured_scroll_offsets, applied_scroll_offsets):
+                 configured_scroll_offsets, applied_scroll_offsets,
+                 visible_line_to_input_line):
         self.original_screen = original_screen
         self.vertical_scroll = vertical_scroll
         self.window_width = window_width
@@ -590,6 +592,7 @@ class WindowRenderInfo(object):
         self.cursor_position = cursor_position
         self.configured_scroll_offsets = configured_scroll_offsets
         self.applied_scroll_offsets = applied_scroll_offsets
+        self.visible_line_to_input_line = visible_line_to_input_line
 
     @property
     def input_line_to_screen_line(self):
@@ -597,6 +600,7 @@ class WindowRenderInfo(object):
         Return a dictionary mapping the line numbers of the screen to the one
         of the input buffer.
         """
+        return defaultdict(lambda: 0) # XXX
         return dict((v, k) for k, v in
                     self.original_screen.screen_line_to_input_line.items())
 
@@ -606,22 +610,25 @@ class WindowRenderInfo(object):
         Return the dictionary mapping the line numbers of the input buffer to
         the lines of the screen.
         """
+        return defaultdict(lambda: 0) # XXX
         return self.original_screen.screen_line_to_input_line
 
-    @property
-    def visible_line_to_input_line(self):
-        """
-        Return a dictionary mapping the visible rows to the line numbers of the
-        input.
-        """
-        return dict((k - self.vertical_scroll, v) for
-                    k, v in self.original_screen.screen_line_to_input_line.items())
+#    @property
+#    def visible_line_to_input_line(self):
+#        """
+#        Return a dictionary mapping the visible rows to the line numbers of the
+#        input.
+#        """
+#        return defaultdict(lambda: 0) # XXX
+#        return dict((k - self.vertical_scroll, v) for
+#                    k, v in self.original_screen.screen_line_to_input_line.items())
 
     def first_visible_line(self, after_scroll_offset=False):
         """
         Return the line number (0 based) of the input document that corresponds
         with the first visible line.
         """
+        return 0
         # Note that we can't just do vertical_scroll+height because some input
         # lines could be wrapped and span several lines in the screen.
         screen = self.original_screen
@@ -641,6 +648,7 @@ class WindowRenderInfo(object):
         """
         Like `first_visible_line`, but for the last visible line.
         """
+        return 0
         screen = self.original_screen
         height = self.window_height
 
@@ -669,6 +677,7 @@ class WindowRenderInfo(object):
         """
         The full height of the user control.
         """
+        return 1  # XXX
         return self.original_screen.height
 
     @property
@@ -676,6 +685,7 @@ class WindowRenderInfo(object):
         """
         True when the full height is visible (There is no vertical scroll.)
         """
+        return True   # XXX
         return self.window_height >= self.original_screen.height
 
     @property
@@ -877,28 +887,23 @@ class Window(Container):
         total_margin_width = sum(left_margin_widths + right_margin_widths)
 
         # Render UserControl.
-        tpl = self.content.create_screen(
+        temp_screen = self.content.create_screen(
             cli, write_position.width - total_margin_width, write_position.height)
-        if isinstance(tpl, tuple):
-            temp_screen, highlighting = tpl
-        else:
-            # For backwards, compatibility.
-            temp_screen, highlighting = tpl, defaultdict(lambda: defaultdict(lambda: None))
+        assert isinstance(temp_screen, LazyScreen)
 
-#        # Scroll content.
+        # Scroll content.
+        # TODO: Implement line wrapping!!!!!
         applied_scroll_offsets = self._scroll(
             temp_screen, write_position.width - total_margin_width, write_position.height, cli)
         applied_scroll_offsets = ScrollOffsets()  ###
 
         # Write body
-        self._copy_body222(cli, temp_screen, highlighting, screen, write_position,
-                        sum(left_margin_widths), write_position.width - total_margin_width,
-                        applied_scroll_offsets)
-
-###         # Write body to screen.
-###         self._copy_body(cli, temp_screen, highlighting, screen, write_position,
-###                         sum(left_margin_widths), write_position.width - total_margin_width,
-###                         applied_scroll_offsets)
+        # TODO: Implement line wrapping!!!!!
+        visible_line_to_input_line = self._copy_body(
+            temp_screen, screen, write_position,
+            sum(left_margin_widths), write_position.width - total_margin_width,
+            self.vertical_scroll, self.horizontal_scroll,
+            has_focus=self.content.has_focus(cli))
 
         # Remember render info. (Set before generating the margins. They need this.)
         self.render_info = WindowRenderInfo(
@@ -910,7 +915,8 @@ class Window(Container):
             cursor_position=Point(y=temp_screen.cursor_position.y - self.vertical_scroll,
                                   x=temp_screen.cursor_position.x - self.horizontal_scroll),
             configured_scroll_offsets=self.scroll_offsets,
-            applied_scroll_offsets=applied_scroll_offsets)
+            applied_scroll_offsets=applied_scroll_offsets,
+            visible_line_to_input_line=visible_line_to_input_line)
 
         # Set mouse handlers.
         def mouse_handler(cli, mouse_event):
@@ -973,40 +979,54 @@ class Window(Container):
             self._copy_margin(margin_screen, screen, write_position, move_x, width)
             move_x += width
 
-    def _copy_body222(self, cli, temp_screen, highlighting, new_screen,
-                      write_position, move_x, width, applied_scroll_offsets):
+    @classmethod
+    def _copy_body(self, temp_screen, new_screen, write_position, move_x,
+                   width, vertical_scroll=0, horizontal_scroll=0, has_focus=False):
         """
+        Copy the content of a LazyScreen into the output screen.
         """
-        # XXX: First test without line wrapping...
-        y = 0
+        # XXX: Implement line wrapping...
+
         xpos = write_position.xpos + move_x
         ypos = write_position.ypos
-        lineno = self.vertical_scroll
+        lineno = vertical_scroll
         line_count = temp_screen.get_line_count()
         new_buffer = new_screen.data_buffer
-        vertical_scroll = self.vertical_scroll
-        horizontal_scroll = self.horizontal_scroll
+
+        # Result dict.
+        visible_line_to_input_line = {}
+
+        # Fill background with default_char first.
+        default_char = temp_screen.default_char
+
+        if default_char:
+            for y in range(ypos, ypos + write_position.height):
+                for x in range(xpos, xpos + width):
+                    new_buffer[y][x] = default_char
+
+        # Copy content.
+        y = 0
 
         while y < write_position.height and lineno < line_count:
             # Take the next line and copy it in the real screen.
             line = temp_screen.get_line(lineno)
 
+            visible_line_to_input_line[y] = lineno
             x = -horizontal_scroll
 
             for token, text in line:
+                new_buffer_row = new_buffer[y + ypos]
                 for c in text:
-                    char = Char(c, token)
-                    if x > 0 and x < write_position.width:
-                        new_buffer[y + ypos][x + xpos] = char
+                    char = _CHAR_CACHE[c, token]
+                    if x >= 0 and x < write_position.width:
+                        new_buffer_row[x + xpos] = char
                     x += char.width
-                    with open('/tmp/buffer', 'a') as f:
-                        f.write('y=%r, x=%r, c=%r\n' % (y, x, c))
 
             lineno += 1
             y += 1
 
-
-        if self.content.has_focus(cli) and temp_screen.cursor_position:
+        # Set cursor and menu positions.
+        if has_focus and temp_screen.cursor_position:
             new_screen.cursor_position = Point(y=temp_screen.cursor_position.y + ypos - vertical_scroll,
                                                x=temp_screen.cursor_position.x + xpos - horizontal_scroll)
 
@@ -1016,100 +1036,91 @@ class Window(Container):
             new_screen.menu_position = Point(y=temp_screen.menu_position.y + ypos - vertical_scroll,
                                              x=temp_screen.menu_position.x + xpos - horizontal_scroll)
 
-
         new_screen.height = max(new_screen.height, ypos + y + 1)
+        return visible_line_to_input_line
 
+#    def _OLD_copy_body(self, cli, temp_screen, highlighting, new_screen,
+#                   write_position, move_x, width, applied_scroll_offsets):
+#        """
+#        Copy characters from the temp screen that we got from the `UIControl`
+#        to the real screen.
+#        """
+#        xpos = write_position.xpos + move_x
+#        ypos = write_position.ypos
+#        height = write_position.height
+#
+#        temp_buffer = temp_screen.data_buffer
+#        new_buffer = new_screen.data_buffer
+#        temp_screen_height = temp_screen.height
+#
+#        vertical_scroll = self.vertical_scroll
+#        horizontal_scroll = self.horizontal_scroll
+#        y = 0
+#
+#        # Now copy the region we need to the real screen.
+#        for y in range(0, height):
+#            # We keep local row variables. (Don't look up the row in the dict
+#            # for each iteration of the nested loop.)
+#            new_row = new_buffer[y + ypos]
+#
+#            if y >= temp_screen_height and y >= write_position.height:
+#                # Break out of for loop when we pass after the last row of the
+#                # temp screen. (We use the 'y' position for calculation of new
+#                # screen's height.)
+#                break
+#            else:
+#                temp_row = temp_buffer[y + vertical_scroll]
+#                highlighting_row = highlighting[y + vertical_scroll]
+#
+#                # Copy row content, except for transparent tokens.
+#                # (This is useful in case of floats.)
+#                # Also apply highlighting.
+#                for x in range(0, width):
+#                    cell = temp_row[x + horizontal_scroll]
+#                    highlighting_token = highlighting_row[x]
+#
+#                    if highlighting_token:
+#                        new_row[x + xpos] = Char(cell.char, highlighting_token)
+#                    elif cell.token != Transparent:
+#                        new_row[x + xpos] = cell
+#
+#        if self.content.has_focus(cli):
+#            new_screen.cursor_position = Point(y=temp_screen.cursor_position.y + ypos - vertical_scroll,
+#                                               x=temp_screen.cursor_position.x + xpos - horizontal_scroll)
+#
+#            if not self.always_hide_cursor(cli):
+#                new_screen.show_cursor = temp_screen.show_cursor
+#
+#        if not new_screen.menu_position and temp_screen.menu_position:
+#            new_screen.menu_position = Point(y=temp_screen.menu_position.y + ypos - vertical_scroll,
+#                                             x=temp_screen.menu_position.x + xpos - horizontal_scroll)
+#
+#        # Update height of the output screen. (new_screen.write_data is not
+#        # called, so the screen is not aware of its height.)
+#        new_screen.height = max(new_screen.height, ypos + y + 1)
 
-    def _copy_body(self, cli, temp_screen, highlighting, new_screen,
-                   write_position, move_x, width, applied_scroll_offsets):
-        """
-        Copy characters from the temp screen that we got from the `UIControl`
-        to the real screen.
-        """
-        xpos = write_position.xpos + move_x
-        ypos = write_position.ypos
-        height = write_position.height
-
-        temp_buffer = temp_screen.data_buffer
-        new_buffer = new_screen.data_buffer
-        temp_screen_height = temp_screen.height
-
-        vertical_scroll = self.vertical_scroll
-        horizontal_scroll = self.horizontal_scroll
-        y = 0
-
-        # Now copy the region we need to the real screen.
-        for y in range(0, height):
-            # We keep local row variables. (Don't look up the row in the dict
-            # for each iteration of the nested loop.)
-            new_row = new_buffer[y + ypos]
-
-            if y >= temp_screen_height and y >= write_position.height:
-                # Break out of for loop when we pass after the last row of the
-                # temp screen. (We use the 'y' position for calculation of new
-                # screen's height.)
-                break
-            else:
-                temp_row = temp_buffer[y + vertical_scroll]
-                highlighting_row = highlighting[y + vertical_scroll]
-
-                # Copy row content, except for transparent tokens.
-                # (This is useful in case of floats.)
-                # Also apply highlighting.
-                for x in range(0, width):
-                    cell = temp_row[x + horizontal_scroll]
-                    highlighting_token = highlighting_row[x]
-
-                    if highlighting_token:
-                        new_row[x + xpos] = Char(cell.char, highlighting_token)
-                    elif cell.token != Transparent:
-                        new_row[x + xpos] = cell
-
-        if self.content.has_focus(cli):
-            new_screen.cursor_position = Point(y=temp_screen.cursor_position.y + ypos - vertical_scroll,
-                                               x=temp_screen.cursor_position.x + xpos - horizontal_scroll)
-
-            if not self.always_hide_cursor(cli):
-                new_screen.show_cursor = temp_screen.show_cursor
-
-        if not new_screen.menu_position and temp_screen.menu_position:
-            new_screen.menu_position = Point(y=temp_screen.menu_position.y + ypos - vertical_scroll,
-                                             x=temp_screen.menu_position.x + xpos - horizontal_scroll)
-
-        # Update height of the output screen. (new_screen.write_data is not
-        # called, so the screen is not aware of its height.)
-        new_screen.height = max(new_screen.height, ypos + y + 1)
-
-    def _copy_margin(self, temp_screen, new_screen, write_position, move_x, width):
+    @classmethod
+    def _copy_margin(cls, lazy_screen, new_screen, write_position, move_x, width):
         """
         Copy characters from the margin screen to the real screen.
         """
         xpos = write_position.xpos + move_x
         ypos = write_position.ypos
 
-        temp_buffer = temp_screen.data_buffer
-        new_buffer = new_screen.data_buffer
+        margin_write_position = WritePosition(xpos + move_x, ypos, width, write_position.height)
+        cls._copy_body(lazy_screen, new_screen, margin_write_position, 0, width)
 
-        # Now copy the region we need to the real screen.
-        for y in range(0, write_position.height):
-            new_row = new_buffer[y + ypos]
-            temp_row = temp_buffer[y]
-
-            # Copy row content, except for transparent tokens.
-            # (This is useful in case of floats.)
-            for x in range(0, width):
-                cell = temp_row[x]
-                if cell.token != Transparent:
-                    new_row[x + xpos] = cell
-
-    def _scroll(self, temp_screen, width, height, cli):
+    def _scroll(self, temp_screen, width, height, cli):  # TODO: implement scrolling when line wrapping is on.
         """
         Scroll to make sure the cursor position is visible and that we maintain the
         requested scroll offset.
         Return the applied scroll offsets.
         """
         cursor_position = temp_screen.cursor_position or Point(0, 0)
-        current_line_text = token_list_to_text(temp_screen.get_line(cursor_position.y))
+        try:
+            current_line_text = token_list_to_text(temp_screen.get_line(cursor_position.y))
+        except IndexError:
+            current_line_text = ''  # XXX
 
         def do_scroll(current_scroll, scroll_offset_start, scroll_offset_end,
                       cursor_pos, window_size, content_size):
