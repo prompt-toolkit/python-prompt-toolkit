@@ -21,6 +21,7 @@ from .lexers import Lexer, SimpleLexer
 from .processors import Processor, Transformation
 from .screen import Screen, Char, Point
 from .utils import token_list_width, split_lines
+from .lazyscreen import LazyScreen
 
 import time
 
@@ -62,7 +63,7 @@ class UIControl(with_metaclass(ABCMeta, object)):
         """
         Write the content at this position to the screen.
 
-        Returns a :class:`.Screen` instance.
+        Returns a :class:`.LazyScreen` instance.
 
         Optionally, this can also return a (screen, highlighting) tuple, where
         the `highlighting` is a dictionary of dictionaries. Mapping
@@ -354,10 +355,10 @@ class BufferControl(UIControl):
         #: lexed. This is a faily easy way to cache such an expensive operation.
         self._token_cache = SimpleCache(maxsize=8)
 
-        #: Keep a similar cache for rendered screens. (when we scroll up/down
-        #: through the screen, or when we change another buffer, we don't want
-        #: to recreate the same screen again.)
-        self._screen_cache = SimpleCache(maxsize=8)
+#        #: Keep a similar cache for rendered screens. (when we scroll up/down
+#        #: through the screen, or when we change another buffer, we don't want
+#        #: to recreate the same screen again.)
+#        self._screen_cache = SimpleCache(maxsize=8)
 
         #: Highlight Cache.
         #: When nothing of the buffer content or processors has changed, but
@@ -389,7 +390,9 @@ class BufferControl(UIControl):
     def preferred_height(self, cli, width):
         # Draw content on a screen using this width. Measure the height of the
         # result.
-        screen, highlighters = self.create_screen(cli, width, None)
+        #########screen, highlighters = self.create_screen(cli, width, None)
+        return None
+        screen = self.create_screen(cli, width, None)
         return screen.height
 
     def _get_input_tokens(self, cli, document):
@@ -481,7 +484,8 @@ class BufferControl(UIControl):
         wrap_width = width if self.wrap_lines(cli) else None
 
         def _create_screen():
-            screen = Screen(self.default_char, initial_width=width)
+
+#            screen = Screen(self.default_char, initial_width=width)
 
             # Get tokens
             # Note: we add the space character at the end, because that's where
@@ -489,71 +493,77 @@ class BufferControl(UIControl):
             input_tokens, source_to_display, display_to_source = self._get_input_tokens(cli, document)
             input_tokens += [(self.default_char.token, ' ')]
 
-            write_data_result = screen.write_data(input_tokens, width=wrap_width)
-            indexes_to_pos = write_data_result.indexes_to_pos
-            line_lengths = write_data_result.line_lengths
+            lines = list(split_lines(input_tokens))
+            screen = LazyScreen(lambda i: lines[i], lambda: len(lines),
+                                cursor_position=Point(document.cursor_position_row, document.cursor_position_col))
 
-            pos_to_indexes = _LazyReverseDict(indexes_to_pos)
 
-            def cursor_position_to_xy(cursor_position):
-                """ Turn a cursor position in the buffer into x/y coordinates
-                on the screen. """
-                cursor_position = min(len(document.text), cursor_position)
+#            write_data_result = screen.write_data(input_tokens, width=wrap_width)
+#            indexes_to_pos = {} ######write_data_result.indexes_to_pos
+#            line_lengths = None  ###### write_data_result.line_lengths
 
-                # First get the real token position by applying all transformations.
-                cursor_position = source_to_display(cursor_position)
+#            pos_to_indexes = _LazyReverseDict(indexes_to_pos)
 
-                # Then look up into the table.
-                try:
-                    return indexes_to_pos[cursor_position]
-                except KeyError:
-                    # This can fail with KeyError, but only if one of the
-                    # processors is returning invalid key locations.
-                    raise
-                    # return 0, 0
+#            def cursor_position_to_xy(cursor_position):
+#                """ Turn a cursor position in the buffer into x/y coordinates
+#                on the screen. """
+#                cursor_position = min(len(document.text), cursor_position)
+#
+#                # First get the real token position by applying all transformations.
+#                cursor_position = source_to_display(cursor_position)
+#
+#                # Then look up into the table.
+#                try:
+#                    return indexes_to_pos[cursor_position]
+#                except KeyError:
+#                    # This can fail with KeyError, but only if one of the
+#                    # processors is returning invalid key locations.
+#                    ######## raise
+#                    return 0, 0
+#
+#            def xy_to_cursor_position(x, y):
+#                """ Turn x/y screen coordinates back to the original cursor
+#                position in the buffer. """
+#                # Look up reverse in table.
+#                while x > 0 or y > 0:
+#                    try:
+#                        index = pos_to_indexes[x, y]
+#                        break
+#                    except KeyError:
+#                        # No match found -> mouse click outside of region
+#                        # containing text. Look to the left or up.
+#                        if x: x -= 1
+#                        elif y: y -=1
+#                else:
+#                    # Nobreak.
+#                    index = 0
+#
+#                # Transform.
+#                return display_to_source(index)
 
-            def xy_to_cursor_position(x, y):
-                """ Turn x/y screen coordinates back to the original cursor
-                position in the buffer. """
-                # Look up reverse in table.
-                while x > 0 or y > 0:
-                    try:
-                        index = pos_to_indexes[x, y]
-                        break
-                    except KeyError:
-                        # No match found -> mouse click outside of region
-                        # containing text. Look to the left or up.
-                        if x: x -= 1
-                        elif y: y -=1
-                else:
-                    # Nobreak.
-                    index = 0
+            return screen #, cursor_position_to_xy, xy_to_cursor_position, line_lengths
 
-                # Transform.
-                return display_to_source(index)
-
-            return screen, cursor_position_to_xy, xy_to_cursor_position, line_lengths
-
-        # Build a key for the caching. If any of these parameters changes, we
-        # have to recreate a new screen.
-        key = (
-            # When the text changes, we obviously have to recreate a new screen.
-            document.text,
-
-            # When the width changes, line wrapping will be different.
-            # (None when disabled.)
-            wrap_width,
-
-            # Include invalidation_hashes from all processors.
-            tuple(p.invalidation_hash(cli, document) for p in self.input_processors),
-        )
+#        # Build a key for the caching. If any of these parameters changes, we
+#        # have to recreate a new screen.
+#        key = (
+#            # When the text changes, we obviously have to recreate a new screen.
+#            document.text,
+#
+#            # When the width changes, line wrapping will be different.
+#            # (None when disabled.)
+#            wrap_width,
+#
+#            # Include invalidation_hashes from all processors.
+#            tuple(p.invalidation_hash(cli, document) for p in self.input_processors),
+#        )
 
         # Get from cache, or create if this doesn't exist yet.
-        screen, cursor_position_to_xy, self._xy_to_cursor_position, line_lengths = \
-            self._screen_cache.get(key, _create_screen)
+#        screen, cursor_position_to_xy, self._xy_to_cursor_position, line_lengths = \
+#            self._screen_cache.get(key, _create_screen)
+        screen = _create_screen()
 
-        x, y = cursor_position_to_xy(document.cursor_position)
-        screen.cursor_position = Point(y=y, x=x)
+#        x, y = cursor_position_to_xy(document.cursor_position)
+#        screen.cursor_position = Point(y=y, x=x)
 
         # If there is an auto completion going on, use that start point for a
         # pop-up menu position. (But only when this buffer has the focus --
@@ -577,19 +587,19 @@ class BufferControl(UIControl):
             else:
                 screen.menu_position = None
 
-        # Add highlighting.
-        highlight_key = (
-            key,  # Includes everything from the 'key' above. (E.g. when the
-                     # document changes, we have to recalculate highlighting.)
+#        # Add highlighting.
+#        highlight_key = (
+#            key,  # Includes everything from the 'key' above. (E.g. when the
+#                     # document changes, we have to recalculate highlighting.)
+#
+#            # Include invalidation_hashes from all highlighters.
+#            tuple(h.invalidation_hash(cli, document) for h in self.highlighters)
+#        )
 
-            # Include invalidation_hashes from all highlighters.
-            tuple(h.invalidation_hash(cli, document) for h in self.highlighters)
-        )
+#        highlighting = self._highlight_cache.get(highlight_key, lambda:
+#            self._get_highlighting(cli, document, cursor_position_to_xy, line_lengths))
 
-        highlighting = self._highlight_cache.get(highlight_key, lambda:
-            self._get_highlighting(cli, document, cursor_position_to_xy, line_lengths))
-
-        return screen, highlighting
+        return screen  #### , None  # highlighting
 
     def _get_highlighting(self, cli, document, cursor_position_to_xy, line_lengths):
         """

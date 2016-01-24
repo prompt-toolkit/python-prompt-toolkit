@@ -12,11 +12,12 @@ from .controls import UIControl, TokenListControl
 from .dimension import LayoutDimension, sum_layout_dimensions, max_layout_dimensions
 from .margins import Margin
 from .screen import Point, WritePosition, Char
+from .utils import token_list_to_text
 from prompt_toolkit.cache import SimpleCache
 from prompt_toolkit.filters import to_cli_filter
 from prompt_toolkit.mouse_events import MouseEvent, MouseEventTypes
 from prompt_toolkit.token import Token
-from prompt_toolkit.utils import take_using_weights
+from prompt_toolkit.utils import take_using_weights, get_cwidth
 
 __all__ = (
     'Container',
@@ -884,14 +885,20 @@ class Window(Container):
             # For backwards, compatibility.
             temp_screen, highlighting = tpl, defaultdict(lambda: defaultdict(lambda: None))
 
-        # Scroll content.
+#        # Scroll content.
         applied_scroll_offsets = self._scroll(
             temp_screen, write_position.width - total_margin_width, write_position.height, cli)
+        applied_scroll_offsets = ScrollOffsets()  ###
 
-        # Write body to screen.
-        self._copy_body(cli, temp_screen, highlighting, screen, write_position,
+        # Write body
+        self._copy_body222(cli, temp_screen, highlighting, screen, write_position,
                         sum(left_margin_widths), write_position.width - total_margin_width,
                         applied_scroll_offsets)
+
+###         # Write body to screen.
+###         self._copy_body(cli, temp_screen, highlighting, screen, write_position,
+###                         sum(left_margin_widths), write_position.width - total_margin_width,
+###                         applied_scroll_offsets)
 
         # Remember render info. (Set before generating the margins. They need this.)
         self.render_info = WindowRenderInfo(
@@ -965,6 +972,53 @@ class Window(Container):
             # Copy and shift X.
             self._copy_margin(margin_screen, screen, write_position, move_x, width)
             move_x += width
+
+    def _copy_body222(self, cli, temp_screen, highlighting, new_screen,
+                      write_position, move_x, width, applied_scroll_offsets):
+        """
+        """
+        # XXX: First test without line wrapping...
+        y = 0
+        xpos = write_position.xpos + move_x
+        ypos = write_position.ypos
+        lineno = self.vertical_scroll
+        line_count = temp_screen.get_line_count()
+        new_buffer = new_screen.data_buffer
+        vertical_scroll = self.vertical_scroll
+        horizontal_scroll = self.horizontal_scroll
+
+        while y < write_position.height and lineno < line_count:
+            # Take the next line and copy it in the real screen.
+            line = temp_screen.get_line(lineno)
+
+            x = -horizontal_scroll
+
+            for token, text in line:
+                for c in text:
+                    char = Char(c, token)
+                    if x > 0 and x < write_position.width:
+                        new_buffer[y + ypos][x + xpos] = char
+                    x += char.width
+                    with open('/tmp/buffer', 'a') as f:
+                        f.write('y=%r, x=%r, c=%r\n' % (y, x, c))
+
+            lineno += 1
+            y += 1
+
+
+        if self.content.has_focus(cli) and temp_screen.cursor_position:
+            new_screen.cursor_position = Point(y=temp_screen.cursor_position.y + ypos - vertical_scroll,
+                                               x=temp_screen.cursor_position.x + xpos - horizontal_scroll)
+
+            new_screen.show_cursor = True
+
+        if not new_screen.menu_position and temp_screen.menu_position:
+            new_screen.menu_position = Point(y=temp_screen.menu_position.y + ypos - vertical_scroll,
+                                             x=temp_screen.menu_position.x + xpos - horizontal_scroll)
+
+
+        new_screen.height = max(new_screen.height, ypos + y + 1)
+
 
     def _copy_body(self, cli, temp_screen, highlighting, new_screen,
                    write_position, move_x, width, applied_scroll_offsets):
@@ -1054,6 +1108,9 @@ class Window(Container):
         requested scroll offset.
         Return the applied scroll offsets.
         """
+        cursor_position = temp_screen.cursor_position or Point(0, 0)
+        current_line_text = token_list_to_text(temp_screen.get_line(cursor_position.y))
+
         def do_scroll(current_scroll, scroll_offset_start, scroll_offset_end,
                       cursor_pos, window_size, content_size):
             " Scrolling algorithm. Used for both horizontal and vertical scrolling. "
@@ -1105,7 +1162,8 @@ class Window(Container):
             scroll_offset_end=offsets.bottom,
             cursor_pos=temp_screen.cursor_position.y,
             window_size=height,
-            content_size=temp_screen.height)
+###            content_size=temp_screen.height)
+            content_size=temp_screen.get_line_count())
 
         self.horizontal_scroll, scroll_offset_left, scroll_offset_right = do_scroll(
             current_scroll=self.horizontal_scroll,
@@ -1113,7 +1171,8 @@ class Window(Container):
             scroll_offset_end=offsets.right,
             cursor_pos=temp_screen.cursor_position.x,
             window_size=width,
-            content_size=temp_screen.width)
+###            content_size=temp_screen.width)
+            content_size=get_cwidth(current_line_text))
 
         applied_scroll_offsets = ScrollOffsets(
             top=scroll_offset_top,
