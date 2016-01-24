@@ -620,6 +620,27 @@ class Document(object):
 
                 yield from_, to
 
+    def selection_range_at_line(self, row):
+        """
+        If the selection spans a portion of the given line, return a (from, to) tuple.
+        Otherwise, return None.
+        """
+        if self.selection:  # TODO: Handle different selection types....!
+            row_start = self.translate_row_col_to_index(row, 0)
+            row_end = self.translate_row_col_to_index(row, len(self.lines[row]) - 1)
+
+            from_, to = sorted([self.cursor_position, self.selection.original_cursor_position])
+
+            # Taket the intersection of the current line and the selection.
+            intersection_start = max(row_start, from_)
+            intersection_end = min(row_end, to)
+
+            if intersection_start < intersection_end:
+                _, from_column = self.translate_index_to_position(intersection_start)
+                _, to_column = self.translate_index_to_position(intersection_end)
+
+                return from_column, to_column
+
     def cut_selection(self):
         """
         Return a (:class:`.Document`, :class:`.ClipboardData`) tuple, where the

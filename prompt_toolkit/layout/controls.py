@@ -123,11 +123,10 @@ class TokenListControl(UIControl):
         upper left corner of this control, unless `get_token` returns a
         ``Token.SetCursorPosition`` token somewhere in the token list, then the
         cursor will be shown there.
-    :param wrap_lines: `bool` or `CLIFilter`: Wrap long lines.
     """
     def __init__(self, get_tokens, default_char=None, get_default_char=None,
                  align_right=False, align_center=False,
-                 has_focus=False, wrap_lines=True):
+                 has_focus=False, wrap_lines=True):  # XXX: remove wrap_lines option.
         assert default_char is None or isinstance(default_char, Char)
         assert get_default_char is None or callable(get_default_char)
         assert not (default_char and get_default_char)
@@ -135,7 +134,6 @@ class TokenListControl(UIControl):
         self.align_right = to_cli_filter(align_right)
         self.align_center = to_cli_filter(align_center)
         self._has_focus_filter = to_cli_filter(has_focus)
-        self.wrap_lines = to_cli_filter(wrap_lines)
 
         self.get_tokens = get_tokens
 
@@ -193,7 +191,6 @@ class TokenListControl(UIControl):
         default_char = self.get_default_char(cli)
 
         # Wrap/align right/center parameters.
-        wrap_lines = self.wrap_lines(cli)
         right = self.align_right(cli)
         center = self.align_center(cli)
 
@@ -216,8 +213,8 @@ class TokenListControl(UIControl):
 
         # Create screen, or take it from the cache.
         key = (default_char.char, default_char.token,
-                tuple(tokens_with_mouse_handlers), width, wrap_lines, right, center)
-        params = (default_char, tokens, width, wrap_lines, right, center)
+                tuple(tokens_with_mouse_handlers), width, right, center)
+        params = (default_char, tokens, width, right, center)
 #        screen, self._pos_to_indexes = self._screen_cache.get(key, lambda: self._get_screen(*params))
         screen = self._screen_cache.get(key, lambda: self._get_screen(*params))
         self._pos_to_indexes = {}
@@ -227,7 +224,7 @@ class TokenListControl(UIControl):
         return screen
 
     @classmethod
-    def _get_screen(cls, default_char, tokens, width, wrap_lines, right, center):
+    def _get_screen(cls, default_char, tokens, width, right, center):
         lines = list(split_lines(tokens))  # XXX: reuse 'split_lines' from above...
         screen = LazyScreen(get_line=lambda i: lines[i],
                             get_line_count=lambda: len(lines),
@@ -328,7 +325,6 @@ class BufferControl(UIControl):
     :param preview_search: `bool` or `CLIFilter`: Show search while typing.
     :param get_search_state: Callable that takes a CommandLineInterface and
         returns the SearchState to be used. (If not CommandLineInterface.search_state.)
-    :param wrap_lines: `bool` or `CLIFilter`: Wrap long lines.
     :param buffer_name: String representing the name of the buffer to display.
     :param default_char: :class:`.Char` instance to use to fill the background. This is
         transparent by default.
@@ -354,7 +350,6 @@ class BufferControl(UIControl):
 
         self.preview_search = to_cli_filter(preview_search)
         self.get_search_state = get_search_state
-        self.wrap_lines = to_cli_filter(wrap_lines)
         self.focus_on_click = to_cli_filter(focus_on_click)
 
         self.input_processors = input_processors or []
@@ -411,66 +406,107 @@ class BufferControl(UIControl):
         screen = self.create_screen(cli, width, None)
         return screen.height
 
-    def _get_input_tokens(self, cli, document):
-        """
-        Tokenize input text for highlighting.
-        Return (tokens, source_to_display, display_to_source) tuple.
-
-        :param document: The document to be shown. This can be `buffer.document`
-                         but could as well be a different one, in case we are
-                         searching through the history. (Buffer.document_for_search)
-        """
-        def get():
-      #      tokens = [(Token, document.text)]
-            # Call lexer.
-            tokens = list(self.lexer.get_tokens(cli, document.text))
-
-       #     # 'Explode' tokens in characters. (And turn generator into a list.)
-       #     # (Some input processors -- like search/selection highlighter --
-       #     # rely on that each item in the tokens array only contains one
-       #     # character.)
-       #     tokens = [(token, c) for token, text in tokens for c in text]
-
-            # Run all processors over the input.
-            # (They can transform both the tokens and the cursor position.)
-            source_to_display_functions = []
-            display_to_source_functions = []
-
-#            d_ = document  # Each processor receives the document of the previous one.
-
-#            for p in self.input_processors:
-#                transformation  = p.apply_transformation(cli, d_, tokens)
-#                d_ = transformation.document
-#                assert isinstance(transformation, Transformation)
+#    def _get_input_tokens(self, cli, document):
+#        """
+#        Tokenize input text for highlighting.
+#        Return (tokens, source_to_display, display_to_source) tuple.
 #
-#                tokens = transformation.tokens
-#                source_to_display_functions.append(transformation.source_to_display)
-#                display_to_source_functions.append(transformation.display_to_source)
+#        :param document: The document to be shown. This can be `buffer.document`
+#                         but could as well be a different one, in case we are
+#                         searching through the history. (Buffer.document_for_search)
+#        """
+#        def get():
+#      #      tokens = [(Token, document.text)]
+#            # Call lexer.
+#            tokens = list(self.lexer.get_tokens(cli, document.text))
+#
+#       #     # 'Explode' tokens in characters. (And turn generator into a list.)
+#       #     # (Some input processors -- like search/selection highlighter --
+#       #     # rely on that each item in the tokens array only contains one
+#       #     # character.)
+#       #     tokens = [(token, c) for token, text in tokens for c in text]
+#
+#            # Run all processors over the input.
+#            # (They can transform both the tokens and the cursor position.)
+#            source_to_display_functions = []
+#            display_to_source_functions = []
+#
+##            d_ = document  # Each processor receives the document of the previous one.
+#
+##            for p in self.input_processors:
+##                transformation  = p.apply_transformation(cli, d_, tokens)
+##                d_ = transformation.document
+##                assert isinstance(transformation, Transformation)
+##
+##                tokens = transformation.tokens
+##                source_to_display_functions.append(transformation.source_to_display)
+##                display_to_source_functions.append(transformation.display_to_source)
+#
+#            # Chain cursor transformation (movement) functions.
+#
+#            def source_to_display(cursor_position):
+#                " Chained source_to_display. "
+#                for f in source_to_display_functions:
+#                    cursor_position = f(cursor_position)
+#                return cursor_position
+#
+#            def display_to_source(cursor_position):
+#                " Chained display_to_source. "
+#                for f in reversed(display_to_source_functions):
+#                    cursor_position = f(cursor_position)
+#                return cursor_position
+#
+#            return tokens, source_to_display, display_to_source
+#
+#        key = (
+#            document.text,
+#
+#            # Include invalidation_hashes from all processors.
+##            tuple(p.invalidation_hash(cli, document) for p in self.input_processors),
+#        )
+#
+#        return self._token_cache.get(key, get)
 
-            # Chain cursor transformation (movement) functions.
+    def create_get_line_func(self, cli, document):
+        """
+        Create a function that returns the tokens for a given line number.
+        This is optimized in a way that it doesn't require the lexer to
+        parse the whole document if we only need to display the first 80
+        lines.
+        """
+        def transform(lineno, tokens):
+            for p in self.input_processors:
+                transformation = p.apply_transformation(cli, document, lineno, tokens)
+                tokens = transformation.tokens
 
-            def source_to_display(cursor_position):
-                " Chained source_to_display. "
-                for f in source_to_display_functions:
-                    cursor_position = f(cursor_position)
-                return cursor_position
+            return tokens
 
-            def display_to_source(cursor_position):
-                " Chained display_to_source. "
-                for f in reversed(display_to_source_functions):
-                    cursor_position = f(cursor_position)
-                return cursor_position
+        def create_func():
+            cache = {}
+            line_generator = enumerate(split_lines(self.lexer.get_tokens(cli, document.text)))
 
-            return tokens, source_to_display, display_to_source
 
+            def get_line(i):
+                " Return the tokens for a given line number. "
+                try:
+                    return cache[i]
+                except KeyError:
+                    for num, line in line_generator:
+                        cache[num] = transform(num, line)
+                        if num == i:
+                            return line  # XXX: Apply line transformations here.
+                return []
+
+            return get_line
+
+        # Cache tokens as long as the document text doesn't change.
         key = (
             document.text,
 
             # Include invalidation_hashes from all processors.
-#            tuple(p.invalidation_hash(cli, document) for p in self.input_processors),
+            tuple(p.invalidation_hash(cli, document) for p in self.input_processors),
         )
-
-        return self._token_cache.get(key, get)
+        return self._token_cache.get(key, create_func)
 
     def create_screen(self, cli, width, height):
         buffer = self._buffer(cli)
@@ -497,32 +533,6 @@ class BufferControl(UIControl):
         else:
             document = buffer.document
 
-        # Wrap.
-        wrap_width = width if self.wrap_lines(cli) else None
-
-        def create_get_line_func():
-            """
-            Create a function that returns the tokens for a given line number.
-            This is optimized in a way that it doesn't require the lexer to
-            parse the whole document if we only need to display the first 80
-            lines.
-            """
-            cache = {}
-            line_generator = enumerate(split_lines(self.lexer.get_tokens(cli, document.text)))
-
-            def get_line(i):
-                " Return the tokens for a given line number. "
-                try:
-                    return cache[i]
-                except KeyError:
-                    for num, line in line_generator:
-                        cache[num] = line
-                        if num == i:
-                            return line  # XXX: Apply line transformations here.
-                return []
-
-            return get_line
-
         def _create_screen():
             line_count = document.text.count('\n') + 1
 
@@ -535,7 +545,7 @@ class BufferControl(UIControl):
 #            input_tokens += [(self.default_char.token, ' ')]
 
 #            lines = list(split_lines(input_tokens))
-            screen = LazyScreen(get_line=create_get_line_func(), ## lambda i: lines[i],
+            screen = LazyScreen(get_line=self.create_get_line_func(cli, document), ## lambda i: lines[i],
                                 get_line_count=lambda: line_count,
                                 cursor_position=Point(document.cursor_position_row, document.cursor_position_col))
 

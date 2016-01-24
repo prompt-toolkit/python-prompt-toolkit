@@ -17,6 +17,8 @@ from .utils import Callback
 from .cache import FastDictCache
 from .validation import ValidationError
 
+from six.moves import range
+
 import os
 import six
 import subprocess

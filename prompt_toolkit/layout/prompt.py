@@ -46,7 +46,7 @@ class DefaultPrompt(Processor):
             return [(Token.Prompt, message)]
         return cls(get_message_tokens)
 
-    def apply_transformation(self, cli, document, tokens):
+    def apply_transformation(self, cli, document, lineno, tokens):
         # Get text before cursor.
         if cli.is_searching:
             before = _get_isearch_tokens(cli)
@@ -61,7 +61,7 @@ class DefaultPrompt(Processor):
         shift_position = token_list_len(before)
 
         return Transformation(
-                document=document.insert_before(token_list_to_text(before)),
+#                document=document.insert_before(token_list_to_text(before)),
                 tokens=before + tokens,
                 source_to_display=lambda i: i + shift_position,
                 display_to_source=lambda i: i - shift_position)
