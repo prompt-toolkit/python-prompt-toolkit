@@ -9,7 +9,6 @@ from __future__ import unicode_literals
 from abc import ABCMeta, abstractmethod
 from six import with_metaclass
 
-
 from prompt_toolkit.document import Document
 from prompt_toolkit.enums import SEARCH_BUFFER
 from prompt_toolkit.filters import to_cli_filter
@@ -18,6 +17,8 @@ from prompt_toolkit.token import Token
 
 from .utils import token_list_len, explode_tokens
 from six.moves import range
+
+import re
 
 __all__ = (
     'Processor',
@@ -112,27 +113,44 @@ class HighlightSearchProcessor(Processor):
         else:
             return cli.search_state.text
 
-    def apply_transformation(self, cli, document, lineno, tokens):  # XXX: only search in the visible region.
-                                                                    #      This means, if the search string has length 'x'.
-                                                                    #      (go 'x' characters back for searching.)
+    def apply_transformation(self, cli, document, lineno, tokens):
+            # XXX: only search in the visible region.
+            #      This means, if the search string has length 'x'.
+            #      (go 'x' characters back for searching.)
+
         # TODO
         search_text = self._get_search_text(cli)
-        ignore_case = cli.is_ignoring_case
+
+        if cli.is_ignoring_case:
+            flags = re.IGNORECASE
+        else:
+            flags = 0
+
+###        return Transformation([(Token.SearchMatch, t) for _, t in tokens])
 
         if search_text and not cli.is_returning:
             # For each search match, replace the Token.
+            line_text = token_list_to_text(tokens)
+            tokens = explode_tokens(tokens)
 
-            for index in document.find_all(search_text, ignore_case=ignore_case):
-                if index == document.cursor_position:
-                    token = Token.SearchMatch.Current
-                else:
-                    token = Token.SearchMatch
+            # XXX: Take cursor position into account.
 
-                for x in range(index, index + len(search_text)):
-                    if x < len(tokens):
-                        tokens[x] = (token, tokens[x][1])
+            for match in re.finditer(re.escape(search_text), line_text, flags=flags):
+                for i in range(match.start(), match.end()):
+                    tokens[i] = (Token.SearchMatch, tokens[i][1])
 
-        return Transformation(document, tokens)
+            ##for index in document.find_all(search_text, ignore_case=ignore_case):
+            ##    if index == document.cursor_position:
+            ##        token = Token.SearchMatch.Current
+            ##    else:
+            ##        token = Token.SearchMatch
+
+            ##    for x in range(index, index + len(search_text)):
+            ##        if x < len(tokens):
+            ##            tokens[x] = (token, tokens[x][1])
+
+        ##return Transformation(document, tokens)
+        return Transformation(tokens)
 
     def invalidation_hash(self, cli, document):
         search_text = self._get_search_text(cli)
@@ -142,10 +160,13 @@ class HighlightSearchProcessor(Processor):
             search_text,
             cli.is_returning,
 
+            # XXX: include ignore_case in hash, if search_text is given.
+
             # When we search for text, and the cursor position changes. The
             # processor has to be applied every time again, because the current
             # match is highlighted in another color.
-            (search_text and document.cursor_position),
+#            (search_text and document.cursor_position),
+            search_text,
         )
 
 
@@ -170,7 +191,7 @@ class HighlightSelectionProcessor(Processor):
     def invalidation_hash(self, cli, document):
         # When the search state changes, highlighting will be different.
         return (
-            document.selection_range(),  # XXX: consider selection type as well.
+            document.selection and document.selection_range(),  # XXX: consider selection type as well.
         )
 
 
@@ -430,18 +451,16 @@ class ShowTrailingWhiteSpaceProcessor(Processor):
     def apply_transformation(self, cli, document, lineno, tokens):  # TODO
         # Walk backwards through all te tokens.
         t = (self.token, self.char)
-        is_end_of_line = True
+
+        tokens = explode_tokens(tokens)  # XXX: Maybe don't explode, or only if this line has trailing whitespace.
 
         for i in range(len(tokens) - 1, -1, -1):
             char = tokens[i][1]
-            if is_end_of_line and char == ' ':
+            if char == ' ':
                 tokens[i] = t
-            elif char == '\n':
-                is_end_of_line = True
             else:
-                is_end_of_line = False
+                break
 
-#        return Transformation(document, tokens)
         return Transformation(tokens)
 
 

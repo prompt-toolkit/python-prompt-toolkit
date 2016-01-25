@@ -571,7 +571,7 @@ class Document(object):
 
         return column - current_column
 
-    def selection_range(self):
+    def selection_range(self):  # XXX: shouldn't this return `None` if there is no selection???
         """
         Return (from, to) tuple of the selection.
         start and end position are included.

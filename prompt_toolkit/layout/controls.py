@@ -175,6 +175,7 @@ class TokenListControl(UIControl):
         Return the preferred width for this control.
         That is the width of the longest line.
         """
+        return None # XXXXXXXXXXXXXXXX
         text = ''.join(t[1] for t in self._get_tokens_cached(cli))
         line_lengths = [get_cwidth(l) for l in text.split('\n')]
         return max(line_lengths)
@@ -365,6 +366,7 @@ class BufferControl(UIControl):
         #: operations, it happens that a short time, the same document has to be
         #: lexed. This is a faily easy way to cache such an expensive operation.
         self._token_cache = SimpleCache(maxsize=8)
+        self._processed_token_cache = SimpleCache(maxsize=8)
 
 #        #: Keep a similar cache for rendered screens. (when we scroll up/down
 #        #: through the screen, or when we change another buffer, we don't want
@@ -374,7 +376,7 @@ class BufferControl(UIControl):
         #: Highlight Cache.
         #: When nothing of the buffer content or processors has changed, but
         #: the highlighting of the selection/search changes,
-        self._highlight_cache = SimpleCache(maxsize=8)
+#        self._highlight_cache = SimpleCache(maxsize=8)
 
         self._xy_to_cursor_position = None
         self._last_click_timestamp = None
@@ -395,6 +397,8 @@ class BufferControl(UIControl):
             any(i.has_focus(cli) for i in self.input_processors)
 
     def preferred_width(self, cli, max_available_width):
+        return None
+
         # Return the length of the longest line.
         return max(map(len, self._buffer(cli).document.lines))
 
@@ -467,13 +471,35 @@ class BufferControl(UIControl):
 #
 #        return self._token_cache.get(key, get)
 
-    def create_get_line_func(self, cli, document):
+    def _create_get_line_func(self, cli, document):
         """
         Create a function that returns the tokens for a given line number.
         This is optimized in a way that it doesn't require the lexer to
         parse the whole document if we only need to display the first 80
         lines.
         """
+        def create_func():
+            cache = {}
+            line_generator = enumerate(split_lines(self.lexer.get_tokens(cli, document.text)))
+
+            def get_line(i):
+                " Return the tokens for a given line number. "
+                try:
+                    return cache[i]
+                except KeyError:
+                    for num, line in line_generator:
+                        cache[num] = line
+                        if num == i:
+                            return cache[num]
+                return []
+
+            return get_line
+
+        # Cache tokens as long as the document text doesn't change.
+        key = document.text
+        return self._token_cache.get(key, create_func)
+
+    def _create_get_processed_line_func(self, cli, document):
         def transform(lineno, tokens):
             for p in self.input_processors:
                 transformation = p.apply_transformation(cli, document, lineno, tokens)
@@ -482,31 +508,26 @@ class BufferControl(UIControl):
             return tokens
 
         def create_func():
+            get_line = self._create_get_line_func(cli, document)
             cache = {}
-            line_generator = enumerate(split_lines(self.lexer.get_tokens(cli, document.text)))
 
-
-            def get_line(i):
-                " Return the tokens for a given line number. "
+            def get_processed_line(i):
                 try:
                     return cache[i]
                 except KeyError:
-                    for num, line in line_generator:
-                        cache[num] = transform(num, line)
-                        if num == i:
-                            return line  # XXX: Apply line transformations here.
-                return []
-
-            return get_line
+                    processed_line = transform(i, get_line(i))
+                    cache[i] = processed_line
+                    return processed_line
+            return get_processed_line
 
         # Cache tokens as long as the document text doesn't change.
+        # Include invalidation_hashes from all processors.
         key = (
             document.text,
-
-            # Include invalidation_hashes from all processors.
             tuple(p.invalidation_hash(cli, document) for p in self.input_processors),
         )
-        return self._token_cache.get(key, create_func)
+        return self._processed_token_cache.get(key, create_func)
+
 
     def create_screen(self, cli, width, height):
         buffer = self._buffer(cli)
@@ -545,7 +566,7 @@ class BufferControl(UIControl):
 #            input_tokens += [(self.default_char.token, ' ')]
 
 #            lines = list(split_lines(input_tokens))
-            screen = LazyScreen(get_line=self.create_get_line_func(cli, document), ## lambda i: lines[i],
+            screen = LazyScreen(get_line=self._create_get_processed_line_func(cli, document), ## lambda i: lines[i],
                                 get_line_count=lambda: line_count,
                                 cursor_position=Point(document.cursor_position_row, document.cursor_position_col))
 
@@ -653,49 +674,49 @@ class BufferControl(UIControl):
 
         return screen  #### , None  # highlighting
 
-    def _get_highlighting(self, cli, document, cursor_position_to_xy, line_lengths):
-        """
-        Return a _HighlightDict for the highlighting. (This is a lazy dict of dicts.)
-
-        The Window class will apply this for the visible regions. - That way,
-        we don't have to recalculate the screen again for each selection/search
-        change.
-
-        :param line_lengths: Maps line numbers to the length of these lines.
-        """
-        def get_row_size(y):
-            " Return the max 'x' value for a given row in the screen. "
-            return max(1, line_lengths.get(y, 0))
-
-        # Get list of fragments.
-        row_to_fragments = defaultdict(list)
-
-        for h in self.highlighters:
-            for fragment in h.get_fragments(cli, document):
-                # Expand fragments.
-                start_column, start_row = cursor_position_to_xy(fragment.start)
-                end_column, end_row = cursor_position_to_xy(fragment.end)
-                token = fragment.token
-
-                if start_row == end_row:
-                    # Single line highlighting.
-                    row_to_fragments[start_row].append(
-                        _HighlightFragment(start_column, end_column, token))
-                else:
-                    # Multi line highlighting.
-                    # (First line.)
-                    row_to_fragments[start_row].append(
-                        _HighlightFragment(start_column, get_row_size(start_row), token))
-
-                    # (Middle lines.)
-                    for y in range(start_row + 1, end_row):
-                        row_to_fragments[y].append(_HighlightFragment(0, get_row_size(y), token))
-
-                    # (Last line.)
-                    row_to_fragments[end_row].append(_HighlightFragment(0, end_column, token))
-
-        # Create dict to return.
-        return _HighlightDict(row_to_fragments)
+#    def _get_highlighting(self, cli, document, cursor_position_to_xy, line_lengths):
+#        """
+#        Return a _HighlightDict for the highlighting. (This is a lazy dict of dicts.)
+#
+#        The Window class will apply this for the visible regions. - That way,
+#        we don't have to recalculate the screen again for each selection/search
+#        change.
+#
+#        :param line_lengths: Maps line numbers to the length of these lines.
+#        """
+#        def get_row_size(y):
+#            " Return the max 'x' value for a given row in the screen. "
+#            return max(1, line_lengths.get(y, 0))
+#
+#        # Get list of fragments.
+#        row_to_fragments = defaultdict(list)
+#
+#        for h in self.highlighters:
+#            for fragment in h.get_fragments(cli, document):
+#                # Expand fragments.
+#                start_column, start_row = cursor_position_to_xy(fragment.start)
+#                end_column, end_row = cursor_position_to_xy(fragment.end)
+#                token = fragment.token
+#
+#                if start_row == end_row:
+#                    # Single line highlighting.
+#                    row_to_fragments[start_row].append(
+#                        _HighlightFragment(start_column, end_column, token))
+#                else:
+#                    # Multi line highlighting.
+#                    # (First line.)
+#                    row_to_fragments[start_row].append(
+#                        _HighlightFragment(start_column, get_row_size(start_row), token))
+#
+#                    # (Middle lines.)
+#                    for y in range(start_row + 1, end_row):
+#                        row_to_fragments[y].append(_HighlightFragment(0, get_row_size(y), token))
+#
+#                    # (Last line.)
+#                    row_to_fragments[end_row].append(_HighlightFragment(0, end_column, token))
+#
+#        # Create dict to return.
+#        return _HighlightDict(row_to_fragments)
 
     def mouse_handler(self, cli, mouse_event):
         """
