@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 import re
 import six
 import string
+import weakref
 
 from .selection import SelectionType, SelectionState
 from .clipboard import ClipboardData
@@ -27,6 +28,22 @@ _FIND_CURRENT_BIG_WORD_RE = re.compile(r'^([^\s]+)')
 _FIND_CURRENT_BIG_WORD_INCLUDE_TRAILING_WHITESPACE_RE = re.compile(r'^([^\s]+\s*)')
 
 
+# Share the Document._lines_cache and Document._lines_indexes_cache between all
+# Document instances.
+_text_to_line_caches = weakref.WeakKeyDictionary()  # Maps document.text to line cache.
+_text_to_line_indexes_caches = weakref.WeakKeyDictionary()
+
+class _Str(object):
+    def __init__(self, text):
+        self.text = text
+
+    def __hash__(self):
+        return hash(self.text)
+
+    def __eq__(self, other):
+        return other.text == self.text
+
+
 class Document(object):
     """
     This is a immutable class around the text and cursor position, and contains
@@ -39,7 +56,7 @@ class Document(object):
     :param cursor_position: int
     :param selection: :class:`.SelectionState`
     """
-    __slots__ = ('text', 'cursor_position', 'selection', '_lines_cache')
+#    __slots__ = ('text', 'cursor_position', 'selection', '_lines_cache', '_lines_indexes_cache')
 
     def __init__(self, text='', cursor_position=None, selection=None):
         assert isinstance(text, six.text_type), 'Got %r' % text
@@ -60,6 +77,8 @@ class Document(object):
         self.cursor_position = cursor_position
         self.selection = selection
         self._lines_cache = None
+        self._lines_indexes_cache = None
+        self._lines_key = _Str(self.text)
 
     def __repr__(self):
         return '%s(%r, %r)' % (self.__class__.__name__, self.text, self.cursor_position)
@@ -97,9 +116,33 @@ class Document(object):
         " Array of all the lines. "
         # Cache, because this one is reused very often.
         if self._lines_cache is None:
-            self._lines_cache = self.text.split('\n')
+            try:
+                self._lines_cache = _text_to_line_caches[self._lines_key]
+            except KeyError:
+                self._lines_cache = _text_to_line_caches[self._lines_key] = self.text.split('\n')
 
         return self._lines_cache
+
+    @property
+    def _line_start_indexes(self):
+        " Array pointing to the start indexes of all the lines. "
+        # Cache, because this is often reused. (If it is used, it's often used
+        # several times.)
+        if self._lines_indexes_cache is None:  # TODO: make lazy.
+            try:
+                self._lines_indexes_cache = _text_to_line_indexes_caches[self._lines_key]
+            except KeyError:
+                indexes = [0]
+                pos = 0
+
+                for line in self.lines:
+                    pos += len(line) + 1
+                    indexes.append(pos)
+
+                self._lines_indexes_cache = indexes
+                _text_to_line_indexes_caches[self._lines_key] = indexes
+
+        return self._lines_indexes_cache
 
     @property
     def lines_from_current(self):
@@ -165,14 +208,27 @@ class Document(object):
         return len(self.current_line_before_cursor)
 
     def translate_index_to_position(self, index):  # TODO: make this 0-based indexed!!!
+
+                 # XXX: Still too slow for selection_range_at_line....
+                 #      Cache something...
         """
         Given an index for the text, return the corresponding (row, col) tuple.
         (0-based. Returns (0, 0) for index=0.)
         """
+        indexes_before = [i for i in self._line_start_indexes if i <= index]
+
+        row = len(indexes_before)
+        col = index - indexes_before[-1]
+        return row, col
+
+
         text_before_position = self.text[:index]
 
         row = text_before_position.count('\n')
-        col = len(text_before_position.split('\n')[-1])
+        try:
+            col = len(text_before_position) - text_before_position.rindex('\n')
+        except ValueError:
+            col = 0
 
         return row, col
 
@@ -181,7 +237,7 @@ class Document(object):
         Given a (row, col) tuple, return the corresponding index.
         (Row and col params are 0-based.)
         """
-        result = len('\n'.join(self.lines[:row])) + (len('\n') if row > 0 else 0) + col
+        result = self._line_start_indexes[row] + col
 
         # Keep in range. (len(self.text) is included, because the cursor can be
         # right after the end of the text as well.)
@@ -629,15 +685,22 @@ class Document(object):
             row_start = self.translate_row_col_to_index(row, 0)
             row_end = self.translate_row_col_to_index(row, len(self.lines[row]) - 1)
 
+#            import time
+#            before = time.time()
+
             from_, to = sorted([self.cursor_position, self.selection.original_cursor_position])
 
-            # Taket the intersection of the current line and the selection.
+            # Take the intersection of the current line and the selection.
             intersection_start = max(row_start, from_)
             intersection_end = min(row_end, to)
 
             if intersection_start < intersection_end:
                 _, from_column = self.translate_index_to_position(intersection_start)
                 _, to_column = self.translate_index_to_position(intersection_end)
+
+#                after = time.time()
+#                with open('translate', 'a') as f:
+#                    f.write('selection_range_at_line %r\n' % (after - before))
 
                 return from_column, to_column
 

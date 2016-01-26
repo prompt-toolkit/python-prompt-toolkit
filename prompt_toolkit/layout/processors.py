@@ -176,7 +176,12 @@ class HighlightSelectionProcessor(Processor):
     """
     def apply_transformation(self, cli, document, lineno, tokens):
         # In case of selection, highlight all matches.
+        import time
+        before = time.time()
         selection_at_line = document.selection_range_at_line(lineno)
+        after = time.time()
+        with open('translate', 'a') as f:
+            f.write('selec %r\n' % (after - before))
 
         if selection_at_line:
             from_, to = selection_at_line
