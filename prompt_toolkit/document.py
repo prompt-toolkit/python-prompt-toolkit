@@ -28,20 +28,14 @@ _FIND_CURRENT_BIG_WORD_RE = re.compile(r'^([^\s]+)')
 _FIND_CURRENT_BIG_WORD_INCLUDE_TRAILING_WHITESPACE_RE = re.compile(r'^([^\s]+\s*)')
 
 
-# Share the Document._lines_cache and Document._lines_indexes_cache between all
-# Document instances.
-_text_to_line_caches = weakref.WeakKeyDictionary()  # Maps document.text to line cache.
-_text_to_line_indexes_caches = weakref.WeakKeyDictionary()
+# Share the Document._cache between all Document instances.
+_text_to_document_cache = weakref.WeakValueDictionary()  # Maps document.text to DocumentCache instance.
 
-class _Str(object):
-    def __init__(self, text):
-        self.text = text
 
-    def __hash__(self):
-        return hash(self.text)
-
-    def __eq__(self, other):
-        return other.text == self.text
+class _DocumentCache(object):
+    def __init__(self):
+        self.lines = None
+        self.line_indexes = None
 
 
 class Document(object):
@@ -56,7 +50,7 @@ class Document(object):
     :param cursor_position: int
     :param selection: :class:`.SelectionState`
     """
-#    __slots__ = ('text', 'cursor_position', 'selection', '_lines_cache', '_lines_indexes_cache')
+    __slots__ = ('text', 'cursor_position', 'selection', '_cache')
 
     def __init__(self, text='', cursor_position=None, selection=None):
         assert isinstance(text, six.text_type), 'Got %r' % text
@@ -76,9 +70,10 @@ class Document(object):
         self.text = text
         self.cursor_position = cursor_position
         self.selection = selection
-        self._lines_cache = None
-        self._lines_indexes_cache = None
-        self._lines_key = _Str(self.text)
+
+        # Cache for lines/indexes. (Shared with other Document instances that
+        # contain the same text.
+        self._cache = _text_to_document_cache.setdefault(self.text, _DocumentCache())
 
     def __repr__(self):
         return '%s(%r, %r)' % (self.__class__.__name__, self.text, self.cursor_position)
@@ -115,34 +110,30 @@ class Document(object):
     def lines(self):
         " Array of all the lines. "
         # Cache, because this one is reused very often.
-        if self._lines_cache is None:
-            try:
-                self._lines_cache = _text_to_line_caches[self._lines_key]
-            except KeyError:
-                self._lines_cache = _text_to_line_caches[self._lines_key] = self.text.split('\n')
+        if self._cache.lines is None:
+            self._cache.lines = self.text.split('\n')
 
-        return self._lines_cache
+        return self._cache.lines
 
     @property
     def _line_start_indexes(self):
         " Array pointing to the start indexes of all the lines. "
         # Cache, because this is often reused. (If it is used, it's often used
         # several times.)
-        if self._lines_indexes_cache is None:  # TODO: make lazy.
-            try:
-                self._lines_indexes_cache = _text_to_line_indexes_caches[self._lines_key]
-            except KeyError:
-                indexes = [0]
-                pos = 0
+        if self._cache.line_indexes is None:
+            indexes = [0]
+            pos = 0
 
-                for line in self.lines:
-                    pos += len(line) + 1
-                    indexes.append(pos)
+            with open('translate', 'a') as f:
+                f.write('recalculating start indexes\n')   # XXX: still recalculating too often...
 
-                self._lines_indexes_cache = indexes
-                _text_to_line_indexes_caches[self._lines_key] = indexes
+            for line in self.lines:
+                pos += len(line) + 1
+                indexes.append(pos)
 
-        return self._lines_indexes_cache
+            self._cache.line_indexes = indexes
+
+        return self._cache.line_indexes
 
     @property
     def lines_from_current(self):
@@ -207,30 +198,39 @@ class Document(object):
         """
         return len(self.current_line_before_cursor)
 
-    def translate_index_to_position(self, index):  # TODO: make this 0-based indexed!!!
+    def _find_line_start_index(self, index):
+        """
+        For the index of a character at a certain line, calculate the index of
+        the first character on that line.
 
-                 # XXX: Still too slow for selection_range_at_line....
-                 #      Cache something...
+        Return (row, index) tuple.
+        """
+        indexes = self._line_start_indexes
+
+        # Binary search for the closest index.
+        a, b = 0, len(indexes) - 1
+
+        while a != b:
+            mid = (a + b) // 2
+
+            if indexes[mid] <= index and indexes[mid + 1] > index:
+                return mid, indexes[mid]
+            elif indexes[mid] <= index:
+                a = mid
+            else:
+                b = mid
+
+    def translate_index_to_position(self, index):
         """
         Given an index for the text, return the corresponding (row, col) tuple.
         (0-based. Returns (0, 0) for index=0.)
         """
-        indexes_before = [i for i in self._line_start_indexes if i <= index]
-
-        row = len(indexes_before)
-        col = index - indexes_before[-1]
-        return row, col
-
-
-        text_before_position = self.text[:index]
-
-        row = text_before_position.count('\n')
-        try:
-            col = len(text_before_position) - text_before_position.rindex('\n')
-        except ValueError:
-            col = 0
+        # Find start of this line.
+        row, row_index = self._find_line_start_index(index)
+        col = index - row_index
 
         return row, col
+
 
     def translate_row_col_to_index(self, row, col):
         """
