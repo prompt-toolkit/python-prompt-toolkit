@@ -28,7 +28,8 @@ def main():
         w = b.document.get_word_before_cursor()
         if w != '':
             for word in corrections:
-                if w in word:
+                length = len(w)
+                if w[0:length] == word[0:length]:
                     b.delete_before_cursor(count=len(w))
                     b.insert_text(word)
 
