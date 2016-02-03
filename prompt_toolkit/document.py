@@ -8,11 +8,6 @@ import six
 import string
 import weakref
 
-try:
-    import numpy
-except ImportError:
-    numpy = None
-
 from .selection import SelectionType, SelectionState
 from .clipboard import ClipboardData
 
@@ -140,18 +135,13 @@ class Document(object):
             line_lengths = map(len, self.lines)
 
             # Calculate cumulative sums.
-            if numpy:
-                line_lengths = numpy.array(line_lengths)
-                line_lengths += 1
-                indexes = [0] + list(numpy.cumsum(line_lengths))
-            else:
-                indexes = [0]
-                append = indexes.append
-                pos = 0
+            indexes = [0]
+            append = indexes.append
+            pos = 0
 
-                for line_length in line_lengths:
-                    pos += line_length + 1
-                    append(pos)
+            for line_length in line_lengths:
+                pos += line_length + 1
+                append(pos)
 
             # Remove the last item. (This is not a new line.)
             if len(indexes) > 1:
