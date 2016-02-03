@@ -280,22 +280,22 @@ class Buffer(object):
 
     def _set_text(self, value):
         """ set text at current working_index. Return whether it changed. """
-        import time
-        start = time.time()
-
         working_index = self.working_index
         working_lines = self._working_lines
 
         original_value = working_lines[working_index]
         working_lines[working_index] = value
 
-        result = value != original_value
-
-        end = time.time()
-        with open('timinings', 'a') as f:
-            f.write('_st_text:  %r\n' % (end-start))
-
-        return result
+        # Return True when this text has been changed.
+        if len(value) != len(original_value):
+            # For Python 2, it seems that when two strings have a different
+            # length, Python still scans character by character to see whether
+            # the strings are different. (Some benchmarking showed significant
+            # differences for big documents. >100,000 of lines.)
+            return True
+        elif value != original_value:
+            return True
+        return False
 
     def _set_cursor_position(self, value):
         """ Set cursor position. Return whether it changed. """
