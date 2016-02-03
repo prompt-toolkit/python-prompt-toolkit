@@ -2,7 +2,6 @@
 LazyScreen is the screen that a UserControl generates.
 """
 from __future__ import unicode_literals
-from prompt_toolkit.token import Token
 
 from .screen import Point, Char
 
@@ -23,8 +22,8 @@ class LazyScreen(object):
         assert menu_position is None or isinstance(menu_position, Point)
         assert default_char is None or isinstance(default_char, Char)
 
-        self.get_line = get_line  # TODO: Add cache!
-        self.get_line_count = get_line_count  # TODO: Add cache!
+        self.get_line = get_line
+        self.get_line_count = get_line_count
 
         self.cursor_position = cursor_position or Point(0, 0)
         self.menu_position = menu_position

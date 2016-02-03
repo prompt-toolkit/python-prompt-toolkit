@@ -97,20 +97,48 @@ def split_lines(tokenlist):
         yield line
 
 
+class _ExplodedList(list):
+    """
+    Wrapper around a list, that marks it as 'exploded'.
+
+    As soon as items are added or the list is extended, the new items are
+    automatically exploded as well.
+    """
+    def __init__(self, *a, **kw):
+        super(_ExplodedList, self).__init__(*a, **kw)
+        self.exploded = True
+
+    def append(self, item):
+        self.extend([item])
+
+    def extend(self, lst):
+        super(_ExplodedList, self).extend(explode_tokens(lst))
+
+    def insert(self, index, item):
+        raise NotImplementedError  # TODO
+
+
 def explode_tokens(tokenlist):
     """
     Turn a list of (token, text) tuples into another list where each string is
     exactly one character.
 
+    It should be fine to call this function several times. Calling this on a
+    list that is already exploded, is a null operation.
+
     :param tokenlist: List of (token, text) tuples.
     """
+    # When the tokenlist is already exploded, don't explode again.
+    if getattr(tokenlist, 'exploded', False):
+        return tokenlist
+
     result = []
 
     for token, string in tokenlist:
         for c in string:
             result.append((token, c))
 
-    return result
+    return _ExplodedList(result)
 
 
 def find_window_for_buffer_name(cli, buffer_name):

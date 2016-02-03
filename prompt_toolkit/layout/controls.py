@@ -18,7 +18,7 @@ from prompt_toolkit.utils import get_cwidth
 
 from .highlighters import Highlighter
 from .lexers import Lexer, SimpleLexer
-from .processors import Processor, Transformation
+from .processors import Processor  #, Transformation
 from .screen import Char, Point
 from .utils import token_list_width, split_lines
 from .lazyscreen import LazyScreen
@@ -478,18 +478,46 @@ class BufferControl(UIControl):
         parse the whole document if we only need to display the first 80
         lines.
         """
+#        def create_func():
+#            cache = {}
+#            line_generator = enumerate(split_lines(self.lexer.get_tokens(cli, document.text)))
+#
+#            def get_line(i):
+#                " Return the tokens for a given line number. "
+#                try:
+#                    return cache[i]
+#                except KeyError:
+#                    for num, line in line_generator:
+#                        cache[num] = line
+#                        if num == i:
+#                            return cache[num]
+#                return []
+#
+#            return get_line
+
         def create_func():
             cache = {}
-            line_generator = enumerate(split_lines(self.lexer.get_tokens(cli, document.text)))
+            line_generators = {}
 
             def get_line(i):
                 " Return the tokens for a given line number. "
                 try:
                     return cache[i]
                 except KeyError:
-                    for num, line in line_generator:
+                    # Find closest line generator.
+                    for generator, lineno in line_generators.items():
+                        if lineno < i and i - lineno < 100:
+                            break
+                    else:
+                        text = '\n'.join(document.lines[i:])
+                        generator = enumerate(split_lines(self.lexer.get_tokens(cli, text)), i)
+                        line_generators[generator] = i
+
+                    # Exhaust the generator, until we find the requested line.
+                    for num, line in generator:
                         cache[num] = line
                         if num == i:
+                            line_generators[generator] = i
                             return cache[num]
                 return []
 
@@ -498,6 +526,16 @@ class BufferControl(UIControl):
         # Cache tokens as long as the document text doesn't change.
         key = document.text
         return self._token_cache.get(key, create_func)
+
+    def _get_tokens_for_line_func(self, cli, document):
+        """
+        Create a function that returns the tokens for a given line.
+        """
+        # Cache using `document.text`.
+        def get_tokens_for_line():
+            return self.lexer.lex_document(cli, document)
+
+        return self._token_cache.get(document.text, get_tokens_for_line)
 
     def _create_get_processed_line_func(self, cli, document):
         def transform(lineno, tokens):
@@ -508,7 +546,7 @@ class BufferControl(UIControl):
             return tokens
 
         def create_func():
-            get_line = self._create_get_line_func(cli, document)
+            get_line = self._get_tokens_for_line_func(cli, document)
             cache = {}
 
             def get_processed_line(i):

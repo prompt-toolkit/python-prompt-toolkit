@@ -895,7 +895,6 @@ class Window(Container):
         # TODO: Implement line wrapping!!!!!
         applied_scroll_offsets = self._scroll(
             temp_screen, write_position.width - total_margin_width, write_position.height, cli)
-        applied_scroll_offsets = ScrollOffsets()  ###
 
         # Write body
         # TODO: Implement line wrapping!!!!!

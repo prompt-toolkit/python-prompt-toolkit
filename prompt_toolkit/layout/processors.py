@@ -313,8 +313,12 @@ class BeforeInput(Processor):
         self.get_tokens = get_tokens
 
     def apply_transformation(self, cli, document, lineno, tokens):
+        if lineno == 0:
+            tokens = self.get_tokens(cli) + tokens
+
         return super(BeforeInput, self).apply_transformation(cli, document, lineno, tokens)
 
+        # TODO: implement position transformation:
         if lineno == 0:
             tokens_before = self.get_tokens(cli)
             shift_position = token_list_len(tokens_before)

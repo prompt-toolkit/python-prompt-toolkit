@@ -1,4 +1,5 @@
 """
+The `Document` that implements all the text operations/querying.
 """
 from __future__ import unicode_literals
 
@@ -27,14 +28,19 @@ _FIND_BIG_WORD_RE = re.compile(r'([^\s]+)')
 _FIND_CURRENT_BIG_WORD_RE = re.compile(r'^([^\s]+)')
 _FIND_CURRENT_BIG_WORD_INCLUDE_TRAILING_WHITESPACE_RE = re.compile(r'^([^\s]+\s*)')
 
-
 # Share the Document._cache between all Document instances.
+# (Document instances are considered immutable. That means that if another
+# `Document` is constructed with the same text, it should have the same
+# `_DocumentCache`.)
 _text_to_document_cache = weakref.WeakValueDictionary()  # Maps document.text to DocumentCache instance.
 
 
 class _DocumentCache(object):
     def __init__(self):
+        #: List of lines for the Document text.
         self.lines = None
+
+        #: List of index positions, pointing to the start of all the lines.
         self.line_indexes = None
 
 
@@ -108,7 +114,9 @@ class Document(object):
 
     @property
     def lines(self):
-        " Array of all the lines. "
+        """
+        Array of all the lines.
+        """
         # Cache, because this one is reused very often.
         if self._cache.lines is None:
             self._cache.lines = self.text.split('\n')
@@ -117,15 +125,14 @@ class Document(object):
 
     @property
     def _line_start_indexes(self):
-        " Array pointing to the start indexes of all the lines. "
+        """
+        Array pointing to the start indexes of all the lines.
+        """
         # Cache, because this is often reused. (If it is used, it's often used
         # several times.)
         if self._cache.line_indexes is None:
             indexes = [0]
             pos = 0
-
-            with open('translate', 'a') as f:
-                f.write('recalculating start indexes\n')   # XXX: still recalculating too often...
 
             for line in self.lines:
                 pos += len(line) + 1
@@ -189,14 +196,19 @@ class Document(object):
         """
         Current row. (0-based.)
         """
-        return self.text_before_cursor.count('\n')
+        row, _ = self._find_line_start_index(self.cursor_position)
+        return row
 
     @property
     def cursor_position_col(self):
         """
         Current column. (0-based.)
         """
-        return len(self.current_line_before_cursor)
+        # (Don't use self.text_before_cursor to calculate this. Creating
+        # substrings and doing rsplit is too expensive for getting the cursor
+        # position.)
+        _, line_start_index = self._find_line_start_index(self.cursor_position)
+        return self.cursor_position - line_start_index
 
     def _find_line_start_index(self, index):
         """
@@ -237,7 +249,14 @@ class Document(object):
         Given a (row, col) tuple, return the corresponding index.
         (Row and col params are 0-based.)
         """
-        result = self._line_start_indexes[row] + col
+        try:
+            result = self._line_start_indexes[row]
+            line = self.lines[row]
+        except IndexError:
+            result = self._line_start_indexes[-1]
+            line = self.lines[-1]
+
+        result += min(col, len(line))
 
         # Keep in range. (len(self.text) is included, because the cursor can be
         # right after the end of the text as well.)
@@ -252,13 +271,13 @@ class Document(object):
     @property
     def is_cursor_at_the_end_of_line(self):
         """ True when the cursor is at the end of this line. """
-        return self.cursor_position_col == len(self.current_line)
+        return self.current_char in ('\n', '')
 
     def has_match_at_current_position(self, sub):
         """
         `True` when this substring is found at the cursor position.
         """
-        return self.text[self.cursor_position:].find(sub) == 0
+        return self.text.find(sub, self.cursor_position) == self.cursor_position
 
     def find(self, sub, in_current_line=False, include_current_position=False,
              ignore_case=False, count=1):
@@ -512,25 +531,8 @@ class Document(object):
         user pressed the arrow-up button.
         """
         assert count >= 1
-
-        count = min(self.text_before_cursor.count('\n'), count)
-
-        if count:
-            pos = self.cursor_position_col
-
-            lines = self.text_before_cursor.split('\n')
-            skip_lines = '\n'.join(lines[-count-1:])
-            new_line = lines[-count-1]
-
-            # When the current line is longer then the previous, move to the
-            # last character of the previous line.
-            if pos > len(new_line):
-                return - len(skip_lines) + len(new_line)
-
-            # Otherwise find the corresponding position in the previous line.
-            else:
-                return - len(skip_lines) + pos
-        return 0
+        return self.translate_row_col_to_index(
+            self.cursor_position_row - count, self.cursor_position_col) - self.cursor_position
 
     def get_cursor_down_position(self, count=1):
         """
@@ -538,26 +540,8 @@ class Document(object):
         user pressed the arrow-down button.
         """
         assert count >= 1
-
-        count = min(self.text_after_cursor.count('\n'), count)
-
-        if count:
-            pos = self.cursor_position_col
-
-            lines = self.text_after_cursor.split('\n')
-            skip_lines = '\n'.join(lines[:count])
-            new_line = lines[count]
-
-            # When the current line is longer then the previous, move to the
-            # last character of the next line.
-            if pos > len(new_line):
-                return len(skip_lines) + len(new_line) + 1
-
-            # Otherwise find the corresponding position in the next line.
-            else:
-                return len(skip_lines) + pos + 1
-
-        return 0
+        return self.translate_row_col_to_index(
+            self.cursor_position_row + count, self.cursor_position_col) - self.cursor_position
 
     @property
     def matching_bracket_position(self):
@@ -667,10 +651,10 @@ class Document(object):
             else:
                 # In case of a LINES selection, go to the start/end of the lines.
                 if self.selection.type == SelectionType.LINES:
-                    from_ = max(0, self.text[:from_].rfind('\n') + 1)
+                    from_ = max(0, self.text.rfind('\n', 0, from_) + 1)
 
-                    if self.text[to:].find('\n') >= 0:
-                        to += self.text[to:].find('\n')
+                    if self.text.find('\n', to) >= 0:
+                        to += self.text.find('\n', to)
                     else:
                         to = len(self.text)
 
@@ -685,9 +669,6 @@ class Document(object):
             row_start = self.translate_row_col_to_index(row, 0)
             row_end = self.translate_row_col_to_index(row, len(self.lines[row]) - 1)
 
-#            import time
-#            before = time.time()
-
             from_, to = sorted([self.cursor_position, self.selection.original_cursor_position])
 
             # Take the intersection of the current line and the selection.
@@ -697,10 +678,6 @@ class Document(object):
             if intersection_start < intersection_end:
                 _, from_column = self.translate_index_to_position(intersection_start)
                 _, to_column = self.translate_index_to_position(intersection_end)
-
-#                after = time.time()
-#                with open('translate', 'a') as f:
-#                    f.write('selection_range_at_line %r\n' % (after - before))
 
                 return from_column, to_column
 
