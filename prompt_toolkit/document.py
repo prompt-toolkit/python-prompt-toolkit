@@ -8,6 +8,11 @@ import six
 import string
 import weakref
 
+try:
+    import numpy
+except ImportError:
+    numpy = None
+
 from .selection import SelectionType, SelectionState
 from .clipboard import ClipboardData
 
@@ -129,18 +134,28 @@ class Document(object):
         Array pointing to the start indexes of all the lines.
         """
         # Cache, because this is often reused. (If it is used, it's often used
-        # many times.)
+        # many times. And this has to be fast for editing big documents!)
         if self._cache.line_indexes is None:
-            indexes = [0]
-            append = indexes.append
-            pos = 0
+            # Create list of line lengths.
+            line_lengths = map(len, self.lines)
 
-            for line in self.lines:
-                pos += len(line) + 1
-                append(pos)
+            # Calculate cumulative sums.
+            if numpy:
+                line_lengths = numpy.array(line_lengths)
+                line_lengths += 1
+                indexes = [0] + list(numpy.cumsum(line_lengths))
+            else:
+                indexes = [0]
+                append = indexes.append
+                pos = 0
+
+                for line_length in line_lengths:
+                    pos += line_length + 1
+                    append(pos)
 
             # Remove the last item. (This is not a new line.)
-            indexes.pop()
+            if len(indexes) > 1:
+                indexes.pop()
 
             self._cache.line_indexes = indexes
 
@@ -225,8 +240,7 @@ class Document(object):
 
         # Special case: 'index' appears after the last line.
         if index >= indexes[-1]:
-            lineno = len(indexes) - 1
-            return lineno, indexes[lineno]
+            return len(indexes) - 1, indexes[-1]
 
         # Binary search for the closest index.
         a, b = 0, len(indexes) - 1
@@ -240,6 +254,8 @@ class Document(object):
                 a = mid
             else:
                 b = mid
+
+        return a, indexes[a]
 
     def translate_index_to_position(self, index):
         """
