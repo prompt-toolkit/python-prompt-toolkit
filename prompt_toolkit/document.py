@@ -129,14 +129,18 @@ class Document(object):
         Array pointing to the start indexes of all the lines.
         """
         # Cache, because this is often reused. (If it is used, it's often used
-        # several times.)
+        # many times.)
         if self._cache.line_indexes is None:
             indexes = [0]
+            append = indexes.append
             pos = 0
 
             for line in self.lines:
                 pos += len(line) + 1
-                indexes.append(pos)
+                append(pos)
+
+            # Remove the last item. (This is not a new line.)
+            indexes.pop()
 
             self._cache.line_indexes = indexes
 
@@ -218,6 +222,11 @@ class Document(object):
         Return (row, index) tuple.
         """
         indexes = self._line_start_indexes
+
+        # Special case: 'index' appears after the last line.
+        if index >= indexes[-1]:
+            lineno = len(indexes) - 1
+            return lineno, indexes[lineno]
 
         # Binary search for the closest index.
         a, b = 0, len(indexes) - 1
