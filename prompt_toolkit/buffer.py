@@ -289,9 +289,10 @@ class Buffer(object):
         # Return True when this text has been changed.
         if len(value) != len(original_value):
             # For Python 2, it seems that when two strings have a different
-            # length, Python still scans character by character to see whether
-            # the strings are different. (Some benchmarking showed significant
-            # differences for big documents. >100,000 of lines.)
+            # length and one is a prefix of the other, Python still scans
+            # character by character to see whether the strings are different.
+            # (Some benchmarking showed significant differences for big
+            # documents. >100,000 of lines.)
             return True
         elif value != original_value:
             return True
