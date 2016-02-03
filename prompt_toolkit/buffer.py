@@ -280,13 +280,22 @@ class Buffer(object):
 
     def _set_text(self, value):
         """ set text at current working_index. Return whether it changed. """
+        import time
+        start = time.time()
+
         working_index = self.working_index
         working_lines = self._working_lines
 
         original_value = working_lines[working_index]
         working_lines[working_index] = value
 
-        return value != original_value
+        result = value != original_value
+
+        end = time.time()
+        with open('timinings', 'a') as f:
+            f.write('_st_text:  %r\n' % (end-start))
+
+        return result
 
     def _set_cursor_position(self, value):
         """ Set cursor position. Return whether it changed. """
@@ -878,7 +887,8 @@ class Buffer(object):
 
         # In insert/text mode.
         if overwrite:
-            # Don't overwrite the newline itself. Just before the line ending, it should act like insert mode.
+            # Don't overwrite the newline itself. Just before the line ending,
+            # it should act like insert mode.
             overwritten_text = otext[ocpos:ocpos + len(data)]
             if '\n' in overwritten_text:
                 overwritten_text = overwritten_text[:overwritten_text.find('\n')]
