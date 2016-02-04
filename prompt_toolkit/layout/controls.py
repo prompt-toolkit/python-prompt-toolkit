@@ -20,7 +20,7 @@ from .highlighters import Highlighter
 from .lexers import Lexer, SimpleLexer
 from .processors import Processor
 from .screen import Char, Point
-from .utils import token_list_width, split_lines
+from .utils import token_list_width, split_lines, token_list_to_text
 from .lazyscreen import LazyScreen
 
 import time
@@ -44,7 +44,7 @@ class UIControl(with_metaclass(ABCMeta, object)):
     def preferred_width(self, cli, max_available_width):
         return None
 
-    def preferred_height(self, cli, width):
+    def preferred_height(self, cli, width, max_available_height):
         return None
 
     def has_focus(self, cli):
@@ -176,11 +176,11 @@ class TokenListControl(UIControl):
         Return the preferred width for this control.
         That is the width of the longest line.
         """
-        text = ''.join(t[1] for t in self._get_tokens_cached(cli))
+        text = token_list_to_text(self._get_tokens_cached(cli))
         line_lengths = [get_cwidth(l) for l in text.split('\n')]
         return max(line_lengths)
 
-    def preferred_height(self, cli, width):
+    def preferred_height(self, cli, width, max_available_height):
         screen = self.create_screen(cli, width, None)
         return screen.get_line_count()
 
@@ -396,18 +396,37 @@ class BufferControl(UIControl):
         return cli.current_buffer_name == self.buffer_name or \
             any(i.has_focus(cli) for i in self.input_processors)
 
-    def preferred_width(self, cli, max_available_width):
-        return None
-
+    def preferred_width(self, cli, max_available_width):  # XXX: this can be very expensive... Not sure that we should do it.
         # Return the length of the longest line.
-        return max(map(len, self._buffer(cli).document.lines))
+        screen = self.create_screen(cli, None, None)
+        width = 0
 
-    def preferred_height(self, cli, width):
+        for line in screen:
+            line_width = get_cwidth(token_list_to_text(line))
+            width = max(width, line_width)
+
+            # Break out of the loop if we need all the available space.
+            if width >= max_available_width:
+                return width
+
+        return width
+
+    def preferred_height(self, cli, width, max_available_height):
         # Draw content on a screen using this width. Measure the height of the
         # result.
-        #########screen = self.create_screen(cli, width, None)
-        return None
+        height = 0
         screen = self.create_screen(cli, width, None)
+
+        # When the number of lines exceeds the max_available_height, just
+        # return max_available_height. No need to calculate anything.
+        if screen.get_line_count() >= max_available_height:
+            return max_available_height
+
+        for i in range(screen.get_line_count()):
+            #line = screen.get_line(i) #self._buffer(cli).document.lines:
+            height += 1
+
+        return height
         return screen.height
 
     def _get_tokens_for_line_func(self, cli, document):

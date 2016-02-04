@@ -57,7 +57,7 @@ class Container(with_metaclass(ABCMeta, object)):
         """
 
     @abstractmethod
-    def preferred_height(self, cli, width):
+    def preferred_height(self, cli, width, max_available_height):
         """
         Return a :class:`~prompt_toolkit.layout.dimension.LayoutDimension` that
         represents the desired height for this container.
@@ -124,8 +124,8 @@ class HSplit(Container):
         else:
             return LayoutDimension(0)
 
-    def preferred_height(self, cli, width):
-        dimensions = [c.preferred_height(cli, width) for c in self.children]
+    def preferred_height(self, cli, width, max_available_height):
+        dimensions = [c.preferred_height(cli, width, max_available_height) for c in self.children]
         return sum_layout_dimensions(dimensions)
 
     def reset(self):
@@ -172,7 +172,7 @@ class HSplit(Container):
             if given_dimensions and given_dimensions[index] is not None:
                 return given_dimensions[index]
             else:
-                return c.preferred_height(cli, write_position.width)
+                return c.preferred_height(cli, write_position.width, write_position.extended_height)
 
         dimensions = [get_dimension_for_child(c, index) for index, c in enumerate(self.children)]
 
@@ -250,12 +250,12 @@ class VSplit(Container):
         dimensions = [c.preferred_width(cli, max_available_width) for c in self.children]
         return sum_layout_dimensions(dimensions)
 
-    def preferred_height(self, cli, width):
+    def preferred_height(self, cli, width, max_available_height):
         sizes = self._divide_widths(cli, width)
         if sizes is None:
             return LayoutDimension()
         else:
-            dimensions = [c.preferred_height(cli, s)
+            dimensions = [c.preferred_height(cli, s, max_available_height)
                           for s, c in zip(sizes, self.children)]
             return max_layout_dimensions(dimensions)
 
@@ -336,7 +336,7 @@ class VSplit(Container):
             return
 
         # Calculate heights, take the largest possible, but not larger than write_position.extended_height.
-        heights = [child.preferred_height(cli, width).preferred
+        heights = [child.preferred_height(cli, width, write_position.extended_height).preferred
                    for width, child in zip(sizes, self.children)]
         height = max(write_position.height, min(write_position.extended_height, max(heights)))
 
@@ -386,13 +386,13 @@ class FloatContainer(Container):
     def preferred_width(self, cli, write_position):
         return self.content.preferred_width(cli, write_position)
 
-    def preferred_height(self, cli, width):
+    def preferred_height(self, cli, width, max_available_height):
         """
         Return the preferred height of the float container.
         (We don't care about the height of the floats, they should always fit
         into the dimensions provided by the container.)
         """
-        return self.content.preferred_height(cli, width)
+        return self.content.preferred_height(cli, width, max_available_height)
 
     def write_to_screen(self, cli, screen, mouse_handlers, write_position):
         self.content.write_to_screen(cli, screen, mouse_handlers, write_position)
@@ -467,7 +467,8 @@ class FloatContainer(Container):
 
                 height = fl_height
                 if height is None:
-                    height = fl.content.preferred_height(cli, width).preferred
+                    height = fl.content.preferred_height(
+                        cli, width, write_position.extended_height).preferred
 
                 # Reduce height if not enough space. (We can use the
                 # extended_height when the content requires it.)
@@ -487,7 +488,8 @@ class FloatContainer(Container):
                 height = fl_height
             # Otherwise, take preferred height from content.
             else:
-                height = fl.content.preferred_height(cli, width).preferred
+                height = fl.content.preferred_height(
+                    cli, width, write_position.extended_height).preferred
 
                 if fl.top is not None:
                     ypos = fl.top
@@ -860,10 +862,10 @@ class Window(Container):
             preferred=preferred_width,
             dont_extend=self.dont_extend_width)
 
-    def preferred_height(self, cli, width):
+    def preferred_height(self, cli, width, max_available_height):
         return self._merge_dimensions(
             dimension=self._height(cli),
-            preferred=self.content.preferred_height(cli, width),
+            preferred=self.content.preferred_height(cli, width, max_available_height),
             dont_extend=self.dont_extend_height)
 
     @staticmethod
@@ -1273,9 +1275,9 @@ class ConditionalContainer(Container):
         else:
             return LayoutDimension.exact(0)
 
-    def preferred_height(self, cli, width):
+    def preferred_height(self, cli, width, max_available_height):
         if self.filter(cli):
-            return self.content.preferred_height(cli, width)
+            return self.content.preferred_height(cli, width, max_available_height)
         else:
             return LayoutDimension.exact(0)
 

@@ -17,7 +17,7 @@ class LazyScreen(object):
     def __init__(self, get_line=None, get_line_count=None,
                  cursor_position=None, menu_position=None, default_char=None):
         assert callable(get_line)
-        assert callable(get_line_count)
+        assert callable(get_line_count)  ## XXX: don't make this a callable!
         assert cursor_position is None or isinstance(cursor_position, Point)
         assert menu_position is None or isinstance(menu_position, Point)
         assert default_char is None or isinstance(default_char, Char)
@@ -29,3 +29,10 @@ class LazyScreen(object):
         self.menu_position = menu_position
 
         self.default_char = default_char
+
+    def __getitem__(self, lineno):
+        if lineno < self.get_line_count():
+            return self.get_line(lineno)
+        else:
+            raise IndexError
+
