@@ -1128,7 +1128,7 @@ class Window(Container):
         xpos = write_position.xpos + move_x
         ypos = write_position.ypos
 
-        margin_write_position = WritePosition(xpos + move_x, ypos, width, write_position.height)
+        margin_write_position = WritePosition(xpos, ypos, width, write_position.height)
         cls._copy_body(lazy_screen, new_screen, margin_write_position, 0, width)
 
     def _scroll(self, temp_screen, width, height, cli):  # TODO: implement scrolling when line wrapping is on.

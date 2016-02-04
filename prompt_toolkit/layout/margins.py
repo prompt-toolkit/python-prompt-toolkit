@@ -154,33 +154,36 @@ class ScrollbarMargin(Margin):
 
     def create_margin(self, cli, window_render_info, width, height):
         total_height = window_render_info.content_height
-        items_per_row = float(total_height) / min(total_height, window_render_info.window_height - 2)
+        try:
+            items_per_row = float(total_height) / min(total_height, window_render_info.window_height - 2)
+        except ZeroDivisionError:
+            return []
+        else:
+            index = window_render_info.vertical_scroll
 
-        index = window_render_info.vertical_scroll
+            visible_lines = set(range(index, index + window_render_info.window_height))
 
-        visible_lines = set(range(index, index + window_render_info.window_height))
+            def is_scroll_button(row):
+                " True if we should display a button on this row. "
+                current_row_middle = int((row + .5) * items_per_row)
+                return current_row_middle in visible_lines
 
-        def is_scroll_button(row):
-            " True if we should display a button on this row. "
-            current_row_middle = int((row + .5) * items_per_row)
-            return current_row_middle in visible_lines
+            # Generate tokens.
+            result = [
+                (Token.Scrollbar.Arrow, '\u25b2'),  # Up arrow.
+                (Token.Scrollbar, '\n')
+            ]
 
-        # Generate tokens.
-        result = [
-            (Token.Scrollbar.Arrow, '\u25b2'),  # Up arrow.
-            (Token.Scrollbar, '\n')
-        ]
+            for i in range(window_render_info.window_height - 2):
+                if is_scroll_button(i):
+                    result.append((Token.Scrollbar.Button, ' '))
+                else:
+                    result.append((Token.Scrollbar, ' '))
+                result.append((Token, '\n'))
 
-        for i in range(window_render_info.window_height - 2):
-            if is_scroll_button(i):
-                result.append((Token.Scrollbar.Button, ' '))
-            else:
-                result.append((Token.Scrollbar, ' '))
-            result.append((Token, '\n'))
+            result.append((Token.Scrollbar.Arrow, '\u25bc'))  # Down arrow
 
-        result.append((Token.Scrollbar.Arrow, '\u25bc'))  # Down arrow
-
-        return result
+            return result
 
 
 class PromptMargin(Margin):

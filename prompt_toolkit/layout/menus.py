@@ -11,7 +11,7 @@ from .controls import UIControl
 from .dimension import LayoutDimension
 from .lazyscreen import LazyScreen
 from .margins import ScrollbarMargin
-from .screen import Point
+from .screen import Point, Char
 
 import math
 
@@ -42,7 +42,7 @@ class CompletionsMenuControl(UIControl):
             menu_width = self._get_menu_width(500, complete_state)
             menu_meta_width = self._get_menu_meta_width(500, complete_state)
 
-            return menu_width + menu_meta_width + 1
+            return menu_width + menu_meta_width
         else:
             return 0
 
@@ -63,21 +63,23 @@ class CompletionsMenuControl(UIControl):
             index = complete_state.complete_index  # Can be None!
 
             # Calculate width of completions menu.
-            menu_width = self._get_menu_width(width - 1, complete_state)
-            menu_meta_width = self._get_menu_meta_width(width - 1 - menu_width, complete_state)
+            menu_width = self._get_menu_width(width, complete_state)
+            menu_meta_width = self._get_menu_meta_width(width - menu_width, complete_state)
             show_meta = self._show_meta(complete_state)
 
             def get_line(i):
                 c = completions[i]
                 is_current_completion = (i == index)
-                return (self._get_menu_item_tokens(c, is_current_completion, menu_width) +
-                        (self._get_menu_item_meta_tokens(c, is_current_completion, menu_meta_width)
-                         if show_meta else []))
+                result = self._get_menu_item_tokens(c, is_current_completion, menu_width)
+
+                if show_meta:
+                    result += self._get_menu_item_meta_tokens(c, is_current_completion, menu_meta_width)
+                return result
 
             return LazyScreen(get_line=get_line,
                               cursor_position=Point(x=0, y=index or 0),
                               get_line_count=lambda: len(completions),
-                              )#default_char=default_char)
+                              default_char=Char(' ', self.token))
 
         return LazyScreen()
 
@@ -181,6 +183,7 @@ class CompletionsMenu(ConditionalContainer):
                 height=LayoutDimension(min=1, max=max_height),
                 scroll_offsets=ScrollOffsets(top=scroll_offset, bottom=scroll_offset),
                 right_margins=[ScrollbarMargin()],
+                dont_extend_width=True,
             ),
             # Show when there are completions but not at the point we are
             # returning the input.
