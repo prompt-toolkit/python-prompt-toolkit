@@ -23,6 +23,7 @@ from .screen import Char, Point
 from .utils import token_list_width, split_lines, token_list_to_text
 from .lazyscreen import LazyScreen
 
+import math
 import time
 
 __all__ = (
@@ -396,20 +397,18 @@ class BufferControl(UIControl):
         return cli.current_buffer_name == self.buffer_name or \
             any(i.has_focus(cli) for i in self.input_processors)
 
-    def preferred_width(self, cli, max_available_width):  # XXX: this can be very expensive... Not sure that we should do it.
-        # Return the length of the longest line.
-        screen = self.create_screen(cli, None, None)
-        width = 0
+    def preferred_width(self, cli, max_available_width):
+        """
+        This should return the preferred width.
 
-        for line in screen:
-            line_width = get_cwidth(token_list_to_text(line))
-            width = max(width, line_width)
-
-            # Break out of the loop if we need all the available space.
-            if width >= max_available_width:
-                return width
-
-        return width
+        Note: We don't specify a preferred width according to the content,
+              because it would be too expensive. Calculating the preferred
+              width can be done by calculating the longest line, but this would
+              require applying all the processors to each line. This is
+              unfeasible for a larger document, and doing it for small
+              documents only would result in inconsistent behaviour.
+        """
+        return None
 
     def preferred_height(self, cli, width, max_available_height):
         # Draw content on a screen using this width. Measure the height of the
@@ -423,11 +422,16 @@ class BufferControl(UIControl):
             return max_available_height
 
         for i in range(screen.get_line_count()):
-            #line = screen.get_line(i) #self._buffer(cli).document.lines:
-            height += 1
+            line_width = get_cwidth(token_list_to_text(screen.get_line(i)))
+
+            # TODO: Only when line wrapping is on, expand lines!
+
+            height += math.ceil(line_width / width)
+
+            if height >= max_available_height:
+                return max_available_height
 
         return height
-        return screen.height
 
     def _get_tokens_for_line_func(self, cli, document):
         """
