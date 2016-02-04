@@ -1062,66 +1062,6 @@ class Window(Container):
         new_screen.height = max(new_screen.height, ypos + y)
         return visible_line_to_input_line
 
-#    def _OLD_copy_body(self, cli, temp_screen, highlighting, new_screen,
-#                   write_position, move_x, width, applied_scroll_offsets):
-#        """
-#        Copy characters from the temp screen that we got from the `UIControl`
-#        to the real screen.
-#        """
-#        xpos = write_position.xpos + move_x
-#        ypos = write_position.ypos
-#        height = write_position.height
-#
-#        temp_buffer = temp_screen.data_buffer
-#        new_buffer = new_screen.data_buffer
-#        temp_screen_height = temp_screen.height
-#
-#        vertical_scroll = self.vertical_scroll
-#        horizontal_scroll = self.horizontal_scroll
-#        y = 0
-#
-#        # Now copy the region we need to the real screen.
-#        for y in range(0, height):
-#            # We keep local row variables. (Don't look up the row in the dict
-#            # for each iteration of the nested loop.)
-#            new_row = new_buffer[y + ypos]
-#
-#            if y >= temp_screen_height and y >= write_position.height:
-#                # Break out of for loop when we pass after the last row of the
-#                # temp screen. (We use the 'y' position for calculation of new
-#                # screen's height.)
-#                break
-#            else:
-#                temp_row = temp_buffer[y + vertical_scroll]
-#                highlighting_row = highlighting[y + vertical_scroll]
-#
-#                # Copy row content, except for transparent tokens.
-#                # (This is useful in case of floats.)
-#                # Also apply highlighting.
-#                for x in range(0, width):
-#                    cell = temp_row[x + horizontal_scroll]
-#                    highlighting_token = highlighting_row[x]
-#
-#                    if highlighting_token:
-#                        new_row[x + xpos] = Char(cell.char, highlighting_token)
-#                    elif cell.token != Transparent:
-#                        new_row[x + xpos] = cell
-#
-#        if self.content.has_focus(cli):
-#            new_screen.cursor_position = Point(y=temp_screen.cursor_position.y + ypos - vertical_scroll,
-#                                               x=temp_screen.cursor_position.x + xpos - horizontal_scroll)
-#
-#            if not self.always_hide_cursor(cli):
-#                new_screen.show_cursor = temp_screen.show_cursor
-#
-#        if not new_screen.menu_position and temp_screen.menu_position:
-#            new_screen.menu_position = Point(y=temp_screen.menu_position.y + ypos - vertical_scroll,
-#                                             x=temp_screen.menu_position.x + xpos - horizontal_scroll)
-#
-#        # Update height of the output screen. (new_screen.write_data is not
-#        # called, so the screen is not aware of its height.)
-#        new_screen.height = max(new_screen.height, ypos + y + 1)
-
     @classmethod
     def _copy_margin(cls, lazy_screen, new_screen, write_position, move_x, width):
         """
@@ -1196,7 +1136,6 @@ class Window(Container):
             scroll_offset_end=offsets.bottom,
             cursor_pos=temp_screen.cursor_position.y,
             window_size=height,
-###            content_size=temp_screen.height)
             content_size=temp_screen.get_line_count())
 
         self.horizontal_scroll, scroll_offset_left, scroll_offset_right = do_scroll(
@@ -1205,7 +1144,6 @@ class Window(Container):
             scroll_offset_end=offsets.right,
             cursor_pos=temp_screen.cursor_position.x,
             window_size=width,
-###            content_size=temp_screen.width)
             content_size=get_cwidth(current_line_text))
 
         applied_scroll_offsets = ScrollOffsets(
