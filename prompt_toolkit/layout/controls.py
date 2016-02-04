@@ -522,13 +522,6 @@ class BufferControl(UIControl):
         else:
             document = buffer.document
 
-#        def _create_screen():
-#            # Get tokens
-#            # Note: we add the space character at the end, because that's where
-#            #       the cursor can also be.
-#            input_tokens, source_to_display, display_to_source = self._get_input_tokens(cli, document)
-#            input_tokens += [(self.default_char.token, ' ')]
-
         get_processed_line = self._create_get_processed_line_func(cli, document)
         self._last_get_processed_line = get_processed_line
 
@@ -536,8 +529,18 @@ class BufferControl(UIControl):
             " Return the screen column for this coordinate. "
             return Point(y=row, x=get_processed_line(row).source_to_display(col))
 
+        def get_line(i):
+            " Return the tokens for a given line number. "
+            tokens = get_processed_line(i).tokens
+
+            # When the cursor is at this row, add a space at the end, that is a
+            # possible cursor position. (When inserting after the input.)
+            if i == document.cursor_position_row:
+                tokens = tokens + [(self.default_char.token, ' ')]
+            return tokens
+
         screen = LazyScreen(
-            get_line=lambda i: get_processed_line(i).tokens,
+            get_line=get_line,
             get_line_count=lambda: document.line_count,
             cursor_position=translate_rowcol(document.cursor_position_row, document.cursor_position_col))
 
