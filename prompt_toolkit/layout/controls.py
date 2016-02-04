@@ -126,8 +126,7 @@ class TokenListControl(UIControl):
         cursor will be shown there.
     """
     def __init__(self, get_tokens, default_char=None, get_default_char=None,
-                 align_right=False, align_center=False,
-                 has_focus=False, wrap_lines=True):  # XXX: remove wrap_lines option.
+                 align_right=False, align_center=False, has_focus=False):
         assert default_char is None or isinstance(default_char, Char)
         assert get_default_char is None or callable(get_default_char)
         assert not (default_char and get_default_char)
@@ -344,7 +343,6 @@ class BufferControl(UIControl):
                  preview_search=False,
                  search_buffer_name=SEARCH_BUFFER,
                  get_search_state=None,
-                 wrap_lines=True,  # XXX: remove wrap_lines attribute. This becomes a property of Window.
                  menu_position=None,
                  default_char=None,
                  focus_on_click=False):

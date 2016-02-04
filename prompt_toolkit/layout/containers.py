@@ -1078,7 +1078,7 @@ class Window(Container):
 
                 if row == r and col >= c:
                     return Point(y=visible_line + ypos, x=col - c + xpos - horizontal_scroll)
-            raise Exception('Some bug. row=%r col=%r\n%r' % (row, col, visible_line_to_row_col))
+            raise Exception('Some bug. row=%r col=%r\n%r' % (row, col, visible_line_to_row_col))  # XXX: fix or remove.
 
         # Set cursor and menu positions.
         if has_focus and temp_screen.cursor_position:
@@ -1087,7 +1087,7 @@ class Window(Container):
             new_screen.show_cursor = True
 
         if not new_screen.menu_position and temp_screen.menu_position:
-            new_screen.cursor_position = cursor_pos_to_screen_pos(
+            new_screen.menu_position = cursor_pos_to_screen_pos(
                     temp_screen.menu_position.y, temp_screen.menu_position.x)
 
         new_screen.height = max(new_screen.height, ypos + y)
