@@ -71,10 +71,6 @@ class Transformation(object):
     Important: Always make sure that the length of `document.text` is equal to
                the length of all the text in `tokens`!
 
- #   :param document: The transformed :class:`~prompt_toolkit.document.Document`
- #       instance, to be passed to the next processor. Most of the time, this
- #       can be the same as the received document, unless some text has been
- #       changed/inserted somewhere.
     :param tokens: The transformed tokens. To be displayed, or to pass to the
         next processor.
     :param source_to_display: Cursor position transformation from original string to
@@ -82,9 +78,7 @@ class Transformation(object):
     :param display_to_source: Cursor position transformed from source string to
         original string.
     """
-#    def __init__(self, document, tokens, source_to_display=None, display_to_source=None):
     def __init__(self, tokens, source_to_display=None, display_to_source=None):
- #       self.document = document
         self.tokens = tokens
         self.source_to_display = source_to_display or (lambda i: i)
         self.display_to_source = display_to_source or (lambda i: i)
@@ -93,6 +87,7 @@ class Transformation(object):
 class HighlightSearchProcessor(Processor):
     """
     Processor that highlights search matches in the document.
+    Note that this doesn't support multiline search matches yet.
 
     :param preview_search: A Filter; when active it indicates that we take
         the search text in real time while the user is typing, instead of the
@@ -114,19 +109,7 @@ class HighlightSearchProcessor(Processor):
             return cli.search_state.text
 
     def apply_transformation(self, cli, document, lineno, tokens):
-            # XXX: only search in the visible region.
-            #      This means, if the search string has length 'x'.
-            #      (go 'x' characters back for searching.)
-
-        # TODO
         search_text = self._get_search_text(cli)
-
-        if cli.is_ignoring_case:
-            flags = re.IGNORECASE
-        else:
-            flags = 0
-
-###        return Transformation([(Token.SearchMatch, t) for _, t in tokens])
 
         if search_text and not cli.is_returning:
             # For each search match, replace the Token.
@@ -134,6 +117,7 @@ class HighlightSearchProcessor(Processor):
             tokens = explode_tokens(tokens)
 
             # XXX: Take cursor position into account.
+            flags = re.IGNORECASE if cli.is_ignoring_case else 0
 
             for match in re.finditer(re.escape(search_text), line_text, flags=flags):
                 for i in range(match.start(), match.end()):
@@ -144,10 +128,6 @@ class HighlightSearchProcessor(Processor):
             ##        token = Token.SearchMatch.Current
             ##    else:
             ##        token = Token.SearchMatch
-
-            ##    for x in range(index, index + len(search_text)):
-            ##        if x < len(tokens):
-            ##            tokens[x] = (token, tokens[x][1])
 
         ##return Transformation(document, tokens)
         return Transformation(tokens)
@@ -176,12 +156,7 @@ class HighlightSelectionProcessor(Processor):
     """
     def apply_transformation(self, cli, document, lineno, tokens):
         # In case of selection, highlight all matches.
-#        import time
-#        before = time.time()
         selection_at_line = document.selection_range_at_line(lineno)
-#        after = time.time()
-#        with open('translate', 'a') as f:
-#            f.write('selec %r\n' % (after - before))
 
         if selection_at_line:
             from_, to = selection_at_line
@@ -196,7 +171,10 @@ class HighlightSelectionProcessor(Processor):
     def invalidation_hash(self, cli, document):
         # When the search state changes, highlighting will be different.
         return (
-            document.selection and document.selection_range(),  # XXX: consider selection type as well.
+            document.selection and (
+                document.selection_range(),
+                document.selection.type,
+            )
         )
 
 
@@ -296,7 +274,6 @@ class BracketsMismatchProcessor(Processor):
         for index in stack:
             tokens[index] = (Token.Error, tokens[index][1])
 
-#        return Transformation(document, tokens)
         return Transformation(tokens)
 
 
@@ -314,20 +291,18 @@ class BeforeInput(Processor):
 
     def apply_transformation(self, cli, document, lineno, tokens):
         if lineno == 0:
-            tokens = self.get_tokens(cli) + tokens
-
-        return super(BeforeInput, self).apply_transformation(cli, document, lineno, tokens)
-
-        # TODO: implement position transformation:
-        if lineno == 0:
             tokens_before = self.get_tokens(cli)
-            shift_position = token_list_len(tokens_before)
+            tokens = tokens_before + tokens
 
-            return Transformation(
-#                    document=document.insert_before(token_list_to_text(tokens_before)),
-                    tokens=tokens_before + tokens,
-                    source_to_display=lambda i: i + shift_position,
-                    display_to_source=lambda i: i - shift_position)
+            shift_position = token_list_len(tokens_before)
+            source_to_display = lambda i: i + shift_position
+            display_to_source = lambda i: i - shift_position
+        else:
+            source_to_display = None
+            display_to_source = None
+
+        return Transformation(tokens, source_to_display=source_to_display,
+                              display_to_source=display_to_source)
 
     @classmethod
     def static(cls, text, token=Token):

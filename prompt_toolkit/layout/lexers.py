@@ -46,7 +46,10 @@ class SimpleLexer(Lexer):
         lines = document.lines
 
         def get_line(lineno):
-            return [(self.default_token, lines[lineno])]
+            try:
+                return [(self.default_token, lines[lineno])]
+            except IndexError:
+                return []
         return get_line
 
 

@@ -3,14 +3,15 @@ from __future__ import unicode_literals
 from six.moves import zip_longest
 from prompt_toolkit.filters import HasCompletions, IsDone, Always, Condition, to_cli_filter
 from prompt_toolkit.mouse_events import MouseEventTypes
-from prompt_toolkit.reactive import Integer
 from prompt_toolkit.token import Token
 from prompt_toolkit.utils import get_cwidth
 
-from .containers import Window, HSplit, ConditionalContainer
+from .containers import Window, HSplit, ConditionalContainer, ScrollOffsets
 from .controls import UIControl
 from .dimension import LayoutDimension
-from .screen import Screen
+from .lazyscreen import LazyScreen
+from .margins import ScrollbarMargin
+from .screen import Point
 
 import math
 
@@ -29,15 +30,8 @@ class CompletionsMenuControl(UIControl):
         is a very high number, the current completion will be shown in the
         middle most of the time.
     """
-    def __init__(self, scroll_offset=0):
-        assert isinstance(scroll_offset, Integer)
-
+    def __init__(self):
         self.token = Token.Menu.Completions
-        self.scroll_offset = scroll_offset
-        self.scroll = 0
-
-    def reset(self):
-        self.scroll = 0
 
     def has_focus(self, cli):
         return False
@@ -63,8 +57,6 @@ class CompletionsMenuControl(UIControl):
         """
         Write the menu to the screen object.
         """
-        screen = Screen()
-
         complete_state = cli.current_buffer.complete_state
         if complete_state:
             completions = complete_state.current_completions
@@ -75,50 +67,19 @@ class CompletionsMenuControl(UIControl):
             menu_meta_width = self._get_menu_meta_width(width - 1 - menu_width, complete_state)
             show_meta = self._show_meta(complete_state)
 
-            if menu_width + menu_meta_width + 1 < width:
-                menu_width += width - (menu_width + menu_meta_width + 1)
+            def get_line(i):
+                c = completions[i]
+                is_current_completion = (i == index)
+                return (self._get_menu_item_tokens(c, is_current_completion, menu_width) +
+                        (self._get_menu_item_meta_tokens(c, is_current_completion, menu_meta_width)
+                         if show_meta else []))
 
-            # Update the scroll offset.
-            scroll_offset = min(height // 2, int(self.scroll_offset))
+            return LazyScreen(get_line=get_line,
+                              cursor_position=Point(x=0, y=index or 0),
+                              get_line_count=lambda: len(completions),
+                              )#default_char=default_char)
 
-            self.scroll = min(self.scroll, (index or 0) - scroll_offset)
-            self.scroll = max(self.scroll, (index or 0) - height + 1 + scroll_offset)
-            self.scroll = min(self.scroll, len(completions) - height)  # Never go out of range.
-            self.scroll = max(self.scroll, 0)  # Never go negative.
-
-            # Decide which slice of completions to show.
-            slice_from = self.scroll
-            slice_to = min(slice_from + height, len(completions))
-
-            # Create a function which decides at which positions the scroll button should be shown.
-            items_per_row = float(len(completions)) / min(len(completions), height)
-
-            def is_scroll_button(row):
-                items_on_this_row_from = row * items_per_row
-                items_on_this_row_to = (row + 1) * items_per_row
-                return items_on_this_row_from <= (index or 0) < items_on_this_row_to
-
-            # Write completions to screen.
-            tokens = []
-
-            for i, c in enumerate(completions[slice_from:slice_to]):
-                is_current_completion = (i + slice_from == index)
-
-                if is_scroll_button(i):
-                    button_token = self.token.ProgressButton
-                else:
-                    button_token = self.token.ProgressBar
-
-                if tokens:
-                    tokens += [(Token, '\n')]
-                tokens += (self._get_menu_item_tokens(c, is_current_completion, menu_width) +
-                           (self._get_menu_item_meta_tokens(c, is_current_completion, menu_meta_width)
-                               if show_meta else []) +
-                           [(button_token, ' '), ])
-
-            screen.write_data(tokens, width)
-
-        return screen
+        return LazyScreen()
 
     def _show_meta(self, complete_state):
         """
@@ -171,18 +132,16 @@ class CompletionsMenuControl(UIControl):
 
         if mouse_event.event_type == MouseEventTypes.MOUSE_UP:
             # Select completion.
-            b.go_to_completion(self.scroll + mouse_event.position.y)
+            b.go_to_completion(mouse_event.position.y)
             b.complete_state = None
 
         elif mouse_event.event_type == MouseEventTypes.SCROLL_DOWN:
             # Scroll up.
             b.complete_next(count=3, disable_wrap_around=True)
-            self.scroll += 3
 
         elif mouse_event.event_type == MouseEventTypes.SCROLL_UP:
             # Scroll down.
             b.complete_previous(count=3, disable_wrap_around=True)
-            self.scroll -= 3
 
 
 def _trim_text(text, max_width):
@@ -217,9 +176,12 @@ class CompletionsMenu(ConditionalContainer):
     def __init__(self, max_height=None, scroll_offset=0, extra_filter=Always()):
         super(CompletionsMenu, self).__init__(
             content=Window(
-                content=CompletionsMenuControl(scroll_offset=scroll_offset),
+                content=CompletionsMenuControl(),
                 width=LayoutDimension(min=8),
-                height=LayoutDimension(min=1, max=max_height)),
+                height=LayoutDimension(min=1, max=max_height),
+                scroll_offsets=ScrollOffsets(top=scroll_offset, bottom=scroll_offset),
+                right_margins=[ScrollbarMargin()],
+            ),
             # Show when there are completions but not at the point we are
             # returning the input.
             filter=HasCompletions() & ~IsDone() & extra_filter)
@@ -306,8 +268,6 @@ class MultiColumnCompletionMenuControl(UIControl):
         column_width = self._get_column_width(complete_state)
         self._render_pos_to_completion = {}
 
-        screen = Screen()
-
         def grouper(n, iterable, fillvalue=None):
             " grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx "
             args = [iter(iterable)] * n
@@ -346,9 +306,10 @@ class MultiColumnCompletionMenuControl(UIControl):
             render_right_arrow = self.scroll < len(rows_[0]) - visible_columns
 
             # Write completions to screen.
-            tokens = []
+            tokens_for_line = []
 
             for row_index, row in enumerate(rows_):
+                tokens = []
                 middle_row = row_index == len(rows_) // 2
 
                 # Draw left arrow if we have hidden completions on the left.
@@ -374,9 +335,10 @@ class MultiColumnCompletionMenuControl(UIControl):
                     tokens += [(self.token.ProgressBar, '>' if middle_row else ' ')]
 
                 # Newline.
-                tokens += [(self.token.ProgressBar, '\n')]
+                tokens_for_line.append(tokens)
 
-            screen.write_data(tokens, width)
+        else:
+            tokens = []
 
         self._rendered_rows = height
         self._rendered_columns = visible_columns
@@ -385,7 +347,11 @@ class MultiColumnCompletionMenuControl(UIControl):
         self._render_right_arrow = render_right_arrow
         self._render_width = column_width * visible_columns + render_left_arrow + render_right_arrow + 1
 
-        return screen
+        def get_line(i):
+            return tokens_for_line[i]
+
+        return LazyScreen(get_line=get_line,
+                          get_line_count=lambda: len(rows_))
 
     def _get_column_width(self, complete_state):
         """

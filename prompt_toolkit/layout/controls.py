@@ -4,7 +4,7 @@ User interface Controls for the layout.
 from __future__ import unicode_literals
 
 from abc import ABCMeta, abstractmethod
-from collections import defaultdict, namedtuple
+from collections import namedtuple
 from six import with_metaclass
 
 from prompt_toolkit.cache import SimpleCache
@@ -18,7 +18,7 @@ from prompt_toolkit.utils import get_cwidth
 
 from .highlighters import Highlighter
 from .lexers import Lexer, SimpleLexer
-from .processors import Processor  #, Transformation
+from .processors import Processor
 from .screen import Char, Point
 from .utils import token_list_width, split_lines
 from .lazyscreen import LazyScreen
@@ -151,9 +151,10 @@ class TokenListControl(UIControl):
             # Only cache one token list. We don't need the previous item.
 
         # Render info for the mouse support.
-        self._tokens = None  # The last rendered tokens.
-        self._pos_to_indexes = None  # Mapping from mouse positions (x,y) to
-                                     # positions in the token list.
+        self._tokens = None
+
+    def reset(self):
+        self._tokens = None
 
     def __repr__(self):
         return '%s(%r)' % (self.__class__.__name__, self.get_tokens)
@@ -175,15 +176,13 @@ class TokenListControl(UIControl):
         Return the preferred width for this control.
         That is the width of the longest line.
         """
-        return None # XXXXXXXXXXXXXXXX
         text = ''.join(t[1] for t in self._get_tokens_cached(cli))
         line_lengths = [get_cwidth(l) for l in text.split('\n')]
         return max(line_lengths)
 
     def preferred_height(self, cli, width):
-        return None # XXXXXXXXXXXXXXXXXX
         screen = self.create_screen(cli, width, None)
-        return screen.height
+        return screen.get_line_count()
 
     def create_screen(self, cli, width, height):
         # Get tokens
@@ -204,50 +203,32 @@ class TokenListControl(UIControl):
             return [(default_char.token, default_char.char * padding)] + line + [(Token, '\n')]
 
         if right or center:
-            tokens2 = []
+            token_lines_with_mouse_handlers = []
+
             for line in split_lines(tokens_with_mouse_handlers):
-                tokens2.extend(process_line(line))
-            tokens_with_mouse_handlers = tokens2
+                token_lines_with_mouse_handlers.append(process_line(line))
+        else:
+            token_lines_with_mouse_handlers = list(split_lines(tokens_with_mouse_handlers))
 
         # Strip mouse handlers from tokens.
-        tokens = [tuple(item[:2]) for item in tokens_with_mouse_handlers]
+        token_lines = [
+            [tuple(item[:2]) for item in line]
+            for line in token_lines_with_mouse_handlers
+        ]
+
+        # Keep track of the tokens with mouse handler, for later use in `mouse_handler`.
+        self._tokens = tokens_with_mouse_handlers
 
         # Create screen, or take it from the cache.
         key = (default_char.char, default_char.token,
                 tuple(tokens_with_mouse_handlers), width, right, center)
-        params = (default_char, tokens, width, right, center)
-#        screen, self._pos_to_indexes = self._screen_cache.get(key, lambda: self._get_screen(*params))
-        screen = self._screen_cache.get(key, lambda: self._get_screen(*params))
-        self._pos_to_indexes = {}
 
+        def get_screen():
+            return LazyScreen(get_line=lambda i: token_lines[i],
+                                get_line_count=lambda: len(token_lines),
+                                default_char=default_char)
 
-        self._tokens = tokens_with_mouse_handlers
-        return screen
-
-    @classmethod
-    def _get_screen(cls, default_char, tokens, width, right, center):
-        lines = list(split_lines(tokens))  # XXX: reuse 'split_lines' from above...
-        screen = LazyScreen(get_line=lambda i: lines[i],
-                            get_line_count=lambda: len(lines),
-                            default_char=default_char)
-        return screen
-
-
-
-#        screen = Screen(default_char, initial_width=width)
-
-#        # Only call write_data when we actually have tokens.
-#        # (Otherwise the screen height will go up from 0 to 1 while we don't
-#        # want that. -- An empty control should not take up any space.)
-#        if tokens:
-#            write_data_result = screen.write_data(tokens, width=(width if wrap_lines else None))
-#
-#            indexes_to_pos = write_data_result.indexes_to_pos
-#            pos_to_indexes = _LazyReverseDict(indexes_to_pos)
-#        else:
-#            pos_to_indexes = {}
-#
-#        return screen, pos_to_indexes
+        return self._screen_cache.get(key, get_screen)
 
     @classmethod
     def static(cls, tokens):
@@ -264,17 +245,23 @@ class TokenListControl(UIControl):
         return `NotImplemented` in case we want the `Window` to handle this
         particular event.)
         """
-        if self._pos_to_indexes:
-            # Find position in the token list.
-            position = mouse_event.position
-            index = self._pos_to_indexes.get((position.x, position.y))
+        if self._tokens:
+            # Read the generator.
+            tokens_for_line = list(split_lines(self._tokens))
 
-            if index is not None:
+            try:
+                tokens = tokens_for_line[mouse_event.position.y]
+            except IndexError:
+                return NotImplemented
+            else:
+                # Find position in the token list.
+                xpos = mouse_event.position.x
+
                 # Find mouse handler for this character.
                 count = 0
-                for item in self._tokens:
+                for item in tokens:
                     count += len(item[1])
-                    if count >= index:
+                    if count >= xpos:
                         if len(item) >= 3:
                             # Handler found. Call it.
                             # (Handler can return NotImplemented, so return
@@ -313,8 +300,11 @@ class FillControl(UIControl):
             return []
         def get_line_count():
             return 0
-        screen = LazyScreen(get_line=get_line, get_line_count=get_line_count, default_char=char)#, initial_width=width)
+        screen = LazyScreen(get_line=get_line, get_line_count=get_line_count, default_char=char)
         return screen
+
+
+_ProcessedLine = namedtuple('_ProcessedLine', 'tokens source_to_display display_to_source')
 
 
 class BufferControl(UIControl):
@@ -373,13 +363,9 @@ class BufferControl(UIControl):
 #        #: to recreate the same screen again.)
 #        self._screen_cache = SimpleCache(maxsize=8)
 
-        #: Highlight Cache.
-        #: When nothing of the buffer content or processors has changed, but
-        #: the highlighting of the selection/search changes,
-#        self._highlight_cache = SimpleCache(maxsize=8)
-
         self._xy_to_cursor_position = None
         self._last_click_timestamp = None
+        self._last_get_processed_line = None
 
     def _buffer(self, cli):
         """
@@ -405,127 +391,10 @@ class BufferControl(UIControl):
     def preferred_height(self, cli, width):
         # Draw content on a screen using this width. Measure the height of the
         # result.
-        #########screen, highlighters = self.create_screen(cli, width, None)
+        #########screen = self.create_screen(cli, width, None)
         return None
         screen = self.create_screen(cli, width, None)
         return screen.height
-
-#    def _get_input_tokens(self, cli, document):
-#        """
-#        Tokenize input text for highlighting.
-#        Return (tokens, source_to_display, display_to_source) tuple.
-#
-#        :param document: The document to be shown. This can be `buffer.document`
-#                         but could as well be a different one, in case we are
-#                         searching through the history. (Buffer.document_for_search)
-#        """
-#        def get():
-#      #      tokens = [(Token, document.text)]
-#            # Call lexer.
-#            tokens = list(self.lexer.get_tokens(cli, document.text))
-#
-#       #     # 'Explode' tokens in characters. (And turn generator into a list.)
-#       #     # (Some input processors -- like search/selection highlighter --
-#       #     # rely on that each item in the tokens array only contains one
-#       #     # character.)
-#       #     tokens = [(token, c) for token, text in tokens for c in text]
-#
-#            # Run all processors over the input.
-#            # (They can transform both the tokens and the cursor position.)
-#            source_to_display_functions = []
-#            display_to_source_functions = []
-#
-##            d_ = document  # Each processor receives the document of the previous one.
-#
-##            for p in self.input_processors:
-##                transformation  = p.apply_transformation(cli, d_, tokens)
-##                d_ = transformation.document
-##                assert isinstance(transformation, Transformation)
-##
-##                tokens = transformation.tokens
-##                source_to_display_functions.append(transformation.source_to_display)
-##                display_to_source_functions.append(transformation.display_to_source)
-#
-#            # Chain cursor transformation (movement) functions.
-#
-#            def source_to_display(cursor_position):
-#                " Chained source_to_display. "
-#                for f in source_to_display_functions:
-#                    cursor_position = f(cursor_position)
-#                return cursor_position
-#
-#            def display_to_source(cursor_position):
-#                " Chained display_to_source. "
-#                for f in reversed(display_to_source_functions):
-#                    cursor_position = f(cursor_position)
-#                return cursor_position
-#
-#            return tokens, source_to_display, display_to_source
-#
-#        key = (
-#            document.text,
-#
-#            # Include invalidation_hashes from all processors.
-##            tuple(p.invalidation_hash(cli, document) for p in self.input_processors),
-#        )
-#
-#        return self._token_cache.get(key, get)
-
-    def _create_get_line_func(self, cli, document):
-        """
-        Create a function that returns the tokens for a given line number.
-        This is optimized in a way that it doesn't require the lexer to
-        parse the whole document if we only need to display the first 80
-        lines.
-        """
-#        def create_func():
-#            cache = {}
-#            line_generator = enumerate(split_lines(self.lexer.get_tokens(cli, document.text)))
-#
-#            def get_line(i):
-#                " Return the tokens for a given line number. "
-#                try:
-#                    return cache[i]
-#                except KeyError:
-#                    for num, line in line_generator:
-#                        cache[num] = line
-#                        if num == i:
-#                            return cache[num]
-#                return []
-#
-#            return get_line
-
-        def create_func():
-            cache = {}
-            line_generators = {}
-
-            def get_line(i):
-                " Return the tokens for a given line number. "
-                try:
-                    return cache[i]
-                except KeyError:
-                    # Find closest line generator.
-                    for generator, lineno in line_generators.items():
-                        if lineno < i and i - lineno < 100:
-                            break
-                    else:
-                        text = '\n'.join(document.lines[i:])
-                        generator = enumerate(split_lines(self.lexer.get_tokens(cli, text)), i)
-                        line_generators[generator] = i
-
-                    # Exhaust the generator, until we find the requested line.
-                    for num, line in generator:
-                        cache[num] = line
-                        if num == i:
-                            line_generators[generator] = i
-                            return cache[num]
-                return []
-
-            return get_line
-
-        # Cache tokens as long as the document text doesn't change.
-        key = document.text
-        return self._token_cache.get(key, create_func)
 
     def _get_tokens_for_line_func(self, cli, document):
         """
@@ -538,12 +407,36 @@ class BufferControl(UIControl):
         return self._token_cache.get(document.text, get_tokens_for_line)
 
     def _create_get_processed_line_func(self, cli, document):
+        """
+        Create a function that takes a line number of the current document and
+        returns a _ProcessedLine(processed_tokens, source_to_display, display_to_source)
+        tuple.
+        """
         def transform(lineno, tokens):
+            " Transform the tokens for a given line number. "
+            source_to_display_functions = []
+            display_to_source_functions = []
+
             for p in self.input_processors:
                 transformation = p.apply_transformation(cli, document, lineno, tokens)
                 tokens = transformation.tokens
 
-            return tokens
+                display_to_source_functions.append(transformation.display_to_source)
+                source_to_display_functions.append(transformation.source_to_display)
+
+            def source_to_display(i):
+                """ Translate x position from the buffer to the x position in the
+                processed token list. """
+                for f in source_to_display_functions:
+                    i = f(i)
+                return i
+
+            def display_to_source(i):
+                for f in reversed(display_to_source_functions):
+                    i = f(i)
+                return i
+
+            return _ProcessedLine(tokens, source_to_display, display_to_source)
 
         def create_func():
             get_line = self._get_tokens_for_line_func(cli, document)
@@ -566,8 +459,10 @@ class BufferControl(UIControl):
         )
         return self._processed_token_cache.get(key, create_func)
 
-
     def create_screen(self, cli, width, height):
+        """
+        Create a LazyScreen.
+        """
         buffer = self._buffer(cli)
 
         # Get the document to be shown. If we are currently searching (the
@@ -592,89 +487,24 @@ class BufferControl(UIControl):
         else:
             document = buffer.document
 
-        def _create_screen():
-            line_count = document.text.count('\n') + 1
-
-#            screen = Screen(self.default_char, initial_width=width)
-
-            # Get tokens
-            # Note: we add the space character at the end, because that's where
-            #       the cursor can also be.
+#        def _create_screen():
+#            # Get tokens
+#            # Note: we add the space character at the end, because that's where
+#            #       the cursor can also be.
 #            input_tokens, source_to_display, display_to_source = self._get_input_tokens(cli, document)
 #            input_tokens += [(self.default_char.token, ' ')]
 
-#            lines = list(split_lines(input_tokens))
-            screen = LazyScreen(get_line=self._create_get_processed_line_func(cli, document), ## lambda i: lines[i],
-                                get_line_count=lambda: line_count,
-                                cursor_position=Point(document.cursor_position_row, document.cursor_position_col))
+        get_processed_line = self._create_get_processed_line_func(cli, document)
+        self._last_get_processed_line = get_processed_line
 
+        def translate_rowcol(row, col):
+            " Return the screen column for this coordinate. "
+            return Point(y=row, x=get_processed_line(row).source_to_display(col))
 
-#            write_data_result = screen.write_data(input_tokens, width=wrap_width)
-#            indexes_to_pos = {} ######write_data_result.indexes_to_pos
-#            line_lengths = None  ###### write_data_result.line_lengths
-
-#            pos_to_indexes = _LazyReverseDict(indexes_to_pos)
-
-#            def cursor_position_to_xy(cursor_position):
-#                """ Turn a cursor position in the buffer into x/y coordinates
-#                on the screen. """
-#                cursor_position = min(len(document.text), cursor_position)
-#
-#                # First get the real token position by applying all transformations.
-#                cursor_position = source_to_display(cursor_position)
-#
-#                # Then look up into the table.
-#                try:
-#                    return indexes_to_pos[cursor_position]
-#                except KeyError:
-#                    # This can fail with KeyError, but only if one of the
-#                    # processors is returning invalid key locations.
-#                    ######## raise
-#                    return 0, 0
-#
-#            def xy_to_cursor_position(x, y):
-#                """ Turn x/y screen coordinates back to the original cursor
-#                position in the buffer. """
-#                # Look up reverse in table.
-#                while x > 0 or y > 0:
-#                    try:
-#                        index = pos_to_indexes[x, y]
-#                        break
-#                    except KeyError:
-#                        # No match found -> mouse click outside of region
-#                        # containing text. Look to the left or up.
-#                        if x: x -= 1
-#                        elif y: y -=1
-#                else:
-#                    # Nobreak.
-#                    index = 0
-#
-#                # Transform.
-#                return display_to_source(index)
-
-            return screen #, cursor_position_to_xy, xy_to_cursor_position, line_lengths
-
-#        # Build a key for the caching. If any of these parameters changes, we
-#        # have to recreate a new screen.
-#        key = (
-#            # When the text changes, we obviously have to recreate a new screen.
-#            document.text,
-#
-#            # When the width changes, line wrapping will be different.
-#            # (None when disabled.)
-#            wrap_width,
-#
-#            # Include invalidation_hashes from all processors.
-#            tuple(p.invalidation_hash(cli, document) for p in self.input_processors),
-#        )
-
-        # Get from cache, or create if this doesn't exist yet.
-#        screen, cursor_position_to_xy, self._xy_to_cursor_position, line_lengths = \
-#            self._screen_cache.get(key, _create_screen)
-        screen = _create_screen()
-
-#        x, y = cursor_position_to_xy(document.cursor_position)
-#        screen.cursor_position = Point(y=y, x=x)
+        screen = LazyScreen(
+            get_line=lambda i: get_processed_line(i).tokens,
+            get_line_count=lambda: document.line_count,
+            cursor_position=translate_rowcol(document.cursor_position_row, document.cursor_position_col))
 
         # If there is an auto completion going on, use that start point for a
         # pop-up menu position. (But only when this buffer has the focus --
@@ -683,78 +513,22 @@ class BufferControl(UIControl):
             menu_position = self.menu_position(cli) if self.menu_position else None
             if menu_position is not None:
                 assert isinstance(menu_position, int)
-                x, y = cursor_position_to_xy(menu_position)
-                screen.menu_position = Point(y=y, x=x)
-            elif False:#buffer.complete_state:
+                menu_row, menu_col = buffer.document.translate_index_to_position(menu_position)
+                screen.menu_position = translate_rowcol(menu_row, menu_col)
+            elif buffer.complete_state:
                 # Position for completion menu.
                 # Note: We use 'min', because the original cursor position could be
                 #       behind the input string when the actual completion is for
                 #       some reason shorter than the text we had before. (A completion
                 #       can change and shorten the input.)
-                x, y = cursor_position_to_xy(
+                menu_row, menu_col = buffer.document.translate_index_to_position(
                     min(buffer.cursor_position,
                         buffer.complete_state.original_document.cursor_position))
-                screen.menu_position = Point(y=y, x=x)
+                screen.menu_position = translate_rowcol(menu_row, menu_col)
             else:
                 screen.menu_position = None
 
-#        # Add highlighting.
-#        highlight_key = (
-#            key,  # Includes everything from the 'key' above. (E.g. when the
-#                     # document changes, we have to recalculate highlighting.)
-#
-#            # Include invalidation_hashes from all highlighters.
-#            tuple(h.invalidation_hash(cli, document) for h in self.highlighters)
-#        )
-
-#        highlighting = self._highlight_cache.get(highlight_key, lambda:
-#            self._get_highlighting(cli, document, cursor_position_to_xy, line_lengths))
-
-        return screen  #### , None  # highlighting
-
-#    def _get_highlighting(self, cli, document, cursor_position_to_xy, line_lengths):
-#        """
-#        Return a _HighlightDict for the highlighting. (This is a lazy dict of dicts.)
-#
-#        The Window class will apply this for the visible regions. - That way,
-#        we don't have to recalculate the screen again for each selection/search
-#        change.
-#
-#        :param line_lengths: Maps line numbers to the length of these lines.
-#        """
-#        def get_row_size(y):
-#            " Return the max 'x' value for a given row in the screen. "
-#            return max(1, line_lengths.get(y, 0))
-#
-#        # Get list of fragments.
-#        row_to_fragments = defaultdict(list)
-#
-#        for h in self.highlighters:
-#            for fragment in h.get_fragments(cli, document):
-#                # Expand fragments.
-#                start_column, start_row = cursor_position_to_xy(fragment.start)
-#                end_column, end_row = cursor_position_to_xy(fragment.end)
-#                token = fragment.token
-#
-#                if start_row == end_row:
-#                    # Single line highlighting.
-#                    row_to_fragments[start_row].append(
-#                        _HighlightFragment(start_column, end_column, token))
-#                else:
-#                    # Multi line highlighting.
-#                    # (First line.)
-#                    row_to_fragments[start_row].append(
-#                        _HighlightFragment(start_column, get_row_size(start_row), token))
-#
-#                    # (Middle lines.)
-#                    for y in range(start_row + 1, end_row):
-#                        row_to_fragments[y].append(_HighlightFragment(0, get_row_size(y), token))
-#
-#                    # (Last line.)
-#                    row_to_fragments[end_row].append(_HighlightFragment(0, end_column, token))
-#
-#        # Create dict to return.
-#        return _HighlightDict(row_to_fragments)
+        return screen
 
     def mouse_handler(self, cli, mouse_event):
         """
@@ -765,40 +539,42 @@ class BufferControl(UIControl):
 
         # Focus buffer when clicked.
         if self.has_focus(cli):
-            if self._xy_to_cursor_position:
+            if self._last_get_processed_line:
+                processed_line = self._last_get_processed_line(position.y)
+
                 # Translate coordinates back to the cursor position of the
                 # original input.
-                pos = self._xy_to_cursor_position(position.x, position.y)
+                xpos = processed_line.display_to_source(position.x)
+                index = buffer.document.translate_row_col_to_index(position.y, xpos)
 
                 # Set the cursor position.
-                if pos <= len(buffer.text):
-                    if mouse_event.event_type == MouseEventTypes.MOUSE_DOWN:
-                        buffer.exit_selection()
-                        buffer.cursor_position = pos
+                if mouse_event.event_type == MouseEventTypes.MOUSE_DOWN:
+                    buffer.exit_selection()
+                    buffer.cursor_position = index
 
-                    elif mouse_event.event_type == MouseEventTypes.MOUSE_UP:
-                        # When the cursor was moved to another place, select the text.
-                        # (The >1 is actually a small but acceptable workaround for
-                        # selecting text in Vi navigation mode. In navigation mode,
-                        # the cursor can never be after the text, so the cursor
-                        # will be repositioned automatically.)
-                        if abs(buffer.cursor_position - pos) > 1:
-                            buffer.start_selection(selection_type=SelectionType.CHARACTERS)
-                            buffer.cursor_position = pos
+                elif mouse_event.event_type == MouseEventTypes.MOUSE_UP:
+                    # When the cursor was moved to another place, select the text.
+                    # (The >1 is actually a small but acceptable workaround for
+                    # selecting text in Vi navigation mode. In navigation mode,
+                    # the cursor can never be after the text, so the cursor
+                    # will be repositioned automatically.)
+                    if abs(buffer.cursor_position - index) > 1:
+                        buffer.start_selection(selection_type=SelectionType.CHARACTERS)
+                        buffer.cursor_position = index
 
-                        # Select word around cursor on double click.
-                        # Two MOUSE_UP events in a short timespan are considered a double click.
-                        double_click = self._last_click_timestamp and time.time() - self._last_click_timestamp < .3
-                        self._last_click_timestamp = time.time()
+                    # Select word around cursor on double click.
+                    # Two MOUSE_UP events in a short timespan are considered a double click.
+                    double_click = self._last_click_timestamp and time.time() - self._last_click_timestamp < .3
+                    self._last_click_timestamp = time.time()
 
-                        if double_click:
-                            start, end = buffer.document.find_boundaries_of_current_word()
-                            buffer.cursor_position += start
-                            buffer.start_selection(selection_type=SelectionType.CHARACTERS)
-                            buffer.cursor_position += end - start
-                    else:
-                        # Don't handle scroll events here.
-                        return NotImplemented
+                    if double_click:
+                        start, end = buffer.document.find_boundaries_of_current_word()
+                        buffer.cursor_position += start
+                        buffer.start_selection(selection_type=SelectionType.CHARACTERS)
+                        buffer.cursor_position += end - start
+                else:
+                    # Don't handle scroll events here.
+                    return NotImplemented
 
         # Not focussed, but focussing on click events.
         else:
@@ -819,67 +595,29 @@ class BufferControl(UIControl):
         b.cursor_position += b.document.get_cursor_up_position()
 
 
-_HighlightFragment = namedtuple('_HighlightFragment', 'start_column end_column token')  # End is excluded.
-
-
-class _HighlightDict(dict):
-    """
-    Helper class to contain the highlighting.
-    Maps 'y' coordinate to 'x' coordinate to Token.
-
-    :param row_to_fragments: Dictionary that maps row numbers to list of `_HighlightFragment`.
-    """
-    def __init__(self, row_to_fragments):
-        self.row_to_fragments = row_to_fragments
-
-    def __missing__(self, key):
-        result = _HighlightDictRow(self.row_to_fragments[key])
-        self[key] = result
-        return result
-
-    def __repr__(self):
-        return '_HighlightDict(%r)' % (dict.__repr__(self), )
-
-
-class _HighlightDictRow(dict):
-    def __init__(self, list_of_fragments):
-        self.list_of_fragments = list_of_fragments
-
-    def __missing__(self, key):
-        result = None
-
-        for f in self.list_of_fragments:
-            if f.start_column <= key < f.end_column:  # End is excluded.
-                result = f.token
-                break
-
-        self[key] = result
-        return result
-
-
-class _LazyReverseDict(dict):
-    """
-    Dictionary constructed from another dictionary by reversing the key/values.
-    This is lazy and will be populated, the first time when it is accessed.
-
-    It is equivalent to::
-
-        new_dict = dict((v, k) for k, v in original_dict.items())
-    """
-    def __init__(self, original_dict):
-        self.original_dict = original_dict
-        self._populated = False
-
-    def _populate(self):
-        self.update(dict((v, k) for k, v in self.original_dict.items()))
-
-    def __missing__(self, key):
-        # Populate when a key is accessed for the first time.
-        if not self._populated:
-            self._populate()
-            self._populated = True
-
-        if key in self:
-            return self[key]
-        else:
-            raise KeyError
+#class _LazyReverseDict(dict):
+#    """
+#    Dictionary constructed from another dictionary by reversing the key/values.
+#    This is lazy and will be populated, the first time when it is accessed.
+#
+#    It is equivalent to::
+#
+#        new_dict = dict((v, k) for k, v in original_dict.items())
+#    """
+#    def __init__(self, original_dict):
+#        self.original_dict = original_dict
+#        self._populated = False
+#
+#    def _populate(self):
+#        self.update(dict((v, k) for k, v in self.original_dict.items()))
+#
+#    def __missing__(self, key):
+#        # Populate when a key is accessed for the first time.
+#        if not self._populated:
+#            self._populate()
+#            self._populated = True
+#
+#        if key in self:
+#            return self[key]
+#        else:
+#            raise KeyError

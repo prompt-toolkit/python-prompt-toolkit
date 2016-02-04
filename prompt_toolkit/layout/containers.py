@@ -10,13 +10,14 @@ from six import with_metaclass
 
 from .controls import UIControl, TokenListControl
 from .dimension import LayoutDimension, sum_layout_dimensions, max_layout_dimensions
-from .margins import Margin
-from .screen import Point, WritePosition, Char, _CHAR_CACHE
 from .lazyscreen import LazyScreen
+from .margins import Margin
+from .screen import Point, WritePosition, _CHAR_CACHE
 from .utils import token_list_to_text
 from prompt_toolkit.cache import SimpleCache
 from prompt_toolkit.filters import to_cli_filter
 from prompt_toolkit.mouse_events import MouseEvent, MouseEventTypes
+from prompt_toolkit.reactive import Integer
 from prompt_toolkit.token import Token
 from prompt_toolkit.utils import take_using_weights, get_cwidth
 
@@ -720,10 +721,31 @@ class ScrollOffsets(object):
     Note that left/right offsets only make sense if line wrapping is disabled.
     """
     def __init__(self, top=0, bottom=0, left=0, right=0):
-        self.top = top
-        self.bottom = bottom
-        self.left = left
-        self.right = right
+        assert isinstance(top, Integer)
+        assert isinstance(bottom, Integer)
+        assert isinstance(left, Integer)
+        assert isinstance(right, Integer)
+
+        self._top = top
+        self._bottom = bottom
+        self._left = left
+        self._right = right
+
+    @property
+    def top(self):
+        return int(self._top)
+
+    @property
+    def bottom(self):
+        return int(self._bottom)
+
+    @property
+    def left(self):
+        return int(self._left)
+
+    @property
+    def right(self):
+        return int(self._right)
 
     def __repr__(self):
         return 'ScrollOffsets(top=%r, bottom=%r, left=%r, right=%r)' % (
@@ -1035,7 +1057,7 @@ class Window(Container):
             new_screen.menu_position = Point(y=temp_screen.menu_position.y + ypos - vertical_scroll,
                                              x=temp_screen.menu_position.x + xpos - horizontal_scroll)
 
-        new_screen.height = max(new_screen.height, ypos + y + 1)
+        new_screen.height = max(new_screen.height, ypos + y)
         return visible_line_to_input_line
 
 #    def _OLD_copy_body(self, cli, temp_screen, highlighting, new_screen,
