@@ -929,12 +929,16 @@ class Window(Container):
             temp_screen, write_position.width - total_margin_width, write_position.height, cli)
 
         # Write body
-        visible_line_to_input_line = self._copy_body(
+        visible_line_to_row_col = self._copy_body(
             temp_screen, screen, write_position,
             sum(left_margin_widths), write_position.width - total_margin_width,
             self.vertical_scroll, self.horizontal_scroll,
             has_focus=self.content.has_focus(cli),
             wrap_lines=wrap_lines)
+
+        visible_line_to_input_line = dict(  # XXX: do we need this. Better pass visible_line_to_row_col to WindowRenderInfo!!!
+            (visible_line, rowcol[0])
+            for visible_line, rowcol in visible_line_to_row_col.items())
 
         # Remember render info. (Set before generating the margins. They need this.)
         self.render_info = WindowRenderInfo(
@@ -955,12 +959,17 @@ class Window(Container):
             absolute coordinates into relative coordinates. """
             position = mouse_event.position
 
-            # Call the mouse handler of the UIControl first.
-            result = self.content.mouse_handler(
-                cli, MouseEvent(
-                    position=Point(x=position.x - write_position.xpos - sum(left_margin_widths) + self.horizontal_scroll,
-                                   y=position.y - write_position.ypos + self.vertical_scroll),
-                    event_type=mouse_event.event_type))
+            try:
+                row, col = visible_line_to_row_col[mouse_event.position.y - write_position.ypos]
+            except IndexError:
+                result = NotImplemented
+            else:
+                # Call the mouse handler of the UIControl first.
+                result = self.content.mouse_handler(
+                    cli, MouseEvent(
+                        position=Point(x=mouse_event.position.x + col - write_position.xpos - sum(left_margin_widths),
+                                       y=row),
+                        event_type=mouse_event.event_type))
 
             # If it returns NotImplemented, handle it here.
             if result == NotImplemented:
@@ -1045,7 +1054,7 @@ class Window(Container):
             # Take the next line and copy it in the real screen.
             line = temp_screen.get_line(lineno)
 
-            visible_line_to_row_col[y] = (lineno, 0)
+            visible_line_to_row_col[y] = (lineno, horizontal_scroll)
             x = -horizontal_scroll
 
             for token, text in line:
@@ -1077,7 +1086,7 @@ class Window(Container):
                 r, c = visible_line_to_row_col[visible_line]
 
                 if row == r and col >= c:
-                    return Point(y=visible_line + ypos, x=col - c + xpos - horizontal_scroll)
+                    return Point(y=visible_line + ypos, x=col - c + xpos)
             raise Exception('Some bug. row=%r col=%r\n%r' % (row, col, visible_line_to_row_col))  # XXX: fix or remove.
 
         # Set cursor and menu positions.
@@ -1092,11 +1101,7 @@ class Window(Container):
 
         new_screen.height = max(new_screen.height, ypos + y)
 
-        visible_line_to_input_line = dict(
-            (visible_line, rowcol[0])
-            for visible_line, rowcol in visible_line_to_row_col.items())
-
-        return visible_line_to_input_line
+        return visible_line_to_row_col
 
     @classmethod
     def _copy_margin(cls, lazy_screen, new_screen, write_position, move_x, width):
