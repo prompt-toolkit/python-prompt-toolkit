@@ -223,10 +223,24 @@ class TokenListControl(UIControl):
         key = (default_char.char, default_char.token,
                 tuple(tokens_with_mouse_handlers), width, right, center)
 
+        # If there is a `Token.SetCursorPosition` in the token list, set the
+        # cursor position here.
+        def get_cursor_position():
+            SetCursorPosition = Token.SetCursorPosition
+
+            for y, line in enumerate(token_lines):
+                x = 0
+                for token, text in line:
+                    if token == SetCursorPosition:
+                        return Point(x=x, y=y)
+                    x += len(text)
+            return None
+
         def get_screen():
             return LazyScreen(get_line=lambda i: token_lines[i],
-                                get_line_count=lambda: len(token_lines),
-                                default_char=default_char)
+                              get_line_count=lambda: len(token_lines),
+                              default_char=default_char,
+                              cursor_position=get_cursor_position())
 
         return self._screen_cache.get(key, get_screen)
 
