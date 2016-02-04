@@ -21,8 +21,6 @@ from prompt_toolkit.token import Token
 
 __all__ = (
     'Fragment',
-    'SelectionHighlighter',
-    'SearchHighlighter',
     'MatchingBracketHighlighter',
     'ConditionalHighlighter',
 )
@@ -55,78 +53,78 @@ class Highlighter(with_metaclass(ABCMeta, object)):
         return []
 
 
-class SelectionHighlighter(Highlighter):
-    """
-    Highlight the selection.
-    """
-    def get_fragments(self, cli, document):
-        for from_, to in document.selection_ranges():
-            yield Fragment(from_, to + 1, Token.SelectedText)
+#class SelectionHighlighter(Highlighter):
+#    """
+#    Highlight the selection.
+#    """
+#    def get_fragments(self, cli, document):
+#        for from_, to in document.selection_ranges():
+#            yield Fragment(from_, to + 1, Token.SelectedText)
+#
+#    def invalidation_hash(self, cli, document):
+#        # When the selection changes, highlighting will be different.
+#        return (document.selection and (
+#            document.cursor_position,
+#            document.selection.original_cursor_position,
+#            document.selection.type))
 
-    def invalidation_hash(self, cli, document):
-        # When the selection changes, highlighting will be different.
-        return (document.selection and (
-            document.cursor_position,
-            document.selection.original_cursor_position,
-            document.selection.type))
 
-
-class SearchHighlighter(Highlighter):
-    """
-    Highlight search matches in the document.
-
-    :param preview_search: A Filter; when active it indicates that we take
-        the search text in real time while the user is typing, instead of the
-        last active search state.
-    :param get_search_state: (Optional) Callable that takes a
-        CommandLineInterface and returns the SearchState to be used for the highlighting.
-    """
-    def __init__(self, preview_search=False, search_buffer_name=SEARCH_BUFFER,
-                 get_search_state=None):
-        self.preview_search = to_cli_filter(preview_search)
-        self.search_buffer_name = search_buffer_name
-        self.get_search_state = get_search_state
-
-    def _get_search_text(self, cli):
-        """
-        The text we are searching for.
-        """
-        # When the search buffer has focus, take that text.
-        if self.preview_search(cli) and cli.buffers[self.search_buffer_name].text:
-            return cli.buffers[self.search_buffer_name].text
-        # Otherwise, take the text of the last active search.
-        elif self.get_search_state:
-            return self.get_search_state(cli).text
-        else:
-            return cli.search_state.text
-
-    def get_fragments(self, cli, document):
-        search_text = self._get_search_text(cli)
-        search_text_length = len(search_text)
-        ignore_case = cli.is_ignoring_case
-
-        if search_text and not cli.is_returning:
-            for index in document.find_all(search_text, ignore_case=ignore_case):
-                if index <= document.cursor_position < index + search_text_length:
-                    token = Token.SearchMatch.Current
-                else:
-                    token = Token.SearchMatch
-
-                yield Fragment(index, index + len(search_text), token)
-
-    def invalidation_hash(self, cli, document):
-        search_text = self._get_search_text(cli)
-
-        # When the search state changes, highlighting will be different.
-        return (
-            search_text,
-            cli.is_returning,
-
-            # When we search for text, and the cursor position changes. The
-            # processor has to be applied every time again, because the current
-            # match is highlighted in another color.
-            (search_text and document.cursor_position),
-        )
+#class SearchHighlighter(Highlighter):
+#    """
+#    Highlight search matches in the document.
+#
+#    :param preview_search: A Filter; when active it indicates that we take
+#        the search text in real time while the user is typing, instead of the
+#        last active search state.
+#    :param get_search_state: (Optional) Callable that takes a
+#        CommandLineInterface and returns the SearchState to be used for the highlighting.
+#    """
+#    def __init__(self, preview_search=False, search_buffer_name=SEARCH_BUFFER,
+#                 get_search_state=None):
+#        self.preview_search = to_cli_filter(preview_search)
+#        self.search_buffer_name = search_buffer_name
+#        self.get_search_state = get_search_state
+#
+#    def _get_search_text(self, cli):
+#        """
+#        The text we are searching for.
+#        """
+#        # When the search buffer has focus, take that text.
+#        if self.preview_search(cli) and cli.buffers[self.search_buffer_name].text:
+#            return cli.buffers[self.search_buffer_name].text
+#        # Otherwise, take the text of the last active search.
+#        elif self.get_search_state:
+#            return self.get_search_state(cli).text
+#        else:
+#            return cli.search_state.text
+#
+#    def get_fragments(self, cli, document):
+#        search_text = self._get_search_text(cli)
+#        search_text_length = len(search_text)
+#        ignore_case = cli.is_ignoring_case
+#
+#        if search_text and not cli.is_returning:
+#            for index in document.find_all(search_text, ignore_case=ignore_case):
+#                if index <= document.cursor_position < index + search_text_length:
+#                    token = Token.SearchMatch.Current
+#                else:
+#                    token = Token.SearchMatch
+#
+#                yield Fragment(index, index + len(search_text), token)
+#
+#    def invalidation_hash(self, cli, document):
+#        search_text = self._get_search_text(cli)
+#
+#        # When the search state changes, highlighting will be different.
+#        return (
+#            search_text,
+#            cli.is_returning,
+#
+#            # When we search for text, and the cursor position changes. The
+#            # processor has to be applied every time again, because the current
+#            # match is highlighted in another color.
+#            (search_text and document.cursor_position),
+#        )
 
 
 class ConditionalHighlighter(Highlighter):
