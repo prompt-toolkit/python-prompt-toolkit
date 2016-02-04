@@ -958,7 +958,7 @@ class Window(Container):
             # Call the mouse handler of the UIControl first.
             result = self.content.mouse_handler(
                 cli, MouseEvent(
-                    position=Point(x=position.x - write_position.xpos - sum(left_margin_widths),
+                    position=Point(x=position.x - write_position.xpos - sum(left_margin_widths) + self.horizontal_scroll,
                                    y=position.y - write_position.ypos + self.vertical_scroll),
                     event_type=mouse_event.event_type))
 

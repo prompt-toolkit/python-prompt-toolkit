@@ -279,7 +279,6 @@ def create_prompt_layout(message='', lexer=None, is_password=False,
                     highlighters=highlighters,
                     input_processors=input_processors,
                     lexer=lexer,
-                    wrap_lines=wrap_lines,
                     # Enable preview_search, we want to have immediate feedback
                     # in reverse-i-search mode.
                     preview_search=True),
@@ -292,6 +291,7 @@ def create_prompt_layout(message='', lexer=None, is_password=False,
                         filter=multiline
                     )
                 ],
+                wrap_lines=wrap_lines,
             ),
             [
                 Float(xcursor=True,
