@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from six import with_metaclass
+from six.moves import range
 
 from .controls import UIControl, TokenListControl
 from .dimension import LayoutDimension, sum_layout_dimensions, max_layout_dimensions
@@ -20,6 +21,8 @@ from prompt_toolkit.mouse_events import MouseEvent, MouseEventTypes
 from prompt_toolkit.reactive import Integer
 from prompt_toolkit.token import Token
 from prompt_toolkit.utils import take_using_weights, get_cwidth
+
+import math
 
 __all__ = (
     'Container',
@@ -782,6 +785,8 @@ class Window(Container):
         anymore, while there is still empty space available at the bottom of
         the window. In the Vi editor for instance, this is possible. You will
         see tildes while the top part of the body is hidden.
+    :param wrap_lines: A `bool` or :class:`~prompt_toolkit.filters.CLIFilter`
+        instance. When True, don't scroll horizontally, but wrap lines instead.
     :param get_vertical_scroll: Callable that takes this window
         instance as input and returns a preferred vertical scroll.
         (When this is `None`, the scroll is only determined by the last and
@@ -796,7 +801,7 @@ class Window(Container):
     def __init__(self, content, width=None, height=None, get_width=None,
                  get_height=None, dont_extend_width=False, dont_extend_height=False,
                  left_margins=None, right_margins=None, scroll_offsets=None,
-                 allow_scroll_beyond_bottom=False,
+                 allow_scroll_beyond_bottom=False, wrap_lines=False,
                  get_vertical_scroll=None, get_horizontal_scroll=None, always_hide_cursor=False):
         assert isinstance(content, UIControl)
         assert width is None or isinstance(width, LayoutDimension)
@@ -813,6 +818,7 @@ class Window(Container):
 
         self.allow_scroll_beyond_bottom = to_cli_filter(allow_scroll_beyond_bottom)
         self.always_hide_cursor = to_cli_filter(always_hide_cursor)
+        self.wrap_lines = to_cli_filter(wrap_lines)
 
         self.content = content
         self.dont_extend_width = dont_extend_width
@@ -916,17 +922,19 @@ class Window(Container):
         assert isinstance(temp_screen, LazyScreen)
 
         # Scroll content.
-        # TODO: Implement line wrapping!!!!!
-        applied_scroll_offsets = self._scroll(
+        wrap_lines = self.wrap_lines(cli)
+        scroll_func = self._scroll_when_linewrapping if wrap_lines else self._scroll
+
+        applied_scroll_offsets = scroll_func(
             temp_screen, write_position.width - total_margin_width, write_position.height, cli)
 
         # Write body
-        # TODO: Implement line wrapping!!!!!
         visible_line_to_input_line = self._copy_body(
             temp_screen, screen, write_position,
             sum(left_margin_widths), write_position.width - total_margin_width,
             self.vertical_scroll, self.horizontal_scroll,
-            has_focus=self.content.has_focus(cli))
+            has_focus=self.content.has_focus(cli),
+            wrap_lines=wrap_lines)
 
         # Remember render info. (Set before generating the margins. They need this.)
         self.render_info = WindowRenderInfo(
@@ -1004,20 +1012,21 @@ class Window(Container):
 
     @classmethod
     def _copy_body(self, temp_screen, new_screen, write_position, move_x,
-                   width, vertical_scroll=0, horizontal_scroll=0, has_focus=False):
+                   width, vertical_scroll=0, horizontal_scroll=0,
+                   has_focus=False, wrap_lines=False):
         """
         Copy the content of a LazyScreen into the output screen.
         """
-        # XXX: Implement line wrapping...
-
         xpos = write_position.xpos + move_x
         ypos = write_position.ypos
-        lineno = vertical_scroll
         line_count = temp_screen.get_line_count()
         new_buffer = new_screen.data_buffer
 
         # Result dict.
-        visible_line_to_input_line = {}
+
+        # Map visible line number to (row, col) of input.
+        # 'col' will always be zero if line wrapping is off.
+        visible_line_to_row_col = {}
 
         # Fill background with default_char first.
         default_char = temp_screen.default_char
@@ -1029,18 +1038,31 @@ class Window(Container):
 
         # Copy content.
         y = 0
+        lineno = vertical_scroll
+        cursor_position = temp_screen.cursor_position
 
         while y < write_position.height and lineno < line_count:
             # Take the next line and copy it in the real screen.
             line = temp_screen.get_line(lineno)
 
-            visible_line_to_input_line[y] = lineno
+            visible_line_to_row_col[y] = (lineno, 0)
             x = -horizontal_scroll
 
             for token, text in line:
                 new_buffer_row = new_buffer[y + ypos]
                 for c in text:
                     char = _CHAR_CACHE[c, token]
+
+                    # Wrap when the line width is exceeded.
+                    if wrap_lines and x >= width:
+                        visible_line_to_row_col[y + 1] = (
+                            lineno, visible_line_to_row_col[y][1] + x)
+                        y += 1
+                        x = -horizontal_scroll  # This would be equal to zero.
+                                                # (horizontal_scroll=0 when wrap_lines.)
+                        new_buffer_row = new_buffer[y + ypos]
+
+                    # Set character in screen and shift 'x'.
                     if x >= 0 and x < write_position.width:
                         new_buffer_row[x + xpos] = char
                     x += char.width
@@ -1048,18 +1070,32 @@ class Window(Container):
             lineno += 1
             y += 1
 
+        def cursor_pos_to_screen_pos(row, col):
+            " Translate row/col from LazyScreen to real Screen coordinates. "
+
+            for visible_line in reversed(list(visible_line_to_row_col)):
+                r, c = visible_line_to_row_col[visible_line]
+
+                if row == r and col >= c:
+                    return Point(y=visible_line + ypos, x=col - c + xpos - horizontal_scroll)
+            raise Exception('Some bug. row=%r col=%r\n%r' % (row, col, visible_line_to_row_col))
+
         # Set cursor and menu positions.
         if has_focus and temp_screen.cursor_position:
-            new_screen.cursor_position = Point(y=temp_screen.cursor_position.y + ypos - vertical_scroll,
-                                               x=temp_screen.cursor_position.x + xpos - horizontal_scroll)
-
+            new_screen.cursor_position = cursor_pos_to_screen_pos(
+                    temp_screen.cursor_position.y, temp_screen.cursor_position.x)
             new_screen.show_cursor = True
 
         if not new_screen.menu_position and temp_screen.menu_position:
-            new_screen.menu_position = Point(y=temp_screen.menu_position.y + ypos - vertical_scroll,
-                                             x=temp_screen.menu_position.x + xpos - horizontal_scroll)
+            new_screen.cursor_position = cursor_pos_to_screen_pos(
+                    temp_screen.menu_position.y, temp_screen.menu_position.x)
 
         new_screen.height = max(new_screen.height, ypos + y)
+
+        visible_line_to_input_line = dict(
+            (visible_line, rowcol[0])
+            for visible_line, rowcol in visible_line_to_row_col.items())
+
         return visible_line_to_input_line
 
     @classmethod
@@ -1073,7 +1109,51 @@ class Window(Container):
         margin_write_position = WritePosition(xpos, ypos, width, write_position.height)
         cls._copy_body(lazy_screen, new_screen, margin_write_position, 0, width)
 
-    def _scroll(self, temp_screen, width, height, cli):  # TODO: implement scrolling when line wrapping is on.
+    def _scroll_when_linewrapping(self, temp_screen, width, height, cli):
+        """
+        """
+        def get_height_for_line(lineno):  # XXX: add cache that maps ('text', width) to height. OR better add cache to LazyScreen (we use this in several places.)
+            line_width = get_cwidth(token_list_to_text(temp_screen.get_line(lineno)))
+            return max(1, math.ceil(line_width / width))
+
+        def get_min_vertical_scroll():
+            # Make sure that the cursor line is not below the bottom.
+            # No lines?
+            if temp_screen.get_line_count() == 0:
+                return 0
+            else:
+                # Calculate how many lines can be shown above.
+                used_height = 0
+                prev_lineno = temp_screen.cursor_position.y
+
+                for lineno in range(temp_screen.cursor_position.y, -1, -1):
+                    used_height += get_height_for_line(lineno)
+                    assert get_height_for_line(lineno) > 0, lineno
+
+                    if used_height > height:
+                        return prev_lineno
+                    else:
+                        prev_lineno = lineno
+
+        # Scroll vertically. (Make sure that the whole line which contains the
+        # cursor is visible.
+        max_vertical_scroll = temp_screen.cursor_position.y
+        min_vertical_scroll = get_min_vertical_scroll()
+
+        self.vertical_scroll = min(self.vertical_scroll, max_vertical_scroll)
+        if min_vertical_scroll:
+            self.vertical_scroll = max(self.vertical_scroll, min_vertical_scroll)
+
+        # TODO: take offsets into account.
+        # TODO: implement: self.allow_scroll_beyond_bottom
+
+        # We don't have horizontal scrolling.
+        self.horizontal_scroll = 0
+
+        applied_scroll_offsets = ScrollOffsets(top=0, bottom=0, left=0, right=0)
+        return applied_scroll_offsets
+
+    def _scroll(self, temp_screen, width, height, cli):
         """
         Scroll to make sure the cursor position is visible and that we maintain the
         requested scroll offset.
