@@ -34,17 +34,30 @@ def scroll_forward(event, half=False):
     b = event.cli.current_buffer
 
     if w and w.render_info:
-        # Determine height to move.
-        shift = w.render_info.window_height
-        if half:
-            shift = int(shift / 2)
+        info = w.render_info
+        original_screen = info.original_screen
 
-        # Scroll.
-        new_document_line = min(
-            b.document.line_count - 1,
-            b.document.cursor_position_row + int(shift))
-        b.cursor_position = b.document.translate_row_col_to_index(new_document_line, 0)
-        w.vertical_scroll = w.render_info.input_line_to_screen_line[new_document_line]
+        # Height to scroll.
+        scroll_height = info.window_height
+        if half:
+            scroll_height //= 2
+
+        # Calculate how many lines is equivalent to that vertical space.
+        y = b.document.cursor_position_row + 1
+        height = 0
+        while y < original_screen.get_line_count():
+            if info.wrap_lines:
+                line_height = original_screen.get_height_for_line(y, info.window_width)
+            else:
+                line_height = 1
+
+            if height + line_height < scroll_height:
+                height += line_height
+                y += 1
+            else:
+                break
+
+        b.cursor_position = b.document.translate_row_col_to_index(y, 0)
 
 
 def scroll_backward(event, half=False):
@@ -55,15 +68,30 @@ def scroll_backward(event, half=False):
     b = event.cli.current_buffer
 
     if w and w.render_info:
-        # Determine height to move.
-        shift = w.render_info.window_height
-        if half:
-            shift = int(shift / 2)
+        info = w.render_info
+        original_screen = info.original_screen
 
-        # Scroll.
-        new_document_line = max(0, b.document.cursor_position_row - int(shift))
-        b.cursor_position = b.document.translate_row_col_to_index(new_document_line, 0)
-        w.vertical_scroll = w.render_info.input_line_to_screen_line[new_document_line]
+        # Height to scroll.
+        scroll_height = info.window_height
+        if half:
+            scroll_height //= 2
+
+        # Calculate how many lines is equivalent to that vertical space.
+        y = max(0, b.document.cursor_position_row - 1)
+        height = 0
+        while y > 0:
+            if info.wrap_lines:
+                line_height = original_screen.get_height_for_line(y, info.window_width)
+            else:
+                line_height = 1
+
+            if height + line_height < scroll_height:
+                height += line_height
+                y -= 1
+            else:
+                break
+
+        b.cursor_position = b.document.translate_row_col_to_index(y, 0)
 
 
 def scroll_half_page_down(event):
@@ -128,15 +156,10 @@ def scroll_page_down(event):
 
     if w and w.render_info:
         # Scroll down one page.
-        w.vertical_scroll += w.render_info.window_height
+        top_line_index = max(w.render_info.last_visible_line(), w.vertical_scroll + 1)
+        w.vertical_scroll = top_line_index
 
-        # Put cursor at the top of the visible region.
-        try:
-            new_document_line = w.render_info.screen_line_to_input_line[w.vertical_scroll]
-        except KeyError:
-            new_document_line = b.document.line_count - 1
-
-        b.cursor_position = b.document.translate_row_col_to_index(new_document_line, 0)
+        b.cursor_position = b.document.translate_row_col_to_index(top_line_index, 0)
         b.cursor_position += b.document.get_start_of_line_position(after_whitespace=True)
 
 
@@ -144,10 +167,16 @@ def scroll_page_up(event):
     """
     Scroll page up. (Prefer the cursor at the bottom of the page, after scrolling.)
     """
+            # TODO: get line by line, measure the height of each. Go up until a whole page is filled.
+
     w = _current_window_for_event(event)
     b = event.cli.current_buffer
 
     if w and w.render_info:
+        # Scroll in a way that the line which is currently at the top will be
+        # displayed at the bottom. The cursor should always be visible at the bottom.
+        # XXX
+
         # Scroll down one page.
         w.vertical_scroll = max(0, w.vertical_scroll - w.render_info.window_height)
 

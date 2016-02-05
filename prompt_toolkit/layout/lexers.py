@@ -27,12 +27,6 @@ class Lexer(with_metaclass(ABCMeta, object)):
         Takes a :class:`~prompt_toolkit.document.Document` and returns a
         callable that takes a line number and returns the tokens for that line.
         """
-        lines = document.lines
-
-        def get_line(lineno):
-            " Return the tokens for the given line. "
-            return [(Token, lines[lineno])]
-        return get_line
 
 
 class SimpleLexer(Lexer):
@@ -46,6 +40,7 @@ class SimpleLexer(Lexer):
         lines = document.lines
 
         def get_line(lineno):
+            " Return the tokens for the given line. "
             try:
                 return [(self.default_token, lines[lineno])]
             except IndexError:

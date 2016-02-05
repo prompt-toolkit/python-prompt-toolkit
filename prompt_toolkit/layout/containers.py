@@ -5,7 +5,6 @@ Container for the layout.
 from __future__ import unicode_literals
 
 from abc import ABCMeta, abstractmethod
-from collections import defaultdict
 from six import with_metaclass
 from six.moves import range
 
@@ -21,8 +20,6 @@ from prompt_toolkit.mouse_events import MouseEvent, MouseEventTypes
 from prompt_toolkit.reactive import Integer
 from prompt_toolkit.token import Token
 from prompt_toolkit.utils import take_using_weights, get_cwidth
-
-import math
 
 __all__ = (
     'Container',
@@ -590,25 +587,37 @@ class WindowRenderInfo(object):
     def __init__(self, original_screen, horizontal_scroll, vertical_scroll,
                  window_width, window_height, cursor_position,
                  configured_scroll_offsets, applied_scroll_offsets,
-                 visible_line_to_input_line):
-        self.original_screen = original_screen
+                 visible_line_to_row_col, wrap_lines):
+        self.original_screen = original_screen  # TODO: Rename!!!
         self.vertical_scroll = vertical_scroll
-        self.window_width = window_width
+        self.window_width = window_width  # Width without margins.
         self.window_height = window_height
+
         self.cursor_position = cursor_position
         self.configured_scroll_offsets = configured_scroll_offsets
         self.applied_scroll_offsets = applied_scroll_offsets
-        self.visible_line_to_input_line = visible_line_to_input_line
+        self.visible_line_to_row_col = visible_line_to_row_col
+        self.wrap_lines = wrap_lines
+
+        self.visible_line_to_input_line = dict(
+            (visible_line, rowcol[0])
+            for visible_line, rowcol in visible_line_to_row_col.items())
 
     @property
-    def input_line_to_screen_line(self):
+    def displayed_lines(self):
+        """
+        List of all the visible rows. (Line numbers of the input buffer.)
+        The last line may not be entirely visible.
+        """
+        return sorted(row for row, col in self.visible_line_to_row_col.values())
+
+    @property
+    def input_line_to_screen_line(self):  # TODO: do we need this...?
         """
         Return a dictionary mapping the line numbers of the screen to the one
         of the input buffer.
         """
-        return defaultdict(lambda: 0) # XXX
-        return dict((v, k) for k, v in
-                    self.original_screen.screen_line_to_input_line.items())
+        return self.visible_line_to_input_line
 
     @property
     def screen_line_to_input_line(self):
@@ -616,57 +625,26 @@ class WindowRenderInfo(object):
         Return the dictionary mapping the line numbers of the input buffer to
         the lines of the screen.
         """
-        return defaultdict(lambda: 0) # XXX
-        return self.original_screen.screen_line_to_input_line
-
-#    @property
-#    def visible_line_to_input_line(self):
-#        """
-#        Return a dictionary mapping the visible rows to the line numbers of the
-#        input.
-#        """
-#        return defaultdict(lambda: 0) # XXX
-#        return dict((k - self.vertical_scroll, v) for
-#                    k, v in self.original_screen.screen_line_to_input_line.items())
+        return dict((v, k) for k, v in self.input_line_to_screen_line.items())
 
     def first_visible_line(self, after_scroll_offset=False):
         """
         Return the line number (0 based) of the input document that corresponds
         with the first visible line.
         """
-        return 0
-        # Note that we can't just do vertical_scroll+height because some input
-        # lines could be wrapped and span several lines in the screen.
-        screen = self.original_screen
-        height = self.window_height
-
-        start = self.vertical_scroll
         if after_scroll_offset:
-            start += self.applied_scroll_offsets.top
-
-        for y in range(start, self.vertical_scroll + height):
-            if y in screen.screen_line_to_input_line:
-                return screen.screen_line_to_input_line[y]
-
-        return 0
+            return self.vertical_scroll + self.applied_scroll_offsets.top
+        else:
+            return self.vertical_scroll
 
     def last_visible_line(self, before_scroll_offset=False):
         """
         Like `first_visible_line`, but for the last visible line.
         """
-        return 0
-        screen = self.original_screen
-        height = self.window_height
-
-        start = self.vertical_scroll + height - 1
+        result = self.displayed_lines[-1]
         if before_scroll_offset:
-            start -= self.applied_scroll_offsets.bottom
-
-        for y in range(start, self.vertical_scroll, -1):
-            if y in screen.screen_line_to_input_line:
-                return screen.screen_line_to_input_line[y]
-
-        return 0
+            result -= self.applied_scroll_offsets.bottom
+        return result
 
     def center_visible_line(self, before_scroll_offset=False,
                             after_scroll_offset=False):
@@ -675,7 +653,7 @@ class WindowRenderInfo(object):
         """
         return (self.first_visible_line(after_scroll_offset) +
                 (self.last_visible_line(before_scroll_offset) -
-                 self.first_visible_line(after_scroll_offset)) / 2
+                 self.first_visible_line(after_scroll_offset)) // 2
                )
 
     @property
@@ -683,16 +661,14 @@ class WindowRenderInfo(object):
         """
         The full height of the user control.
         """
-        return 1  # XXX
-        return self.original_screen.height
+        return self.original_screen.get_line_count()
 
     @property
     def full_height_visible(self):
         """
         True when the full height is visible (There is no vertical scroll.)
         """
-        return True   # XXX
-        return self.window_height >= self.original_screen.height
+        return self.vertical_scroll == 0 and self.last_visible_line() == self.content_height
 
     @property
     def top_visible(self):
@@ -706,8 +682,7 @@ class WindowRenderInfo(object):
         """
         True when the bottom of the buffer is visible.
         """
-        return self.vertical_scroll >= \
-            self.original_screen.height - self.window_height
+        return self.last_visible_line() == self.content_height - 1
 
     @property
     def vertical_scroll_percentage(self):
@@ -715,8 +690,10 @@ class WindowRenderInfo(object):
         Vertical scroll as a percentage. (0 means: the top is visible,
         100 means: the bottom is visible.)
         """
-        return (100 * self.vertical_scroll //
-                (self.original_screen.height - self.window_height))
+        if self.bottom_visible:
+            return 100
+        else:
+            return (100 * self.vertical_scroll // self.content_height)
 
 
 class ScrollOffsets(object):
@@ -936,40 +913,34 @@ class Window(Container):
             has_focus=self.content.has_focus(cli),
             wrap_lines=wrap_lines)
 
-        visible_line_to_input_line = dict(  # XXX: do we need this. Better pass visible_line_to_row_col to WindowRenderInfo!!!
-            (visible_line, rowcol[0])
-            for visible_line, rowcol in visible_line_to_row_col.items())
-
         # Remember render info. (Set before generating the margins. They need this.)
         self.render_info = WindowRenderInfo(
             original_screen=temp_screen,
             horizontal_scroll=self.horizontal_scroll,
             vertical_scroll=self.vertical_scroll,
-            window_width=write_position.width,
+            window_width=write_position.width - total_margin_width,
             window_height=write_position.height,
             cursor_position=Point(y=temp_screen.cursor_position.y - self.vertical_scroll,
                                   x=temp_screen.cursor_position.x - self.horizontal_scroll),
             configured_scroll_offsets=self.scroll_offsets,
             applied_scroll_offsets=applied_scroll_offsets,
-            visible_line_to_input_line=visible_line_to_input_line)
+            visible_line_to_row_col=visible_line_to_row_col,
+            wrap_lines=wrap_lines)
 
         # Set mouse handlers.
         def mouse_handler(cli, mouse_event):
             """ Wrapper around the mouse_handler of the `UIControl` that turns
             absolute coordinates into relative coordinates. """
-            position = mouse_event.position
-
             try:
                 row, col = visible_line_to_row_col[mouse_event.position.y - write_position.ypos]
-            except IndexError:
+            except KeyError:
                 result = NotImplemented
             else:
                 # Call the mouse handler of the UIControl first.
+                x = mouse_event.position.x + col - write_position.xpos - sum(left_margin_widths)
                 result = self.content.mouse_handler(
-                    cli, MouseEvent(
-                        position=Point(x=mouse_event.position.x + col - write_position.xpos - sum(left_margin_widths),
-                                       y=row),
-                        event_type=mouse_event.event_type))
+                    cli, MouseEvent(position=Point(x=x, y=row),
+                                    event_type=mouse_event.event_type))
 
             # If it returns NotImplemented, handle it here.
             if result == NotImplemented:
@@ -1036,58 +1007,75 @@ class Window(Container):
         # Map visible line number to (row, col) of input.
         # 'col' will always be zero if line wrapping is off.
         visible_line_to_row_col = {}
+        rowcol_to_yx = {}  # Maps (row, col) to (y, x) screen coordinates.
 
         # Fill background with default_char first.
         default_char = temp_screen.default_char
 
         if default_char:
             for y in range(ypos, ypos + write_position.height):
+                new_buffer_row = new_buffer[y]
                 for x in range(xpos, xpos + width):
-                    new_buffer[y][x] = default_char
+                    new_buffer_row[x] = default_char
 
         # Copy content.
-        y = 0
-        lineno = vertical_scroll
-        cursor_position = temp_screen.cursor_position
+        def copy():
+            y = 0
+            lineno = vertical_scroll
 
-        while y < write_position.height and lineno < line_count:
-            # Take the next line and copy it in the real screen.
-            line = temp_screen.get_line(lineno)
+            while y < write_position.height and lineno < line_count:
+                # Take the next line and copy it in the real screen.
+                line = temp_screen.get_line(lineno)
+                col = 0
+                x = -horizontal_scroll
 
-            visible_line_to_row_col[y] = (lineno, horizontal_scroll)
-            x = -horizontal_scroll
+                visible_line_to_row_col[y] = (lineno, horizontal_scroll)
+#                rowcol_to_yx[lineno, 0] = (y + ypos, x + xpos)
 
-            for token, text in line:
-                new_buffer_row = new_buffer[y + ypos]
-                for c in text:
-                    char = _CHAR_CACHE[c, token]
+                for token, text in line:
+                    new_buffer_row = new_buffer[y + ypos]
+                    for c in text:
+                        char = _CHAR_CACHE[c, token]
 
-                    # Wrap when the line width is exceeded.
-                    if wrap_lines and x >= width:
-                        visible_line_to_row_col[y + 1] = (
-                            lineno, visible_line_to_row_col[y][1] + x)
-                        y += 1
-                        x = -horizontal_scroll  # This would be equal to zero.
-                                                # (horizontal_scroll=0 when wrap_lines.)
-                        new_buffer_row = new_buffer[y + ypos]
+                        # Wrap when the line width is exceeded.
+                        if wrap_lines and x >= width:
+                            visible_line_to_row_col[y + 1] = (
+                                lineno, visible_line_to_row_col[y][1] + x)
+                            y += 1
+                            x = -horizontal_scroll  # This would be equal to zero.
+                                                    # (horizontal_scroll=0 when wrap_lines.)
+                            new_buffer_row = new_buffer[y + ypos]
 
-                    # Set character in screen and shift 'x'.
-                    if x >= 0 and x < write_position.width:
-                        new_buffer_row[x + xpos] = char
-                    x += char.width
+                            if y >= write_position.height:
+                                return  y # Break out of all for loops.
 
-            lineno += 1
-            y += 1
+                        # Set character in screen and shift 'x'.
+                        if x >= 0 and x < write_position.width:
+                            new_buffer_row[x + xpos] = char
+
+                            # Keep track of write position for each character.
+                            rowcol_to_yx[lineno, col] = (y + ypos, x + xpos)
+                        col += 1
+                        x += char.width
+
+                lineno += 1
+                y += 1
+            return y
+
+        y = copy()
 
         def cursor_pos_to_screen_pos(row, col):
             " Translate row/col from LazyScreen to real Screen coordinates. "
-
-            for visible_line in reversed(list(visible_line_to_row_col)):
-                r, c = visible_line_to_row_col[visible_line]
-
-                if row == r and col >= c:
-                    return Point(y=visible_line + ypos, x=col - c + xpos)
-            raise Exception('Some bug. row=%r col=%r\n%r' % (row, col, visible_line_to_row_col))  # XXX: fix or remove.
+            try:
+                y, x = rowcol_to_yx[row, col]
+            except KeyError:
+                # Normally this should never happen. (It is a bug, if it happens.)
+                raise ValueError(
+                    'Invalid position. row=%r col=%r, vertical_scroll=%r, '
+                    'horizontal_scroll=%r, height=%r' %
+                    (row, col, vertical_scroll, horizontal_scroll, write_position.height))
+            else:
+                return Point(y=y, x=x)
 
         # Set cursor and menu positions.
         if has_focus and temp_screen.cursor_position:
@@ -1117,10 +1105,6 @@ class Window(Container):
     def _scroll_when_linewrapping(self, temp_screen, width, height, cli):
         """
         """
-        def get_height_for_line(lineno):  # XXX: add cache that maps ('text', width) to height. OR better add cache to LazyScreen (we use this in several places.)
-            line_width = get_cwidth(token_list_to_text(temp_screen.get_line(lineno)))
-            return max(1, math.ceil(line_width / width))
-
         def get_min_vertical_scroll():
             # Make sure that the cursor line is not below the bottom.
             # No lines?
@@ -1132,8 +1116,7 @@ class Window(Container):
                 prev_lineno = temp_screen.cursor_position.y
 
                 for lineno in range(temp_screen.cursor_position.y, -1, -1):
-                    used_height += get_height_for_line(lineno)
-                    assert get_height_for_line(lineno) > 0, lineno
+                    used_height += temp_screen.get_height_for_line(lineno, width)
 
                     if used_height > height:
                         return prev_lineno
@@ -1146,8 +1129,8 @@ class Window(Container):
         min_vertical_scroll = get_min_vertical_scroll()
 
         self.vertical_scroll = min(self.vertical_scroll, max_vertical_scroll)
-        if min_vertical_scroll:
-            self.vertical_scroll = max(self.vertical_scroll, min_vertical_scroll)
+        #if min_vertical_scroll:
+        self.vertical_scroll = max(self.vertical_scroll, min_vertical_scroll)
 
         # TODO: take offsets into account.
         # TODO: implement: self.allow_scroll_beyond_bottom

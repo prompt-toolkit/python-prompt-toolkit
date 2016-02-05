@@ -16,7 +16,6 @@ from prompt_toolkit.selection import SelectionType
 from prompt_toolkit.token import Token
 from prompt_toolkit.utils import get_cwidth
 
-from .highlighters import Highlighter
 from .lexers import Lexer, SimpleLexer
 from .processors import Processor
 from .screen import Char, Point
@@ -65,10 +64,6 @@ class UIControl(with_metaclass(ABCMeta, object)):
         Write the content at this position to the screen.
 
         Returns a :class:`.LazyScreen` instance.
-
-        Optionally, this can also return a (screen, highlighting) tuple, where
-        the `highlighting` is a dictionary of dictionaries. Mapping
-        y->x->Token if this position needs to be highlighted with that Token.
         """
 
     def mouse_handler(self, cli, mouse_event):
@@ -200,7 +195,7 @@ class TokenListControl(UIControl):
             padding = width - used_width
             if center:
                 padding = int(padding / 2)
-            return [(default_char.token, default_char.char * padding)] + line + [(Token, '\n')]
+            return [(default_char.token, default_char.char * padding)] + line
 
         if right or center:
             token_lines_with_mouse_handlers = []
@@ -313,7 +308,7 @@ class FillControl(UIControl):
         def get_line(i):
             return []
         def get_line_count():
-            return 0
+            return 100 ** 100  # Something very big.
         screen = LazyScreen(get_line=get_line, get_line_count=get_line_count, default_char=char)
         return screen
 
@@ -338,7 +333,6 @@ class BufferControl(UIControl):
     def __init__(self,
                  buffer_name=DEFAULT_BUFFER,
                  input_processors=None,
-                 highlighters=None,
                  lexer=None,
                  preview_search=False,
                  search_buffer_name=SEARCH_BUFFER,
@@ -347,17 +341,16 @@ class BufferControl(UIControl):
                  default_char=None,
                  focus_on_click=False):
         assert input_processors is None or all(isinstance(i, Processor) for i in input_processors)
-        assert highlighters is None or all(isinstance(i, Highlighter) for i in highlighters)
         assert menu_position is None or callable(menu_position)
         assert lexer is None or isinstance(lexer, Lexer)
         assert get_search_state is None or callable(get_search_state)
+        assert default_char is None or isinstance(default_char, Char)
 
         self.preview_search = to_cli_filter(preview_search)
         self.get_search_state = get_search_state
         self.focus_on_click = to_cli_filter(focus_on_click)
 
         self.input_processors = input_processors or []
-        self.highlighters = highlighters or []
         self.buffer_name = buffer_name
         self.menu_position = menu_position
         self.lexer = lexer or SimpleLexer()
@@ -419,12 +412,10 @@ class BufferControl(UIControl):
         if screen.get_line_count() >= max_available_height:
             return max_available_height
 
-        for i in range(screen.get_line_count()):
-            line_width = get_cwidth(token_list_to_text(screen.get_line(i)))
-
             # TODO: Only when line wrapping is on, expand lines!
 
-            height += math.ceil(line_width / width)
+        for i in range(screen.get_line_count()):
+            height += screen.get_height_for_line(i, width)
 
             if height >= max_available_height:
                 return max_available_height
@@ -542,7 +533,8 @@ class BufferControl(UIControl):
         screen = LazyScreen(
             get_line=get_line,
             get_line_count=lambda: document.line_count,
-            cursor_position=translate_rowcol(document.cursor_position_row, document.cursor_position_col))
+            cursor_position=translate_rowcol(document.cursor_position_row, document.cursor_position_col),
+            default_char=self.default_char)
 
         # If there is an auto completion going on, use that start point for a
         # pop-up menu position. (But only when this buffer has the focus --

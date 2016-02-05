@@ -1068,7 +1068,7 @@ def load_vi_bindings(registry, get_vi_state, enable_visual_key=Always(), get_sea
             if render_row is not None:
                 w.vertical_scroll = max(0, (render_row - w.render_info.window_height))
 
-    @handle('z', 'z', filter=navigation_mode|selection_mode)
+    @handle('z', 'z', filter=navigation_mode|selection_mode)  # XXX: fix this. Maybe move to scroll bindings??
     def _(event):
         """
         Center Window vertically around cursor.

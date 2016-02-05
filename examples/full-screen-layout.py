@@ -49,9 +49,9 @@ layout = VSplit([
     # sure that the layout engine will not try to divide the whole width by
     # three for all these windows. The `FillControl` will simply fill the whole
     # window by repeating this character.
-#    Window(width=D.exact(1),
-#           content=FillControl('|', token=Token.Line)),
-#
+    Window(width=D.exact(1),
+           content=FillControl('|', token=Token.Line)),
+
     # Display the Result buffer on the right.
     Window(content=BufferControl(buffer_name='RESULT')),
 ])
@@ -71,13 +71,13 @@ def get_titlebar_tokens(cli):
 
 
 layout = HSplit([
-#    # The titlebar.
-#    Window(height=D.exact(1),
-#           content=TokenListControl(get_titlebar_tokens, align_center=True)),
-#
-#    # Horizontal separator.
-#    Window(height=D.exact(1),
-#           content=FillControl('-', token=Token.Line)),
+    # The titlebar.
+    Window(height=D.exact(1),
+           content=TokenListControl(get_titlebar_tokens, align_center=True)),
+
+    # Horizontal separator.
+    Window(height=D.exact(1),
+           content=FillControl('-', token=Token.Line)),
 
     # The 'body', like defined above.
     layout,

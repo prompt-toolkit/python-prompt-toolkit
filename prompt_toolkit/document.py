@@ -672,9 +672,9 @@ class Document(object):
                     from_ = max(0, self.text.rfind('\n', 0, from_) + 1)
 
                     if self.text.find('\n', to) >= 0:
-                        to += self.text.find('\n', to)
+                        to = self.text.find('\n', to)
                     else:
-                        to = len(self.text)
+                        to = len(self.text) - 1
 
                 yield from_, to
 
