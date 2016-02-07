@@ -1122,6 +1122,7 @@ class Window(Container):
                         return prev_lineno
                     else:
                         prev_lineno = lineno
+                return 0
 
         # Scroll vertically. (Make sure that the whole line which contains the
         # cursor is visible.
