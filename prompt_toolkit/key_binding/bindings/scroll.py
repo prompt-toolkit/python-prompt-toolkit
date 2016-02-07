@@ -35,7 +35,7 @@ def scroll_forward(event, half=False):
 
     if w and w.render_info:
         info = w.render_info
-        original_screen = info.original_screen
+        ui_content = info.ui_content
 
         # Height to scroll.
         scroll_height = info.window_height
@@ -45,9 +45,9 @@ def scroll_forward(event, half=False):
         # Calculate how many lines is equivalent to that vertical space.
         y = b.document.cursor_position_row + 1
         height = 0
-        while y < original_screen.get_line_count():
+        while y < ui_content.line_count:
             if info.wrap_lines:
-                line_height = original_screen.get_height_for_line(y, info.window_width)
+                line_height = ui_content.get_height_for_line(y, info.window_width)
             else:
                 line_height = 1
 
@@ -69,7 +69,7 @@ def scroll_backward(event, half=False):
 
     if w and w.render_info:
         info = w.render_info
-        original_screen = info.original_screen
+        ui_content = info.ui_content
 
         # Height to scroll.
         scroll_height = info.window_height
@@ -81,7 +81,7 @@ def scroll_backward(event, half=False):
         height = 0
         while y > 0:
             if info.wrap_lines:
-                line_height = original_screen.get_height_for_line(y, info.window_width)
+                line_height = ui_content.get_height_for_line(y, info.window_width)
             else:
                 line_height = 1
 

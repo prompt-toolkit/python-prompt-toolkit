@@ -1039,16 +1039,7 @@ def load_vi_bindings(registry, get_vi_state, enable_visual_key=Always(), get_sea
         """
         w = find_window_for_buffer_name(event.cli, event.cli.current_buffer_name)
         b = event.cli.current_buffer
-
-        if w and w.render_info:
-            # Calculate the offset that we need in order to position the row
-            # containing the cursor in the center.
-            cursor_position_row = b.document.cursor_position_row
-
-            render_row = w.render_info.input_line_to_screen_line.get(cursor_position_row)
-            if render_row is not None:
-                w.vertical_scroll = max(0, render_row)
-
+        w.vertical_scroll = b.document.cursor_position_row
 
     @handle('z', '-', filter=navigation_mode|selection_mode)
     @handle('z', 'b', filter=navigation_mode|selection_mode)
