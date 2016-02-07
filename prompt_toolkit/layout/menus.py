@@ -7,9 +7,8 @@ from prompt_toolkit.token import Token
 from prompt_toolkit.utils import get_cwidth
 
 from .containers import Window, HSplit, ConditionalContainer, ScrollOffsets
-from .controls import UIControl
+from .controls import UIControl, UIContent
 from .dimension import LayoutDimension
-from .lazyscreen import LazyScreen
 from .margins import ScrollbarMargin
 from .screen import Point, Char
 
@@ -53,9 +52,9 @@ class CompletionsMenuControl(UIControl):
         else:
             return 0
 
-    def create_screen(self, cli, width, height):
+    def create_content(self, cli, width, height):
         """
-        Write the menu to the screen object.
+        Create a UIContent object for this control.
         """
         complete_state = cli.current_buffer.complete_state
         if complete_state:
@@ -76,12 +75,12 @@ class CompletionsMenuControl(UIControl):
                     result += self._get_menu_item_meta_tokens(c, is_current_completion, menu_meta_width)
                 return result
 
-            return LazyScreen(get_line=get_line,
-                              cursor_position=Point(x=0, y=index or 0),
-                              get_line_count=lambda: len(completions),
-                              default_char=Char(' ', self.token))
+            return UIContent(get_line=get_line,
+                             cursor_position=Point(x=0, y=index or 0),
+                             line_count=len(completions),
+                             default_char=Char(' ', self.token))
 
-        return LazyScreen()
+        return UIContent()
 
     def _show_meta(self, complete_state):
         """
@@ -263,9 +262,9 @@ class MultiColumnCompletionMenuControl(UIControl):
 
         return int(math.ceil(len(complete_state.current_completions) / float(column_count)))
 
-    def create_screen(self, cli, width, height):
+    def create_content(self, cli, width, height):
         """
-        Write the menu to the screen object.
+        Create a UIContent object for this menu.
         """
         complete_state = cli.current_buffer.complete_state
         column_width = self._get_column_width(complete_state)
@@ -353,8 +352,7 @@ class MultiColumnCompletionMenuControl(UIControl):
         def get_line(i):
             return tokens_for_line[i]
 
-        return LazyScreen(get_line=get_line,
-                          get_line_count=lambda: len(rows_))
+        return UIContent(get_line=get_line, line_count=len(rows_))
 
     def _get_column_width(self, complete_state):
         """
@@ -472,10 +470,13 @@ class _SelectedCompletionMetaControl(UIControl):
     def preferred_height(self, cli, width, max_available_height):
         return 1
 
-    def create_screen(self, cli, width, height):
-        screen = Screen()
-        screen.write_data(self._get_tokens(cli), width)
-        return screen
+    def create_content(self, cli, width, height):
+        tokens = self._get_tokens()
+
+        def get_line(i):
+            return tokens
+
+        return UIContent(get_line=get_line, line_count=1 if tokens else 0)
 
     def _get_tokens(self, cli):
         token = Token.Menu.Completions.MultiColumnMeta
