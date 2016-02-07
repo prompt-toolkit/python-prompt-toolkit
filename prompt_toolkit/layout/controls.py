@@ -45,7 +45,7 @@ class UIControl(with_metaclass(ABCMeta, object)):
     def preferred_width(self, cli, max_available_width):
         return None
 
-    def preferred_height(self, cli, width, max_available_height):
+    def preferred_height(self, cli, width, max_available_height, wrap_lines):
         return None
 
     def has_focus(self, cli):
@@ -236,7 +236,7 @@ class TokenListControl(UIControl):
         line_lengths = [get_cwidth(l) for l in text.split('\n')]
         return max(line_lengths)
 
-    def preferred_height(self, cli, width, max_available_height):
+    def preferred_height(self, cli, width, max_available_height, wrap_lines):
         content = self.create_content(cli, width, None)
         return content.line_count
 
@@ -458,18 +458,21 @@ class BufferControl(UIControl):
         """
         return None
 
-    def preferred_height(self, cli, width, max_available_height):
+    def preferred_height(self, cli, width, max_available_height, wrap_lines):
         # Calculate the content height, if it was drawn on a screen with the
         # given width.
         height = 0
         content = self.create_content(cli, width, None)
 
+        # When line wrapping is off, the height should be equal to the amount
+        # of lines.
+        if not wrap_lines:
+            return content.line_count
+
         # When the number of lines exceeds the max_available_height, just
         # return max_available_height. No need to calculate anything.
         if content.line_count >= max_available_height:
             return max_available_height
-
-            # TODO: Only when line wrapping is on, expand lines!
 
         for i in range(content.line_count):
             height += content.get_height_for_line(i, width)

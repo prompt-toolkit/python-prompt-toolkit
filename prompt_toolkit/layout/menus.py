@@ -45,7 +45,7 @@ class CompletionsMenuControl(UIControl):
         else:
             return 0
 
-    def preferred_height(self, cli, width, max_available_height):
+    def preferred_height(self, cli, width, max_available_height, wrap_lines):
         complete_state = cli.current_buffer.complete_state
         if complete_state:
             return len(complete_state.current_completions)
@@ -252,7 +252,7 @@ class MultiColumnCompletionMenuControl(UIControl):
             result -= column_width
         return result + self._required_margin
 
-    def preferred_height(self, cli, width, max_available_height):
+    def preferred_height(self, cli, width, max_available_height, wrap_lines):
         """
         Preferred height: as much as needed in order to display all the completions.
         """
@@ -467,7 +467,7 @@ class _SelectedCompletionMetaControl(UIControl):
         else:
             return 0
 
-    def preferred_height(self, cli, width, max_available_height):
+    def preferred_height(self, cli, width, max_available_height, wrap_lines):
         return 1
 
     def create_content(self, cli, width, height):

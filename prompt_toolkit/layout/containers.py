@@ -827,15 +827,15 @@ class Window(Container):
         self.render_info = None
 
     def preferred_width(self, cli, max_available_width):
-        # Width of the margins.
         total_margin_width = sum(m.get_width(cli) for m in
                                  self.left_margins + self.right_margins)
 
-        # Window of the content.
+        # Window of the content. (Can be `None`.)
         preferred_width = self.content.preferred_width(
             cli, max_available_width - total_margin_width)
 
         if preferred_width is not None:
+            # Include width of the margins.
             preferred_width += total_margin_width
 
         # Merge.
@@ -845,9 +845,12 @@ class Window(Container):
             dont_extend=self.dont_extend_width)
 
     def preferred_height(self, cli, width, max_available_height):
+        wrap_lines = self.wrap_lines(cli)
+
         return self._merge_dimensions(
             dimension=self._height(cli),
-            preferred=self.content.preferred_height(cli, width, max_available_height),
+            preferred=self.content.preferred_height(
+                cli, width, max_available_height, wrap_lines),
             dont_extend=self.dont_extend_height)
 
     @staticmethod
