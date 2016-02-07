@@ -585,7 +585,7 @@ class WindowRenderInfo(object):
     """
     def __init__(self, ui_content, horizontal_scroll, vertical_scroll,
                  window_width, window_height, cursor_position,
-                 configured_scroll_offsets, applied_scroll_offsets,
+                 configured_scroll_offsets,
                  visible_line_to_row_col, wrap_lines):
         assert isinstance(ui_content, UIContent)
 
@@ -596,13 +596,25 @@ class WindowRenderInfo(object):
 
         self.cursor_position = cursor_position
         self.configured_scroll_offsets = configured_scroll_offsets
-        self.applied_scroll_offsets = applied_scroll_offsets
         self.visible_line_to_row_col = visible_line_to_row_col
         self.wrap_lines = wrap_lines
 
         self.visible_line_to_input_line = dict(
             (visible_line, rowcol[0])
             for visible_line, rowcol in visible_line_to_row_col.items())
+
+    @property
+    def applied_scroll_offsets(self):
+        x, y = self.cursor_position.x, self.cursor_position.y
+
+        return ScrollOffsets(
+            top=max(y - self.vertical_scroll, self.configured_scroll_offsets.top),
+            bottom=min(self.displayed_lines[-1] - y, self.configured_scroll_offsets.bottom),
+
+            # For left/right, it probably doesn't make sense to return something.
+            # (We would have to calculate the widths of all the lines and keep
+            # double width characters in mind.)
+            left=0, right=0)
 
     @property
     def displayed_lines(self):
@@ -916,7 +928,7 @@ class Window(Container):
         wrap_lines = self.wrap_lines(cli)
         scroll_func = self._scroll_when_linewrapping if wrap_lines else self._scroll_without_linewrapping
 
-        applied_scroll_offsets = scroll_func(
+        scroll_func(
             ui_content, write_position.width - total_margin_width, write_position.height, cli)
 
         # Write body
@@ -937,7 +949,6 @@ class Window(Container):
             cursor_position=Point(y=ui_content.cursor_position.y - self.vertical_scroll,
                                   x=ui_content.cursor_position.x - self.horizontal_scroll),
             configured_scroll_offsets=self.scroll_offsets,
-            applied_scroll_offsets=applied_scroll_offsets,
             visible_line_to_row_col=visible_line_to_row_col,
             wrap_lines=wrap_lines)
 
@@ -1057,7 +1068,7 @@ class Window(Container):
                             new_buffer_row = new_buffer[y + ypos]
 
                             if y >= write_position.height:
-                                return  y # Break out of all for loops.
+                                return y  # Break out of all for loops.
 
                         # Set character in screen and shift 'x'.
                         if x >= 0 and x < write_position.width:
@@ -1117,7 +1128,7 @@ class Window(Container):
         Scroll to make sure the cursor position is visible and that we maintain
         the requested scroll offset.
 
-        Set `self.horizontal_scroll/vertical_scroll` and return the applied scroll offsets.
+        Set `self.horizontal_scroll/vertical_scroll`.
         """
         def get_min_vertical_scroll():
             # Make sure that the cursor line is not below the bottom.
@@ -1140,28 +1151,23 @@ class Window(Container):
 
         # Scroll vertically. (Make sure that the whole line which contains the
         # cursor is visible.
-        max_vertical_scroll = ui_content.cursor_position.y
-        min_vertical_scroll = get_min_vertical_scroll()
+        max_vertical_scroll = max(0, ui_content.cursor_position.y - self.scroll_offsets.top)
+        min_vertical_scroll = min(ui_content.cursor_position.y, get_min_vertical_scroll() + self.scroll_offsets.bottom)
 
         self.vertical_scroll = min(self.vertical_scroll, max_vertical_scroll)
-        #if min_vertical_scroll:
         self.vertical_scroll = max(self.vertical_scroll, min_vertical_scroll)
 
-        # TODO: take offsets into account.
-        # TODO: implement: self.allow_scroll_beyond_bottom
+        # TODO: implement: self.allow_scroll_beyond_bottom!
 
         # We don't have horizontal scrolling.
         self.horizontal_scroll = 0
-
-        applied_scroll_offsets = ScrollOffsets(top=0, bottom=0, left=0, right=0)
-        return applied_scroll_offsets
 
     def _scroll_without_linewrapping(self, ui_content, width, height, cli):
         """
         Scroll to make sure the cursor position is visible and that we maintain
         the requested scroll offset.
 
-        Set `self.horizontal_scroll/vertical_scroll` and return the applied scroll offsets.
+        Set `self.horizontal_scroll/vertical_scroll`.
         """
         cursor_position = ui_content.cursor_position or Point(0, 0)
         try:
@@ -1196,11 +1202,7 @@ class Window(Container):
             if current_scroll < (cursor_pos + 1) - window_size + scroll_offset_end:
                 current_scroll = (cursor_pos + 1) - window_size + scroll_offset_end
 
-            # Calculate the applied scroll offset. This value can be lower than what we had.
-            scroll_offset_start = max(0, min(current_scroll, scroll_offset_start))
-            scroll_offset_end = max(0, min(content_size - current_scroll - window_size, scroll_offset_end))
-
-            return current_scroll, scroll_offset_start, scroll_offset_end
+            return current_scroll
 
         # When a preferred scroll is given, take that first into account.
         if self.get_vertical_scroll:
@@ -1214,7 +1216,7 @@ class Window(Container):
         # remains visible.
         offsets = self.scroll_offsets
 
-        self.vertical_scroll, scroll_offset_top, scroll_offset_bottom = do_scroll(
+        self.vertical_scroll = do_scroll(
             current_scroll=self.vertical_scroll,
             scroll_offset_start=offsets.top,
             scroll_offset_end=offsets.bottom,
@@ -1222,21 +1224,13 @@ class Window(Container):
             window_size=height,
             content_size=ui_content.line_count)
 
-        self.horizontal_scroll, scroll_offset_left, scroll_offset_right = do_scroll(
+        self.horizontal_scroll = do_scroll(
             current_scroll=self.horizontal_scroll,
             scroll_offset_start=offsets.left,
             scroll_offset_end=offsets.right,
             cursor_pos=ui_content.cursor_position.x,
             window_size=width,
             content_size=get_cwidth(current_line_text))
-
-        applied_scroll_offsets = ScrollOffsets(
-            top=scroll_offset_top,
-            bottom=scroll_offset_bottom,
-            left=scroll_offset_left,
-            right=scroll_offset_right)
-
-        return applied_scroll_offsets
 
     def _mouse_handler(self, cli, mouse_event):
         """
