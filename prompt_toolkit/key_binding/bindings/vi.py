@@ -1042,7 +1042,7 @@ def load_vi_bindings(registry, get_vi_state, enable_visual_key=Always(), get_sea
         w.vertical_scroll = b.document.cursor_position_row
 
     @handle('z', '-', filter=navigation_mode|selection_mode)
-    @handle('z', 'b', filter=navigation_mode|selection_mode)  # XXX: fix this.
+    @handle('z', 'b', filter=navigation_mode|selection_mode)
     def _(event):
         """
         Scrolls the window to makes the current line the last line in the visible region.
@@ -1054,22 +1054,32 @@ def load_vi_bindings(registry, get_vi_state, enable_visual_key=Always(), get_sea
         # again.
         w.vertical_scroll = 0
 
-    @handle('z', 'z', filter=navigation_mode|selection_mode)  # XXX: fix this. Maybe move to scroll bindings??
+    @handle('z', 'z', filter=navigation_mode|selection_mode)
     def _(event):
         """
         Center Window vertically around cursor.
         """
         w = find_window_for_buffer_name(event.cli, event.cli.current_buffer_name)
         b = event.cli.current_buffer
+        info = w.render_info
 
-        if w and w.render_info:
+        if w and info:
             # Calculate the offset that we need in order to position the row
             # containing the cursor in the center.
-            cursor_position_row = b.document.cursor_position_row
+            scroll_height = info.window_height // 2
 
-            render_row = w.render_info.input_line_to_screen_line.get(cursor_position_row)
-            if render_row is not None:
-                w.vertical_scroll = max(0, int(render_row - w.render_info.window_height / 2))
+            y = max(0, b.document.cursor_position_row - 1)
+            height = 0
+            while y > 0:
+                line_height = info.get_height_for_line(y)
+
+                if height + line_height < scroll_height:
+                    height += line_height
+                    y -= 1
+                else:
+                    break
+
+            w.vertical_scroll = y
 
     @change_delete_move_yank_handler('%')
     def _(event):

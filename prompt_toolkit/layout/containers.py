@@ -702,7 +702,7 @@ class WindowRenderInfo(object):
         (The height that it would take, if this line became visible.)
         """
         if self.wrap_lines:
-            self.ui_content.get_height_for_line(lineno, self.window_width)
+            return self.ui_content.get_height_for_line(lineno, self.window_width)
         else:
             return 1
 

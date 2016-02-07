@@ -46,10 +46,7 @@ def scroll_forward(event, half=False):
         y = b.document.cursor_position_row + 1
         height = 0
         while y < ui_content.line_count:
-            if info.wrap_lines:
-                line_height = ui_content.get_height_for_line(y, info.window_width)
-            else:
-                line_height = 1
+            line_height = info.get_height_for_line(y)
 
             if height + line_height < scroll_height:
                 height += line_height
