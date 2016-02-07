@@ -56,7 +56,8 @@ DEFAULT_STYLE_EXTENSIONS = {
     Token.Toolbar.Completions.Completion.Current: 'bg:#444444 #ffffff',
 
     # Completions menu.
-    Token.Menu.Completions.Completion:            'bg:#bbbbbb #000000',
+    Token.Menu.Completions:                       'bg:#bbbbbb #000000',
+    Token.Menu.Completions.Completion:            '',
     Token.Menu.Completions.Completion.Current:    'bg:#888888 #ffffff',
     Token.Menu.Completions.Meta:                  'bg:#999999 #000000',
     Token.Menu.Completions.Meta.Current:          'bg:#aaaaaa #000000',

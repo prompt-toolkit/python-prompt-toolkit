@@ -471,7 +471,7 @@ class _SelectedCompletionMetaControl(UIControl):
         return 1
 
     def create_content(self, cli, width, height):
-        tokens = self._get_tokens()
+        tokens = self._get_tokens(cli)
 
         def get_line(i):
             return tokens

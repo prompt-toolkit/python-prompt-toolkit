@@ -575,19 +575,21 @@ class WindowRenderInfo(object):
     (Could be used for implementation of the Vi 'H' and 'L' key bindings as
     well as implementing mouse support.)
 
-    :param original_screen: The original full screen instance that contains the
-                            whole input, without clipping. (ui_content)
+    :param ui_content: The original :class:`.UIContent` instance that contains
+        the whole input, without clipping. (ui_content)
     :param horizontal_scroll: The horizontal scroll of the :class:`.Window` instance.
     :param vertical_scroll: The vertical scroll of the :class:`.Window` instance.
     :param height: The height that was used for the rendering.
     :param cursor_position: `Point` instance. Where the cursor is currently
                             shown, relative to the window.
     """
-    def __init__(self, original_screen, horizontal_scroll, vertical_scroll,
+    def __init__(self, ui_content, horizontal_scroll, vertical_scroll,
                  window_width, window_height, cursor_position,
                  configured_scroll_offsets, applied_scroll_offsets,
                  visible_line_to_row_col, wrap_lines):
-        self.original_screen = original_screen  # TODO: Rename!!!
+        assert isinstance(ui_content, UIContent)
+
+        self.ui_content = ui_content
         self.vertical_scroll = vertical_scroll
         self.window_width = window_width  # Width without margins.
         self.window_height = window_height
@@ -660,7 +662,7 @@ class WindowRenderInfo(object):
         """
         The full height of the user control.
         """
-        return self.original_screen.line_count
+        return self.ui_content.line_count
 
     @property
     def full_height_visible(self):
@@ -917,7 +919,7 @@ class Window(Container):
 
         # Remember render info. (Set before generating the margins. They need this.)
         self.render_info = WindowRenderInfo(
-            original_screen=ui_content,
+            ui_content=ui_content,
             horizontal_scroll=self.horizontal_scroll,
             vertical_scroll=self.vertical_scroll,
             window_width=write_position.width - total_margin_width,
