@@ -103,22 +103,23 @@ class UIContent(object):
     :param line_count: The number of lines.
     :param cursor_position: a :class:`.Point` for the cursor position.
     :param menu_position: a :class:`.Point` for the menu position.
+    :param show_cursor: Make the cursor visible.
     :param default_char: The default :class:`.Char` for filling the background.
     """
     def __init__(self, get_line=None, line_count=0,
-                 cursor_position=None, menu_position=None, default_char=None):
+                 cursor_position=None, menu_position=None, show_cursor=True,
+                 default_char=None):
         assert callable(get_line)
         assert isinstance(line_count, int)
         assert cursor_position is None or isinstance(cursor_position, Point)
         assert menu_position is None or isinstance(menu_position, Point)
         assert default_char is None or isinstance(default_char, Char)
 
-        self.get_line = get_line  # TODO: cache here??? Instead of elsewhere...
+        self.get_line = get_line
         self.line_count = line_count
-
         self.cursor_position = cursor_position or Point(0, 0)
         self.menu_position = menu_position
-
+        self.show_cursor = show_cursor
         self.default_char = default_char
 
         # Cache for line heights. Maps (lineno, width) -> height.

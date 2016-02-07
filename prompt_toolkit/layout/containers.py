@@ -1081,7 +1081,7 @@ class Window(Container):
         if has_focus and ui_content.cursor_position:
             new_screen.cursor_position = cursor_pos_to_screen_pos(
                     ui_content.cursor_position.y, ui_content.cursor_position.x)
-            new_screen.show_cursor = True
+            new_screen.show_cursor = ui_content.show_cursor
 
         if not new_screen.menu_position and ui_content.menu_position:
             new_screen.menu_position = cursor_pos_to_screen_pos(
