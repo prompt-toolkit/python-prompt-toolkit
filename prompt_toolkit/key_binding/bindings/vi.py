@@ -1042,7 +1042,7 @@ def load_vi_bindings(registry, get_vi_state, enable_visual_key=Always(), get_sea
         w.vertical_scroll = b.document.cursor_position_row
 
     @handle('z', '-', filter=navigation_mode|selection_mode)
-    @handle('z', 'b', filter=navigation_mode|selection_mode)
+    @handle('z', 'b', filter=navigation_mode|selection_mode)  # XXX: fix this.
     def _(event):
         """
         Scrolls the window to makes the current line the last line in the visible region.

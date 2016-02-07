@@ -696,6 +696,16 @@ class WindowRenderInfo(object):
         else:
             return (100 * self.vertical_scroll // self.content_height)
 
+    def get_height_for_line(self, lineno):
+        """
+        Return the height of the given line.
+        (The height that it would take, if this line became visible.)
+        """
+        if self.wrap_lines:
+            self.ui_content.get_height_for_line(lineno, self.window_width)
+        else:
+            return 1
+
 
 class ScrollOffsets(object):
     """

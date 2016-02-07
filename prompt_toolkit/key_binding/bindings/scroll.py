@@ -80,10 +80,7 @@ def scroll_backward(event, half=False):
         y = max(0, b.document.cursor_position_row - 1)
         height = 0
         while y > 0:
-            if info.wrap_lines:
-                line_height = ui_content.get_height_for_line(y, info.window_width)
-            else:
-                line_height = 1
+            line_height = info.get_height_for_line(y)
 
             if height + line_height < scroll_height:
                 height += line_height
@@ -156,10 +153,10 @@ def scroll_page_down(event):
 
     if w and w.render_info:
         # Scroll down one page.
-        top_line_index = max(w.render_info.last_visible_line(), w.vertical_scroll + 1)
-        w.vertical_scroll = top_line_index
+        line_index = max(w.render_info.last_visible_line(), w.vertical_scroll + 1)
+        w.vertical_scroll = line_index
 
-        b.cursor_position = b.document.translate_row_col_to_index(top_line_index, 0)
+        b.cursor_position = b.document.translate_row_col_to_index(line_index, 0)
         b.cursor_position += b.document.get_start_of_line_position(after_whitespace=True)
 
 
@@ -167,26 +164,19 @@ def scroll_page_up(event):
     """
     Scroll page up. (Prefer the cursor at the bottom of the page, after scrolling.)
     """
-            # TODO: get line by line, measure the height of each. Go up until a whole page is filled.
-
     w = _current_window_for_event(event)
+    info = w.render_info
     b = event.cli.current_buffer
 
     if w and w.render_info:
-        # Scroll in a way that the line which is currently at the top will be
-        # displayed at the bottom. The cursor should always be visible at the bottom.
-        # XXX
+        # Put cursor at the first visible line. (But make sure that the cursor
+        # moves at least one line up.)
+        line_index = max(0, min(w.render_info.first_visible_line(),
+                                b.document.cursor_position_row - 1))
 
-        # Scroll down one page.
-        w.vertical_scroll = max(0, w.vertical_scroll - w.render_info.window_height)
-
-        # Put cursor at the bottom of the visible region.
-        try:
-            new_document_line = w.render_info.screen_line_to_input_line[
-                w.vertical_scroll + w.render_info.window_height - 1]
-        except KeyError:
-            new_document_line = 0
-
-        b.cursor_position = min(b.cursor_position,
-                                b.document.translate_row_col_to_index(new_document_line, 0))
+        b.cursor_position = b.document.translate_row_col_to_index(line_index, 0)
         b.cursor_position += b.document.get_start_of_line_position(after_whitespace=True)
+
+        # Set the scroll offset. We can safely set it to zero; the Window will
+        # make sure that it scrolls at least until the cursor becomes visible.
+        w.vertical_scroll = 0
