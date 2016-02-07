@@ -594,7 +594,7 @@ class WindowRenderInfo(object):
         self.window_width = window_width  # Width without margins.
         self.window_height = window_height
 
-        self.cursor_position = cursor_position
+        self.cursor_position = cursor_position  # XXX: what is this cursor position? it doesn't work when line wrapping is on.
         self.configured_scroll_offsets = configured_scroll_offsets
         self.visible_line_to_row_col = visible_line_to_row_col
         self.wrap_lines = wrap_lines
@@ -625,20 +625,12 @@ class WindowRenderInfo(object):
         return sorted(row for row, col in self.visible_line_to_row_col.values())
 
     @property
-    def input_line_to_screen_line(self):  # TODO: do we need this...?
-        """
-        Return a dictionary mapping the line numbers of the screen to the one
-        of the input buffer.
-        """
-        return self.visible_line_to_input_line
-
-    @property
-    def screen_line_to_input_line(self):
+    def screen_line_to_input_line(self):  # XXX: do we use this??
         """
         Return the dictionary mapping the line numbers of the input buffer to
         the lines of the screen.
         """
-        return dict((v, k) for k, v in self.input_line_to_screen_line.items())
+        return dict((v, k) for k, v in self.visible_line_to_input_line.items())
 
     def first_visible_line(self, after_scroll_offset=False):
         """
