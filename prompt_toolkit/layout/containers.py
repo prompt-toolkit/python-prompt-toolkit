@@ -914,7 +914,7 @@ class Window(Container):
 
         # Scroll content.
         wrap_lines = self.wrap_lines(cli)
-        scroll_func = self._scroll_when_linewrapping if wrap_lines else self._scroll
+        scroll_func = self._scroll_when_linewrapping if wrap_lines else self._scroll_without_linewrapping
 
         applied_scroll_offsets = scroll_func(
             ui_content, write_position.width - total_margin_width, write_position.height, cli)
@@ -1114,6 +1114,10 @@ class Window(Container):
 
     def _scroll_when_linewrapping(self, ui_content, width, height, cli):
         """
+        Scroll to make sure the cursor position is visible and that we maintain
+        the requested scroll offset.
+
+        Set `self.horizontal_scroll/vertical_scroll` and return the applied scroll offsets.
         """
         def get_min_vertical_scroll():
             # Make sure that the cursor line is not below the bottom.
@@ -1152,11 +1156,12 @@ class Window(Container):
         applied_scroll_offsets = ScrollOffsets(top=0, bottom=0, left=0, right=0)
         return applied_scroll_offsets
 
-    def _scroll(self, ui_content, width, height, cli):
+    def _scroll_without_linewrapping(self, ui_content, width, height, cli):
         """
-        Scroll to make sure the cursor position is visible and that we maintain the
-        requested scroll offset.
-        Return the applied scroll offsets.
+        Scroll to make sure the cursor position is visible and that we maintain
+        the requested scroll offset.
+
+        Set `self.horizontal_scroll/vertical_scroll` and return the applied scroll offsets.
         """
         cursor_position = ui_content.cursor_position or Point(0, 0)
         try:
