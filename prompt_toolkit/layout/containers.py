@@ -599,9 +599,11 @@ class WindowRenderInfo(object):
         self.visible_line_to_row_col = visible_line_to_row_col
         self.wrap_lines = wrap_lines
 
-        self.visible_line_to_input_line = dict(
+    @property
+    def visible_line_to_input_line(self):
+        return dict(
             (visible_line, rowcol[0])
-            for visible_line, rowcol in visible_line_to_row_col.items())
+            for visible_line, rowcol in self.visible_line_to_row_col.items())
 
     @property
     def applied_scroll_offsets(self):

@@ -214,14 +214,15 @@ class PromptMargin(Margin):
             tokens2 = []
 
         show_numbers = self.show_numbers(cli)
-        visible_line_to_input_line = window_render_info.visible_line_to_input_line
+        last_y = None
 
-        for y in range(1, min(window_render_info.content_height, height)):
+        for y in window_render_info.displayed_lines[1:]:
             tokens.append((Token, '\n'))
             if show_numbers:
-                line_number = visible_line_to_input_line.get(y) or 0
-                tokens.append((Token.LineNumber, ('%i ' % (line_number + 1)).rjust(width)))
+                if y != last_y:
+                    tokens.append((Token.LineNumber, ('%i ' % (y + 1)).rjust(width)))
             else:
                 tokens.extend(tokens2)
+            last_y = y
 
         return tokens
