@@ -215,7 +215,7 @@ def create_prompt_layout(message='', lexer=None, is_password=False,
     # backwards-compatibility.)
     try:
         if pygments_Lexer and issubclass(lexer, pygments_Lexer):
-            lexer = PygmentsLexer(lexer)
+            lexer = PygmentsLexer(lexer, sync_from_start=True)
     except TypeError: # Happens when lexer is `None` or an instance of something else.
         pass
 

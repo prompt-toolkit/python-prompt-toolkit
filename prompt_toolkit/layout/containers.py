@@ -605,11 +605,15 @@ class WindowRenderInfo(object):
 
     @property
     def applied_scroll_offsets(self):
-        # Get row where the cursor is displayed.
-        y = self.screen_line_to_input_line[self.ui_content.cursor_position.y]
+        if self.displayed_lines[0] == 0:
+            top = 0
+        else:
+            # Get row where the cursor is displayed.
+            y = self.screen_line_to_input_line[self.ui_content.cursor_position.y]
+            top = min(y, self.configured_scroll_offsets.top)
 
         return ScrollOffsets(
-            top=min(y, self.configured_scroll_offsets.top),
+            top=top,
             bottom=min(self.ui_content.line_count - self.displayed_lines[-1] - 1,
                        self.configured_scroll_offsets.bottom),
 

@@ -10,10 +10,16 @@ from prompt_toolkit.token import Token
 from prompt_toolkit.filters import to_cli_filter
 from .utils import split_lines
 
+import re
+import six
+
 __all__ = (
     'Lexer',
     'SimpleLexer',
     'PygmentsLexer',
+    'SyntaxSync',
+    'SyncFromStart',
+    'RegexSync',
 )
 
 
@@ -48,11 +54,100 @@ class SimpleLexer(Lexer):
         return get_line
 
 
+class SyntaxSync(with_metaclass(ABCMeta, object)):
+    """
+    Syntax synchroniser. This is a tool that finds a start position for the
+    lexer. This is especially important when editing big documents; we don't
+    want to start the highlighting by running the lexer from the beginning of
+    the file. That is very slow when editing.
+    """
+    @abstractmethod
+    def get_sync_start_position(self, document, lineno):
+        """
+        Return the start position as a (row, column) tuple for the given line number.
+
+        :param document: `Document` instance that contains all the lines.
+        :param lineno: The line that we want to highlight. (We need to return
+            this line, or an earlier position.)
+        """
+
+class SyncFromStart(SyntaxSync):
+    """
+    Always start the syntax highlighting from the beginning.
+    """
+    def get_sync_start_position(self, document, lineno):
+        return 0, 0
+
+
+class RegexSync(SyntaxSync):
+    """
+    Synchronize by starting at a line that matches the given regex pattern.
+    """
+    # Never go more than this amount of lines backwards for synchronisation.
+    # That would be too CPU intensive.
+    MAX_BACKWARDS = 500
+
+    def __init__(self, pattern):
+        assert isinstance(pattern, six.text_type)
+        self._compiled_pattern = re.compile(pattern)
+
+    def get_sync_start_position(self, document, lineno):
+        " Scan backwards, and find a possible position to start. "
+        pattern = self._compiled_pattern
+        lines = document.lines
+
+        # Scan upwards, until we find a point where we can start the syntax
+        # synchronisation.
+        for i in range(lineno, max(-1, lineno - self.MAX_BACKWARDS), -1):
+            match = pattern.match(lines[i])
+            if match:
+                return i, match.start()
+
+        # No synchronisation point found. Just try to start at the current line.
+        return lineno, 0
+
+    @classmethod
+    def from_pygments_lexer_cls(cls, lexer_cls):
+        """
+        Create a :class:`.RegexSync` instance for this Pygments lexer class.
+        """
+        patterns = {
+            # For Python, start highlighting at any class/def block.
+            'Python':   r'^\s*(class|def)\s+',
+            'Python 3': r'^\s*(class|def)\s+',
+
+            # For HTML, start at any open/close tag definition.
+            'HTML': r'<[/a-zA-Z]',
+
+            # For javascript, start at a function.
+            'JavaScript': r'\bfunction\b'
+
+            # TODO: Add definitions for other languages.
+            #       By default, we start at every possible line.
+        }
+        p = patterns.get(lexer_cls.name, '^')
+        return cls(p)
+
+
 class PygmentsLexer(Lexer):
     """
     Lexer that calls a pygments lexer.
     """
-    def __init__(self, pygments_lexer_cls, sync_from_start=False):
+    # Minimum amount of lines to go backwards when starting the parser.
+    # This is important when the lines are retrieved in reverse order, or when
+    # scrolling upwards. (Due to the complexity of calculating the vertical
+    # scroll offset in the `Window` class, lines are not always retrieved in
+    # order.)
+    MIN_LINES_BACKWARDS = 50
+
+    # When a parser was started this amount of lines back, read the parser
+    # until we get the current line. Otherwise, start a new parser.
+    # (This should probably be bigger than MIN_LINES_BACKWARDS.)
+    REUSE_GENERATOR_MAX_DISTANCE = 100
+
+    def __init__(self, pygments_lexer_cls, sync_from_start=False, syntax_sync=None):
+        assert syntax_sync is None or isinstance(syntax_sync, SyntaxSync)
+
         self.pygments_lexer_cls = pygments_lexer_cls
         self.sync_from_start = to_cli_filter(sync_from_start)
 
@@ -61,6 +156,9 @@ class PygmentsLexer(Lexer):
             stripnl=False,
             stripall=False,
             ensurenl=False)
+
+        # Create syntax sync instance.
+        self.syntax_sync = syntax_sync or RegexSync.from_pygments_lexer_cls(pygments_lexer_cls)
 
     @classmethod
     def from_filename(cls, filename, sync_from_start=False):
@@ -78,45 +176,83 @@ class PygmentsLexer(Lexer):
             return cls(pygments_lexer.__class__, sync_from_start=sync_from_start)
 
     def lex_document(self, cli, document):
-        from_start = self.sync_from_start(cli)
-
+        """
+        Create a lexer function that takes a line number and returns the list
+        of (Token, text) tuples as the Pygments lexer returns for that line.
+        """
         # Cache of already lexed lines.
         cache = {}
 
         # Pygments generators that are currently lexing.
         line_generators = {}  # Map lexer generator to the line number.
 
-        def create_line_generator(start_lineno):
+        def get_syntax_sync():
+            " The Syntax synchronisation objcet that we currently use. "
+            if self.sync_from_start(cli):
+                return SyncFromStart()
+            else:
+                return self.syntax_sync
+
+        def find_closest_generator(i):
+            " Return a generator close to line 'i', or None if none was fonud. "
+            for generator, lineno in line_generators.items():
+                if lineno < i and i - lineno < self.REUSE_GENERATOR_MAX_DISTANCE:
+                    return generator
+
+        def create_line_generator(start_lineno, column=0):
             """
             Create a generator that yields the lexed lines.
             Each iteration it yields a (line_number, [(token, text), ...]) tuple.
             """
-            text = '\n'.join(document.lines[start_lineno:])
-            return enumerate(split_lines(self.pygments_lexer.get_tokens(text)), start_lineno)
+            text = '\n'.join(document.lines[start_lineno:])[column:]
+            return enumerate(split_lines(self.pygments_lexer.get_tokens(text)),
+                                  start_lineno)
+
+        def get_generator(i):
+            """
+            Find an already started generator that is close, or create a new one.
+            """
+            # Find closest line generator.
+            generator = find_closest_generator(i)
+            if generator:
+                return generator
+
+            # No generator found. Determine starting point for the syntax
+            # synchronisation first.
+
+            # Go at least x lines back. (Make scrolling upwards more
+            # efficient.)
+            i = max(0, i - self.MIN_LINES_BACKWARDS)
+
+            if i == 0:
+                row = 0
+                column = 0
+            else:
+                row, column = get_syntax_sync().get_sync_start_position(document, i)
+
+            # Find generator close to this point, or otherwise create a new one.
+            generator = find_closest_generator(i)
+            if generator:
+                return generator
+            else:
+                generator = create_line_generator(row, column)
+
+            # If the column is not 0, ignore the first line. (Which is
+            # incomplete. This happens when the synchronisation algorithm tells
+            # us to start parsing in the middle of a line.)
+            if column:
+                next(generator)
+                row += 1
+
+            line_generators[generator] = row
+            return generator
 
         def get_line(i):
             " Return the tokens for a given line number. "
             try:
                 return cache[i]
             except KeyError:
-                # Find closest line generator.
-                if from_start:
-                    if line_generators:
-                        return line_generators.keys()[0]
-                    else:
-                        generator = create_line_generator(0)
-                        line_generators[generator] = 0
-                else:
-                    for generator, lineno in line_generators.items():
-                        if lineno < i and i - lineno < 100:
-                            break
-                    else:
-                        # Go at least 200 lines back. (Make scrolling upwards
-                        # more efficient.)
-                        startpos = max(0, i - 200)
-
-                        generator = create_line_generator(startpos)
-                        line_generators[generator] = startpos
+                generator = get_generator(i)
 
                 # Exhaust the generator, until we find the requested line.
                 for num, line in generator:
