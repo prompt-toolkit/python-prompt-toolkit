@@ -24,9 +24,14 @@ class Margin(with_metaclass(ABCMeta, object)):
     Base interface for a margin.
     """
     @abstractmethod
-    def get_width(self, cli):
+    def get_width(self, cli, get_ui_content):
         """
         Return the width that this margin is going to consume.
+
+        :param cli: :class:`.CommandLineInterface` instance.
+        :param get_ui_content: Callable that asks the user control to create
+            a :class:`.UIContent` instance. This can be used for instance to
+            obtain the number of lines.
         """
         return 0
 
@@ -36,6 +41,7 @@ class Margin(with_metaclass(ABCMeta, object)):
         Creates a margin.
         This should return a list of (Token, text) tuples.
 
+        :param cli: :class:`.CommandLineInterface` instance.
         :param window_render_info:
             :class:`~prompt_toolkit.layout.containers.WindowRenderInfo`
             instance, generated after rendering and copying the visible part of
@@ -53,32 +59,15 @@ class NumberredMargin(Margin):
     """
     Margin that displays the line numbers.
 
-    :param buffer_name: The name of the buffer. This is recommended if the
-        margin is used together with a
-        :class:`~prompt_toolkit.layout.controls.BufferControl` inside a
-        :class:`~prompt_toolkit.layout.containers.Window`. That way, we can
-        predict the width of this margin (the amount of decimals) according to
-        the number of lines in the buffer.
-    :param width: If no buffer name is given, width can be used to set a fixed
-        width.
     :param relative: Number relative to the cursor position. Similar to the Vi
                      'relativenumber' option.
     """
-    def __init__(self, buffer_name=None, width=None, relative=False):
-        assert buffer_name or width
-
-        self.buffer_name = buffer_name
-        self.width = width
+    def __init__(self, relative=False):
         self.relative = to_cli_filter(relative)
 
-    def get_width(self, cli):
-        if self.width is not None:
-            # Fixed width.
-            return self.width
-        else:
-            # Width determined by the amount of lines in the buffer.
-            document = cli.buffers[self.buffer_name].document
-            return max(3, len('%s' % document.line_count) + 1)
+    def get_width(self, cli, get_ui_content):
+        line_count = get_ui_content().line_count
+        return max(3, len('%s' % line_count) + 1)
 
     def create_margin(self, cli, window_render_info, width, height):
         visible_line_to_input_line = window_render_info.visible_line_to_input_line
@@ -88,13 +77,7 @@ class NumberredMargin(Margin):
         token_current = Token.LineNumber.Current
 
         # Get current line number.
-        if self.buffer_name:
-            # (BufferControl will only have a cursor position when the buffer
-            # has the focus, so this is a better way to know the current line.)
-            document = cli.buffers[self.buffer_name].document
-            current_lineno = document.cursor_position_row
-        else:
-            current_lineno = visible_line_to_input_line.get(window_render_info.cursor_position.y) or 0
+        current_lineno = window_render_info.ui_content.cursor_position.y
 
         # Construct margin.
         result = []
@@ -102,8 +85,11 @@ class NumberredMargin(Margin):
         for y in range(window_render_info.window_height):
             line_number = visible_line_to_input_line.get(y)
 
-            if line_number is not None:
-                if line_number == current_lineno:
+            # Only display line number if this line is not a continuation of the previous line.
+            if y == 0 or visible_line_to_input_line.get(y - 1) != line_number:
+                if line_number is None:
+                    pass
+                elif line_number == current_lineno:
                     # Current line.
                     if relative:
                         # Left align current number in relative mode.
@@ -132,9 +118,9 @@ class ConditionalMargin(Margin):
         self.margin = margin
         self.filter = to_cli_filter(filter)
 
-    def get_width(self, cli):
+    def get_width(self, cli, ui_content):
         if self.filter(cli):
-            return self.margin.get_width(cli)
+            return self.margin.get_width(cli, ui_content)
         else:
             return 0
 
@@ -149,7 +135,7 @@ class ScrollbarMargin(Margin):
     """
     Margin displaying a scrollbar.
     """
-    def get_width(self, cli):
+    def get_width(self, cli, ui_content):
         return 1
 
     def create_margin(self, cli, window_render_info, width, height):
@@ -211,7 +197,7 @@ class PromptMargin(Margin):
         self.get_continuation_tokens = get_continuation_tokens
         self.show_numbers = show_numbers
 
-    def get_width(self, cli):
+    def get_width(self, cli, ui_content):
         " Width to report to the `Window`. "
         # Take the width from the first line.
         text = ''.join(t[1] for t in self.get_prompt_tokens(cli))

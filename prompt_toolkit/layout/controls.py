@@ -21,6 +21,7 @@ from .processors import Processor
 from .screen import Char, Point
 from .utils import token_list_width, split_lines, token_list_to_text
 
+import six
 import time
 
 
@@ -108,7 +109,7 @@ class UIContent(object):
                  cursor_position=None, menu_position=None, show_cursor=True,
                  default_char=None):
         assert callable(get_line)
-        assert isinstance(line_count, int)
+        assert isinstance(line_count, six.integer_types)
         assert cursor_position is None or isinstance(cursor_position, Point)
         assert menu_position is None or isinstance(menu_position, Point)
         assert default_char is None or isinstance(default_char, Char)
