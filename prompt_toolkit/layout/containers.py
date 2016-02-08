@@ -1067,6 +1067,9 @@ class Window(Container):
                 new_buffer_row = new_buffer[y]
                 for x in range(xpos, xpos + width):
                     new_buffer_row[x] = default_char
+            default_token = default_char.token
+        else:
+            default_token = Token
 
         # Copy content.
         def copy():
@@ -1077,7 +1080,7 @@ class Window(Container):
                 # Take the next line and copy it in the real screen.
                 # (Always add a space to each line, because that's a place
                 # where the cursor position can be.)
-                line = ui_content.get_line(lineno) + [(ui_content.default_char.token, ' ')]
+                line = ui_content.get_line(lineno) + [(default_token, ' ')]
 
                 col = 0
                 x = -horizontal_scroll
