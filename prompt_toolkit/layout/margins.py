@@ -62,8 +62,9 @@ class NumberredMargin(Margin):
     :param relative: Number relative to the cursor position. Similar to the Vi
                      'relativenumber' option.
     """
-    def __init__(self, relative=False):
+    def __init__(self, relative=False, show_tildes=False):
         self.relative = to_cli_filter(relative)
+        self.show_tildes = to_cli_filter(show_tildes)
 
     def get_width(self, cli, get_ui_content):
         line_count = get_ui_content().line_count
@@ -72,6 +73,7 @@ class NumberredMargin(Margin):
     def create_margin(self, cli, window_render_info, width, height):
         visible_line_to_input_line = window_render_info.visible_line_to_input_line
         relative = self.relative(cli)
+        show_tildes = self.show_tildes(cli)
 
         token = Token.LineNumber
         token_current = Token.LineNumber.Current
@@ -81,29 +83,35 @@ class NumberredMargin(Margin):
 
         # Construct margin.
         result = []
+        last_lineno = None
 
-        for y in range(window_render_info.window_height):
-            line_number = visible_line_to_input_line.get(y)
-
+        for y, lineno in enumerate(window_render_info.displayed_lines):
             # Only display line number if this line is not a continuation of the previous line.
-            if y == 0 or visible_line_to_input_line.get(y - 1) != line_number:
-                if line_number is None:
+            if lineno != last_lineno:
+                if lineno is None:
                     pass
-                elif line_number == current_lineno:
+                elif lineno == current_lineno:
                     # Current line.
                     if relative:
                         # Left align current number in relative mode.
-                        result.append((token_current, '%i' % (line_number + 1)))
+                        result.append((token_current, '%i' % (lineno + 1)))
                     else:
-                        result.append((token_current, ('%i ' % (line_number + 1)).rjust(width)))
+                        result.append((token_current, ('%i ' % (lineno + 1)).rjust(width)))
                 else:
                     # Other lines.
                     if relative:
-                        line_number = abs(line_number - current_lineno) - 1
+                        lineno = abs(lineno - current_lineno) - 1
 
-                    result.append((token, ('%i ' % (line_number + 1)).rjust(width)))
+                    result.append((token, ('%i ' % (lineno + 1)).rjust(width)))
 
+            last_lineno = lineno
             result.append((Token, '\n'))
+
+        # Fill with tildes.
+        if self.show_tildes(cli):
+            while y < window_render_info.window_height:
+                result.append((token, '~\n'))
+                y += 1
 
         return result
 
