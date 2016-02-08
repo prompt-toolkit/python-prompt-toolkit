@@ -61,10 +61,12 @@ class NumberredMargin(Margin):
 
     :param relative: Number relative to the cursor position. Similar to the Vi
                      'relativenumber' option.
+    :param display_tildes: Display tildes after the end of the document, just
+        like Vi does.
     """
-    def __init__(self, relative=False, show_tildes=False):
+    def __init__(self, relative=False, display_tildes=False):
         self.relative = to_cli_filter(relative)
-        self.show_tildes = to_cli_filter(show_tildes)
+        self.display_tildes = to_cli_filter(display_tildes)
 
     def get_width(self, cli, get_ui_content):
         line_count = get_ui_content().line_count
@@ -73,7 +75,7 @@ class NumberredMargin(Margin):
     def create_margin(self, cli, window_render_info, width, height):
         visible_line_to_input_line = window_render_info.visible_line_to_input_line
         relative = self.relative(cli)
-        show_tildes = self.show_tildes(cli)
+        display_tildes = self.display_tildes(cli)
 
         token = Token.LineNumber
         token_current = Token.LineNumber.Current
@@ -108,9 +110,9 @@ class NumberredMargin(Margin):
             result.append((Token, '\n'))
 
         # Fill with tildes.
-        if self.show_tildes(cli):
+        if self.display_tildes(cli):
             while y < window_render_info.window_height:
-                result.append((token, '~\n'))
+                result.append((Token.Tilde, '~\n'))
                 y += 1
 
         return result
