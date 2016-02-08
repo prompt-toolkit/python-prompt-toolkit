@@ -631,7 +631,7 @@ class WindowRenderInfo(object):
         return sorted(row for row, col in self.visible_line_to_row_col.values())
 
     @property
-    def screen_line_to_input_line(self):  # XXX: do we use this??
+    def screen_line_to_input_line(self):  # XXX: rename to input_line_to_visible_line.
         """
         Return the dictionary mapping the line numbers of the input buffer to
         the lines of the screen.
@@ -956,7 +956,7 @@ class Window(Container):
             ui_content, write_position.width - total_margin_width, write_position.height, cli)
 
         # Write body
-        visible_line_to_row_col = self._copy_body(
+        visible_line_to_row_col, rowcol_to_yx = self._copy_body(
             ui_content, screen, write_position,
             sum(left_margin_widths), write_position.width - total_margin_width,
             self.vertical_scroll, self.horizontal_scroll,
@@ -980,15 +980,20 @@ class Window(Container):
         def mouse_handler(cli, mouse_event):
             """ Wrapper around the mouse_handler of the `UIControl` that turns
             absolute coordinates into relative coordinates. """
+            yx_to_rowcol = dict((v, k) for k, v in rowcol_to_yx.items())
+
             try:
-                row, col = visible_line_to_row_col[mouse_event.position.y - write_position.ypos]
+                try:
+                    row, col = yx_to_rowcol[mouse_event.position.y, mouse_event.position.x]
+                except KeyError:
+                    # 2nd try: when clicking on the right side of double width characters.
+                    row, col = yx_to_rowcol[mouse_event.position.y, mouse_event.position.x - 1]
             except KeyError:
                 result = NotImplemented
             else:
                 # Call the mouse handler of the UIControl first.
-                x = mouse_event.position.x + col - write_position.xpos - sum(left_margin_widths)
                 result = self.content.mouse_handler(
-                    cli, MouseEvent(position=Point(x=x, y=row),
+                    cli, MouseEvent(position=Point(x=col, y=row),
                                     event_type=mouse_event.event_type))
 
             # If it returns NotImplemented, handle it here.
@@ -1052,7 +1057,7 @@ class Window(Container):
         # Map visible line number to (row, col) of input.
         # 'col' will always be zero if line wrapping is off.
         visible_line_to_row_col = {}
-        rowcol_to_yx = {}  # Maps (row, col) to (y, x) screen coordinates.
+        rowcol_to_yx = {}  # Maps (row, col) from the input to (y, x) screen coordinates.
 
         # Fill background with default_char first.
         default_char = ui_content.default_char
@@ -1070,12 +1075,11 @@ class Window(Container):
 
             while y < write_position.height and lineno < line_count:
                 # Take the next line and copy it in the real screen.
-                line = ui_content.get_line(lineno)
+                line = ui_content.get_line(lineno) + [(ui_content.default_char.token, ' ')]
                 col = 0
                 x = -horizontal_scroll
 
                 visible_line_to_row_col[y] = (lineno, horizontal_scroll)
-#                rowcol_to_yx[lineno, 0] = (y + ypos, x + xpos)
 
                 for token, text in line:
                     new_buffer_row = new_buffer[y + ypos]
@@ -1134,7 +1138,7 @@ class Window(Container):
 
         new_screen.height = max(new_screen.height, ypos + y)
 
-        return visible_line_to_row_col
+        return visible_line_to_row_col, rowcol_to_yx
 
     @classmethod
     def _copy_margin(cls, lazy_screen, new_screen, write_position, move_x, width):
@@ -1227,10 +1231,13 @@ class Window(Container):
         Set `self.horizontal_scroll/vertical_scroll`.
         """
         cursor_position = ui_content.cursor_position or Point(0, 0)
-        try:
+
+        if ui_content.line_count == 0:
+            self.vertical_scroll = 0
+            self.horizontal_scroll = 0
+            return
+        else:
             current_line_text = token_list_to_text(ui_content.get_line(cursor_position.y))
-        except IndexError:
-            current_line_text = ''  # XXX
 
         def do_scroll(current_scroll, scroll_offset_start, scroll_offset_end,
                       cursor_pos, window_size, content_size):
@@ -1285,7 +1292,7 @@ class Window(Container):
             current_scroll=self.horizontal_scroll,
             scroll_offset_start=offsets.left,
             scroll_offset_end=offsets.right,
-            cursor_pos=ui_content.cursor_position.x,
+            cursor_pos=get_cwidth(current_line_text[:ui_content.cursor_position.x]),
             window_size=width,
             content_size=get_cwidth(current_line_text))
 
