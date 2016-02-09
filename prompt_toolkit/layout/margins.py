@@ -73,9 +73,7 @@ class NumberredMargin(Margin):
         return max(3, len('%s' % line_count) + 1)
 
     def create_margin(self, cli, window_render_info, width, height):
-        visible_line_to_input_line = window_render_info.visible_line_to_input_line
         relative = self.relative(cli)
-        display_tildes = self.display_tildes(cli)
 
         token = Token.LineNumber
         token_current = Token.LineNumber.Current
@@ -144,40 +142,52 @@ class ConditionalMargin(Margin):
 class ScrollbarMargin(Margin):
     """
     Margin displaying a scrollbar.
+
+    :param display_arrows: Display scroll up/down arrows.
     """
+    def __init__(self, display_arrows=False):
+        self.display_arrows = to_cli_filter(display_arrows)
+
     def get_width(self, cli, ui_content):
         return 1
 
     def create_margin(self, cli, window_render_info, width, height):
         total_height = window_render_info.content_height
+        display_arrows = self.display_arrows(cli)
+
+        window_height = window_render_info.window_height
+        if display_arrows:
+            window_height -= 2
+
         try:
-            items_per_row = float(total_height) / min(total_height, window_render_info.window_height - 2)
+            items_per_row = float(total_height) / min(total_height, window_height)
         except ZeroDivisionError:
             return []
         else:
-            index = window_render_info.vertical_scroll
-
-            visible_lines = set(range(index, index + window_render_info.window_height))
-
             def is_scroll_button(row):
                 " True if we should display a button on this row. "
                 current_row_middle = int((row + .5) * items_per_row)
-                return current_row_middle in visible_lines
+                return current_row_middle in window_render_info.displayed_lines
 
-            # Generate tokens.
-            result = [
-                (Token.Scrollbar.Arrow, '\u25b2'),  # Up arrow.
-                (Token.Scrollbar, '\n')
-            ]
+            # Up arrow.
+            result = []
+            if display_arrows:
+                result.extend([
+                    (Token.Scrollbar.Arrow, '^'),
+                    (Token.Scrollbar, '\n')
+                ])
 
-            for i in range(window_render_info.window_height - 2):
+            # Scrollbar body.
+            for i in range(window_height):
                 if is_scroll_button(i):
                     result.append((Token.Scrollbar.Button, ' '))
                 else:
                     result.append((Token.Scrollbar, ' '))
                 result.append((Token, '\n'))
 
-            result.append((Token.Scrollbar.Arrow, '\u25bc'))  # Down arrow
+            # Down arrow
+            if display_arrows:
+                result.append((Token.Scrollbar.Arrow, 'v'))
 
             return result
 

@@ -63,13 +63,11 @@ DEFAULT_STYLE_EXTENSIONS = {
     Token.Menu.Completions.Meta:                  'bg:#999999 #000000',
     Token.Menu.Completions.Meta.Current:          'bg:#aaaaaa #000000',
     Token.Menu.Completions.MultiColumnMeta:       'bg:#aaaaaa #000000',
-    Token.Menu.Completions.ProgressBar:           'bg:#aaaaaa',
-    Token.Menu.Completions.ProgressButton:        'bg:#000000',
 
     # Scrollbars.
-    Token.Scrollbar:                              'bg:#444444',
-    Token.Scrollbar.Button:                       'bg:#888888',
-    Token.Scrollbar.Arrow:                        'bg:#222222 #ffffff',
+    Token.Scrollbar:                              'bg:#888888',
+    Token.Scrollbar.Button:                       'bg:#444444',
+    Token.Scrollbar.Arrow:                        'bg:#222222 #888888 bold',
 
     # Auto suggestion text.
     Token.AutoSuggestion:                         '#666666',

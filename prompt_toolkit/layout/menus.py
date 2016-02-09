@@ -174,14 +174,17 @@ def _trim_text(text, max_width):
 
 
 class CompletionsMenu(ConditionalContainer):
-    def __init__(self, max_height=None, scroll_offset=0, extra_filter=Always()):
+    def __init__(self, max_height=None, scroll_offset=0, extra_filter=True, display_arrows=False):
+        extra_filter = to_cli_filter(extra_filter)
+        display_arrows = to_cli_filter(display_arrows)
+
         super(CompletionsMenu, self).__init__(
             content=Window(
                 content=CompletionsMenuControl(),
                 width=LayoutDimension(min=8),
                 height=LayoutDimension(min=1, max=max_height),
                 scroll_offsets=ScrollOffsets(top=scroll_offset, bottom=scroll_offset),
-                right_margins=[ScrollbarMargin()],
+                right_margins=[ScrollbarMargin(display_arrows=display_arrows)],
                 dont_extend_width=True,
             ),
             # Show when there are completions but not at the point we are
