@@ -1239,9 +1239,10 @@ class Window(Container):
         # the scroll offsets into account for this.)
         if ui_content.get_height_for_line(self.vertical_scroll, width) > height:
             # Calculate the height of the text before the cursor, with the line
-            # containing the cursor included.
+            # containing the cursor included, and the character belowe the
+            # cursor included as well.
             line = ui_content.get_line(ui_content.cursor_position.y)
-            text_before_cursor = token_list_to_text(line[:ui_content.cursor_position.x])
+            text_before_cursor = token_list_to_text(line[:ui_content.cursor_position.x + 1])
             text_before_height = UIContent.get_height_for_text(text_before_cursor, width)
 
             # Adjust scroll offset.
