@@ -1129,6 +1129,9 @@ class Window(Container):
                 y, x = rowcol_to_yx[row, col]
             except KeyError:
                 # Normally this should never happen. (It is a bug, if it happens.)
+
+                #return Point(y=0, x=0)  # I guess we should return (0,0), just to be really stable.
+
                 raise ValueError(
                     'Invalid position. row=%r col=%r, vertical_scroll=%r, '
                     'horizontal_scroll=%r, height=%r' %
