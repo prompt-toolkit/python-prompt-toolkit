@@ -139,18 +139,23 @@ class UIContent(object):
         try:
             return self._line_heights[lineno, width]
         except KeyError:
-            # Get text width for this line.
-            line_width = get_cwidth(token_list_to_text(self.get_line(lineno)))
-
-            # Calculate height.
-            quotient, remainder = divmod(line_width, width)
-            if remainder:
-                quotient += 1  # Like math.ceil.
-            result = max(1, quotient)
+            text = token_list_to_text(self.get_line(lineno))
+            result = self.get_height_for_text(text, width)
 
             # Cache and return
             self._line_heights[lineno, width] = result
             return result
+
+    @staticmethod
+    def get_height_for_text(text, width):
+        # Get text width for this line.
+        line_width = get_cwidth(text)
+
+        # Calculate height.
+        quotient, remainder = divmod(line_width, width)
+        if remainder:
+            quotient += 1  # Like math.ceil.
+        return max(1, quotient)
 
 
 class TokenListControl(UIControl):

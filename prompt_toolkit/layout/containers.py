@@ -852,6 +852,11 @@ class Window(Container):
         self.vertical_scroll = 0
         self.horizontal_scroll = 0
 
+        # Vertical scroll 2: this is the vertical offset that a line is
+        # scrolled if a single line (the one that contains the cursor) consumes
+        # all of the vertical space.
+        self.vertical_scroll_2 = 0
+
         #: Keep render information (mappings between buffer input and render
         #: output.)
         self.render_info = None
@@ -963,7 +968,8 @@ class Window(Container):
             sum(left_margin_widths), write_position.width - total_margin_width,
             self.vertical_scroll, self.horizontal_scroll,
             has_focus=self.content.has_focus(cli),
-            wrap_lines=wrap_lines)
+            wrap_lines=wrap_lines,
+            vertical_scroll_2=self.vertical_scroll_2)
 
         # Remember render info. (Set before generating the margins. They need this.)
         self.render_info = WindowRenderInfo(
@@ -1043,9 +1049,9 @@ class Window(Container):
             move_x += width
 
     @classmethod
-    def _copy_body(self, ui_content, new_screen, write_position, move_x,
+    def _copy_body(cls, ui_content, new_screen, write_position, move_x,
                    width, vertical_scroll=0, horizontal_scroll=0,
-                   has_focus=False, wrap_lines=False):
+                   has_focus=False, wrap_lines=False, vertical_scroll_2=0):
         """
         Copy the UIContent into the output screen.
         """
@@ -1075,7 +1081,7 @@ class Window(Container):
 
         # Copy content.
         def copy():
-            y = 0
+            y = - vertical_scroll_2
             lineno = vertical_scroll
 
             while y < write_position.height and lineno < line_count:
@@ -1107,7 +1113,7 @@ class Window(Container):
                                 return y  # Break out of all for loops.
 
                         # Set character in screen and shift 'x'.
-                        if x >= 0 and x < write_position.width:
+                        if x >= 0 and y >= 0 and x < write_position.width:
                             new_buffer_row[x + xpos] = char
 
                             # Keep track of write position for each character.
@@ -1228,6 +1234,22 @@ class Window(Container):
         if not self.allow_scroll_beyond_bottom(cli):
             self.vertical_scroll = min(self.vertical_scroll, topmost_visible)
 
+        # If the current line consumes more than the whole window height,
+        # then we have to scroll vertically inside this line. (We don't take
+        # the scroll offsets into account for this.)
+        if ui_content.get_height_for_line(self.vertical_scroll, width) > height:
+            # Calculate the height of the text before the cursor, with the line
+            # containing the cursor included.
+            line = ui_content.get_line(ui_content.cursor_position.y)
+            text_before_cursor = token_list_to_text(line[:ui_content.cursor_position.x])
+            text_before_height = UIContent.get_height_for_text(text_before_cursor, width)
+
+            # Adjust scroll offset.
+            self.vertical_scroll_2 = min(text_before_height - 1, self.vertical_scroll_2)
+            self.vertical_scroll_2 = max(0, text_before_height - height, self.vertical_scroll_2)
+        else:
+            self.vertical_scroll_2 = 0
+
         # We don't have horizontal scrolling.
         self.horizontal_scroll = 0
 
@@ -1303,6 +1325,10 @@ class Window(Container):
             cursor_pos=get_cwidth(current_line_text[:ui_content.cursor_position.x]),
             window_size=width,
             content_size=get_cwidth(current_line_text))
+
+        # Without line wrapping, we will never have to scroll vertically inside
+        # a single line.
+        self.vertical_scroll_2 = 0
 
     def _mouse_handler(self, cli, mouse_event):
         """
