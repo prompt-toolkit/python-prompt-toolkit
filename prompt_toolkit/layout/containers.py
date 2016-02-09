@@ -608,7 +608,7 @@ class WindowRenderInfo(object):
             top = 0
         else:
             # Get row where the cursor is displayed.
-            y = self.screen_line_to_input_line[self.ui_content.cursor_position.y]
+            y = self.input_line_to_visible_line[self.ui_content.cursor_position.y]
             top = min(y, self.configured_scroll_offsets.top)
 
         return ScrollOffsets(
@@ -630,10 +630,11 @@ class WindowRenderInfo(object):
         return sorted(row for row, col in self.visible_line_to_row_col.values())
 
     @property
-    def screen_line_to_input_line(self):  # XXX: rename to input_line_to_visible_line.
+    def input_line_to_visible_line(self):
         """
         Return the dictionary mapping the line numbers of the input buffer to
-        the lines of the screen.
+        the lines of the screen. When a line spans several rows at the screen,
+        the first row appears in the dictionary.
         """
         result = {}
         for k, v in self.visible_line_to_input_line.items():
