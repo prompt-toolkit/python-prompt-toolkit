@@ -580,11 +580,9 @@ class WindowRenderInfo(object):
     :param horizontal_scroll: The horizontal scroll of the :class:`.Window` instance.
     :param vertical_scroll: The vertical scroll of the :class:`.Window` instance.
     :param height: The height that was used for the rendering.
-    :param cursor_position: `Point` instance. Where the cursor is currently
-                            shown, relative to the window.
     """
     def __init__(self, ui_content, horizontal_scroll, vertical_scroll,
-                 window_width, window_height, cursor_position,
+                 window_width, window_height,
                  configured_scroll_offsets,
                  visible_line_to_row_col, wrap_lines):
         assert isinstance(ui_content, UIContent)
@@ -594,7 +592,6 @@ class WindowRenderInfo(object):
         self.window_width = window_width  # Width without margins.
         self.window_height = window_height
 
-        self.cursor_position = cursor_position  # XXX: what is this cursor position? it doesn't work when line wrapping is on.
         self.configured_scroll_offsets = configured_scroll_offsets
         self.visible_line_to_row_col = visible_line_to_row_col
         self.wrap_lines = wrap_lines
@@ -978,8 +975,6 @@ class Window(Container):
             vertical_scroll=self.vertical_scroll,
             window_width=write_position.width - total_margin_width,
             window_height=write_position.height,
-            cursor_position=Point(y=ui_content.cursor_position.y - self.vertical_scroll,
-                                  x=ui_content.cursor_position.x - self.horizontal_scroll),
             configured_scroll_offsets=self.scroll_offsets,
             visible_line_to_row_col=visible_line_to_row_col,
             wrap_lines=wrap_lines)
