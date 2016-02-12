@@ -37,7 +37,7 @@ class Lexer(with_metaclass(ABCMeta, object)):
 
 class SimpleLexer(Lexer):
     """
-    Lexer that returns everything as just one token.
+    Lexer that doesn't do any tokenizing and returns the whole input as one token.
     """
     def __init__(self, default_token=Token):
         self.default_token = default_token
@@ -64,7 +64,8 @@ class SyntaxSync(with_metaclass(ABCMeta, object)):
     @abstractmethod
     def get_sync_start_position(self, document, lineno):
         """
-        Return the start position as a (row, column) tuple for the given line number.
+        Return the position from where we can start lexing as a (row, column)
+        tuple.
 
         :param document: `Document` instance that contains all the lines.
         :param lineno: The line that we want to highlight. (We need to return
@@ -132,6 +133,12 @@ class RegexSync(SyntaxSync):
 class PygmentsLexer(Lexer):
     """
     Lexer that calls a pygments lexer.
+
+    :param pygments_lexer_cls: A `Lexer` from Pygments.
+    :param sync_from_start: Start lexing at the start of the document. This
+        will always give the best results, but it will be slow for bigger
+        documents.
+    :param syntax_sync: `SyntaxSync` object.
     """
     # Minimum amount of lines to go backwards when starting the parser.
     # This is important when the lines are retrieved in reverse order, or when
