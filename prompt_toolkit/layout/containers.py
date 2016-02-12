@@ -1162,13 +1162,13 @@ class Window(Container):
                 y, x = rowcol_to_yx[row, col]
             except KeyError:
                 # Normally this should never happen. (It is a bug, if it happens.)
+                # But to be sure, return (0, 0)
+                return Point(y=0, x=0)
 
-                #return Point(y=0, x=0)  # I guess we should return (0,0), just to be really stable.
-
-                raise ValueError(
-                    'Invalid position. row=%r col=%r, vertical_scroll=%r, '
-                    'horizontal_scroll=%r, height=%r' %
-                    (row, col, vertical_scroll, horizontal_scroll, write_position.height))
+                # raise ValueError(
+                #     'Invalid position. row=%r col=%r, vertical_scroll=%r, '
+                #     'horizontal_scroll=%r, height=%r' %
+                #     (row, col, vertical_scroll, horizontal_scroll, write_position.height))
             else:
                 return Point(y=y, x=x)
 
@@ -1207,6 +1207,31 @@ class Window(Container):
         scroll_offsets_bottom = self.scroll_offsets.bottom
         scroll_offsets_top = self.scroll_offsets.top
 
+        # We don't have horizontal scrolling.
+        self.horizontal_scroll = 0
+
+        # If the current line consumes more than the whole window height,
+        # then we have to scroll vertically inside this line. (We don't take
+        # the scroll offsets into account for this.)
+        # Also, ignore the scroll offsets in this case. Just set the vertical
+        # scroll to this line.
+        if ui_content.get_height_for_line(ui_content.cursor_position.y, width) > height - scroll_offsets_top:
+            # Calculate the height of the text before the cursor, with the line
+            # containing the cursor included, and the character belowe the
+            # cursor included as well.
+            line = explode_tokens(ui_content.get_line(ui_content.cursor_position.y))
+            text_before_cursor = token_list_to_text(line[:ui_content.cursor_position.x + 1])
+            text_before_height = UIContent.get_height_for_text(text_before_cursor, width)
+
+            # Adjust scroll offset.
+            self.vertical_scroll = ui_content.cursor_position.y
+            self.vertical_scroll_2 = min(text_before_height - 1, self.vertical_scroll_2)
+            self.vertical_scroll_2 = max(0, text_before_height - height, self.vertical_scroll_2)
+            return
+        else:
+            self.vertical_scroll_2 = 0
+
+        # Current line doesn't consume the whole height. Take scroll offsets into account.
         def get_min_vertical_scroll():
             # Make sure that the cursor line is not below the bottom.
             # (Calculate how many lines can be shown between the cursor and the .)
@@ -1265,26 +1290,6 @@ class Window(Container):
         # Disallow scrolling beyond bottom?
         if not self.allow_scroll_beyond_bottom(cli):
             self.vertical_scroll = min(self.vertical_scroll, topmost_visible)
-
-        # If the current line consumes more than the whole window height,
-        # then we have to scroll vertically inside this line. (We don't take
-        # the scroll offsets into account for this.)
-        if ui_content.get_height_for_line(self.vertical_scroll, width) > height:
-            # Calculate the height of the text before the cursor, with the line
-            # containing the cursor included, and the character belowe the
-            # cursor included as well.
-            line = explode_tokens(ui_content.get_line(ui_content.cursor_position.y))
-            text_before_cursor = token_list_to_text(line[:ui_content.cursor_position.x + 1])
-            text_before_height = UIContent.get_height_for_text(text_before_cursor, width)
-
-            # Adjust scroll offset.
-            self.vertical_scroll_2 = min(text_before_height - 1, self.vertical_scroll_2)
-            self.vertical_scroll_2 = max(0, text_before_height - height, self.vertical_scroll_2)
-        else:
-            self.vertical_scroll_2 = 0
-
-        # We don't have horizontal scrolling.
-        self.horizontal_scroll = 0
 
     def _scroll_without_linewrapping(self, ui_content, width, height, cli):
         """
