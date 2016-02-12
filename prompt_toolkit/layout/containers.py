@@ -1082,9 +1082,7 @@ class Window(Container):
 
             while y < write_position.height and lineno < line_count:
                 # Take the next line and copy it in the real screen.
-                # (Always add a space to each line, because that's a place
-                # where the cursor position can be.)
-                line = ui_content.get_line(lineno) + [(default_token, ' ')]
+                line = ui_content.get_line(lineno)
 
                 col = 0
                 x = -horizontal_scroll

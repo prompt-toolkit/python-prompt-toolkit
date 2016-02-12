@@ -589,10 +589,12 @@ class BufferControl(UIControl):
             " Return the tokens for a given line number. "
             tokens = get_processed_line(i).tokens
 
-            # When the cursor is at this row, add a space at the end, that is a
-            # possible cursor position. (When inserting after the input.)
-            if i == document.cursor_position_row:
-                tokens = tokens + [(self.default_char.token, ' ')]
+            # Add a space at the end, because that is a possible cursor
+            # position. (When inserting after the input.) We should do this on
+            # all the lines, not just the line containing the cursor. (Because
+            # otherwise, line wrapping/scrolling could change when moving the
+            # cursor around.)
+            tokens = tokens + [(self.default_char.token, ' ')]
             return tokens
 
         content = UIContent(
