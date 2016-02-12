@@ -433,17 +433,17 @@ class ShowTrailingWhiteSpaceProcessor(Processor):
         self.char = char
 
     def apply_transformation(self, cli, document, lineno, tokens):  # TODO
-        # Walk backwards through all te tokens.
-        t = (self.token, self.char)
+        if tokens and tokens[-1][1].endswith(' '):
+            t = (self.token, self.char)
+            tokens = explode_tokens(tokens)
 
-        tokens = explode_tokens(tokens)  # XXX: Maybe don't explode, or only if this line has trailing whitespace.
-
-        for i in range(len(tokens) - 1, -1, -1):
-            char = tokens[i][1]
-            if char == ' ':
-                tokens[i] = t
-            else:
-                break
+            # Walk backwards through all te tokens and replace whitespace.
+            for i in range(len(tokens) - 1, -1, -1):
+                char = tokens[i][1]
+                if char == ' ':
+                    tokens[i] = t
+                else:
+                    break
 
         return Transformation(tokens)
 
