@@ -12,7 +12,7 @@ from .controls import UIControl, TokenListControl, UIContent
 from .dimension import LayoutDimension, sum_layout_dimensions, max_layout_dimensions
 from .margins import Margin
 from .screen import Point, WritePosition, _CHAR_CACHE
-from .utils import token_list_to_text
+from .utils import token_list_to_text, explode_tokens
 from prompt_toolkit.cache import SimpleCache
 from prompt_toolkit.filters import to_cli_filter
 from prompt_toolkit.mouse_events import MouseEvent, MouseEventTypes
@@ -1238,7 +1238,7 @@ class Window(Container):
             # Calculate the height of the text before the cursor, with the line
             # containing the cursor included, and the character belowe the
             # cursor included as well.
-            line = ui_content.get_line(ui_content.cursor_position.y)
+            line = explode_tokens(ui_content.get_line(ui_content.cursor_position.y))
             text_before_cursor = token_list_to_text(line[:ui_content.cursor_position.x + 1])
             text_before_height = UIContent.get_height_for_text(text_before_cursor, width)
 
