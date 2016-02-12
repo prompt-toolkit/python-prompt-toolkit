@@ -584,8 +584,19 @@ class WindowRenderInfo(object):
     def __init__(self, ui_content, horizontal_scroll, vertical_scroll,
                  window_width, window_height,
                  configured_scroll_offsets,
-                 visible_line_to_row_col, wrap_lines):
+                 visible_line_to_row_col, rowcol_to_yx,
+                 x_offset, y_offset, wrap_lines):
         assert isinstance(ui_content, UIContent)
+        assert isinstance(horizontal_scroll, int)
+        assert isinstance(vertical_scroll, int)
+        assert isinstance(window_width, int)
+        assert isinstance(window_height, int)
+        assert isinstance(configured_scroll_offsets, ScrollOffsets)
+        assert isinstance(visible_line_to_row_col, dict)
+        assert isinstance(rowcol_to_yx, dict)
+        assert isinstance(x_offset, int)
+        assert isinstance(y_offset, int)
+        assert isinstance(wrap_lines, bool)
 
         self.ui_content = ui_content
         self.vertical_scroll = vertical_scroll
@@ -596,11 +607,26 @@ class WindowRenderInfo(object):
         self.visible_line_to_row_col = visible_line_to_row_col
         self.wrap_lines = wrap_lines
 
+        self._rowcol_to_yx = rowcol_to_yx  # row/col from input to absolute y/x
+                                           # screen coordinates.
+        self._x_offset = x_offset
+        self._y_offset = y_offset
+
     @property
     def visible_line_to_input_line(self):
         return dict(
             (visible_line, rowcol[0])
             for visible_line, rowcol in self.visible_line_to_row_col.items())
+
+    @property
+    def cursor_position(self):
+        """
+        Return the cursor position coordinates, relative to the left/top corner
+        of the rendered screen.
+        """
+        cpos = self.ui_content.cursor_position
+        y, x = self._rowcol_to_yx[cpos.y, cpos.x]
+        return Point(x=x - self._x_offset, y=y - self._y_offset)
 
     @property
     def applied_scroll_offsets(self):
@@ -970,6 +996,9 @@ class Window(Container):
             vertical_scroll_2=self.vertical_scroll_2)
 
         # Remember render info. (Set before generating the margins. They need this.)
+        x_offset=write_position.xpos + sum(left_margin_widths)
+        y_offset=write_position.ypos
+
         self.render_info = WindowRenderInfo(
             ui_content=ui_content,
             horizontal_scroll=self.horizontal_scroll,
@@ -978,27 +1007,36 @@ class Window(Container):
             window_height=write_position.height,
             configured_scroll_offsets=self.scroll_offsets,
             visible_line_to_row_col=visible_line_to_row_col,
+            rowcol_to_yx=rowcol_to_yx,
+            x_offset=x_offset,
+            y_offset=y_offset,
             wrap_lines=wrap_lines)
 
         # Set mouse handlers.
         def mouse_handler(cli, mouse_event):
             """ Wrapper around the mouse_handler of the `UIControl` that turns
-            absolute coordinates into relative coordinates. """
+            screen coordinates into line coordinates. """
+            # Find row/col position first.
             yx_to_rowcol = dict((v, k) for k, v in rowcol_to_yx.items())
+            y = mouse_event.position.y
+            x = mouse_event.position.x
 
-            try:
+            while x >= 0:
                 try:
-                    row, col = yx_to_rowcol[mouse_event.position.y, mouse_event.position.x]
+                    row, col = yx_to_rowcol[y, x]
                 except KeyError:
-                    # 2nd try: when clicking on the right side of double width characters.
-                    row, col = yx_to_rowcol[mouse_event.position.y, mouse_event.position.x - 1]
-            except KeyError:
-                result = NotImplemented
+                    # Try again. (When clicking on the right side of double
+                    # width characters, or on the right side of the input.)
+                    x -= 1
+                else:
+                    # Found position, call handler of UIControl.
+                    result = self.content.mouse_handler(
+                        cli, MouseEvent(position=Point(x=col, y=row),
+                                        event_type=mouse_event.event_type))
+                    break
             else:
-                # Call the mouse handler of the UIControl first.
-                result = self.content.mouse_handler(
-                    cli, MouseEvent(position=Point(x=col, y=row),
-                                    event_type=mouse_event.event_type))
+                # nobreak.
+                result = NotImplemented
 
             # If it returns NotImplemented, handle it here.
             if result == NotImplemented:
@@ -1071,9 +1109,6 @@ class Window(Container):
                 new_buffer_row = new_buffer[y]
                 for x in range(xpos, xpos + width):
                     new_buffer_row[x] = default_char
-            default_token = default_char.token
-        else:
-            default_token = Token
 
         # Copy content.
         def copy():
@@ -1355,6 +1390,7 @@ class Window(Container):
         info = self.render_info
 
         if info.vertical_scroll > 0:
+            # TODO: not entirely correct yet in case of line wrapping and long lines.
             if info.cursor_position.y >= info.window_height - 1 - info.configured_scroll_offsets.bottom:
                 self.content.move_cursor_up(cli)
 

@@ -66,7 +66,6 @@ def scroll_backward(event, half=False):
 
     if w and w.render_info:
         info = w.render_info
-        ui_content = info.ui_content
 
         # Height to scroll.
         scroll_height = info.window_height
@@ -134,7 +133,14 @@ def scroll_one_line_up(event):
             info = w.render_info
 
             if w.vertical_scroll > 0:
-                if info.cursor_position.y >= info.window_height - 1 - info.configured_scroll_offsets.bottom:
+                first_line_height = info.get_height_for_line(info.first_visible_line())
+
+                cursor_up = info.cursor_position.y - (info.window_height - 1 - first_line_height -
+                                                      info.configured_scroll_offsets.bottom)
+
+                # Move cursor up, as many steps as the height of the first line.
+                # TODO: not entirely correct yet, in case of line wrapping and many long lines.
+                for _ in range(max(0, cursor_up)):
                     b.cursor_position += b.document.get_cursor_up_position()
 
                 # Scroll window
@@ -162,7 +168,6 @@ def scroll_page_up(event):
     Scroll page up. (Prefer the cursor at the bottom of the page, after scrolling.)
     """
     w = _current_window_for_event(event)
-    info = w.render_info
     b = event.cli.current_buffer
 
     if w and w.render_info:
