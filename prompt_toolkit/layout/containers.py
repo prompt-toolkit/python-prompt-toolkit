@@ -1260,6 +1260,10 @@ class Window(Container):
         """
         cursor_position = ui_content.cursor_position or Point(0, 0)
 
+        # Without line wrapping, we will never have to scroll vertically inside
+        # a single line.
+        self.vertical_scroll_2 = 0
+
         if ui_content.line_count == 0:
             self.vertical_scroll = 0
             self.horizontal_scroll = 0
@@ -1322,11 +1326,9 @@ class Window(Container):
             scroll_offset_end=offsets.right,
             cursor_pos=get_cwidth(current_line_text[:ui_content.cursor_position.x]),
             window_size=width,
-            content_size=get_cwidth(current_line_text))
-
-        # Without line wrapping, we will never have to scroll vertically inside
-        # a single line.
-        self.vertical_scroll_2 = 0
+            # We can only analyse the current line. Calculating the width off
+            # all the lines is too expensive.
+            content_size=max(get_cwidth(current_line_text), self.horizontal_scroll + width))
 
     def _mouse_handler(self, cli, mouse_event):
         """
