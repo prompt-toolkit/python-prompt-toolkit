@@ -137,7 +137,10 @@ class PygmentsLexer(Lexer):
     :param pygments_lexer_cls: A `Lexer` from Pygments.
     :param sync_from_start: Start lexing at the start of the document. This
         will always give the best results, but it will be slow for bigger
-        documents.
+        documents. (When the last part of the document is display, then the
+        whole document will be lexed by Pygments on every key stroke.) It is
+        recommended to disable this for inputs that are expected to be more
+        than 1,000 lines.
     :param syntax_sync: `SyntaxSync` object.
     """
     # Minimum amount of lines to go backwards when starting the parser.
@@ -152,7 +155,7 @@ class PygmentsLexer(Lexer):
     # (This should probably be bigger than MIN_LINES_BACKWARDS.)
     REUSE_GENERATOR_MAX_DISTANCE = 100
 
-    def __init__(self, pygments_lexer_cls, sync_from_start=False, syntax_sync=None):
+    def __init__(self, pygments_lexer_cls, sync_from_start=True, syntax_sync=None):
         assert syntax_sync is None or isinstance(syntax_sync, SyntaxSync)
 
         self.pygments_lexer_cls = pygments_lexer_cls
@@ -168,7 +171,7 @@ class PygmentsLexer(Lexer):
         self.syntax_sync = syntax_sync or RegexSync.from_pygments_lexer_cls(pygments_lexer_cls)
 
     @classmethod
-    def from_filename(cls, filename, sync_from_start=False):
+    def from_filename(cls, filename, sync_from_start=True):
         """
         Create a `Lexer` from a filename.
         """
