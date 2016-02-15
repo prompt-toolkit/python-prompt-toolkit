@@ -32,7 +32,7 @@ class StyleFromDictTest(unittest.TestCase):
                          underline=False, italic=False, blink=False, reverse=False)
         assert style.get_attrs_for_token(Token.A.B.C) == expected
 
-        expected = Attrs(color='red', bgcolor=None, bold=True,
+        expected = Attrs(color='#ansired', bgcolor=None, bold=True,
                          underline=False, italic=False, blink=False, reverse=False)
         assert style.get_attrs_for_token(Token.A.B.C.D) == expected
 
