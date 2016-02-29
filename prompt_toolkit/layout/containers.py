@@ -88,7 +88,25 @@ def _window_too_small():
 
 
 class XSplit(Container):
-    """A base class for HSplit and VSplit"""
+    """
+    Several layouts, one stacked next to the other.
+
+    Above/Under for ``HSplit``
+    Left/Right for ``VSplit``
+
+    :param children: List of child :class:`.Container` objects.
+    :param window_too_small: A :class:`.Container` object that is displayed if
+        there is not enough space for all the children. By default, this is a
+        "Window too small" message.
+    :param get_dimensions: (`None` or a callable that takes a
+        `CommandLineInterface` and returns a list of `LayoutDimension`
+        instances.) By default the dimensions are taken from the children and
+        divided by the available space. However, when `get_dimensions` is specified,
+        this is taken instead.
+    :param report_dimensions_callback: When rendering, this function is called
+        with the `CommandLineInterface` and the list of used dimensions. (As a
+        list of integers.)
+    """
 
     def __init__(self, children, window_too_small=None,
                  get_dimensions=None, report_dimensions_callback=None):
@@ -115,22 +133,6 @@ class XSplit(Container):
 
 
 class HSplit(XSplit):
-    """
-    Several layouts, one stacked above/under the other.
-
-    :param children: List of child :class:`.Container` objects.
-    :param window_too_small: A :class:`.Container` object that is displayed if
-        there is not enough space for all the children. By default, this is a
-        "Window too small" message.
-    :param get_dimensions: (`None` or a callable that takes a
-        `CommandLineInterface` and returns a list of `LayoutDimension`
-        instances.) By default the dimensions are taken from the children and
-        divided by the available space. However, when `get_dimensions` is specified,
-        this is taken instead.
-    :param report_dimensions_callback: When rendering, this function is called
-        with the `CommandLineInterface` and the list of used dimensions. (As a
-        list of integers.)
-    """
 
     def preferred_height(self, cli, width, max_available_height):
         dimensions = [c.preferred_height(cli, width, max_available_height) for c in self.children]
@@ -222,22 +224,6 @@ class HSplit(XSplit):
 
 
 class VSplit(XSplit):
-    """
-    Several layouts, one stacked left/right of the other.
-
-    :param children: List of child :class:`.Container` objects.
-    :param window_too_small: A :class:`.Container` object that is displayed if
-        there is not enough space for all the children. By default, this is a
-        "Window too small" message.
-    :param get_dimensions: (`None` or a callable that takes a
-        `CommandLineInterface` and returns a list of `LayoutDimension`
-        instances.) By default the dimensions are taken from the children and
-        divided by the available space. However, when `get_dimensions` is specified,
-        this is taken instead.
-    :param report_dimensions_callback: When rendering, this function is called
-        with the `CommandLineInterface` and the list of used dimensions. (As a
-        list of integers.)
-    """
 
     def preferred_width(self, cli, max_available_width):
         dimensions = [c.preferred_width(cli, max_available_width) for c in self.children]
