@@ -87,7 +87,34 @@ def _window_too_small():
         [(Token.WindowTooSmall, ' Window too small... ')]))
 
 
-class HSplit(Container):
+class XSplit(Container):
+    """A base class for HSplit and VSplit"""
+
+    def __init__(self, children, window_too_small=None,
+                 get_dimensions=None, report_dimensions_callback=None):
+        assert all(isinstance(c, Container) for c in children)
+        assert window_too_small is None or isinstance(window_too_small, Container)
+        assert get_dimensions is None or callable(get_dimensions)
+        assert report_dimensions_callback is None or callable(report_dimensions_callback)
+
+        self.children = children
+        self.window_too_small = window_too_small or _window_too_small()
+        self.get_dimensions = get_dimensions
+        self.report_dimensions_callback = report_dimensions_callback
+
+    def reset(self):
+        for c in self.children:
+            c.reset()
+
+    def walk(self, cli):
+        """ Walk through children. """
+        yield self
+        for c in self.children:
+            for i in c.walk(cli):
+                yield i
+
+
+class HSplit(XSplit):
     """
     Several layouts, one stacked above/under the other.
 
@@ -104,17 +131,6 @@ class HSplit(Container):
         with the `CommandLineInterface` and the list of used dimensions. (As a
         list of integers.)
     """
-    def __init__(self, children, window_too_small=None,
-                 get_dimensions=None, report_dimensions_callback=None):
-        assert all(isinstance(c, Container) for c in children)
-        assert window_too_small is None or isinstance(window_too_small, Container)
-        assert get_dimensions is None or callable(get_dimensions)
-        assert report_dimensions_callback is None or callable(report_dimensions_callback)
-
-        self.children = children
-        self.window_too_small = window_too_small or _window_too_small()
-        self.get_dimensions = get_dimensions
-        self.report_dimensions_callback = report_dimensions_callback
 
     def preferred_height(self, cli, width, max_available_height):
         dimensions = [c.preferred_height(cli, width, max_available_height) for c in self.children]
@@ -126,10 +142,6 @@ class HSplit(Container):
             return max_layout_dimensions(dimensions)
         else:
             return LayoutDimension(0)
-
-    def reset(self):
-        for c in self.children:
-            c.reset()
 
     def write_to_screen(self, cli, screen, mouse_handlers, write_position):
         """
@@ -208,15 +220,8 @@ class HSplit(Container):
 
         return sizes
 
-    def walk(self, cli):
-        """ Walk through children. """
-        yield self
-        for c in self.children:
-            for i in c.walk(cli):
-                yield i
 
-
-class VSplit(Container):
+class VSplit(XSplit):
     """
     Several layouts, one stacked left/right of the other.
 
@@ -233,17 +238,6 @@ class VSplit(Container):
         with the `CommandLineInterface` and the list of used dimensions. (As a
         list of integers.)
     """
-    def __init__(self, children, window_too_small=None,
-                 get_dimensions=None, report_dimensions_callback=None):
-        assert all(isinstance(c, Container) for c in children)
-        assert window_too_small is None or isinstance(window_too_small, Container)
-        assert get_dimensions is None or callable(get_dimensions)
-        assert report_dimensions_callback is None or callable(report_dimensions_callback)
-
-        self.children = children
-        self.window_too_small = window_too_small or _window_too_small()
-        self.get_dimensions = get_dimensions
-        self.report_dimensions_callback = report_dimensions_callback
 
     def preferred_width(self, cli, max_available_width):
         dimensions = [c.preferred_width(cli, max_available_width) for c in self.children]
@@ -257,10 +251,6 @@ class VSplit(Container):
             dimensions = [c.preferred_height(cli, s, max_available_height)
                           for s, c in zip(sizes, self.children)]
             return max_layout_dimensions(dimensions)
-
-    def reset(self):
-        for c in self.children:
-            c.reset()
 
     def _divide_widths(self, cli, width):
         """
@@ -346,13 +336,6 @@ class VSplit(Container):
         for s, c in zip(sizes, self.children):
             c.write_to_screen(cli, screen, mouse_handlers, WritePosition(xpos, ypos, s, height))
             xpos += s
-
-    def walk(self, cli):
-        """ Walk through children. """
-        yield self
-        for c in self.children:
-            for i in c.walk(cli):
-                yield i
 
 
 class FloatContainer(Container):
