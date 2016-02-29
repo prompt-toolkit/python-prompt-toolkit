@@ -116,16 +116,16 @@ class HSplit(Container):
         self.get_dimensions = get_dimensions
         self.report_dimensions_callback = report_dimensions_callback
 
+    def preferred_height(self, cli, width, max_available_height):
+        dimensions = [c.preferred_height(cli, width, max_available_height) for c in self.children]
+        return sum_layout_dimensions(dimensions)
+
     def preferred_width(self, cli, max_available_width):
         if self.children:
             dimensions = [c.preferred_width(cli, max_available_width) for c in self.children]
             return max_layout_dimensions(dimensions)
         else:
             return LayoutDimension(0)
-
-    def preferred_height(self, cli, width, max_available_height):
-        dimensions = [c.preferred_height(cli, width, max_available_height) for c in self.children]
-        return sum_layout_dimensions(dimensions)
 
     def reset(self):
         for c in self.children:
