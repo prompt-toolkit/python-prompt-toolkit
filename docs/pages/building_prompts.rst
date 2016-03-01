@@ -353,6 +353,11 @@ A suggestion does not have to come from the history. Any implementation of the
 :class:`~prompt_toolkit.auto_suggest.AutoSuggest` abstract base class can be
 passed as an argument.
 
+``AutoSuggestion`` engines can be asynchronous, for the case where such engine
+are slow, we provide
+:class:`~prompt_toolkit.auto_suggest.SimpleAutoSuggestCache` that does some
+basic caching on the result to make the auto suggestion experience feel faster. 
+
 
 Adding a bottom toolbar
 -----------------------

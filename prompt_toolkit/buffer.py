@@ -54,7 +54,7 @@ class AcceptAction(object):
     @classmethod
     def run_in_terminal(cls, handler, render_cli_done=False):
         """
-        Create an :class:`.AcceptAction` that runs the given handler in the
+        Create an :class:`AcceptAction` that runs the given handler in the
         terminal.
 
         :param render_cli_done: When True, render the interface in the 'Done'
