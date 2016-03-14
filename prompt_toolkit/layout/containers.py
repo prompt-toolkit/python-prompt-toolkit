@@ -867,12 +867,16 @@ class Window(Container):
         :class:`~prompt_toolkit.filters.CLIFilter` instance. When True, never
         display the cursor, even when the user control specifies a cursor
         position.
+    :param auto_scroll_horizontally: Ensure that the horizontal scroll offset
+        is updated automatically to ensure that the cursor will be visible.
+    :param auto_scroll_vertically: Like `auto_scroll_horizontally`, but vertical.
     """
     def __init__(self, content, width=None, height=None, get_width=None,
                  get_height=None, dont_extend_width=False, dont_extend_height=False,
                  left_margins=None, right_margins=None, scroll_offsets=None,
                  allow_scroll_beyond_bottom=False, wrap_lines=False,
-                 get_vertical_scroll=None, get_horizontal_scroll=None, always_hide_cursor=False):
+                 get_vertical_scroll=None, get_horizontal_scroll=None, always_hide_cursor=False,
+                 auto_scroll_horizontally=True, auto_scroll_vertically=True):
         assert isinstance(content, UIControl)
         assert width is None or isinstance(width, LayoutDimension)
         assert height is None or isinstance(height, LayoutDimension)
@@ -889,6 +893,8 @@ class Window(Container):
         self.allow_scroll_beyond_bottom = to_cli_filter(allow_scroll_beyond_bottom)
         self.always_hide_cursor = to_cli_filter(always_hide_cursor)
         self.wrap_lines = to_cli_filter(wrap_lines)
+        self.auto_scroll_horizontally = to_cli_filter(auto_scroll_horizontally)
+        self.auto_scroll_vertically = to_cli_filter(auto_scroll_vertically)
 
         self.content = content
         self.dont_extend_width = dont_extend_width
@@ -1281,6 +1287,10 @@ class Window(Container):
         # We don't have horizontal scrolling.
         self.horizontal_scroll = 0
 
+        # Don't do anything, when asked not to scroll automatically.
+        if not self.auto_scroll_vertically(cli):
+            return
+
         # If the current line consumes more than the whole window height,
         # then we have to scroll vertically inside this line. (We don't take
         # the scroll offsets into account for this.)
@@ -1423,23 +1433,26 @@ class Window(Container):
         # remains visible.
         offsets = self.scroll_offsets
 
-        self.vertical_scroll = do_scroll(
-            current_scroll=self.vertical_scroll,
-            scroll_offset_start=offsets.top,
-            scroll_offset_end=offsets.bottom,
-            cursor_pos=ui_content.cursor_position.y,
-            window_size=height,
-            content_size=ui_content.line_count)
+        if self.auto_scroll_vertically(cli):
+            self.vertical_scroll = do_scroll(
+                current_scroll=self.vertical_scroll,
+                scroll_offset_start=offsets.top,
+                scroll_offset_end=offsets.bottom,
+                cursor_pos=ui_content.cursor_position.y,
+                window_size=height,
+                content_size=ui_content.line_count)
 
-        self.horizontal_scroll = do_scroll(
-            current_scroll=self.horizontal_scroll,
-            scroll_offset_start=offsets.left,
-            scroll_offset_end=offsets.right,
-            cursor_pos=get_cwidth(current_line_text[:ui_content.cursor_position.x]),
-            window_size=width,
-            # We can only analyse the current line. Calculating the width off
-            # all the lines is too expensive.
-            content_size=max(get_cwidth(current_line_text), self.horizontal_scroll + width))
+        if self.auto_scroll_horizontally(cli):
+            self.horizontal_scroll = do_scroll(
+                current_scroll=self.horizontal_scroll,
+                scroll_offset_start=offsets.left,
+                scroll_offset_end=offsets.right,
+                cursor_pos=get_cwidth(current_line_text[:ui_content.cursor_position.x]),
+                window_size=width,
+                # We can only analyse the current line. Calculating the width
+                # off all the lines is too expensive.
+                content_size=max(get_cwidth(current_line_text),
+                                 self.horizontal_scroll + width))
 
     def _mouse_handler(self, cli, mouse_event):
         """
