@@ -891,7 +891,7 @@ def load_vi_bindings(registry, get_vi_state, enable_visual_key=Always(), get_sea
         """
         get_vi_state(event.cli).last_character_find = CharacterFind(event.data, False)
         match = event.current_buffer.document.find(event.data, in_current_line=True, count=event.arg)
-        return CursorRegion(match or 0)
+        return CursorRegion((match + 1) if match else 0)
 
     @change_delete_move_yank_handler('F', Keys.Any)
     def _(event):
@@ -909,7 +909,7 @@ def load_vi_bindings(registry, get_vi_state, enable_visual_key=Always(), get_sea
         """
         get_vi_state(event.cli).last_character_find = CharacterFind(event.data, False)
         match = event.current_buffer.document.find(event.data, in_current_line=True, count=event.arg)
-        return CursorRegion(match - 1 if match else 0)
+        return CursorRegion(match or 0)
 
     @change_delete_move_yank_handler('T', Keys.Any)
     def _(event):
