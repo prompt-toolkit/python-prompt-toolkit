@@ -31,6 +31,10 @@ class ViState(object):
         #: The Vi mode we're currently in to.
         self.input_mode = InputMode.INSERT
 
+        #: Named registers. Maps register name (e.g. 'a') to
+        #: :class:`ClipboardData` instances.
+        self.named_registers = {}
+
     def reset(self):
         # Go back to insert mode.
         self.input_mode = InputMode.INSERT
