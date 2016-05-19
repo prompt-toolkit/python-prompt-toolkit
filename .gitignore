@@ -19,6 +19,12 @@ lib
 lib64
 __pycache__
 
+# Virtualenvs
+#  Common destinations (depending on developer) are env and venv, they can
+#  sometimes to preceded with a period (e.g. .venv) or followed by a number
+#  (e.g. venv3) or both (.venv3).
+*env*/
+
 # Installer logs
 pip-log.txt
 
