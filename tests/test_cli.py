@@ -12,7 +12,6 @@ from prompt_toolkit.interface import CommandLineInterface
 from prompt_toolkit.output import DummyOutput
 from functools import partial
 
-import unittest
 
 def _feed_cli_with_input(text, editing_mode=EditingMode.EMACS):
     """
@@ -45,6 +44,7 @@ def test_simple_text_input():
     result, cli = _feed_cli_with_input('hello\n')
     assert result.text == 'hello'
     assert cli.buffers[DEFAULT_BUFFER].text == 'hello'
+
 
 def test_emacs_cursor_movements():
     """
@@ -94,6 +94,7 @@ def test_emacs_cursor_movements():
     result, cli = _feed_cli_with_input('hello\x0c\n')
     assert result.text == 'hello'
 
+
 def test_emacs_other_bindings():
     # Transpose characters.
     result, cli = _feed_cli_with_input('abcde\x14X\n')  # Ctrl-T
@@ -114,6 +115,7 @@ def test_emacs_other_bindings():
     # (with argument.)
     result, cli = _feed_cli_with_input('hello world test\x1b2\x17X\n')
     assert result.text == 'hello X'
+
 
 def test_vi_cursor_movements():
     """
@@ -161,6 +163,7 @@ def test_vi_cursor_movements():
     result, cli = feed('hello\x1b2hrX\n')
     assert result.text == 'heXlo'
 
+
 def test_vi_operators():
     feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI)
 
@@ -175,6 +178,7 @@ def test_vi_operators():
     # Esc d0
     result, cli = feed('hello\x1bd0\n')
     assert result.text == 'o'
+
 
 def test_vi_text_objects():
     feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI)
@@ -194,6 +198,7 @@ def test_vi_text_objects():
     # Esc da(
     result, cli = feed('before(inside)after\x1b8hda(\n')
     assert result.text == 'beforeafter'
+
 
 def test_vi_digraphs():
     feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI)

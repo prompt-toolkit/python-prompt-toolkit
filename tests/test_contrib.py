@@ -1,11 +1,8 @@
-from __future__ import unicode_literals
-from __future__ import absolute_import
-from __future__ import print_function
+from __future__ import unicode_literals, absolute_import, print_function
 
 import os
 import shutil
 import tempfile
-import unittest
 
 from contextlib import contextmanager
 
@@ -14,6 +11,7 @@ from six import text_type
 from prompt_toolkit.completion import CompleteEvent
 from prompt_toolkit.document import Document
 from prompt_toolkit.contrib.completers.filesystem import PathCompleter
+
 
 @contextmanager
 def chdir(directory):
@@ -43,6 +41,7 @@ def test_pathcompleter_completes_in_current_directory():
     completions = list(completer.get_completions(doc, event))
     assert len(completions) > 0
 
+
 def test_pathcompleter_completes_files_in_current_directory():
     # setup: create a test dir with 10 files
     test_dir = tempfile.mkdtemp()
@@ -66,6 +65,7 @@ def test_pathcompleter_completes_files_in_current_directory():
     # cleanup
     shutil.rmtree(test_dir)
 
+
 def test_pathcompleter_completes_files_in_absolute_directory():
     # setup: create a test dir with 10 files
     test_dir = tempfile.mkdtemp()
@@ -88,6 +88,7 @@ def test_pathcompleter_completes_files_in_absolute_directory():
 
     # cleanup
     shutil.rmtree(test_dir)
+
 
 def test_pathcompleter_completes_directories_with_only_directories():
     # setup: create a test dir with 10 files
@@ -120,6 +121,7 @@ def test_pathcompleter_completes_directories_with_only_directories():
 
     # cleanup
     shutil.rmtree(test_dir)
+
 
 def test_pathcompleter_respects_completions_under_min_input_len():
     # setup: create a test dir with 10 files
@@ -182,6 +184,7 @@ def test_pathcompleter_respects_completions_under_min_input_len():
     # cleanup
     shutil.rmtree(test_dir)
 
+
 def test_pathcompleter_does_not_expanduser_by_default():
     completer = PathCompleter()
     doc_text = '~'
@@ -190,6 +193,7 @@ def test_pathcompleter_does_not_expanduser_by_default():
     completions = list(completer.get_completions(doc, event))
     assert [] == completions
 
+
 def test_pathcompleter_can_expanduser():
     completer = PathCompleter(expanduser=True)
     doc_text = '~'
@@ -197,6 +201,7 @@ def test_pathcompleter_can_expanduser():
     event = CompleteEvent()
     completions = list(completer.get_completions(doc, event))
     assert len(completions) > 0
+
 
 def test_pathcompleter_can_apply_file_filter():
     # setup: create a test dir with 10 files
@@ -220,6 +225,7 @@ def test_pathcompleter_can_apply_file_filter():
 
     # cleanup
     shutil.rmtree(test_dir)
+
 
 def test_pathcompleter_get_paths_constrains_path():
     # setup: create a test dir with 10 files

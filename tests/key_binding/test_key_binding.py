@@ -4,79 +4,95 @@ from prompt_toolkit.key_binding.input_processor import InputProcessor, KeyPress
 from prompt_toolkit.key_binding.registry import Registry
 from prompt_toolkit.keys import Keys
 
-import unittest
+import pytest
 
 
-class KeyBindingTest(unittest.TestCase):
-    def setUp(self):
-        class Handlers(object):
-            def __init__(self):
-                self.called = []
+class Handlers(object):
 
-            def __getattr__(self, name):
-                def func(event):
-                    self.called.append(name)
-                return func
+    def __init__(self):
+        self.called = []
 
-        self.handlers = Handlers()
+    def __getattr__(self, name):
+        def func(event):
+            self.called.append(name)
+        return func
 
-        self.registry = Registry()
-        self.registry.add_binding(Keys.ControlX, Keys.ControlC)(self.handlers.controlx_controlc)
-        self.registry.add_binding(Keys.ControlX)(self.handlers.control_x)
-        self.registry.add_binding(Keys.ControlD)(self.handlers.control_d)
-        self.registry.add_binding(Keys.ControlSquareClose, Keys.Any)(self.handlers.control_square_close_any)
 
-        self.processor = InputProcessor(self.registry, lambda: None)
+@pytest.fixture
+def handlers():
+    return Handlers()
 
-    def test_feed_simple(self):
-        self.processor.feed(KeyPress(Keys.ControlX, '\x18'))
-        self.processor.feed(KeyPress(Keys.ControlC, '\x03'))
-        self.processor.process_keys()
 
-        self.assertEqual(self.handlers.called, ['controlx_controlc'])
+@pytest.fixture
+def registry(handlers):
+    registry = Registry()
+    registry.add_binding(
+        Keys.ControlX, Keys.ControlC)(handlers.controlx_controlc)
+    registry.add_binding(Keys.ControlX)(handlers.control_x)
+    registry.add_binding(Keys.ControlD)(handlers.control_d)
+    registry.add_binding(
+        Keys.ControlSquareClose, Keys.Any)(handlers.control_square_close_any)
 
-    def test_feed_several(self):
-        # First an unknown key first.
-        self.processor.feed(KeyPress(Keys.ControlQ, ''))
-        self.processor.process_keys()
+    return registry
 
-        self.assertEqual(self.handlers.called, [])
 
-        # Followed by a know key sequence.
-        self.processor.feed(KeyPress(Keys.ControlX, ''))
-        self.processor.feed(KeyPress(Keys.ControlC, ''))
-        self.processor.process_keys()
+@pytest.fixture
+def processor(registry):
+    return InputProcessor(registry, lambda: None)
 
-        self.assertEqual(self.handlers.called, ['controlx_controlc'])
 
-        # Followed by another unknown sequence.
-        self.processor.feed(KeyPress(Keys.ControlR, ''))
-        self.processor.feed(KeyPress(Keys.ControlS, ''))
+def test_feed_simple(processor, handlers):
+    processor.feed(KeyPress(Keys.ControlX, '\x18'))
+    processor.feed(KeyPress(Keys.ControlC, '\x03'))
+    processor.process_keys()
 
-        # Followed again by a know key sequence.
-        self.processor.feed(KeyPress(Keys.ControlD, ''))
-        self.processor.process_keys()
+    assert handlers.called == ['controlx_controlc']
 
-        self.assertEqual(self.handlers.called, ['controlx_controlc', 'control_d'])
 
-    def test_control_square_closed_any(self):
-        self.processor.feed(KeyPress(Keys.ControlSquareClose, ''))
-        self.processor.feed(KeyPress('C', 'C'))
-        self.processor.process_keys()
+def test_feed_several(processor, handlers):
+    # First an unknown key first.
+    processor.feed(KeyPress(Keys.ControlQ, ''))
+    processor.process_keys()
 
-        self.assertEqual(self.handlers.called, ['control_square_close_any'])
+    assert handlers.called == []
 
-    def test_common_prefix(self):
-        # Sending Control_X should not yet do anything, because there is
-        # another sequence starting with that as well.
-        self.processor.feed(KeyPress(Keys.ControlX, ''))
-        self.processor.process_keys()
+    # Followed by a know key sequence.
+    processor.feed(KeyPress(Keys.ControlX, ''))
+    processor.feed(KeyPress(Keys.ControlC, ''))
+    processor.process_keys()
 
-        self.assertEqual(self.handlers.called, [])
+    assert handlers.called == ['controlx_controlc']
 
-        # When another key is pressed, we know that we did not meant the longer
-        # "ControlX ControlC" sequence and the callbacks are called.
-        self.processor.feed(KeyPress(Keys.ControlD, ''))
-        self.processor.process_keys()
+    # Followed by another unknown sequence.
+    processor.feed(KeyPress(Keys.ControlR, ''))
+    processor.feed(KeyPress(Keys.ControlS, ''))
 
-        self.assertEqual(self.handlers.called, ['control_x', 'control_d'])
+    # Followed again by a know key sequence.
+    processor.feed(KeyPress(Keys.ControlD, ''))
+    processor.process_keys()
+
+    assert handlers.called == ['controlx_controlc', 'control_d']
+
+
+def test_control_square_closed_any(processor, handlers):
+    processor.feed(KeyPress(Keys.ControlSquareClose, ''))
+    processor.feed(KeyPress('C', 'C'))
+    processor.process_keys()
+
+    assert handlers.called == ['control_square_close_any']
+
+
+def test_common_prefix(processor, handlers):
+    # Sending Control_X should not yet do anything, because there is
+    # another sequence starting with that as well.
+    processor.feed(KeyPress(Keys.ControlX, ''))
+    processor.process_keys()
+
+    assert handlers.called == []
+
+    # When another key is pressed, we know that we did not meant the longer
+    # "ControlX ControlC" sequence and the callbacks are called.
+    processor.feed(KeyPress(Keys.ControlD, ''))
+    processor.process_keys()
+
+    assert handlers.called == ['control_x', 'control_d']

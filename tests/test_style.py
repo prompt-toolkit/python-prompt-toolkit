@@ -1,8 +1,7 @@
 from __future__ import unicode_literals
+
 from prompt_toolkit.styles import Attrs, style_from_dict
 from prompt_toolkit.token import Token
-
-import unittest
 
 
 def test_style_from_dict():

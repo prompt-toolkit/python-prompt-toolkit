@@ -4,19 +4,18 @@ from prompt_toolkit.filters.types import CLIFilter, SimpleFilter
 from prompt_toolkit.filters.utils import to_cli_filter, to_simple_filter
 from prompt_toolkit.filters.cli import HasArg, HasFocus, HasSelection
 
-import unittest
 import pytest
 
 
 def test_condition_filter_args():
-    c = Condition(lambda a, b, c:True)
+    c = Condition(lambda a, b, c: True)
     assert c.test_args('a', 'b', 'c')
     assert not c.test_args()
     assert not c.test_args('a')
     assert not c.test_args('a', 'b')
     assert not c.test_args('a', 'b', 'c', 'd')
 
-    c2 = Condition(lambda a, b=1:True)
+    c2 = Condition(lambda a, b=1: True)
     assert c2.test_args('a')
     assert c2.test_args('a', 'b')
     assert not c2.test_args('a', 'b', 'c')
@@ -27,6 +26,7 @@ def test_condition_filter_args():
     assert c3.test_args('a')
     assert c3.test_args('a', 'b')
 
+
 def test_and_arg():
     c1 = Condition(lambda a: True)
     c2 = Condition(lambda a: True)
@@ -35,6 +35,7 @@ def test_and_arg():
     assert c3.test_args('a')
     assert not c3.test_args()
     assert not c3.test_args('a', 'b')
+
 
 def test_or_arg():
     c1 = Condition(lambda a: True)
@@ -45,6 +46,7 @@ def test_or_arg():
     assert not c3.test_args()
     assert not c3.test_args('a', 'b')
 
+
 def test_condition():
     c = Condition(lambda a: a % 2 == 0)
     assert c(4)
@@ -52,11 +54,14 @@ def test_condition():
     assert not c(5)
     assert not c(3)
 
+
 def test_never():
     assert not Never()()
 
+
 def test_always():
     assert Always()()
+
 
 def test_invert():
     assert not (~Always())()
@@ -64,6 +69,7 @@ def test_invert():
 
     c = ~Condition(lambda: False)
     assert c()
+
 
 def test_or():
     for a in (True, False):
@@ -75,6 +81,7 @@ def test_or():
             assert isinstance(c3, Filter)
             assert c3() == a or b
 
+
 def test_and():
     for a in (True, False):
         for b in (True, False):
@@ -84,6 +91,7 @@ def test_and():
 
             assert isinstance(c3, Filter)
             assert c3() == (a and b)
+
 
 def test_cli_filter():
     c1 = Condition(lambda cli: True)
@@ -111,6 +119,7 @@ def test_cli_filter():
     assert isinstance(c8, CLIFilter)
     assert isinstance(c8, SimpleFilter)
 
+
 def test_to_cli_filter():
     f1 = to_cli_filter(True)
     f2 = to_cli_filter(False)
@@ -131,6 +140,7 @@ def test_to_cli_filter():
     with pytest.raises(TypeError):
         to_cli_filter(Condition(lambda: True))
 
+
 def test_to_simple_filter():
     f1 = to_simple_filter(True)
     f2 = to_simple_filter(False)
@@ -150,6 +160,7 @@ def test_to_simple_filter():
         to_simple_filter(4)
     with pytest.raises(TypeError):
         to_simple_filter(Condition(lambda cli: True))
+
 
 def test_cli_filters():
     assert isinstance(HasArg(), CLIFilter)
