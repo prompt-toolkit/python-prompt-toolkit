@@ -221,7 +221,8 @@ class PromptMargin(Margin):
     def get_width(self, cli, ui_content):
         " Width to report to the `Window`. "
         # Take the width from the first line.
-        text = ''.join(t[1] for t in self.get_prompt_tokens(cli))
+        ZeroWidthEscape = Token.ZeroWidthEscape
+        text = ''.join(t[1] for t in self.get_prompt_tokens(cli) if t[0] != ZeroWidthEscape)
         return get_cwidth(text)
 
     def create_margin(self, cli, window_render_info, width, height):
