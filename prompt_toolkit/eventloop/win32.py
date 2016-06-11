@@ -6,7 +6,6 @@ Windows notes:
 """
 from __future__ import unicode_literals
 
-from ..prompt_toolkit.interface import CommandLineInterfaceIsDoneError
 from ..terminal.win32_input import ConsoleInputReader
 from ..win32_types import SECURITY_ATTRIBUTES
 from .base import EventLoop, INPUT_TIMEOUT
@@ -91,6 +90,7 @@ class Win32EventLoop(EventLoop):
                 current_timeout = -1
 
     def _read_input(self, callbacks):
+        from prompt_toolkit.interface import CommandLineInterfaceIsDoneError
         gen = self._console_input_reader.read()
         for k in gen:
             try:
