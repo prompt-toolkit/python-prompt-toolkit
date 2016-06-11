@@ -115,16 +115,18 @@ class ConsoleInputReader(object):
         if self._fdcon is not None:
             os.close(self._fdcon)
 
-    def read(self):
+    def read(self, count=1024):
         """
         Read from the Windows console and return a list of `KeyPress` instances.
         It can return an empty list when there was nothing to read. (This
         function doesn't block.)
 
         http://msdn.microsoft.com/en-us/library/windows/desktop/ms684961(v=vs.85).aspx
+
+        :param count: Max amount of events to read at the same time.
         """
-        max_count = 1024  # Read max 1024 events at the same time.
-        result = []
+        max_count = count  # Max events to read at the same time.
+        processed_events = 0
 
         read = DWORD(0)
 
@@ -132,29 +134,34 @@ class ConsoleInputReader(object):
         input_records = arrtype()
 
         # Get next batch of input event.
-        windll.kernel32.ReadConsoleInputW(self.handle, pointer(input_records), max_count, pointer(read))
+        windll.kernel32.PeekConsoleInputW(
+            self.handle, pointer(input_records), max_count, pointer(read))
 
-        for i in range(read.value):
-            ir = input_records[i]
+        try:
+            for i in range(read.value):
+                ir = input_records[i]
+                processed_events += 1
 
-            # Get the right EventType from the EVENT_RECORD.
-            # (For some reason the Windows console application 'cmder'
-            # [http://gooseberrycreative.com/cmder/] can return '0' for
-            # ir.EventType. -- Just ignore that.)
-            if ir.EventType in EventTypes:
-                ev = getattr(ir.Event, EventTypes[ir.EventType])
+                # Get the right EventType from the EVENT_RECORD.
+                # (For some reason the Windows console application 'cmder'
+                # [http://gooseberrycreative.com/cmder/] can return '0' for
+                # ir.EventType. -- Just ignore that.)
+                if ir.EventType in EventTypes:
+                    ev = getattr(ir.Event, EventTypes[ir.EventType])
 
-                # Process if this is a key event. (We also have mouse, menu and
-                # focus events.)
-                if type(ev) == KEY_EVENT_RECORD and ev.KeyDown:
-                    key_presses = self._event_to_key_presses(ev)
-                    if key_presses:
-                        result.extend(key_presses)
+                    # Process if this is a key event. (We also have mouse, menu and
+                    # focus events.)
+                    if type(ev) == KEY_EVENT_RECORD and ev.KeyDown:
+                        for key_press in self._event_to_key_presses(ev):
+                            yield key_press
 
-                elif type(ev) == MOUSE_EVENT_RECORD:
-                    result.extend(self._handle_mouse(ev))
-
-        return result
+                    elif type(ev) == MOUSE_EVENT_RECORD:
+                        for key_press in self._handle_mouse(ev):
+                            yield key_press
+        finally:
+            # Flush processed items.
+            windll.kernel32.ReadConsoleInputW(
+                self.handle, pointer(input_records), processed_events, pointer(read))
 
     def _event_to_key_presses(self, ev):
         """

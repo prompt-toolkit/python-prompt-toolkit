@@ -73,9 +73,7 @@ class Win32EventLoop(EventLoop):
 
             if handle == self._console_input_reader.handle:
                 # When stdin is ready, read input and reset timeout timer.
-                keys = self._console_input_reader.read()
-                for k in keys:
-                    callbacks.feed_key(k)
+                self._read_input(callbacks)
                 current_timeout = INPUT_TIMEOUT_MS
 
             elif handle == self._event:
@@ -90,6 +88,27 @@ class Win32EventLoop(EventLoop):
                 # Fire input timeout event.
                 callbacks.input_timeout()
                 current_timeout = -1
+
+    def _read_input(self, callbacks):
+        from prompt_toolkit.interface import CommandLineInterfaceIsDoneError
+        gen = self._console_input_reader.read()
+        for k in gen:
+            try:
+                callbacks.feed_key(k)
+            except CommandLineInterfaceIsDoneError:
+                # This happens if the read action returned a chunk of keys,
+                # because many events were in the input buffer. However, one of
+                # the key handlers put the interface in the "Done" state,
+                # making it ready to return a value. From then on, we can't
+                # feed any new keys in the CLI anymore and whatever remains in
+                # the input buffer can be used for the next input.
+                pass
+            finally:
+                # Ensure that the generator is closed (required for Pypy.) We want
+                # the 'finally' block of this reader to be executed before we go
+                # on.
+                gen.close()
+                return
 
     def _ready_for_reading(self, timeout=None):
         """
