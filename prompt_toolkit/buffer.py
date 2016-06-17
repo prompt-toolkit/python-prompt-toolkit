@@ -137,7 +137,7 @@ class CompletionState(object):
                 before = original_text_before_cursor[:c.start_position]
 
             new_text = before + c.text + original_text_after_cursor
-            new_cursor_position = len(before) + len(c.text)
+            new_cursor_position = len(before) + len(c.text) - c.cursor_position
             return new_text, new_cursor_position
 
     @property

@@ -804,6 +804,8 @@ class CommandLineInterface(object):
                             if common_part:
                                 # Insert + run completer again.
                                 buffer.insert_text(common_part)
+                                if len(completions) == 1:
+                                    buffer.cursor_position -= completions[0].cursor_position
                                 async_completer()
                                 set_completions = False
                             else:
