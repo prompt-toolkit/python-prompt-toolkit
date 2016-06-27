@@ -193,9 +193,9 @@ class Buffer(object):
 
         # Accept both filters and booleans as input.
         enable_history_search = to_simple_filter(enable_history_search)
-        is_multiline = to_simple_filter(is_multiline)
+        is_multiline          = to_simple_filter(is_multiline)
         complete_while_typing = to_simple_filter(complete_while_typing)
-        read_only = to_simple_filter(read_only)
+        read_only             = to_simple_filter(read_only)
 
         # Validate input.
         assert completer is None or isinstance(completer, Completer)
@@ -205,17 +205,17 @@ class Buffer(object):
         assert on_text_insert is None or callable(on_text_insert)
         assert on_cursor_position_changed is None or callable(on_cursor_position_changed)
 
-        self.completer = completer
-        self.auto_suggest = auto_suggest
-        self.validator = validator
+        self.completer       = completer
+        self.auto_suggest    = auto_suggest
+        self.validator       = validator
         self.tempfile_suffix = tempfile_suffix
-        self.accept_action = accept_action
+        self.accept_action   = accept_action
 
         # Filters. (Usually, used by the key bindings to drive the buffer.)
-        self.is_multiline = is_multiline
+        self.is_multiline          = is_multiline
         self.complete_while_typing = complete_while_typing
         self.enable_history_search = enable_history_search
-        self.read_only = read_only
+        self.read_only             = read_only
 
         # Text width. (For wrapping, used by the Vi 'gq' operator.)
         self.text_width = 0
@@ -228,8 +228,8 @@ class Buffer(object):
         self.__cursor_position = 0
 
         # Events
-        self.on_text_changed = Event(self, on_text_changed)
-        self.on_text_insert = Event(self, on_text_insert)
+        self.on_text_changed            = Event(self, on_text_changed)
+        self.on_text_insert             = Event(self, on_text_insert)
         self.on_cursor_position_changed = Event(self, on_cursor_position_changed)
 
         # Document cache. (Avoid creating new Document instances.)
@@ -289,7 +289,7 @@ class Buffer(object):
         working_index = self.working_index
         working_lines = self._working_lines
 
-        original_value = working_lines[working_index]
+        original_value               = working_lines[working_index]
         working_lines[working_index] = value
 
         # Return True when this text has been changed.
@@ -306,7 +306,7 @@ class Buffer(object):
 
     def _set_cursor_position(self, value):
         """ Set cursor position. Return whether it changed. """
-        original_position = self.__cursor_position
+        original_position      = self.__cursor_position
         self.__cursor_position = max(0, value)
 
         return value != original_position
@@ -367,9 +367,9 @@ class Buffer(object):
     def _text_changed(self):
         # Remove any validation errors and complete state.
         self.validation_error = None
-        self.complete_state = None
-        self.selection_state = None
-        self.suggestion = None
+        self.complete_state   = None
+        self.selection_state  = None
+        self.suggestion       = None
         self.preferred_column = None
 
         # fire 'on_text_changed' event.
@@ -378,7 +378,7 @@ class Buffer(object):
     def _cursor_position_changed(self):
         # Remove any validation errors and complete state.
         self.validation_error = None
-        self.complete_state = None
+        self.complete_state   = None
 
         # Unset preferred_column. (Will be set after the cursor movement, if
         # required.)
@@ -1215,9 +1215,9 @@ def reshape_text(buffer, from_row, to_row):
     `to_row` is included.
     (Vi 'gq' operator.)
     """
-    lines = buffer.text.splitlines(True)
-    lines_before = lines[:from_row]
-    lines_after = lines[to_row + 1:]
+    lines             = buffer.text.splitlines(True)
+    lines_before      = lines[:from_row]
+    lines_after       = lines[to_row + 1:]
     lines_to_reformat = lines[from_row:to_row + 1]
 
     if lines_to_reformat:
