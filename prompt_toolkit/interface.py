@@ -11,6 +11,7 @@ import six
 import sys
 import textwrap
 import threading
+import time
 import types
 import weakref
 
@@ -581,10 +582,57 @@ class CommandLineInterface(object):
 
     def _set_return_callable(self, value):
         assert callable(value)
-        self._return_value = value
+        eventloop = self.eventloop
 
-        if self.eventloop:
-            self.eventloop.stop()
+        def stop_soon():
+            """
+            Stop the eventloop very soon.
+
+            We run very shortly until a possible CPR response arrives.
+            (All received key strokes in this period are ignored.)
+            """
+            # Wait for the CPR response to return.
+            # But: wait at most .1 seconds.
+            max_iterations = .1 // .005
+            i = 0
+            while self.renderer.waiting_for_cpr and i < max_iterations:
+                i += 1
+                time.sleep(.005)
+
+            # Stop the loop.
+            eventloop.call_from_executor(eventloop.stop)
+
+        if not self.is_returning:
+            self._return_value = value
+
+            if eventloop:
+                # If we're waiting for a CPR, wait shortly until it arrives,
+                # (Otherwise, when the response arrives, this is printed very
+                # ugly to stdout.)
+                # Then quit the event loop.
+                if self.renderer.waiting_for_cpr:
+                    eventloop.run_in_executor(stop_soon)
+                else:
+                    eventloop.stop()
+
+    def _render_run_in_terminal(self, render_cli_done=False):
+        """
+        Render or erase the prompt, for usage in 'run_in_terminal'.
+        """
+        original_return_value = self._return_value
+        try:
+            if render_cli_done:
+                # Temporarily set a return, value, so that the 'redraw'
+                # function renders the UI in the 'done' state. (E.g. don't
+                # display toolbars.)
+                self._return_value = self._return_value or True
+                self._redraw()
+
+                self.renderer.reset()  # Make sure to disable mouse mode, etc...
+            else:
+                self.renderer.erase()
+        finally:
+            self._return_value = original_return_value
 
     def run_in_terminal(self, func, render_cli_done=False):
         """
@@ -603,13 +651,7 @@ class CommandLineInterface(object):
         :returns: the result of `func`.
         """
         # Draw interface in 'done' state, or erase.
-        if render_cli_done:
-            self._return_value = True
-            self._redraw()
-            self.renderer.reset()  # Make sure to disable mouse mode, etc...
-        else:
-            self.renderer.erase()
-        self._return_value = None
+        self._render_run_in_terminal(render_cli_done=render_cli_done)
 
         # Run system command.
         with self.input.cooked_mode():
@@ -642,13 +684,7 @@ class CommandLineInterface(object):
         there should not be any user interaction or I/O in the given function.
         """
         # Draw interface in 'done' state, or erase.
-        if render_cli_done:
-            self._return_value = True
-            self._redraw()
-            self.renderer.reset()  # Make sure to disable mouse mode, etc...
-        else:
-            self.renderer.erase()
-        self._return_value = None
+        self._render_run_in_terminal(render_cli_done=render_cli_done)
 
         # Loop through the generator.
         g = coroutine()
