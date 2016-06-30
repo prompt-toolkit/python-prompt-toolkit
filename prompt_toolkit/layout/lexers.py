@@ -191,6 +191,10 @@ class PygmentsLexer(Lexer):
         """
         Create a `Lexer` from a filename.
         """
+        # must come before pygments imports
+        from ..lazyasd import load_module_in_background
+        load_module_in_background('pkg_resources', debug='PROMPT_TOOLKIT_DEBUG',
+            replacements={'pygments.plugin': 'pkg_resources'})
         from pygments.util import ClassNotFound
         from pygments.lexers import get_lexer_for_filename
 
