@@ -312,6 +312,13 @@ class KeyPressEvent(object):
         """
         return self._arg or 1
 
+    @property
+    def arg_present(self):
+        """
+        True if repetition argument was explicitly provided.
+        """
+        return self._arg is not None
+
     def append_to_arg_count(self, data):
         """
         Add digit to the input argument.

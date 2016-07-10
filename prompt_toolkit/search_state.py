@@ -3,6 +3,7 @@ from .filters import to_simple_filter
 
 __all__ = (
     'SearchState',
+    'SearchLastWordState',
 )
 
 
@@ -34,3 +35,17 @@ class SearchState(object):
             direction = IncrementalSearchDirection.BACKWARD
 
         return SearchState(text=self.text, direction=direction, ignore_case=self.ignore_case)
+
+
+class SearchLastWordState(object):
+    def __init__(self, history_position=0, previous_word=''):
+        self.history_position = history_position
+        self.previous_word = previous_word
+
+    def reset(self):
+        self.history_position = 0
+        self.previous_word = ''
+
+    def __repr__(self):
+        return '%s(history_position=%r, previous_word=%r)' % (
+            self.__class__.__name__, self.history_position, self.previous_word)

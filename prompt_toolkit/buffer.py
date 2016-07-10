@@ -11,7 +11,7 @@ from .document import Document
 from .enums import IncrementalSearchDirection
 from .filters import to_simple_filter
 from .history import History, InMemoryHistory
-from .search_state import SearchState
+from .search_state import SearchState, SearchLastWordState
 from .selection import SelectionType, SelectionState
 from .utils import Event
 from .cache import FastDictCache
@@ -33,6 +33,9 @@ __all__ = (
     'unindent',
     'reshape_text',
 )
+
+
+_QUOTED_WORDS_RE = re.compile(r"""( |".*?"|'.*?')""")
 
 
 class EditReadOnlyBuffer(Exception):
@@ -1092,6 +1095,37 @@ class Buffer(object):
             working_index, cursor_position = search_result
             self.working_index = working_index
             self.cursor_position = cursor_position
+
+    def insert_previous_nth_word(self, search_word_state, word_pos=-1):
+        """
+        Pick nth word (`word_pos`) from previous history entry (depending
+        on current `search_word_state`) and insert it at current
+        position. Rotate through history if called repeatedly with the
+        same `search_word_state`.
+        """
+        if not len(self.history):
+            return
+        # if user presses search key repeatedly we move up in
+        # history and wrap around at the end
+        new_pos = search_word_state.history_position - 1
+        if -new_pos > len(self.history):
+            # wrap around
+            new_pos = -1
+        search_word_state.history_position = new_pos
+
+        line = self.history[search_word_state.history_position]
+        # respect quotes when spliting line - it matches readline behavior
+        words = [w.strip() for w in _QUOTED_WORDS_RE.split(line)]
+        words = [w for w in words if w]
+        try:
+            word = words[word_pos]
+        except IndexError:
+            return
+        if search_word_state.previous_word:
+            # delete previous match
+            self.delete_before_cursor(len(search_word_state.previous_word))
+        self.insert_text(word)
+        search_word_state.previous_word = word
 
     def exit_selection(self):
         self.selection_state = None

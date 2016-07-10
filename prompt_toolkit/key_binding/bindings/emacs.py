@@ -300,7 +300,12 @@ def load_emacs_bindings(registry, filter=Always()):
         """
         Rotate through the last word (white-space delimited) of the previous lines in history.
         """
-        # TODO
+        buffer = event.current_buffer
+        search_state = event.cli.search_last_word_state
+        word_pos = (event.arg if event.arg_present else -1)
+        if not event.is_repeat:
+            search_state.reset()
+        buffer.insert_previous_nth_word(search_state, word_pos)
 
     @handle(Keys.Escape, '\\', filter=insert_mode)
     def _(event):
