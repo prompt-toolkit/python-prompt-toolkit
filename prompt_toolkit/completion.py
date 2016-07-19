@@ -24,13 +24,15 @@ class Completion(object):
         completion, e.g. the path or source where it's coming from.
     :param get_display_meta: Lazy `display_meta`. Retrieve meta information
         only when meta is displayed.
+    :param cursor_position: Cursor position after completion, from end
     """
     def __init__(self, text, start_position=0, display=None, display_meta=None,
-                 get_display_meta=None):
+                 get_display_meta=None, cursor_position=0):
         self.text = text
         self.start_position = start_position
         self._display_meta = display_meta
         self._get_display_meta = get_display_meta
+        self.cursor_position = cursor_position
 
         if display is None:
             self.display = text
