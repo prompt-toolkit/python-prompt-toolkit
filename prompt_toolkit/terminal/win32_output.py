@@ -47,16 +47,19 @@ class NoConsoleScreenBufferError(Exception):
     """
     def __init__(self):
         # Are we running in 'xterm' on Windows, like git-bash for instance?
-        xterm = 'xterm' in os.environ.get('TERM')
+        try:
+            xterm = 'xterm' in os.environ.get('TERM')
 
-        if xterm:
-            message = ('Found %s, while expecting a Windows console. '
-                       'Maybe try to run this program using "winpty" '
-                       'or run it in cmd.exe instead. Or otherwise, '
-                       'in case of Cygwin, use the Python executable '
-                       'that is compiled for Cygwin.' % os.environ['TERM'])
-        else:
-            message = 'No Windows console found. Are you running cmd.exe?'
+            if xterm:
+                message = ('Found %s, while expecting a Windows console. '
+                           'Maybe try to run this program using "winpty" '
+                           'or run it in cmd.exe instead. Or otherwise, '
+                           'in case of Cygwin, use the Python executable '
+                           'that is compiled for Cygwin.' % os.environ['TERM'])
+            else:
+                message = 'No Windows console found. Are you running cmd.exe?'
+        except TypeError:
+            message = 'No Windows console found. Are you running cmd.exe (You cannot run the application from idle)?'
         super(NoConsoleScreenBufferError, self).__init__(message)
 
 
