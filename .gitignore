@@ -34,3 +34,9 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+# Vim swap files
+*.sw*
+
+# Generated documentation
+docs/_build
