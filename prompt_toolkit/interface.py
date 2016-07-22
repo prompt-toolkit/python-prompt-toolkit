@@ -856,22 +856,22 @@ class CommandLineInterface(object):
 
                         set_completions = True
                         select_first_anyway = False
-
-                        # When the commond part has to be inserted, and there
+                        # When the common part has to be inserted, and there
                         # is a common part.
                         if insert_common_part:
                             common_part = get_common_complete_suffix(document, completions)
                             if common_part:
                                 # Insert + run completer again.
                                 buffer.insert_text(common_part)
-                                async_completer()
+                                if len(completions) > 1:
+                                    async_completer()
                                 set_completions = False
                             else:
                                 # When we were asked to insert the "common"
                                 # prefix, but there was no common suffix but
                                 # still exactly one match, then select the
                                 # first. (It could be that we have a completion
-                                # which does * expension, like '*.py', with
+                                # which does * expansion, like '*.py', with
                                 # exactly one match.)
                                 if len(completions) == 1:
                                     select_first_anyway = True
