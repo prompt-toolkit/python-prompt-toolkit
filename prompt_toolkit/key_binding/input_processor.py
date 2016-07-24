@@ -90,6 +90,10 @@ class InputProcessor(object):
 
 #        print(' '.join(set(''.join(map(str, kb.keys)) for kb in registry.key_bindings if all(isinstance(X, unicode) for X in kb.keys))))
 
+    @property
+    def arg(self):
+        return InputProcessor.get_arg(self._arg)
+
     def reset(self):
         self._previous_key_sequence = None
         self._previous_handler = None
@@ -99,7 +103,7 @@ class InputProcessor(object):
 
         #: Readline argument (for repetition of commands.)
         #: https://www.gnu.org/software/bash/manual/html_node/Readline-Arguments.html
-        self.arg = None
+        self._arg = None
 
     def _get_matches(self, key_presses):
         """
@@ -209,8 +213,8 @@ class InputProcessor(object):
             cli.invalidate()
 
     def _call_handler(self, handler, key_sequence=None):
-        arg = self.arg
-        self.arg = None
+        arg = self._arg
+        self._arg = None
 
         event = KeyPressEvent(
             weakref.ref(self), arg=arg, key_sequence=key_sequence,
@@ -256,6 +260,20 @@ class InputProcessor(object):
                 # (This was cleared after changing the cursor position.)
                 buff.preferred_column = preferred_column
 
+    @staticmethod
+    def get_arg(arg):
+        if arg == "-":
+            value = -1
+        else:
+            value = arg or 1
+        try:
+            value = int(value)
+        except ValueError:
+            value = 1
+        # Don't exceed a million.
+        if value >= 1000000:
+            value = 1
+        return value
 
 
 class KeyPressEvent(object):
@@ -310,7 +328,7 @@ class KeyPressEvent(object):
         """
         Repetition argument.
         """
-        return self._arg or 1
+        return InputProcessor.get_arg(self._arg)
 
     def append_to_arg_count(self, data):
         """
@@ -318,18 +336,15 @@ class KeyPressEvent(object):
 
         :param data: the typed digit as string
         """
+        # NOTE: Entering "-" when a -ve argument is already in progress causes
+        # readline to abort argument, and this seems to be how it is already
+        # working (not sure how).
         assert data in '-0123456789'
         current = self._arg
 
         if current is None:
-            if data == '-':
-                data = '-1'
-            result = int(data)
+            current = data
         else:
-            result = int("%s%s" % (current, data))
+            current = "%s%s" % (current, data)
 
-        # Don't exceed a million.
-        if int(result) >= 1000000:
-            result = None
-
-        self.input_processor.arg = result
+        self.input_processor._arg = current

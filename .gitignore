@@ -37,3 +37,6 @@ nosetests.xml
 
 # Generated documentation
 docs/_build
+
+# Vim swap files
+.*.sw*
