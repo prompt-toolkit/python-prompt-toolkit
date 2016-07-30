@@ -145,7 +145,7 @@ class HasArg(Filter):
     Enable when the input processor has an 'arg'.
     """
     def __call__(self, cli):
-        return cli.input_processor.arg is not None
+        return cli.input_processor._arg is not None
 
     def __repr__(self):
         return 'HasArg()'
