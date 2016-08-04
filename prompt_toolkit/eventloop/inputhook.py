@@ -79,7 +79,9 @@ class InputHookContext(object):
             # monkey patched and won't be cooperative, so that would block all
             # other select() calls otherwise.
             # See: http://www.gevent.org/gevent.os.html
-            select_fds([self._r], timeout=None)
+            if os.name != 'nt':
+                # Windows select() can't be used on fds
+                select_fds([self._r], timeout=None)
 
             os.read(self._r, 1024)
         except OSError:
