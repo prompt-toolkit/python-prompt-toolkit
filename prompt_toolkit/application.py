@@ -154,26 +154,26 @@ class Application(object):
             get_title = lambda: None
 
         self.key_bindings_registry = key_bindings_registry
-        self.clipboard = clipboard or InMemoryClipboard()
-        self.on_abort = on_abort
-        self.on_exit = on_exit
-        self.use_alternate_screen = use_alternate_screen
-        self.mouse_support = mouse_support
-        self.get_title = get_title
+        self.clipboard             = clipboard or InMemoryClipboard()
+        self.on_abort              = on_abort
+        self.on_exit               = on_exit
+        self.use_alternate_screen  = use_alternate_screen
+        self.mouse_support         = mouse_support
+        self.get_title             = get_title
 
-        self.paste_mode = paste_mode
-        self.ignore_case = ignore_case
-        self.editing_mode = editing_mode
+        self.paste_mode      = paste_mode
+        self.ignore_case     = ignore_case
+        self.editing_mode    = editing_mode
         self.erase_when_done = erase_when_done
 
         def dummy_handler(cli):
             " Dummy event handler. "
 
-        self.on_input_timeout = on_input_timeout or dummy_handler
-        self.on_start = on_start or dummy_handler
-        self.on_stop = on_stop or dummy_handler
-        self.on_reset = on_reset or dummy_handler
-        self.on_initialize = on_initialize or dummy_handler
+        self.on_input_timeout  = on_input_timeout or dummy_handler
+        self.on_start          = on_start or dummy_handler
+        self.on_stop           = on_stop or dummy_handler
+        self.on_reset          = on_reset or dummy_handler
+        self.on_initialize     = on_initialize or dummy_handler
         self.on_buffer_changed = on_buffer_changed or dummy_handler
-        self.on_render = on_render or dummy_handler
-        self.on_invalidate = on_invalidate or dummy_handler
+        self.on_render         = on_render or dummy_handler
+        self.on_invalidate     = on_invalidate or dummy_handler
