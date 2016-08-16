@@ -34,6 +34,10 @@ class _TokenType(tuple):
 # Prefer the Token class from Pygments. If Pygments is not installed, use our
 # minimalistic Token class.
 try:
+    # must come before pygments imports
+    from .lazyasd import load_module_in_background
+    load_module_in_background('pkg_resources', debug='PROMPT_TOOLKIT_DEBUG',
+        replacements={'pygments.plugin': 'pkg_resources'})
     from pygments.token import Token
 except ImportError:
     Token = _TokenType()

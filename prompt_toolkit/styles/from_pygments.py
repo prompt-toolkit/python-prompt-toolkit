@@ -19,6 +19,10 @@ __all__ = (
 
 # Following imports are only needed when a ``PygmentsStyle`` class is used.
 try:
+    # must come before pygments imports
+    from ..lazyasd import load_module_in_background
+    load_module_in_background('pkg_resources', debug='PROMPT_TOOLKIT_DEBUG',
+        replacements={'pygments.plugin': 'pkg_resources'})
     from pygments.style import Style as pygments_Style
     from pygments.styles.default import DefaultStyle as pygments_DefaultStyle
 except ImportError:

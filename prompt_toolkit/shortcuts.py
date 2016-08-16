@@ -56,6 +56,10 @@ import threading
 import time
 
 try:
+    # must come before pygments imports
+    from .lazyasd import load_module_in_background
+    load_module_in_background('pkg_resources', debug='PROMPT_TOOLKIT_DEBUG',
+        replacements={'pygments.plugin': 'pkg_resources'})
     from pygments.lexer import Lexer as pygments_Lexer
     from pygments.style import Style as pygments_Style
 except ImportError:
