@@ -677,3 +677,72 @@ loop. Prompting the user for input is as simple as calling
 The ``patch_stdout=True`` parameter is optional, but it's recommended, because
 other coroutines could print to stdout. This option ensures that other output
 won't destroy the prompt.
+
+
+Debugging on Windows
+--------------------
+
+Debugging applications on windows under a debugger/ide can be difficult
+because the IDE may use its own 'console' which Prompt Toolkit is unable
+to use productively.  In these cases it is possible to set an environment
+variable which allows Prompt Toolkit to create a console window and
+attach the appropriate handles to allow the program to use the console
+productively.
+
+Two conditions need to be present for this to work. First, the code needs
+to be imported before anything else that may use the std file handles, or
+the console, because they may cache these handles, and thus wouldn't work
+as hoped.
+
+.. code:: python
+
+    from prompt_toolkit.utils import is_windows
+    if is_windows():
+        from prompt_toolkit.terminal import win32_console_debug
+
+        # check if any environment variables are set that induce us to action
+        win32_console_debug.check_environment_variables()
+
+The second condition needed is to set an environment variable::
+
+   SET USE_WIN_CONSOLE=Window Identifier
+
+or alternatively, if managing the import directly, right after the import,
+call:
+
+.. code:: python
+
+    win32_console_debug.ensure_console(title="Window Identifier")
+
+or, if it is preferred to only invoke when the application is being
+'debugged', set an environment variable::
+
+   SET USE_WIN_CONSOLE_DEBUG=Window Identifier
+
+or right after the import, call:
+
+.. code:: python
+
+    win32_console_debug.ensure_console(
+        debugger_only=True, title="Window Identifier")
+
+The console will be reused (based on the "Window Identifier" passed in)
+when restarting the application.
+
+
+Other Console Support (or starting in pre-existing terminals)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As an additional operating mode, :module:`~prompt_toolkit.win_console_debug`
+may be directly executed in a terminal::
+
+    c:\> python win_console_debug.py Window Identifier
+
+When run as a script it will prep the terminal to allow it to be connected to.
+This allows other terminals to be supported by debugging with an environment
+variable of::
+
+    SET USE_EXISTING_WIN_CONSOLE=Window Identifier
+
+USE_EXISTING_WIN_CONSOLE will not create a console if a console to connect
+to does not already exist.
