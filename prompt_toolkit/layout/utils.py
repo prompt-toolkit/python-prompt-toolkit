@@ -12,6 +12,12 @@ __all__ = (
     'find_window_for_buffer_name',
 )
 
+_special_tokens = (
+    Token.SetTabStop,
+    Token.SetCursorPosition,
+    Token.ZeroWidthEscape
+)
+
 
 def token_list_len(tokenlist):
     """
@@ -20,8 +26,8 @@ def token_list_len(tokenlist):
     :param tokenlist: List of (token, text) or (token, text, mouse_handler)
                       tuples.
     """
-    ZeroWidthEscape = Token.ZeroWidthEscape
-    return sum(len(item[1]) for item in tokenlist if item[0] != ZeroWidthEscape)
+    special = _special_tokens
+    return sum(len(item[1]) for item in tokenlist if item[0] not in special)
 
 
 def token_list_width(tokenlist):
@@ -32,16 +38,16 @@ def token_list_width(tokenlist):
     :param tokenlist: List of (token, text) or (token, text, mouse_handler)
                       tuples.
     """
-    ZeroWidthEscape = Token.ZeroWidthEscape
-    return sum(get_cwidth(c) for item in tokenlist for c in item[1] if item[0] != ZeroWidthEscape)
+    special = _special_tokens
+    return sum(get_cwidth(c) for item in tokenlist for c in item[1] if item[0] not in special)
 
 
 def token_list_to_text(tokenlist):
     """
     Concatenate all the text parts again.
     """
-    ZeroWidthEscape = Token.ZeroWidthEscape
-    return ''.join(item[1] for item in tokenlist if item[0] != ZeroWidthEscape)
+    special = _special_tokens
+    return ''.join(item[1] for item in tokenlist if item[0] not in special)
 
 
 def iter_token_lines(tokenlist):
@@ -148,6 +154,12 @@ def explode_tokens(tokenlist):
     It should be fine to call this function several times. Calling this on a
     list that is already exploded, is a null operation.
 
+    Note that this removes special tokens, like `SetTabStop` and
+    `ZeroWidthEscape`. The idea is that the following expression will always be
+    True::
+
+        explode_tokens(...)[i][1] == token_list_to_text(...)[i]
+
     :param tokenlist: List of (token, text) tuples.
     """
     # When the tokenlist is already exploded, don't explode again.
@@ -157,8 +169,9 @@ def explode_tokens(tokenlist):
     result = []
 
     for token, string in tokenlist:
-        for c in string:
-            result.append((token, c))
+        if token not in _special_tokens:
+            for c in string:
+                result.append((token, c))
 
     return _ExplodedList(result)
 

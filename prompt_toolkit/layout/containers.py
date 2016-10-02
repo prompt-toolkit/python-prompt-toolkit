@@ -1194,6 +1194,7 @@ class Window(Container):
         new_buffer = new_screen.data_buffer
         empty_char = _CHAR_CACHE['', Token]
         ZeroWidthEscape = Token.ZeroWidthEscape
+        SetTabStop = Token.SetTabStop
 
         # Map visible line number to (row, col) of input.
         # 'col' will always be zero if line wrapping is off.
@@ -1220,6 +1221,7 @@ class Window(Container):
 
                 col = 0
                 x = -horizontal_scroll
+                tabstop = x
 
                 visible_line_to_row_col[y] = (lineno, horizontal_scroll)
                 new_buffer_row = new_buffer[y + ypos]
@@ -1231,6 +1233,11 @@ class Window(Container):
                         new_screen.zero_width_escapes[y + ypos][x + xpos] += text
                         continue
 
+                    # SetTabStop, will indent linewraps at this position.
+                    if token == SetTabStop:
+                        tabstop = x
+                        continue  # The payload of this character should be ignored.
+
                     for c in text:
                         char = _CHAR_CACHE[c, token]
                         char_width = char.width
@@ -1240,8 +1247,8 @@ class Window(Container):
                             visible_line_to_row_col[y + 1] = (
                                 lineno, visible_line_to_row_col[y][1] + x)
                             y += 1
-                            x = -horizontal_scroll  # This would be equal to zero.
-                                                    # (horizontal_scroll=0 when wrap_lines.)
+                            x = tabstop  # This would be equal to zero.
+                                         # (horizontal_scroll=0 when wrap_lines.)
                             new_buffer_row = new_buffer[y + ypos]
 
                             if y >= write_position.height:

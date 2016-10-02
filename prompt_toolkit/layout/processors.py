@@ -523,6 +523,18 @@ class TabsProcessor(Processor):
             display_to_source=display_to_source)
 
 
+class BreakIndent(Processor):
+    """
+    When a line is wrapped, automatically indent the next part, using the same
+    indentation.  Like the Vi 'breakindent' option.
+    """
+    def apply_transformation(self, cli, document, lineno, source_to_display, tokens):
+        pass
+#        for token, text in tokens:
+#            if 
+#        return Transformation(tokens)
+
+
 class ConditionalProcessor(Processor):
     """
     Processor that applies another processor, according to a certain condition.
