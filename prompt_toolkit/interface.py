@@ -628,7 +628,7 @@ class CommandLineInterface(object):
         EXPERIMENTAL
         Like `run_in_terminal`, but takes a generator that can yield Application instances.
 
-        Example:
+        Example::
 
             def f():
                 yield Application1(...)
