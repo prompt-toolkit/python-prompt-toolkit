@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 import datetime
-import fcntl
 import os
 import random
 import signal
@@ -40,6 +39,9 @@ class PosixEventLoop(EventLoop):
 
         # Create a pipe for inter thread communication.
         self._schedule_pipe = os.pipe()
+        
+        # import on demand
+        import fcntl
         fcntl.fcntl(self._schedule_pipe[0], fcntl.F_SETFL, os.O_NONBLOCK)
 
         # Create inputhook context.
