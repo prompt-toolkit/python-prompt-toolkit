@@ -1,10 +1,11 @@
 from __future__ import unicode_literals
-
-from prompt_toolkit.terminal.vt100_input import InputStream
-from prompt_toolkit.keys import Keys
-
 import pytest
+import sys
 
+pytestmark = pytest.mark.skipif(
+    sys.platform == 'win32', reason="uses v100_input")
+
+from prompt_toolkit.keys import Keys
 
 class _ProcessorMock(object):
 
@@ -22,6 +23,7 @@ def processor():
 
 @pytest.fixture
 def stream(processor):
+    from prompt_toolkit.terminal.vt100_input import InputStream
     return InputStream(processor.feed_key)
 
 

@@ -187,6 +187,8 @@ class DummyOutput(Output):
     def bell(self): pass
     def enable_bracketed_paste(self): pass
     def disable_bracketed_paste(self): pass
-
+    def scroll_buffer_to_prompt(self):  pass
+    def get_rows_below_cursor_position(self):
+        return 0
     def get_size(self):
         return Size(rows=40, columns=80)

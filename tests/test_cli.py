@@ -3,20 +3,25 @@
 These are almost end-to-end tests. They create a CommandLineInterface
 instance, feed it with some input and check the result.
 """
+
 from __future__ import unicode_literals
+
+import sys
+import pytest
+
+pytestmark = pytest.mark.skipif(
+    sys.platform == 'win32', reason="uses Unix")
+
 from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer, AcceptAction
 from prompt_toolkit.clipboard import InMemoryClipboard, ClipboardData
 from prompt_toolkit.enums import DEFAULT_BUFFER, EditingMode
-from prompt_toolkit.eventloop.posix import PosixEventLoop
 from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.input import PipeInput
 from prompt_toolkit.interface import CommandLineInterface
 from prompt_toolkit.key_binding.manager import KeyBindingManager
 from prompt_toolkit.output import DummyOutput
-from prompt_toolkit.terminal.vt100_input import ANSI_SEQUENCES
 from functools import partial
-import pytest
 
 
 def _history():
@@ -38,7 +43,8 @@ def _feed_cli_with_input(text, editing_mode=EditingMode.EMACS, clipboard=None,
     # If the given text doesn't end with a newline, the interface won't finish.
     assert text.endswith('\n')
 
-    loop = PosixEventLoop()
+    from prompt_toolkit.eventloop.posix import PosixEventLoop as EventLoop
+    loop = EventLoop()
     try:
         inp = PipeInput()
         inp.send_text(text)
@@ -345,11 +351,15 @@ def test_emacs_arguments():
     assert result.text == 'abbbbaaa'
 
 
+@pytest.mark.skipif(
+    sys.platform == 'win32', reason="uses v100_input")
 def test_emacs_arguments_for_all_commands():
     """
     Test all Emacs commands with Meta-[0-9] arguments (both positive and
     negative). No one should crash.
     """
+    from prompt_toolkit.terminal.vt100_input import ANSI_SEQUENCES
+    
     for key in ANSI_SEQUENCES:
         # Ignore BracketedPaste. This would hang forever, because it waits for
         # the end sequence.
