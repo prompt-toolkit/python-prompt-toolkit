@@ -1477,16 +1477,32 @@ def load_vi_bindings(registry, enable_visual_key=Always(),
         """
         event.current_buffer.insert_text(event.data, overwrite=True)
 
+    @handle(Keys.Backspace, filter=insert_selection_mode)
+    @handle(Keys.Delete, filter=insert_selection_mode)
     @handle(Keys.Any, filter=insert_selection_mode)
     def _(event):
         """
-        Insert data at left cursor positions of the selection.
+        Insert data at the beginning of each line of the block selection.
         """
         cursor_position = event.current_buffer.cursor_position
-        for i, cp in enumerate(event.current_buffer.selection_cursor_positions):
-            event.current_buffer.cursor_position = cp + (cursor_position - event.current_buffer.selection_cursor_positions[0]) * (1 + i) + i
-            event.current_buffer.insert_text(event.data)
-        event.current_buffer.cursor_position = cursor_position + 1
+        selection_cursor_positions = event.current_buffer.selection_cursor_positions
+        insert = False
+        if event.data == '\x7f': # Backspace
+            j = [-1, -1, -1]
+        elif event.data == '\x1b[3~': # Delete
+            j = [0, -1, 0]
+        else: # Otherwise
+            insert = True
+            j = [0, 1, 1]
+        for i1, cp in enumerate(selection_cursor_positions):
+            event.current_buffer.cursor_position = cp + (cursor_position - selection_cursor_positions[0]) + j[0]
+            if insert:
+                event.current_buffer.insert_text(event.data)
+            else:
+                event.current_buffer.delete()
+            for i2 in range(i1 + 1, len(selection_cursor_positions)):
+                selection_cursor_positions[i2] += j[1]
+        event.current_buffer.cursor_position = cursor_position + j[2]
 
     @handle(Keys.ControlX, Keys.ControlL, filter=insert_mode)
     def _(event):
