@@ -4,7 +4,7 @@ from prompt_toolkit.buffer import ClipboardData, indent, unindent, reshape_text
 from prompt_toolkit.document import Document
 from prompt_toolkit.enums import IncrementalSearchDirection, SEARCH_BUFFER, SYSTEM_BUFFER
 from prompt_toolkit.filters import Filter, Condition, HasArg, Always, to_cli_filter, IsReadOnly
-from prompt_toolkit.filters.cli import ViNavigationMode, ViInsertMode, ViReplaceMode, ViSelectionMode, ViWaitingForTextObjectMode, ViDigraphMode, ViMode
+from prompt_toolkit.filters.cli import ViNavigationMode, ViInsertMode, ViInsertSelectionLeftMode, ViInsertSelectionRightMode, ViReplaceMode, ViSelectionMode, ViWaitingForTextObjectMode, ViDigraphMode, ViMode
 from prompt_toolkit.key_binding.digraphs import DIGRAPHS
 from prompt_toolkit.key_binding.vi_state import CharacterFind, InputMode
 from prompt_toolkit.keys import Keys
@@ -161,6 +161,8 @@ def load_vi_bindings(registry, enable_visual_key=Always(),
     #  ViState says different.)
     navigation_mode = ViNavigationMode()
     insert_mode = ViInsertMode()
+    insert_selection_left_mode = ViInsertSelectionLeftMode()
+    insert_selection_right_mode = ViInsertSelectionRightMode()
     replace_mode = ViReplaceMode()
     selection_mode = ViSelectionMode()
     operator_given = ViWaitingForTextObjectMode()
@@ -407,6 +409,30 @@ def load_vi_bindings(registry, enable_visual_key=Always(),
         event.cli.vi_state.input_mode = InputMode.INSERT
         event.current_buffer.cursor_position += \
             event.current_buffer.document.get_start_of_line_position(after_whitespace=True)
+
+    @handle('I', filter=selection_mode & ~IsReadOnly())
+    def _(event):
+        event.current_buffer.selection_left_cursor_positions = []
+        for i, from_to in enumerate(event.current_buffer.document.selection_ranges()):
+            event.current_buffer.selection_left_cursor_positions.append(from_to[0])
+            if i == 0:
+                event.current_buffer.cursor_position = from_to[0]
+        event.cli.vi_state.input_mode = InputMode.INSERT_SELECTION_LEFT
+        buffer = event.current_buffer
+        if bool(buffer.selection_state):
+            buffer.exit_selection()
+
+    @handle('A', filter=selection_mode & ~IsReadOnly())
+    def _(event):
+        event.current_buffer.selection_right_cursor_positions = []
+        for i, from_to in enumerate(event.current_buffer.document.selection_ranges()):
+            event.current_buffer.selection_right_cursor_positions.append(from_to[1] + 1)
+            if i == 0:
+                event.current_buffer.cursor_position = from_to[1] + 1
+        event.cli.vi_state.input_mode = InputMode.INSERT_SELECTION_RIGHT
+        buffer = event.current_buffer
+        if bool(buffer.selection_state):
+            buffer.exit_selection()
 
     @handle('J', filter=navigation_mode & ~IsReadOnly())
     def _(event):
@@ -1463,6 +1489,60 @@ def load_vi_bindings(registry, enable_visual_key=Always(),
         Insert data at cursor position.
         """
         event.current_buffer.insert_text(event.data, overwrite=True)
+
+    @handle(Keys.Backspace, filter=insert_selection_left_mode)
+    @handle(Keys.Delete, filter=insert_selection_left_mode)
+    @handle(Keys.Any, filter=insert_selection_left_mode)
+    def _(event):
+        """
+        Insert data at the beginning of each line of the block selection.
+        """
+        cursor_position = event.current_buffer.cursor_position
+        selection_left_cursor_positions = event.current_buffer.selection_left_cursor_positions
+        insert = False
+        if event.data == '\x7f': # Backspace
+            j = [-1, -1, -1]
+        elif event.data == '\x1b[3~': # Delete
+            j = [0, -1, 0]
+        else: # Otherwise
+            insert = True
+            j = [0, 1, 1]
+        for i1, cp in enumerate(selection_left_cursor_positions):
+            event.current_buffer.cursor_position = cp + (cursor_position - selection_left_cursor_positions[0]) + j[0]
+            if insert:
+                event.current_buffer.insert_text(event.data)
+            else:
+                event.current_buffer.delete()
+            for i2 in range(i1 + 1, len(selection_left_cursor_positions)):
+                selection_left_cursor_positions[i2] += j[1]
+        event.current_buffer.cursor_position = cursor_position + j[2]
+
+    @handle(Keys.Backspace, filter=insert_selection_right_mode)
+    @handle(Keys.Delete, filter=insert_selection_right_mode)
+    @handle(Keys.Any, filter=insert_selection_right_mode)
+    def _(event):
+        """
+        Insert data at the end of each line of the block selection.
+        """
+        cursor_position = event.current_buffer.cursor_position
+        selection_right_cursor_positions = event.current_buffer.selection_right_cursor_positions
+        insert = False
+        if event.data == '\x7f': # Backspace
+            j = [-1, -1, -1]
+        elif event.data == '\x1b[3~': # Delete
+            j = [0, -1, 0]
+        else: # Otherwise
+            insert = True
+            j = [0, 1, 1]
+        for i1, cp in enumerate(selection_right_cursor_positions):
+            event.current_buffer.cursor_position = cp + (cursor_position - selection_right_cursor_positions[0]) + j[0]
+            if insert:
+                event.current_buffer.insert_text(event.data)
+            else:
+                event.current_buffer.delete()
+            for i2 in range(i1 + 1, len(selection_right_cursor_positions)):
+                selection_right_cursor_positions[i2] += j[1]
+        event.current_buffer.cursor_position = cursor_position + j[2]
 
     @handle(Keys.ControlX, Keys.ControlL, filter=insert_mode)
     def _(event):

@@ -27,6 +27,8 @@ __all__ = (
     'ViMode',
     'ViNavigationMode',
     'ViInsertMode',
+    'ViInsertSelectionLeftMode',
+    'ViInsertSelectionRightMode',
     'ViReplaceMode',
     'ViSelectionMode',
     'ViWaitingForTextObjectMode',
@@ -291,6 +293,38 @@ class ViInsertMode(Filter):
 
     def __repr__(self):
         return 'ViInputMode()'
+
+
+@memoized()
+class ViInsertSelectionLeftMode(Filter):
+    def __call__(self, cli):
+        if (cli.editing_mode != EditingMode.VI
+                or cli.vi_state.operator_func
+                or cli.vi_state.waiting_for_digraph
+                or cli.current_buffer.selection_state
+                or cli.current_buffer.read_only()):
+            return False
+
+        return cli.vi_state.input_mode == ViInputMode.INSERT_SELECTION_LEFT
+
+    def __repr__(self):
+        return 'ViInputSelectionLeftMode()'
+
+
+@memoized()
+class ViInsertSelectionRightMode(Filter):
+    def __call__(self, cli):
+        if (cli.editing_mode != EditingMode.VI
+                or cli.vi_state.operator_func
+                or cli.vi_state.waiting_for_digraph
+                or cli.current_buffer.selection_state
+                or cli.current_buffer.read_only()):
+            return False
+
+        return cli.vi_state.input_mode == ViInputMode.INSERT_SELECTION_RIGHT
+
+    def __repr__(self):
+        return 'ViInputSelectionRightMode()'
 
 
 @memoized()
