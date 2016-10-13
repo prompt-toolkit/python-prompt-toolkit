@@ -1,5 +1,7 @@
 # pylint: disable=function-redefined
 from __future__ import unicode_literals
+import re
+
 from prompt_toolkit.buffer import SelectionType, indent, unindent
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.enums import IncrementalSearchDirection, SEARCH_BUFFER, SYSTEM_BUFFER
@@ -183,7 +185,45 @@ def load_emacs_bindings(registry, filter=Always()):
         """
         Rotate through the last word (white-space delimited) of the previous lines in history.
         """
-        # TODO
+        buf = event.current_buffer
+
+        if not event.is_repeat:
+            _.depth = 0
+            _.last_word = ''
+
+        if event._arg is not None:
+            word_index = int(event._arg)
+        else:
+            word_index = 1
+
+        new_word = _.last_word
+        while _.last_word == new_word:
+            _.depth += 1
+
+            if _.depth > len(buf.history):
+                # Can't find a word to insert, give up
+                # readline does a bell here
+                return
+
+            past_line = buf.history[-_.depth]
+            if past_line == '':
+                past_words = []
+            else:
+                past_words = [w.strip() for w in re.split(r'''(\s+|'.*?'|".*?")''', past_line, re.U)]
+                past_words = [w for w in past_words if w]
+
+            if len(past_words) < word_index:
+                # Can't find a word to insert, give up
+                # readline does a bell here
+                return
+
+            new_word = past_words[-word_index]
+
+        buf.save_to_undo_stack()
+        if event.is_repeat:
+            buf.delete_before_cursor(len(_.last_word))
+        buf.insert_text(new_word)
+        _.last_word = new_word
 
     @handle(Keys.Escape, '*', filter=insert_mode)
     def _(event):
