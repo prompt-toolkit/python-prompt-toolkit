@@ -412,9 +412,10 @@ def load_vi_bindings(registry, enable_visual_key=Always(),
 
     @handle('I', filter=selection_mode & ~IsReadOnly())
     def _(event):
-        event.current_buffer.selection_left_cursor_positions = []
+        global selection_left_cursor_positions
+        selection_left_cursor_positions = []
         for i, from_to in enumerate(event.current_buffer.document.selection_ranges()):
-            event.current_buffer.selection_left_cursor_positions.append(from_to[0])
+            selection_left_cursor_positions.append(from_to[0])
             if i == 0:
                 event.current_buffer.cursor_position = from_to[0]
         event.cli.vi_state.input_mode = InputMode.INSERT_SELECTION_LEFT
@@ -1497,8 +1498,8 @@ def load_vi_bindings(registry, enable_visual_key=Always(),
         """
         Insert data at the beginning of each line of the block selection.
         """
+        global selection_left_cursor_positions
         cursor_position = event.current_buffer.cursor_position
-        selection_left_cursor_positions = event.current_buffer.selection_left_cursor_positions
         insert = False
         if event.data == '\x7f': # Backspace
             j = [-1, -1, -1]
@@ -1656,7 +1657,27 @@ def load_vi_search_bindings(registry, get_search_state=None,
 
     has_focus = filters.HasFocus(search_buffer_name)
     navigation_mode = ViNavigationMode()
+    selection_mode = ViSelectionMode()
     handle = create_handle_decorator(registry, filter & ViMode())
+
+    @handle('/', filter=selection_mode)
+    @handle(Keys.ControlS, filter=~has_focus)
+    def _(event):
+        """
+        Vi-style forward search.
+        """
+        global search_selection_ranges
+        search_selection_ranges = []
+        for from_to in event.current_buffer.document.selection_ranges():
+            search_selection_ranges.append(list(from_to))
+        event.current_buffer.exit_selection()
+        event.current_buffer.cursor_position = search_selection_ranges[0][0]
+        # Set the ViState.
+        get_search_state(event.cli).direction = IncrementalSearchDirection.FORWARD
+        event.cli.vi_state.input_mode = InputMode.INSERT
+
+        # Focus search buffer.
+        event.cli.push_focus(search_buffer_name)
 
     @handle('/', filter=navigation_mode)
     @handle(Keys.ControlS, filter=~has_focus)
@@ -1664,6 +1685,8 @@ def load_vi_search_bindings(registry, get_search_state=None,
         """
         Vi-style forward search.
         """
+        global search_selection_ranges
+        search_selection_ranges = []
         # Set the ViState.
         get_search_state(event.cli).direction = IncrementalSearchDirection.FORWARD
         event.cli.vi_state.input_mode = InputMode.INSERT
@@ -1747,6 +1770,74 @@ def load_vi_search_bindings(registry, get_search_state=None,
         event.cli.pop_focus()
         event.cli.buffers[search_buffer_name].reset()
 
+    @handle('/', filter=has_focus)
+    def _(event):
+        """
+        Replace the searched text.
+        """
+        global search_selection_ranges, selection_left_cursor_positions
+        if len(search_selection_ranges) > 0:
+            selection_left_cursor_positions = []
+
+            text_length = len(event.cli.buffers[search_buffer_name].text)
+
+            # Apply the search:
+            input_buffer = event.cli.buffers.previous(event.cli)
+            search_buffer = event.cli.buffers[search_buffer_name]
+
+            # Update search state.
+            if search_buffer.text:
+                get_search_state(event.cli).text = search_buffer.text
+
+            # Apply search.
+            input_buffer.apply_search(get_search_state(event.cli))
+
+            # Add query to history of search line.
+            search_buffer.append_to_history()
+            search_buffer.reset()
+
+            # Focus previous document again.
+            event.cli.vi_state.input_mode = InputMode.NAVIGATION
+            event.cli.pop_focus()
+
+            done0 = False
+            i0 = 0
+            while (not done0):
+                from_, to = search_selection_ranges[i0]
+                done1 = False
+                while (not done1):
+                    done2 = False
+                    while (not done2):
+                        if event.current_buffer.cursor_position < from_:
+                            done2 = not event.current_buffer.apply_search(
+                                get_search_state(event.cli), include_current_position=False,
+                                count=1)
+                        else:
+                            done2 = True
+
+                    if from_ <= event.current_buffer.cursor_position <= to - text_length + 1:
+                        selection_left_cursor_positions.append(event.current_buffer.cursor_position)
+                        event.current_buffer.delete(count=text_length)
+                        for i1 in range(i0, len(search_selection_ranges)):
+                            if i1 > i0:
+                                search_selection_ranges[i1][0] -= text_length
+                            search_selection_ranges[i1][1] -= text_length
+                            to -= text_length
+                        if not event.current_buffer.apply_search(
+                            get_search_state(event.cli), include_current_position=False,
+                            count=1):
+                            done1 = True
+                    else:
+                        done1 = True
+                i0 += 1
+                if i0 == len(search_selection_ranges):
+                    done0 = True
+
+            event.cli.buffers[search_buffer_name].reset()
+            search_selection_ranges = []
+            if len(selection_left_cursor_positions) > 0:
+                event.cli.vi_state.input_mode = InputMode.INSERT_SELECTION_LEFT
+                event.current_buffer.cursor_position = selection_left_cursor_positions[0]
 
 def load_extra_vi_page_navigation_bindings(registry, filter=None):
     """

@@ -1102,6 +1102,8 @@ class Buffer(object):
             self.working_index = working_index
             self.cursor_position = cursor_position
 
+        return search_result is not None
+
     def exit_selection(self):
         self.selection_state = None
 
