@@ -29,6 +29,13 @@ class ViState(object):
         #: search in Vi mode, by pressing the 'n' or 'N' in navigation mode.)
         self.last_character_find = None
 
+        # Information necessary to repeat the previous change
+        self.last_change_type = None
+        self.last_handler_function = None
+        self.last_event = None
+        self.last_text_object_function = None
+        self.potential_text_object_function = None
+
         # When an operator is given and we are waiting for text object,
         # -- e.g. in the case of 'dw', after the 'd' --, an operator callback
         # is set here.
