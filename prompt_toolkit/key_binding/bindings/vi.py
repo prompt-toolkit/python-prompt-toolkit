@@ -1661,10 +1661,9 @@ def load_vi_search_bindings(registry, get_search_state=None,
     handle = create_handle_decorator(registry, filter & ViMode())
 
     @handle('/', filter=selection_mode)
-    @handle(Keys.ControlS, filter=~has_focus)
     def _(event):
         """
-        Vi-style forward search.
+        Search text (in order to replace it in the selection).
         """
         global search_selection_ranges
         search_selection_ranges = []
@@ -1814,7 +1813,6 @@ def load_vi_search_bindings(registry, get_search_state=None,
                                 count=1)
                         else:
                             done2 = True
-
                     if from_ <= event.current_buffer.cursor_position <= to - text_length + 1:
                         selection_left_cursor_positions.append(event.current_buffer.cursor_position)
                         event.current_buffer.delete(count=text_length)
@@ -1822,9 +1820,9 @@ def load_vi_search_bindings(registry, get_search_state=None,
                             if i1 > i0:
                                 search_selection_ranges[i1][0] -= text_length
                             search_selection_ranges[i1][1] -= text_length
-                            to -= text_length
+                        to -= text_length
                         if not event.current_buffer.apply_search(
-                            get_search_state(event.cli), include_current_position=False,
+                            get_search_state(event.cli), include_current_position=True,
                             count=1):
                             done1 = True
                     else:
