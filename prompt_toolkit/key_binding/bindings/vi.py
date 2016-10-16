@@ -1769,7 +1769,7 @@ def load_vi_search_bindings(registry, get_search_state=None,
         event.cli.pop_focus()
         event.cli.buffers[search_buffer_name].reset()
 
-    @handle('/', filter=has_focus)
+    @handle(Keys.ControlJ, filter=has_focus)
     def _(event):
         """
         Replace the searched text.
