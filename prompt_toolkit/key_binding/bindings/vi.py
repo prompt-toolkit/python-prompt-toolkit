@@ -1807,10 +1807,14 @@ def load_vi_search_bindings(registry, get_search_state=None,
                 while (not done1):
                     done2 = False
                     while (not done2):
+                        last_cursor_position = event.current_buffer.cursor_position
                         if event.current_buffer.cursor_position < from_:
-                            done2 = not event.current_buffer.apply_search(
+                            if not event.current_buffer.apply_search(
                                 get_search_state(event.cli), include_current_position=False,
-                                count=1)
+                                count=1):
+                                done2 = True
+                            if event.current_buffer.cursor_position <= last_cursor_position:
+                                done2 = True
                         else:
                             done2 = True
                     if from_ <= event.current_buffer.cursor_position <= to - text_length + 1:
