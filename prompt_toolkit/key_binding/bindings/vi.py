@@ -1893,6 +1893,18 @@ def load_vi_search_bindings(registry, get_search_state=None,
                 from_, to = ranges[i0]
                 done1 = False
                 while (not done1):
+                    done2 = False
+                    while (not done2):
+                        last_cursor_position = event.current_buffer.cursor_position
+                        if event.current_buffer.cursor_position < from_:
+                            if not event.current_buffer.apply_search(
+                                get_search_state(event.cli), include_current_position=False,
+                                count=1):
+                                done2 = True
+                            if event.current_buffer.cursor_position <= last_cursor_position:
+                                done2 = True
+                        else:
+                            done2 = True
                     if from_ <= event.current_buffer.cursor_position <= to - text_length + 1:
                         positions.append(event.current_buffer.cursor_position)
                         event.current_buffer.delete(count=text_length)
