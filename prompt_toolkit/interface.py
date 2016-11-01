@@ -32,7 +32,7 @@ from .key_binding.vi_state import ViState
 from .keys import Keys
 from .output import Output
 from .renderer import Renderer, print_tokens
-from .search_state import SearchState
+from .search_state import SearchState, SearchLastWordState
 from .utils import Event
 
 # Following import is required for backwards compatibility.
@@ -291,6 +291,7 @@ class CommandLineInterface(object):
         # Search new search state. (Does also remember what has to be
         # highlighted.)
         self.search_state = SearchState(ignore_case=Condition(lambda: self.is_ignoring_case))
+        self.search_last_word_state = SearchLastWordState()
 
         # Trigger reset event.
         self.on_reset.fire()
