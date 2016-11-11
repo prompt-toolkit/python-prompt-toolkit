@@ -69,7 +69,7 @@ BG_ANSI_COLORS = {
     'ansiblue':        104,
     'ansifuchsia':     105,
     'ansiturquoise':   106,
-    'ansilightgray':   107,
+    'ansiwhite':       107,
 
 }
 
