@@ -1747,8 +1747,8 @@ def load_vi_search_bindings(registry, get_search_state=None,
     selection_mode = ViSelectionMode()
     handle = create_handle_decorator(registry, filter & ViMode())
 
-    @handle('/', filter=navigation_mode|selection_mode)
-    @handle(Keys.ControlS, filter=~has_focus)
+    @handle('?', filter=navigation_mode|selection_mode)
+    @handle(Keys.ControlR, filter=~has_focus)
     def _(event):
         """
         Vi-style forward search.
@@ -1760,8 +1760,8 @@ def load_vi_search_bindings(registry, get_search_state=None,
         # Focus search buffer.
         event.cli.push_focus(search_buffer_name)
 
-    @handle('?', filter=navigation_mode|selection_mode)
-    @handle(Keys.ControlR, filter=~has_focus)
+    @handle('/', filter=navigation_mode|selection_mode)
+    @handle(Keys.ControlS, filter=~has_focus)
     def _(event):
         """
         Vi-style backward search.
