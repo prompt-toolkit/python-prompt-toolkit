@@ -287,6 +287,8 @@ class Buffer(object):
         # using multiple cursors.)
         self.multiple_cursor_positions = []
 
+        self.substitute_selection_ranges = []
+
         # When doing consecutive up/down movements, prefer to stay at this column.
         self.preferred_column = None
 
@@ -1241,6 +1243,8 @@ class Buffer(object):
             working_index, cursor_position = search_result
             self.working_index = working_index
             self.cursor_position = cursor_position
+
+        return search_result is not None
 
     def exit_selection(self):
         self.selection_state = None

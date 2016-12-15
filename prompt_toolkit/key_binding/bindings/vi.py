@@ -1747,6 +1747,30 @@ def load_vi_search_bindings(registry, get_search_state=None,
     selection_mode = ViSelectionMode()
     handle = create_handle_decorator(registry, filter & ViMode())
 
+    @handle('s', filter=selection_mode)
+    def _(event):
+        """
+        Search text (in order to replace it in the selection).
+        """
+        buff = event.current_buffer
+
+        # Store selection ranges.
+        ranges = []
+
+        for from_to in buff.document.selection_ranges():
+            ranges.append(list(from_to))
+
+        buff.substitute_selection_ranges = ranges
+
+        event.current_buffer.exit_selection()
+        event.current_buffer.cursor_position = ranges[0][0]
+        # Set the ViState.
+        get_search_state(event.cli).direction = IncrementalSearchDirection.FORWARD
+        event.cli.vi_state.input_mode = InputMode.INSERT
+
+        # Focus search buffer.
+        event.cli.push_focus(search_buffer_name)
+
     @handle('/', filter=navigation_mode|selection_mode)
     @handle(Keys.ControlS, filter=~has_focus)
     def _(event):
@@ -1836,6 +1860,78 @@ def load_vi_search_bindings(registry, get_search_state=None,
         event.cli.pop_focus()
         event.cli.buffers[search_buffer_name].reset()
 
+    @handle('/', filter=has_focus)
+    def _(event):
+        """
+        Replace the searched text.
+        """
+        ranges = event.cli.buffers.previous(event.cli).substitute_selection_ranges
+        if len(ranges) > 0:
+            positions = []
+
+            text_length = len(event.cli.buffers[search_buffer_name].text)
+
+            # Apply the search:
+            input_buffer = event.cli.buffers.previous(event.cli)
+            search_buffer = event.cli.buffers[search_buffer_name]
+
+            # Update search state.
+            if search_buffer.text:
+                get_search_state(event.cli).text = search_buffer.text
+
+            # Apply search.
+            input_buffer.apply_search(get_search_state(event.cli))
+
+            # Add query to history of search line.
+            search_buffer.append_to_history()
+            search_buffer.reset()
+
+            # Focus previous document again.
+            event.cli.vi_state.input_mode = InputMode.NAVIGATION
+            event.cli.pop_focus()
+
+            done0 = False
+            i0 = 0
+            while (not done0):
+                from_, to = ranges[i0]
+                done1 = False
+                while (not done1):
+                    done2 = False
+                    while (not done2):
+                        last_cursor_position = event.current_buffer.cursor_position
+                        if event.current_buffer.cursor_position < from_:
+                            if not event.current_buffer.apply_search(
+                                get_search_state(event.cli), include_current_position=False,
+                                count=1):
+                                done2 = True
+                            if event.current_buffer.cursor_position <= last_cursor_position:
+                                done2 = True
+                        else:
+                            done2 = True
+                    if from_ <= event.current_buffer.cursor_position <= to - text_length + 1:
+                        positions.append(event.current_buffer.cursor_position)
+                        event.current_buffer.delete(count=text_length)
+                        for i1 in range(i0, len(ranges)):
+                            if i1 > i0:
+                                ranges[i1][0] -= text_length
+                            ranges[i1][1] -= text_length
+                        to -= text_length
+                        if not event.current_buffer.apply_search(
+                            get_search_state(event.cli), include_current_position=True,
+                            count=1):
+                            done1 = True
+                    else:
+                        done1 = True
+                i0 += 1
+                if i0 == len(ranges):
+                    done0 = True
+
+            event.cli.buffers[search_buffer_name].reset()
+            ranges = []
+            if len(positions) > 0:
+                event.current_buffer.multiple_cursor_positions = positions
+                event.current_buffer.cursor_position = positions[0]
+                event.cli.vi_state.input_mode = InputMode.INSERT_MULTIPLE
 
 def load_extra_vi_page_navigation_bindings(registry, filter=None):
     """
