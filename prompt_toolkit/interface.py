@@ -376,38 +376,45 @@ class CommandLineInterface(object):
         """
         assert pre_run is None or callable(pre_run)
 
-        try:
-            self._is_running = True
+        # While running, suppress all exceptions that people could potentially
+        # raise from a signal handler and postpone the 'raise' until the end of
+        # this function. (It is not a good practice to have a signal handler
+        # that raises an exception, but we want to protect against that anyway.)
+        # See: https://github.com/ipython/ipython/pull/9867
+        with _suppress_signal_exceptions(self.eventloop.stop) as exc_catcher:
+            try:
+                self._is_running = True
 
-            self.on_start.fire()
-            self.reset(reset_current_buffer=reset_current_buffer)
+                self.on_start.fire()
+                self.reset(reset_current_buffer=reset_current_buffer)
 
-            # Call pre_run.
-            if pre_run:
-                pre_run()
+                # Call pre_run.
+                if pre_run:
+                    pre_run()
 
-            # Run eventloop in raw mode.
-            with self.input.raw_mode():
-                self.renderer.request_absolute_cursor_position()
-                self._redraw()
+                # Run eventloop in raw mode.
+                with self.input.raw_mode():
+                    self.renderer.request_absolute_cursor_position()
+                    self._redraw()
 
-                self.eventloop.run(self.input, self.create_eventloop_callbacks())
-        finally:
-            # Clean up renderer. (This will leave the alternate screen, if we use
-            # that.)
+                    self.eventloop.run(self.input, self.create_eventloop_callbacks())
+            finally:
+                # Clean up renderer. (This will leave the alternate screen, if we use
+                # that.)
 
-            # If exit/abort haven't been called set, but another exception was
-            # thrown instead for some reason, make sure that we redraw in exit
-            # mode.
-            if not self.is_done:
-                self._exit_flag = True
-                self._redraw()
+                # If exit/abort haven't been called set, but another exception was
+                # thrown instead for some reason, make sure that we redraw in exit
+                # mode.
+                if not self.is_done:
+                    self._exit_flag = True
+                    self._redraw()
 
-            self.renderer.reset()
-            self.on_stop.fire()
-            self._is_running = False
+                self.renderer.reset()
+                self.on_stop.fire()
+                self._is_running = False
 
         # Return result.
+        exc_catcher.raise_exceptions()
         return self.return_value()
 
     try:
@@ -1163,3 +1170,73 @@ class _SubApplicationEventLoop(EventLoop):
 
     def remove_reader(self, fd):
         self.cli.eventloop.remove_reader(fd)
+
+
+class _suppress_signal_exceptions(object):
+    """
+    Context manager that replaces all signal handlers by a wrapper that
+    suppresses exceptions from the original signal handlers.
+
+    Instead, when an exception was raised by the original signal handler, this
+    is stored and the `notify` callback is triggered. When later
+    `raise_exceptions` is called, the captured exception is raised.
+    """
+    def __init__(self, notify):
+        assert callable(notify)
+        self.notify = notify
+
+        # Map signal number to original handler.
+        self._original_handlers = {}
+        self.captured_exceptions = []
+
+    def __enter__(self):
+        # Only replace signals in the main thread.
+        # (It doesn't make sense to do this from other threads, as they don't
+        # receive signals anyway.)
+        if isinstance(threading.current_thread(), threading._MainThread):
+            # Replace each signal handler.
+            for n in self._get_signal_numbers():
+                try:
+                    original_handler = signal.getsignal(n)
+                except ValueError:  # Signal number out of range.
+                    pass
+                else:
+                    if original_handler:
+                        self._original_handlers[n] = original_handler
+                        signal.signal(n, self._create_wrapper(original_handler))
+        return self
+
+    def __exit__(self, *a, **kw):
+        # Restore the original signal handlers.
+        for n, original_handler in self._original_handlers.items():
+            signal.signal(n, original_handler)
+
+    def _get_signal_numbers(self):
+        " Yield the signal numbers that are available. "
+        for name in dir(signal):
+            if name.startswith('SIG'):
+                item = getattr(signal, name)
+                if isinstance(item, int):
+                    yield item
+
+    def _create_wrapper(self, original_handler):
+        """
+        Create a signal handler that does the same as the original handler, but
+        is guaranteed to not raise an exception.
+        """
+        def signal_handler(signum, frame):
+            try:
+                original_handler(signum, frame)
+            except BaseException as e:
+                # Note: This should be able to catch `KeyboardInterrupt`,
+                #       which is not an instance of `Exception`.
+                self.captured_exceptions.append(e)
+                self.notify()
+        return signal_handler
+
+    def raise_exceptions(self):
+        """
+        If any exceptions were caught, raise them.
+        """
+        for exception in self.captured_exceptions:
+            raise exception  # I know, we only raise the first exception.
