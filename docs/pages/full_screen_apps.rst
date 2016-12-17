@@ -75,20 +75,15 @@ Key bindings
 
 In order to react to user actions, we need to create a registry of keyboard
 shortcuts to pass to our :class:`~prompt_toolkit.application.Application`.  The
-easiest way to do so, is to create a
-:class:`~prompt_toolkit.key_binding.manager.KeyBindingManager`, and then attach
-handlers to our desired keys. :class:`~prompt_toolkit.keys.Keys` contains a few
-predefined keyboards shortcut that can be useful.
-
-To create a `registry`, we can simply instantiate a
-:class:`~prompt_toolkit.key_binding.manager.KeyBindingManager` and take its
-`registry` attribute:
+easiest way to do so, is to use the
+:class:`~prompt_toolkit.key_binding.manager.defaults.load_key_bindings`
+function. This returns a `Registry` object that is already filled with the
+default key bindings.
 
 .. code:: python
 
-    from prompt_toolkit.key_binding.manager import KeyBindingManager
-    manager = KeyBindingManager()
-    registry = manager.registry
+    from prompt_toolkit.key_binding.defaults import load_key_bindings
+    registry = load_key_bindings()
 
 Update the `Application` constructor, and pass the registry as one of the
 argument.
@@ -99,7 +94,7 @@ argument.
 
 To register a new keyboard shortcut, we can use the
 :meth:`~prompt_toolkit.key_binding.registry.Registry.add_binding` method as a
-decorator of the key handler:
+decorator of the key handler.
 
 .. code:: python
 
@@ -441,11 +436,11 @@ This filter can then be used in a key binding, like in the following snippet:
 
 .. code:: python
 
-    from prompt_toolkit.key_binding.manager import KeyBindingManager
+    from prompt_toolkit.key_binding.defaults import load_key_bindings
 
-    manager = KeyBindingManager.for_prompt()
+    registry = load_key_bindings()
 
-    @manager.registry.add_binding(Keys.ControlT, filter=is_searching)
+    @registry.add_binding(Keys.ControlT, filter=is_searching)
     def _(event):
         # Do, something, but only when searching.
         pass
@@ -473,17 +468,17 @@ Some examples:
 
 .. code:: python
 
-    from prompt_toolkit.key_binding.manager import KeyBindingManager
+    from prompt_toolkit.key_binding.defaults import load_key_bindings
     from prompt_toolkit.filters import HasSearch, HasSelection
 
-    manager = KeyBindingManager()
+    registry = load_key_bindings()
 
-    @manager.registry.add_binding(Keys.ControlT, filter=~is_searching)
+    @registry.add_binding(Keys.ControlT, filter=~is_searching)
     def _(event):
         # Do, something, but not when when searching.
         pass
 
-    @manager.registry.add_binding(Keys.ControlT, filter=HasSearch() | HasSelection())
+    @registry.add_binding(Keys.ControlT, filter=HasSearch() | HasSelection())
     def _(event):
         # Do, something, but not when when searching.
         pass
