@@ -7,9 +7,8 @@ env:
   - TOXENV=py33
   - TOXENV=py34
   - TOXENV=py35
-  - TOXENV=py36-dev
+  - TOXENV=py36
   - TOXENV=pypy
-  - TOXENV=pypy3
 install:
   - travis_retry pip install tox
 script:
