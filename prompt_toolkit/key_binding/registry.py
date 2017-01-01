@@ -27,7 +27,7 @@ from __future__ import unicode_literals
 from abc import ABCMeta, abstractmethod
 
 from prompt_toolkit.cache import SimpleCache
-from prompt_toolkit.filters import CLIFilter, to_cli_filter, Never
+from prompt_toolkit.filters import AppFilter, to_app_filter, Never
 from prompt_toolkit.keys import Key, Keys
 
 from six import text_type, with_metaclass
@@ -37,6 +37,7 @@ __all__ = (
     'Registry',
     'ConditionalRegistry',
     'MergedRegistry',
+    'DynamicRegistry',
 )
 
 
@@ -47,8 +48,8 @@ class _Binding(object):
     def __init__(self, keys, handler, filter=None, eager=None, save_before=None):
         assert isinstance(keys, tuple)
         assert callable(handler)
-        assert isinstance(filter, CLIFilter)
-        assert isinstance(eager, CLIFilter)
+        assert isinstance(filter, AppFilter)
+        assert isinstance(eager, AppFilter)
         assert callable(save_before)
 
         self.keys = keys
@@ -73,11 +74,26 @@ class BaseRegistry(with_metaclass(ABCMeta, object)):
 
     @abstractmethod
     def get_bindings_for_keys(self, keys):
-        pass
+        """
+        Return a list of key bindings that can handle these keys.
+        (This return also inactive bindings, so the `filter` still has to be
+        called, for checking it.)
+
+        :param keys: tuple of keys.
+        """
+        return []
 
     @abstractmethod
     def get_bindings_starting_with_keys(self, keys):
-        pass
+        """
+        Return a list of key bindings that handle a key sequence starting with
+        `keys`. (It does only return bindings for which the sequences are
+        longer than `keys`. And like `get_bindings_for_keys`, it also includes
+        inactive bindings.)
+
+        :param keys: tuple of keys.
+        """
+        return []
 
     # `add_binding` and `remove_binding` don't have to be part of this
     # interface.
@@ -102,9 +118,9 @@ class Registry(BaseRegistry):
         """
         Decorator for annotating key bindings.
 
-        :param filter: :class:`~prompt_toolkit.filters.CLIFilter` to determine
+        :param filter: :class:`~prompt_toolkit.filters.AppFilter` to determine
             when this key binding is active.
-        :param eager: :class:`~prompt_toolkit.filters.CLIFilter` or `bool`.
+        :param eager: :class:`~prompt_toolkit.filters.AppFilter` or `bool`.
             When True, ignore potential longer matches when this key binding is
             hit. E.g. when there is an active eager key binding for Ctrl-X,
             execute the handler immediately and ignore the key binding for
@@ -113,10 +129,10 @@ class Registry(BaseRegistry):
             we should save the current buffer, before handling the event.
             (That's the default.)
         """
-        filter = to_cli_filter(kwargs.pop('filter', True))
-        eager = to_cli_filter(kwargs.pop('eager', False))
+        filter = to_app_filter(kwargs.pop('filter', True))
+        eager = to_app_filter(kwargs.pop('eager', False))
         save_before = kwargs.pop('save_before', lambda e: True)
-        to_cli_filter(kwargs.pop('invalidate_ui', True))  # Deprecated! (ignored.)
+        to_app_filter(kwargs.pop('invalidate_ui', True))  # Deprecated! (ignored.)
 
         assert not kwargs
         assert keys
@@ -217,7 +233,7 @@ class Registry(BaseRegistry):
         return self._get_bindings_starting_with_keys_cache.get(keys, get)
 
 
-class _AddRemoveMixin(BaseRegistry):
+class _ProxyMixin(BaseRegistry):
     """
     Common part for ConditionalRegistry and MergedRegistry.
     """
@@ -226,22 +242,8 @@ class _AddRemoveMixin(BaseRegistry):
         self._registry2 = Registry()
         self._last_version = None
 
-        # The 'extra' registry. Mostly for backwards compatibility.
-        self._extra_registry = Registry()
-
     def _update_cache(self):
         raise NotImplementedError
-
-    # For backwards, compatibility, we allow adding bindings to both
-    # ConditionalRegistry and MergedRegistry. This is however not the
-    # recommended way. Better is to create a new registry and merge them
-    # together using MergedRegistry.
-
-    def add_binding(self, *k, **kw):
-        return self._extra_registry.add_binding(*k, **kw)
-
-    def remove_binding(self, *k, **kw):
-        return self._extra_registry.remove_binding(*k, **kw)
 
     # Proxy methods to self._registry2.
 
@@ -264,13 +266,13 @@ class _AddRemoveMixin(BaseRegistry):
         return self._registry2.get_bindings_starting_with_keys(*a, **kw)
 
 
-class ConditionalRegistry(_AddRemoveMixin):
+class ConditionalRegistry(_ProxyMixin):
     """
     Wraps around a `Registry`. Disable/enable all the key bindings according to
     the given (additional) filter.::
 
         @Condition
-        def setting_is_true(cli):
+        def setting_is_true(app):
             return True  # or False
 
         registy = ConditionalRegistry(registry, setting_is_true)
@@ -279,40 +281,37 @@ class ConditionalRegistry(_AddRemoveMixin):
     enable/disabled according to the given `filter`.
 
     :param registries: List of `Registry` objects.
-    :param filter: `CLIFilter` object.
+    :param filter: `AppFilter` object.
     """
-    def __init__(self, registry=None, filter=True):
-        registry = registry or Registry()
+    def __init__(self, registry, filter=True):
         assert isinstance(registry, BaseRegistry)
-
-        _AddRemoveMixin.__init__(self)
+        _ProxyMixin.__init__(self)
 
         self.registry = registry
-        self.filter = to_cli_filter(filter)
+        self.filter = to_app_filter(filter)
 
     def _update_cache(self):
         " If the original registry was changed. Update our copy version. "
-        expected_version = (self.registry._version, self._extra_registry._version)
+        expected_version = self.registry._version
 
         if self._last_version != expected_version:
             registry2 = Registry()
 
             # Copy all bindings from `self.registry`, adding our condition.
-            for reg in (self.registry, self._extra_registry):
-                for b in reg.key_bindings:
-                    registry2.key_bindings.append(
-                        _Binding(
-                            keys=b.keys,
-                            handler=b.handler,
-                            filter=self.filter & b.filter,
-                            eager=b.eager,
-                            save_before=b.save_before))
+            for b in self.registry.key_bindings:
+                registry2.key_bindings.append(
+                    _Binding(
+                        keys=b.keys,
+                        handler=b.handler,
+                        filter=self.filter & b.filter,
+                        eager=b.eager,
+                        save_before=b.save_before))
 
             self._registry2 = registry2
             self._last_version = expected_version
 
 
-class MergedRegistry(_AddRemoveMixin):
+class MergedRegistry(_ProxyMixin):
     """
     Merge multiple registries of key bindings into one.
 
@@ -323,9 +322,7 @@ class MergedRegistry(_AddRemoveMixin):
     """
     def __init__(self, registries):
         assert all(isinstance(r, BaseRegistry) for r in registries)
-
-        _AddRemoveMixin.__init__(self)
-
+        _ProxyMixin.__init__(self)
         self.registries = registries
 
     def _update_cache(self):
@@ -333,9 +330,7 @@ class MergedRegistry(_AddRemoveMixin):
         If one of the original registries was changed. Update our merged
         version.
         """
-        expected_version = (
-            tuple(r._version for r in self.registries) +
-            (self._extra_registry._version, ))
+        expected_version = tuple(r._version for r in self.registries)
 
         if self._last_version != expected_version:
             registry2 = Registry()
@@ -343,8 +338,27 @@ class MergedRegistry(_AddRemoveMixin):
             for reg in self.registries:
                 registry2.key_bindings.extend(reg.key_bindings)
 
-            # Copy all bindings from `self._extra_registry`.
-            registry2.key_bindings.extend(self._extra_registry.key_bindings)
-
             self._registry2 = registry2
             self._last_version = expected_version
+
+
+class DynamicRegistry(_ProxyMixin):
+    """
+    Registry class that can dynamically returns any Registry.
+
+    :param get_registry: Callable that returns a :class:`.Registry` instance.
+    """
+    def __init__(self, get_registry):
+        assert callable(get_registry)
+        self.get_registry = get_registry
+        self.__version = 0
+        self._last_child_version = None
+        self._dummy = Registry()  # Empty registry.
+
+    def _update_cache(self):
+        registry = self.get_registry() or self._dummy
+        assert isinstance(registry, BaseRegistry)
+        version = id(registry), registry._version
+
+        self._registry2 = registry
+        self._last_version = version

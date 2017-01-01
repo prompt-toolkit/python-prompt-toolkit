@@ -13,7 +13,6 @@ See the examples directory to learn about the usage.
 Probably, to get started, you meight also want to have a look at
 `prompt_toolkit.shortcuts.prompt`.
 """
-from .interface import CommandLineInterface
 from .application import AbortAction, Application
 from .shortcuts import prompt, prompt_async
 

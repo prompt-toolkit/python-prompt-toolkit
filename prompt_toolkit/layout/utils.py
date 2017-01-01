@@ -9,7 +9,6 @@ __all__ = (
     'token_list_to_text',
     'explode_tokens',
     'split_lines',
-    'find_window_for_buffer_name',
 )
 
 
@@ -163,19 +162,13 @@ def explode_tokens(tokenlist):
     return _ExplodedList(result)
 
 
-def find_window_for_buffer_name(cli, buffer_name):
+def find_all_controls(layout):
     """
-    Look for a :class:`~prompt_toolkit.layout.containers.Window` in the Layout
-    that contains the :class:`~prompt_toolkit.layout.controls.BufferControl`
-    for the given buffer and return it. If no such Window is found, return None.
+    Find all the `UIControl` objects in this layout.
     """
-    from prompt_toolkit.interface import CommandLineInterface
-    assert isinstance(cli, CommandLineInterface)
+    from .containers import Container, Window
+    assert isinstance(layout, Container)
 
-    from .containers import Window
-    from .controls import BufferControl
-
-    for l in cli.layout.walk(cli):
-        if isinstance(l, Window) and isinstance(l.content, BufferControl):
-            if l.content.buffer_name == buffer_name:
-                return l
+    for item in layout.walk():
+        if isinstance(item, Window):
+            yield item.content

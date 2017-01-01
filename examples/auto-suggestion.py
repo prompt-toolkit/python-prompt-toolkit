@@ -9,9 +9,9 @@ suggestion.
 """
 from __future__ import unicode_literals, print_function
 from prompt_toolkit import prompt
-from prompt_toolkit.history import InMemoryHistory
-from prompt_toolkit.interface import AbortAction
+from prompt_toolkit.application import AbortAction
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.history import InMemoryHistory
 
 
 def main():
