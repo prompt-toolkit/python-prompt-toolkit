@@ -1,6 +1,59 @@
 CHANGELOG
 =========
 
+2.0.0: ...
+-----------------
+
+Version 2.0 includes a big refactoring of the internal architecture. This
+includes the merge of the CommandLineInterface and the Application object, a
+rewrite of how user controls are focussed, a rewrite of how event loops work
+and the removal of the buffers dictionary. This introduces many backwards
+incompatible changes, but the result is a very nice and powerful architecture.
+
+Changes:
+- The `CommandLineInterface` and the `Application` classes are merged. First,
+  `CommandLineInterface` contained all the I/O objects (like the input, output
+  and event loop), while the `Application` contained everything else. There was
+  no practical reason to keep this separation. (`CommandLineInterface` was
+  mostly a proxy to `Application`.)
+
+  A consequence is that all almost code which received a
+  `CommandLineInterface`, will now receive an `Application`.
+  For instance, `CLIFilter` will now take an `Application`, so it was renamed
+  to `AppFilter`.
+
+- The `buffers` dictionary (`CommandLineInterface.buffers`) does not exist
+  anymore. Further, `buffers` was a `BufferMapping` that keeps track of which
+  buffer has the focus. All this significantly reduces the freedom for creating
+  complex applications. We wanted to more toward a layout that can be defined
+  as a collection of and relation between user widgets. A user widget does not
+  need to have a `Buffer` underneath and any widget should be focussable.
+
+  * `layout.focus.Focus` was introduced and `Application.focussed_control` was
+    added.
+
+- The key bindings were refactored. It became much more flexible to combine
+  sets of key bindings.
+
+  * Every `load_*` function returns one `Registry` objects, instead of
+    populating an existing one, like before.
+  * `MergedRegistry` and `ConditionalRegistry` were added. They can
+    respectively merge other `Registry` objects and make a set of bindings
+    optional.
+  * `key_binding.defaults.load_key_bindings` was added to load all the key
+    bindings.
+  * `KeyBindingManager` has been removed.
+
+- Deprecated 
+
+Migrating readline applications:
+
+
+TODO: finish changelog...
+
+
+
+
 1.0.9: 2016-11-07
 -----------------
 

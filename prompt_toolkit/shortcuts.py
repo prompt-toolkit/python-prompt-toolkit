@@ -1,23 +1,28 @@
 """
-Shortcuts for retrieving input from the user.
+Line editing functionality.
+---------------------------
 
-If you are using this library for retrieving some input from the user (as a
-pure Python replacement for GNU readline), probably for 90% of the use cases,
-the :func:`.prompt` function is all you need. It's the easiest shortcut which
-does a lot of the underlying work like creating a
-:class:`~prompt_toolkit.application.Application` instance for you.
+This provides a UI for a line input, similar to GNU Readline, libedit and
+linenoise.
 
-When is this not sufficient:
-    - When you want to have more complicated layouts (maybe with sidebars or
-      multiple toolbars. Or visibility of certain user interface controls
-      according to some conditions.)
-    - When you wish to have multiple input buffers. (If you would create an
-      editor like a Vi clone.)
-    - Something else that requires more customization than what is possible
-      with the parameters of `prompt`.
+Either call the `prompt` function for every line input. Or create an instance
+of the :class:`.Prompt` class and call the `prompt` method from that class. In
+the second case, we'll have a 'session' that keeps all the state like the
+history in between several calls.
 
-In that case, study the code in this file and build your own `Application`
-instance. It's not too complicated.
+There is a lot of overlap between the arguments taken by the `prompt` function
+and the `Prompt` (like `completer`, `style`, etcetera). There we have the
+freedom to decide which settings we want for the whole 'session', and which we
+want for an individual `prompt`.
+
+Example::
+
+        # Simple `prompt` call.
+        result = prompt('Say something: ')
+
+        # Using a 'session'.
+        p = Prompt()
+        result = p.prompt('Say something: ')
 """
 from __future__ import unicode_literals
 
