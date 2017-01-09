@@ -200,8 +200,9 @@ class Buffer(object):
     :param eventloop: :class:`~prompt_toolkit.eventloop.base.EventLoop` instance.
     :param completer: :class:`~prompt_toolkit.completion.Completer` instance.
     :param history: :class:`~prompt_toolkit.history.History` instance.
-    :param tempfile_suffix: Suffix to be appended to the tempfile for the 'open
-                           in editor' function.
+    :param get_tempfile_suffix: Callable that returns the tempfile suffix to be
+        used for the 'open in editor' function.
+    :param tempfile_suffix: The tempfile suffix.
     :param name: Name for this buffer. E.g. DEFAULT_BUFFER. This is mostly
         useful for key bindings where we sometimes prefer to refer to a buffer
         by their name instead of by reference.
@@ -228,7 +229,7 @@ class Buffer(object):
         changes will not be allowed.
     """
     def __init__(self, loop=None, completer=None, auto_suggest=None, history=None,
-                 validator=None, tempfile_suffix='', name='',
+                 validator=None, get_tempfile_suffix=None, tempfile_suffix='', name='',
                  complete_while_typing=False,
                  enable_history_search=False, document=None,
                  accept_action=AcceptAction.IGNORE, read_only=False,
@@ -246,8 +247,10 @@ class Buffer(object):
         assert auto_suggest is None or isinstance(auto_suggest, AutoSuggest)
         assert history is None or isinstance(history, History)
         assert validator is None or isinstance(validator, Validator)
+        assert get_tempfile_suffix is None or callable(get_tempfile_suffix)
         assert isinstance(tempfile_suffix, six.text_type)
         assert isinstance(name, six.text_type)
+        assert not (get_tempfile_suffix and tempfile_suffix)
         assert on_text_changed is None or callable(on_text_changed)
         assert on_text_insert is None or callable(on_text_insert)
         assert on_cursor_position_changed is None or callable(on_cursor_position_changed)
@@ -259,7 +262,7 @@ class Buffer(object):
         self.completer = completer or DummyCompleter()
         self.auto_suggest = auto_suggest
         self.validator = validator
-        self.tempfile_suffix = tempfile_suffix
+        self.get_tempfile_suffix = get_tempfile_suffix or (lambda: tempfile_suffix)
         self.name = name
         self.accept_action = accept_action
 
@@ -1299,7 +1302,7 @@ class Buffer(object):
             raise EditReadOnlyBuffer()
 
         # Write to temporary file
-        descriptor, filename = tempfile.mkstemp(self.tempfile_suffix)
+        descriptor, filename = tempfile.mkstemp(self.get_tempfile_suffix())
         os.write(descriptor, self.text.encode('utf-8'))
         os.close(descriptor)
 

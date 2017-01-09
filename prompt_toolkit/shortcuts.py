@@ -202,7 +202,7 @@ class Prompt(object):
         'clipboard', 'get_title', 'validator', 'patch_stdout',
         'refresh_interval', 'extra_input_processor', 'default',
         'enable_system_bindings', 'enable_open_in_editor',
-        'reserve_space_for_menu')
+        'reserve_space_for_menu', 'tempfile_suffix')
 
     def __init__(
             self,
@@ -239,6 +239,7 @@ class Prompt(object):
             on_abort=AbortAction.RAISE_EXCEPTION,
             on_exit=AbortAction.RAISE_EXCEPTION,
             erase_when_done=False,
+            tempfile_suffix='.txt',
 
             refresh_interval=0,
             patch_stdout=False,
@@ -320,7 +321,8 @@ class Prompt(object):
             completer=DynamicCompleter(lambda: self.completer),
             history=DynamicHistory(lambda: self.history),
             auto_suggest=DynamicAutoSuggest(lambda: self.auto_suggest),
-            accept_action=AcceptAction.RETURN_TEXT)
+            accept_action=AcceptAction.RETURN_TEXT,
+            get_tempfile_suffix=lambda: self.tempfile_suffix)
 
         search_buffer = Buffer(name=SEARCH_BUFFER, loop=self.loop)
 
@@ -556,7 +558,8 @@ class Prompt(object):
             auto_suggest=None, validator=None, clipboard=None,
             mouse_support=None, get_title=None, extra_input_processor=None,
             reserve_space_for_menu=None,
-            enable_system_bindings=False, enable_open_in_editor=False):
+            enable_system_bindings=False, enable_open_in_editor=False,
+            tempfile_suffix=None):
         """
         Display the prompt.
         """
@@ -598,7 +601,8 @@ class Prompt(object):
             auto_suggest=None, validator=None, clipboard=None,
             mouse_support=None, get_title=None, extra_input_processor=None,
             reserve_space_for_menu=None,
-            enable_system_bindings=False, enable_open_in_editor=False):
+            enable_system_bindings=False, enable_open_in_editor=False,
+            tempfile_suffix=None):
         """
         Display the prompt (run in async IO coroutine).
         This is only available in Python 3.5 or newer.
