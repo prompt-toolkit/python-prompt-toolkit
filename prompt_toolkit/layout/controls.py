@@ -97,12 +97,12 @@ class UIControlKeyBindings(object):
     """
     Key bindings for a user control.
     """
-    def __init__(self, registry, modal=False):
-        from prompt_toolkit.key_binding.registry import BaseRegistry
-        assert isinstance(registry, BaseRegistry)
+    def __init__(self, key_bindings, modal=False):
+        from prompt_toolkit.key_binding.key_bindings import KeyBindingsBase
+        assert isinstance(key_bindings, KeyBindingsBase)
         assert isinstance(modal, bool)
 
-        self.registry = registry
+        self.key_bindings = key_bindings
         self.modal = modal
 
 

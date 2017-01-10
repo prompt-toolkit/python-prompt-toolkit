@@ -11,7 +11,7 @@ from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.enums import SYSTEM_BUFFER, SearchDirection
 from prompt_toolkit.filters import HasFocus, HasArg, HasCompletions, HasValidationError, IsSearching, Always, IsDone, EmacsMode, ViMode, ViNavigationMode, IsSearching
 from prompt_toolkit.filters import to_app_filter
-from prompt_toolkit.key_binding.registry import Registry, MergedRegistry, ConditionalRegistry
+from prompt_toolkit.key_binding.key_bindings import KeyBindings, MergedKeyBindings, ConditionalKeyBindings
 from prompt_toolkit.key_binding.vi_state import InputMode
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.token import Token
@@ -50,14 +50,14 @@ class SystemToolbarControl(BufferControl):
             lexer=SimpleLexer(token=token.Text),
             input_processor=BeforeInput.static('Shell command: ', token))
 
-        self._registry = self._build_key_bindings()
+        self._bindings = self._build_key_bindings()
 
     def _build_key_bindings(self):
         has_focus = HasFocus(self.system_buffer)
 
         # Emacs
-        emacs_registry = Registry()
-        handle = emacs_registry.add_binding
+        emacs_bindings = KeyBindings()
+        handle = emacs_bindings.add
 
         @handle(Keys.Escape, '!', filter= ~has_focus & EmacsMode() &
                 self.enable)
@@ -81,8 +81,8 @@ class SystemToolbarControl(BufferControl):
             event.app.focus.focus_previous()
 
         # Vi.
-        vi_registry = Registry()
-        handle = vi_registry.add_binding
+        vi_bindings = KeyBindings()
+        handle = vi_bindings.add
 
         @handle('!', filter=~has_focus & ViNavigationMode())
         def _(event):
@@ -106,13 +106,13 @@ class SystemToolbarControl(BufferControl):
             self.system_buffer.reset(append_to_history=True)
             event.app.focus.focus_previous()
 
-        return MergedRegistry([
-            ConditionalRegistry(emacs_registry, EmacsMode()),
-            ConditionalRegistry(vi_registry, ViMode()),
+        return MergedKeyBindings([
+            ConditionalKeyBindings(emacs_bindings, EmacsMode()),
+            ConditionalKeyBindings(vi_bindings, ViMode()),
         ])
 
     def get_key_bindings(self, app):
-        return UIControlKeyBindings(registry=self._registry, modal=False)
+        return UIControlKeyBindings(key_bindings=self._bindings, modal=False)
 
 
 class SystemToolbar(ConditionalContainer):

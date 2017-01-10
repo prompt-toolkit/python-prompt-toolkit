@@ -11,7 +11,7 @@ from prompt_toolkit.renderer import HeightIsUnknownError
 from prompt_toolkit.utils import suspend_to_background_supported, is_windows
 
 from .named_commands import get_by_name
-from ..registry import Registry
+from ..key_bindings import KeyBindings
 
 
 __all__ = (
@@ -28,9 +28,9 @@ def if_no_repeat(event):
 
 
 def load_basic_bindings():
-    registry = Registry()
+    key_bindings = KeyBindings()
     insert_mode = ViInsertMode() | EmacsInsertMode()
-    handle = registry.add_binding
+    handle = key_bindings.add
     has_selection = HasSelection()
 
     @handle(Keys.ControlA)
@@ -233,7 +233,7 @@ def load_basic_bindings():
         event.current_buffer.insert_text(event.data, overwrite=False)
         event.app.quoted_insert = False
 
-    return registry
+    return key_bindings
 
 
 def load_mouse_bindings():
@@ -241,9 +241,9 @@ def load_mouse_bindings():
     Key bindings, required for mouse support.
     (Mouse events enter through the key binding system.)
     """
-    registry = Registry()
+    key_bindings = KeyBindings()
 
-    @registry.add_binding(Keys.Vt100MouseEvent)
+    @key_bindings.add(Keys.Vt100MouseEvent)
     def _(event):
         """
         Handling of incoming mouse event.
@@ -317,7 +317,7 @@ def load_mouse_bindings():
             handler(event.app, MouseEvent(position=Point(x=x, y=y),
                                           event_type=mouse_event))
 
-    @registry.add_binding(Keys.WindowsMouseEvent)
+    @key_bindings.add(Keys.WindowsMouseEvent)
     def _(event):
         """
         Handling of mouse events for Windows.
@@ -339,15 +339,15 @@ def load_mouse_bindings():
         handler(event.app, MouseEvent(position=Point(x=x, y=y),
                                       event_type=event_type))
 
-    return registry
+    return key_bindings
 
 
 def load_abort_and_exit_bindings():
     """
     Basic bindings for abort (Ctrl-C) and exit (Ctrl-D).
     """
-    registry = Registry()
-    handle = registry.add_binding
+    key_bindings = KeyBindings()
+    handle = key_bindings.add
 
     @handle(Keys.ControlC)
     def _(event):
@@ -363,34 +363,34 @@ def load_abort_and_exit_bindings():
 
     handle(Keys.ControlD, filter=ctrl_d_condition)(get_by_name('end-of-file'))
 
-    return registry
+    return key_bindings
 
 
 def load_basic_system_bindings():
     """
     Basic system bindings (For both Emacs and Vi mode.)
     """
-    registry = Registry()
+    key_bindings = KeyBindings()
 
     suspend_supported = Condition(
         lambda app: suspend_to_background_supported())
 
-    @registry.add_binding(Keys.ControlZ, filter=suspend_supported)
+    @key_bindings.add(Keys.ControlZ, filter=suspend_supported)
     def _(event):
         """
         Suspend process to background.
         """
         event.app.suspend_to_background()
 
-    return registry
+    return key_bindings
 
 
 def load_auto_suggestion_bindings():
     """
     Key bindings for accepting auto suggestion text.
     """
-    registry = Registry()
-    handle = registry.add_binding
+    key_bindings = KeyBindings()
+    handle = key_bindings.add
 
     suggestion_available = Condition(
         lambda app:
@@ -408,4 +408,4 @@ def load_auto_suggestion_bindings():
         if suggestion:
             b.insert_text(suggestion.text)
 
-    return registry
+    return key_bindings

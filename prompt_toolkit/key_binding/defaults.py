@@ -1,11 +1,11 @@
 """
 Default key bindings.::
 
-    registry = load_key_bindings()
-    app = Application(key_bindings_registry=registry)
+    key_bindings = load_key_bindings()
+    app = Application(key_bindings=key_bindings)
 """
 from __future__ import unicode_literals
-from prompt_toolkit.key_binding.registry import ConditionalRegistry, MergedRegistry
+from prompt_toolkit.key_binding.key_bindings import ConditionalKeyBindings, MergedKeyBindings
 from prompt_toolkit.key_binding.bindings.basic import load_basic_bindings, load_abort_and_exit_bindings, load_basic_system_bindings, load_auto_suggestion_bindings, load_mouse_bindings
 from prompt_toolkit.key_binding.bindings.emacs import load_emacs_bindings, load_emacs_search_bindings, load_emacs_open_in_editor_bindings, load_extra_emacs_page_navigation_bindings
 from prompt_toolkit.key_binding.bindings.vi import load_vi_bindings, load_vi_search_bindings, load_vi_open_in_editor_bindings, load_extra_vi_page_navigation_bindings
@@ -24,7 +24,7 @@ def load_key_bindings(
         enable_extra_page_navigation=False,
         enable_auto_suggest_bindings=False):
     """
-    Create a Registry object that contains the default key bindings.
+    Create a KeyBindings object that contains the default key bindings.
 
     :param enable_abort_and_exit_bindings: Filter to enable Ctrl-C and Ctrl-D.
     :param enable_system_bindings: Filter to enable the system bindings (meta-!
@@ -45,47 +45,45 @@ def load_key_bindings(
     enable_extra_page_navigation = to_app_filter(enable_extra_page_navigation)
     enable_auto_suggest_bindings = to_app_filter(enable_auto_suggest_bindings)
 
-    registry = MergedRegistry([
+    return MergedKeyBindings([
         # Load basic bindings.
         load_basic_bindings(),
         load_mouse_bindings(),
 
-        ConditionalRegistry(load_abort_and_exit_bindings(),
-                            enable_abort_and_exit_bindings),
+        ConditionalKeyBindings(load_abort_and_exit_bindings(),
+                               enable_abort_and_exit_bindings),
 
-        ConditionalRegistry(load_basic_system_bindings(),
-                            enable_system_bindings),
+        ConditionalKeyBindings(load_basic_system_bindings(),
+                               enable_system_bindings),
 
         # Load emacs bindings.
         load_emacs_bindings(),
 
-        ConditionalRegistry(load_emacs_open_in_editor_bindings(),
-                            enable_open_in_editor),
+        ConditionalKeyBindings(load_emacs_open_in_editor_bindings(),
+                               enable_open_in_editor),
 
-        ConditionalRegistry(load_emacs_search_bindings(),
-                            enable_search),
+        ConditionalKeyBindings(load_emacs_search_bindings(),
+                               enable_search),
 
-        ConditionalRegistry(load_extra_emacs_page_navigation_bindings(),
-                            enable_extra_page_navigation),
+        ConditionalKeyBindings(load_extra_emacs_page_navigation_bindings(),
+                               enable_extra_page_navigation),
 
         # Load Vi bindings.
         load_vi_bindings(),
 
-        ConditionalRegistry(load_vi_open_in_editor_bindings(),
-                            enable_open_in_editor),
+        ConditionalKeyBindings(load_vi_open_in_editor_bindings(),
+                               enable_open_in_editor),
 
-        ConditionalRegistry(load_vi_search_bindings(),
-                            enable_search),
+        ConditionalKeyBindings(load_vi_search_bindings(),
+                               enable_search),
 
-        ConditionalRegistry(load_extra_vi_page_navigation_bindings(),
-                            enable_extra_page_navigation),
+        ConditionalKeyBindings(load_extra_vi_page_navigation_bindings(),
+                               enable_extra_page_navigation),
 
         # Suggestion bindings.
         # (This has to come at the end, because the Vi bindings also have an
         # implementation for the "right arrow", but we really want the
         # suggestion binding when a suggestion is available.)
-        ConditionalRegistry(load_auto_suggestion_bindings(),
-                            enable_auto_suggest_bindings),
+        ConditionalKeyBindings(load_auto_suggestion_bindings(),
+                               enable_auto_suggest_bindings),
     ])
-
-    return registry

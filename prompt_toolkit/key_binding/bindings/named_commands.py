@@ -544,7 +544,7 @@ def prefix_meta(event):
 
     Sometimes people also want to bind other keys to Meta, e.g. 'jj'::
 
-        registry.add_key_binding('j', 'j', filter=ViInsertMode())(prefix_meta)
+        key_bindings.add_key_binding('j', 'j', filter=ViInsertMode())(prefix_meta)
     """
     # ('first' should be true, because we want to insert it at the current
     # position in the queue.)

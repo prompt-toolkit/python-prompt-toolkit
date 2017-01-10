@@ -13,7 +13,7 @@ from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.input.vt100 import PipeInput
 from prompt_toolkit.input.vt100_parser import ANSI_SEQUENCES
 from prompt_toolkit.key_binding.bindings.named_commands import prefix_meta
-from prompt_toolkit.key_binding.registry import Registry
+from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.output import DummyOutput
 from prompt_toolkit.shortcuts import Prompt
 import pytest
@@ -433,11 +433,11 @@ def test_emacs_record_macro():
 
 def test_prefix_meta():
     # Test the prefix-meta command.
-    r = Registry()
-    r.add_binding('j', 'j', filter=ViInsertMode())(prefix_meta)
+    b = KeyBindings()
+    b.add('j', 'j', filter=ViInsertMode())(prefix_meta)
 
     result, cli = _feed_cli_with_input(
-        'hellojjIX\r', extra_key_bindings=r, editing_mode=EditingMode.VI)
+        'hellojjIX\r', extra_key_bindings=b, editing_mode=EditingMode.VI)
     assert result.text == 'Xhello'
 
 

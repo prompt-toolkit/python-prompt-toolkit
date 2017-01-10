@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 from prompt_toolkit.completion import CompleteEvent, get_common_complete_suffix
 from prompt_toolkit.utils import get_cwidth
 from prompt_toolkit.keys import Keys
-from prompt_toolkit.key_binding.registry import Registry
+from prompt_toolkit.key_binding.key_bindings import KeyBindings
 
 import math
 
@@ -40,7 +40,7 @@ def display_completions_like_readline(event):
     Usage::
 
         # Call this handler when 'Tab' has been pressed.
-        registry.add_binding(Keys.ControlI)(display_completions_like_readline)
+        key_bindings.add(Keys.ControlI)(display_completions_like_readline)
     """
     # Request completions.
     b = event.current_buffer
@@ -141,25 +141,25 @@ def _create_more_application(loop):
     Create an `Application` instance that displays the "--MORE--".
     """
     from prompt_toolkit.shortcuts import Prompt
-    registry = Registry()
+    bindings = KeyBindings()
 
-    @registry.add_binding(' ')
-    @registry.add_binding('y')
-    @registry.add_binding('Y')
-    @registry.add_binding(Keys.ControlJ)
-    @registry.add_binding(Keys.ControlM)
-    @registry.add_binding(Keys.ControlI)  # Tab.
+    @bindings.add(' ')
+    @bindings.add('y')
+    @bindings.add('Y')
+    @bindings.add(Keys.ControlJ)
+    @bindings.add(Keys.ControlM)
+    @bindings.add(Keys.ControlI)  # Tab.
     def _(event):
         event.app.set_return_value(True)
 
-    @registry.add_binding('n')
-    @registry.add_binding('N')
-    @registry.add_binding('q')
-    @registry.add_binding('Q')
-    @registry.add_binding(Keys.ControlC)
+    @bindings.add('n')
+    @bindings.add('N')
+    @bindings.add('q')
+    @bindings.add('Q')
+    @bindings.add(Keys.ControlC)
     def _(event):
         event.app.set_return_value(False)
 
     return Prompt('--MORE--',
-        loop=loop, extra_key_bindings=registry,
+        loop=loop, extra_key_bindings=bindings,
         include_default_key_bindings=False, erase_when_done=True).app

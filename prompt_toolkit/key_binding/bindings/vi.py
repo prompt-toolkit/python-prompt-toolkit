@@ -12,7 +12,7 @@ from prompt_toolkit.selection import SelectionType, SelectionState, PasteMode
 
 from .scroll import scroll_forward, scroll_backward, scroll_half_page_up, scroll_half_page_down, scroll_one_line_up, scroll_one_line_down, scroll_page_up, scroll_page_down
 from .named_commands import get_by_name
-from ..registry import Registry, ConditionalRegistry, BaseRegistry
+from ..key_bindings import KeyBindings, ConditionalKeyBindings, KeyBindingsBase
 
 import prompt_toolkit.filters as filters
 from six.moves import range
@@ -135,11 +135,11 @@ class TextObject(object):
         return new_document, clipboard_data
 
 
-def create_text_object_decorator(registry):
+def create_text_object_decorator(key_bindings):
     """
     Create a decorator that can be used to register Vi text object implementations.
     """
-    assert isinstance(registry, BaseRegistry)
+    assert isinstance(key_bindings, KeyBindingsBase)
 
     operator_given = ViWaitingForTextObjectMode()
     navigation_mode = ViNavigationMode()
@@ -168,7 +168,7 @@ def create_text_object_decorator(registry):
         def decorator(text_object_func):
             assert callable(text_object_func)
 
-            @registry.add_binding(*keys, filter=operator_given & filter, eager=eager)
+            @key_bindings.add(*keys, filter=operator_given & filter, eager=eager)
             def _(event):
                 # Arguments are multiplied.
                 vi_state = event.app.vi_state
@@ -188,7 +188,7 @@ def create_text_object_decorator(registry):
 
             # Register a move operation. (Doesn't need an operator.)
             if not no_move_handler:
-                @registry.add_binding(*keys, filter=~operator_given & filter & navigation_mode, eager=eager)
+                @key_bindings.add(*keys, filter=~operator_given & filter & navigation_mode, eager=eager)
                 def _(event):
                     " Move handler for navigation mode. "
                     text_object = text_object_func(event)
@@ -196,7 +196,7 @@ def create_text_object_decorator(registry):
 
             # Register a move selection operation.
             if not no_selection_handler:
-                @registry.add_binding(*keys, filter=~operator_given & filter & selection_mode, eager=eager)
+                @key_bindings.add(*keys, filter=~operator_given & filter & selection_mode, eager=eager)
                 def _(event):
                     " Move handler for selection mode. "
                     text_object = text_object_func(event)
@@ -228,11 +228,11 @@ def create_text_object_decorator(registry):
     return text_object_decorator
 
 
-def create_operator_decorator(registry):
+def create_operator_decorator(key_bindings):
     """
     Create a decorator that can be used for registering Vi operators.
     """
-    assert isinstance(registry, BaseRegistry)
+    assert isinstance(key_bindings, KeyBindingsBase)
 
     operator_given = ViWaitingForTextObjectMode()
     navigation_mode = ViNavigationMode()
@@ -253,7 +253,7 @@ def create_operator_decorator(registry):
         assert not kw
 
         def decorator(operator_func):
-            @registry.add_binding(*keys, filter=~operator_given & filter & navigation_mode, eager=eager)
+            @key_bindings.add(*keys, filter=~operator_given & filter & navigation_mode, eager=eager)
             def _(event):
                 """
                 Handle operator in navigation mode.
@@ -264,7 +264,7 @@ def create_operator_decorator(registry):
                 event.app.vi_state.operator_func = operator_func
                 event.app.vi_state.operator_arg = event.arg
 
-            @registry.add_binding(*keys, filter=~operator_given & filter & selection_mode, eager=eager)
+            @key_bindings.add(*keys, filter=~operator_given & filter & selection_mode, eager=eager)
             def _(event):
                 """
                 Handle operator in selection mode.
@@ -311,8 +311,8 @@ def load_vi_bindings():
     #       handled correctly. There is no need to add "~IsReadOnly" to all key
     #       bindings that do text manipulation.
 
-    registry = Registry()
-    handle = registry.add_binding
+    key_bindings = KeyBindings()
+    handle = key_bindings.add
 
     # (Note: Always take the navigation bindings in read-only mode, even when
     #  ViState says different.)
@@ -903,8 +903,8 @@ def load_vi_bindings():
         # XXX: should become text_object.
         pass
 
-    operator = create_operator_decorator(registry)
-    text_object = create_text_object_decorator(registry)
+    operator = create_operator_decorator(key_bindings)
+    text_object = create_text_object_decorator(key_bindings)
 
     @text_object(Keys.Any, filter=operator_given)
     def _(event):
@@ -1699,27 +1699,27 @@ def load_vi_bindings():
             event.app.vi_state.waiting_for_digraph = False
             event.app.vi_state.digraph_symbol1 = None
 
-    return ConditionalRegistry(registry, ViMode())
+    return ConditionalKeyBindings(key_bindings, ViMode())
 
 
 def load_vi_open_in_editor_bindings():
     """
     Pressing 'v' in navigation mode will open the buffer in an external editor.
     """
-    registry = Registry()
+    key_bindings = KeyBindings()
     navigation_mode = ViMode() & ViNavigationMode()
 
-    registry.add_binding('v', filter=navigation_mode)(
+    key_bindings.add('v', filter=navigation_mode)(
         get_by_name('edit-and-execute-command'))
-    return registry
+    return key_bindings
 
 
 def load_vi_search_bindings():
     is_searching = IsSearching()
     control_is_searchable = ControlIsSearchable()
 
-    registry = Registry()
-    handle = registry.add_binding
+    key_bindings = KeyBindings()
+    handle = key_bindings.add
 
     navigation_mode = ViNavigationMode()
     selection_mode = ViSelectionMode()
@@ -1832,7 +1832,7 @@ def load_vi_search_bindings():
 
         event.app.focus.focus_previous()
 
-    return ConditionalRegistry(registry, ViMode())
+    return ConditionalKeyBindings(key_bindings, ViMode())
 
 
 def load_extra_vi_page_navigation_bindings():
@@ -1840,8 +1840,8 @@ def load_extra_vi_page_navigation_bindings():
     Key bindings, for scrolling up and down through pages.
     This are separate bindings, because GNU readline doesn't have them.
     """
-    registry = Registry()
-    handle = registry.add_binding
+    key_bindings = KeyBindings()
+    handle = key_bindings.add
 
     handle(Keys.ControlF)(scroll_forward)
     handle(Keys.ControlB)(scroll_backward)
@@ -1852,4 +1852,4 @@ def load_extra_vi_page_navigation_bindings():
     handle(Keys.PageDown)(scroll_page_down)
     handle(Keys.PageUp)(scroll_page_up)
 
-    return ConditionalRegistry(registry, ViMode())
+    return ConditionalKeyBindings(key_bindings, ViMode())

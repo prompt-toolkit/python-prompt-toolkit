@@ -12,7 +12,7 @@ from prompt_toolkit.filters.app import ViNavigationMode
 from prompt_toolkit.keys import Keys, Key
 from prompt_toolkit.utils import Event
 
-from .registry import BaseRegistry
+from .key_bindings import KeyBindingsBase
 
 from collections import deque
 from six.moves import range
@@ -51,11 +51,11 @@ class KeyPress(object):
 class KeyProcessor(object):
     """
     Statemachine that receives :class:`KeyPress` instances and according to the
-    key bindings in the given :class:`Registry`, calls the matching handlers.
+    key bindings in the given :class:`KeyBindings`, calls the matching handlers.
 
     ::
 
-        p = KeyProcessor(registry)
+        p = KeyProcessor(key_bindings)
 
         # Send keys into the processor.
         p.feed(KeyPress(Keys.ControlX, '\x18'))
@@ -65,15 +65,15 @@ class KeyProcessor(object):
         p.process_keys()
 
         # Now the ControlX-ControlC callback will be called if this sequence is
-        # registered in the registry.
+        # registered in the key bindings.
 
-    :param registry: `BaseRegistry` instance.
+    :param key_bindings: `KeyBindingsBase` instance.
     :param app_ref: weakref to `Application`.
     """
-    def __init__(self, registry, app_ref):
-        assert isinstance(registry, BaseRegistry)
+    def __init__(self, key_bindings, app_ref):
+        assert isinstance(key_bindings, KeyBindingsBase)
 
-        self._registry = registry
+        self._bindings = key_bindings
         self._app_ref = app_ref
 
         self.beforeKeyPress = Event(self)
@@ -125,7 +125,7 @@ class KeyProcessor(object):
         app = self._app_ref()
 
         # Try match, with mode flag
-        return [b for b in self._registry.get_bindings_for_keys(keys) if b.filter(app)]
+        return [b for b in self._bindings.get_bindings_for_keys(keys) if b.filter(app)]
 
     def _is_prefix_of_longer_match(self, key_presses):
         """
@@ -139,7 +139,7 @@ class KeyProcessor(object):
         # Note that we transform it into a `set`, because we don't care about
         # the actual bindings and executing it more than once doesn't make
         # sense. (Many key bindings share the same filter.)
-        filters = set(b.filter for b in self._registry.get_bindings_starting_with_keys(keys))
+        filters = set(b.filter for b in self._bindings.get_bindings_starting_with_keys(keys))
 
         # When any key binding is active, return True.
         return any(f(app) for f in filters)

@@ -39,7 +39,7 @@ from .history import InMemoryHistory, DynamicHistory
 from .input.defaults import create_input
 from .application import Application, AbortAction
 from .key_binding.defaults import load_key_bindings
-from .key_binding.registry import Registry, DynamicRegistry, MergedRegistry, ConditionalRegistry
+from .key_binding.key_bindings import KeyBindings, DynamicRegistry, MergedKeyBindings, ConditionalKeyBindings, KeyBindingsBase
 from .keys import Keys
 from .layout import Window, HSplit, FloatContainer, Float
 from .layout.containers import ConditionalContainer
@@ -254,7 +254,7 @@ class Prompt(object):
         assert not (message and get_prompt_tokens)
         assert style is None or isinstance(style, Style)
         assert extra_input_processor is None or isinstance(extra_input_processor, Processor)
-        assert extra_key_bindings is None or isinstance(extra_key_bindings, Registry)
+        assert extra_key_bindings is None or isinstance(extra_key_bindings, KeyBindingsBase)
 
         # Defaults.
         loop = loop or create_event_loop()
@@ -454,14 +454,14 @@ class Prompt(object):
             enable_auto_suggest_bindings=True,
             enable_system_bindings=dyncond('enable_system_bindings'),
             enable_open_in_editor=dyncond('enable_open_in_editor'))
-        prompt_bindings = Registry()
+        prompt_bindings = KeyBindings()
 
         @Condition
         def do_accept(app):
             return (not _true(self.multiline) and
                     self.app.focussed_control == self._default_buffer_control)
 
-        @prompt_bindings.add_binding(Keys.ControlM, filter=do_accept)
+        @prompt_bindings.add(Keys.ControlM, filter=do_accept)
         def _(event):
             " Accept input when enter has been pressed. "
             buff = self._default_buffer
@@ -473,9 +473,9 @@ class Prompt(object):
             focussed_control=default_buffer_control,
             style=DynamicStyle(lambda: self.style or DEFAULT_STYLE),
             clipboard=DynamicClipboard(lambda: self.clipboard),
-            key_bindings_registry=MergedRegistry([
-                ConditionalRegistry(
-                    MergedRegistry([
+            key_bindings=MergedKeyBindings([
+                ConditionalKeyBindings(
+                    MergedKeyBindings([
                         default_bindings,
                         prompt_bindings]),
                     dyncond('include_default_key_bindings')),
@@ -741,22 +741,22 @@ def create_confirm_prompt(message, loop=None):
     Create a `Prompt` object for the 'confirm' function.
     """
     assert isinstance(message, text_type)
-    registry = Registry()
+    bindings = KeyBindings()
 
-    @registry.add_binding('y')
-    @registry.add_binding('Y')
+    @bindings.add('y')
+    @bindings.add('Y')
     def _(event):
         prompt._default_buffer.text = 'y'
         event.app.set_return_value(True)
 
-    @registry.add_binding('n')
-    @registry.add_binding('N')
-    @registry.add_binding(Keys.ControlC)
+    @bindings.add('n')
+    @bindings.add('N')
+    @bindings.add(Keys.ControlC)
     def _(event):
         prompt._default_buffer.text = 'n'
         event.app.set_return_value(False)
 
-    prompt = Prompt(message, extra_key_bindings=registry,
+    prompt = Prompt(message, extra_key_bindings=bindings,
                     include_default_key_bindings=False,
                     loop=loop)
     return prompt

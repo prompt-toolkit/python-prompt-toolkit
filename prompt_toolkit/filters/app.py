@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 from .base import Filter
 from prompt_toolkit.cache import memoized
 from prompt_toolkit.enums import EditingMode
-from prompt_toolkit.key_binding.vi_state import InputMode as ViInputMode
 import six
 
 __all__ = (
@@ -240,13 +239,14 @@ class ViNavigationMode(Filter):
     Active when the set for Vi navigation key bindings are active.
     """
     def __call__(self, app):
+        from prompt_toolkit.key_binding.vi_state import InputMode
         if (app.editing_mode != EditingMode.VI
                 or app.vi_state.operator_func
                 or app.vi_state.waiting_for_digraph
                 or app.current_buffer.selection_state):
             return False
 
-        return (app.vi_state.input_mode == ViInputMode.NAVIGATION or
+        return (app.vi_state.input_mode == InputMode.NAVIGATION or
                 app.current_buffer.read_only())
 
     def __repr__(self):
@@ -256,6 +256,7 @@ class ViNavigationMode(Filter):
 @memoized()
 class ViInsertMode(Filter):
     def __call__(self, app):
+        from prompt_toolkit.key_binding.vi_state import InputMode
         if (app.editing_mode != EditingMode.VI
                 or app.vi_state.operator_func
                 or app.vi_state.waiting_for_digraph
@@ -263,15 +264,16 @@ class ViInsertMode(Filter):
                 or app.current_buffer.read_only()):
             return False
 
-        return app.vi_state.input_mode == ViInputMode.INSERT
+        return app.vi_state.input_mode == InputMode.INSERT
 
     def __repr__(self):
-        return 'ViInputMode()'
+        return 'ViInsertMode()'
 
 
 @memoized()
 class ViInsertMultipleMode(Filter):
     def __call__(self, app):
+        from prompt_toolkit.key_binding.vi_state import InputMode
         if (app.editing_mode != EditingMode.VI
                 or app.vi_state.operator_func
                 or app.vi_state.waiting_for_digraph
@@ -279,7 +281,7 @@ class ViInsertMultipleMode(Filter):
                 or app.current_buffer.read_only()):
             return False
 
-        return app.vi_state.input_mode == ViInputMode.INSERT_MULTIPLE
+        return app.vi_state.input_mode == InputMode.INSERT_MULTIPLE
 
     def __repr__(self):
         return 'ViInsertMultipleMode()'
@@ -288,6 +290,7 @@ class ViInsertMultipleMode(Filter):
 @memoized()
 class ViReplaceMode(Filter):
     def __call__(self, app):
+        from prompt_toolkit.key_binding.vi_state import InputMode
         if (app.editing_mode != EditingMode.VI
                 or app.vi_state.operator_func
                 or app.vi_state.waiting_for_digraph
@@ -295,7 +298,7 @@ class ViReplaceMode(Filter):
                 or app.current_buffer.read_only()):
             return False
 
-        return app.vi_state.input_mode == ViInputMode.REPLACE
+        return app.vi_state.input_mode == InputMode.REPLACE
 
     def __repr__(self):
         return 'ViReplaceMode()'

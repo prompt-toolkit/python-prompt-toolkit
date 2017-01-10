@@ -8,7 +8,7 @@ from prompt_toolkit.completion import CompleteEvent
 
 from .scroll import scroll_page_up, scroll_page_down
 from .named_commands import get_by_name
-from ..registry import Registry, ConditionalRegistry
+from ..key_bindings import KeyBindings, ConditionalKeyBindings
 
 __all__ = (
     'load_emacs_bindings',
@@ -23,8 +23,8 @@ def load_emacs_bindings():
     """
     # Overview of Readline emacs commands:
     # http://www.catonmat.net/download/readline-emacs-editing-mode-cheat-sheet.pdf
-    registry = Registry()
-    handle = registry.add_binding
+    key_bindings = KeyBindings()
+    handle = key_bindings.add
 
     insert_mode = EmacsInsertMode()
     has_selection = HasSelection()
@@ -295,25 +295,25 @@ def load_emacs_bindings():
 
         unindent(buffer, from_, to + 1, count=event.arg)
 
-    return ConditionalRegistry(registry, EmacsMode())
+    return ConditionalKeyBindings(key_bindings, EmacsMode())
 
 
 def load_emacs_open_in_editor_bindings():
     """
     Pressing C-X C-E will open the buffer in an external editor.
     """
-    registry = Registry()
+    key_bindings = KeyBindings()
 
-    registry.add_binding(Keys.ControlX, Keys.ControlE,
+    key_bindings.add(Keys.ControlX, Keys.ControlE,
                          filter=EmacsMode() & ~HasSelection())(
          get_by_name('edit-and-execute-command'))
 
-    return registry
+    return key_bindings
 
 
 def load_emacs_search_bindings():
-    registry = Registry()
-    handle = registry.add_binding
+    key_bindings = KeyBindings()
+    handle = key_bindings.add
 
     is_searching = IsSearching()
     control_is_searchable = ControlIsSearchable()
@@ -398,7 +398,7 @@ def load_emacs_search_bindings():
     def _(event):
         incremental_search(event.app, SearchDirection.FORWARD, count=event.arg)
 
-    return ConditionalRegistry(registry, EmacsMode())
+    return ConditionalKeyBindings(key_bindings, EmacsMode())
 
 
 def load_extra_emacs_page_navigation_bindings():
@@ -406,12 +406,12 @@ def load_extra_emacs_page_navigation_bindings():
     Key bindings, for scrolling up and down through pages.
     This are separate bindings, because GNU readline doesn't have them.
     """
-    registry = Registry()
-    handle = registry.add_binding
+    key_bindings = KeyBindings()
+    handle = key_bindings.add
 
     handle(Keys.ControlV)(scroll_page_down)
     handle(Keys.PageDown)(scroll_page_down)
     handle(Keys.Escape, 'v')(scroll_page_up)
     handle(Keys.PageUp)(scroll_page_up)
 
-    return ConditionalRegistry(registry, EmacsMode())
+    return ConditionalKeyBindings(key_bindings, EmacsMode())

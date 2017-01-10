@@ -12,7 +12,7 @@ from .input.base import Input
 from .input.defaults import create_input
 from .key_binding.defaults import load_key_bindings
 from .key_binding.key_processor import KeyProcessor
-from .key_binding.registry import Registry, BaseRegistry, MergedRegistry, ConditionalRegistry
+from .key_binding.key_bindings import KeyBindings, KeyBindingsBase, MergedKeyBindings, ConditionalKeyBindings
 from .key_binding.vi_state import ViState
 from .keys import Keys
 from .layout.containers import Container, Window
@@ -61,8 +61,8 @@ class Application(object):
     This glues everything together.
 
     :param layout: A :class:`~prompt_toolkit.layout.containers.Container` instance.
-    :param key_bindings_registry:
-        :class:`~prompt_toolkit.key_binding.registry.BaseRegistry` instance for
+    :param key_bindings:
+        :class:`~prompt_toolkit.key_binding.key_bindings.KeyBindingsBase` instance for
         the key bindings.
     :param clipboard: :class:`~prompt_toolkit.clipboard.base.Clipboard` to use.
     :param on_abort: What to do when Control-C is pressed.
@@ -103,7 +103,7 @@ class Application(object):
     """
     def __init__(self, layout=None,
                  style=None,
-                 key_bindings_registry=None, clipboard=None,
+                 key_bindings=None, clipboard=None,
                  on_abort=AbortAction.RAISE_EXCEPTION, on_exit=AbortAction.RAISE_EXCEPTION,
                  use_alternate_screen=False, mouse_support=False,
                  get_title=None,
@@ -125,7 +125,7 @@ class Application(object):
         reverse_vi_search_direction = to_app_filter(reverse_vi_search_direction)
 
         assert isinstance(layout, Container)
-        assert key_bindings_registry is None or isinstance(key_bindings_registry, BaseRegistry)
+        assert key_bindings is None or isinstance(key_bindings, KeyBindingsBase)
         assert clipboard is None or isinstance(clipboard, Clipboard)
         assert on_abort in AbortAction._all
         assert on_exit in AbortAction._all
@@ -148,14 +148,14 @@ class Application(object):
 
         self.style = style or DEFAULT_STYLE
 
-        if key_bindings_registry is None:
-            key_bindings_registry = load_key_bindings()
+        if key_bindings is None:
+            key_bindings = load_key_bindings()
 
         if get_title is None:
             get_title = lambda: None
 
         self.layout = layout
-        self.key_bindings_registry = key_bindings_registry
+        self.key_bindings = key_bindings
         self.clipboard = clipboard or InMemoryClipboard()
         self.on_abort = on_abort
         self.on_exit = on_exit
@@ -708,17 +708,17 @@ class Application(object):
             """
             from .shortcuts import Prompt
 
-            registry = Registry()
+            key_bindings = KeyBindings()
 
-            @registry.add_binding(Keys.ControlJ)
-            @registry.add_binding(Keys.ControlM)
+            @key_bindings.add(Keys.ControlJ)
+            @key_bindings.add(Keys.ControlM)
             def _(event):
                 event.app.set_return_value(None)
 
             prompt = Prompt(
                 message='Press ENTER to continue...',
                 loop=self.loop,
-                extra_key_bindings=registry,
+                extra_key_bindings=key_bindings,
                 include_default_key_bindings=False)
             self.run_sub_application(prompt.app)
 
@@ -917,9 +917,9 @@ class _StdoutProxy(object):
             self._flush()
 
 
-class _CombinedRegistry(BaseRegistry):
+class _CombinedRegistry(KeyBindingsBase):
     """
-    The `Registry` of key bindings for a `Application`.
+    The `KeyBindings` of key bindings for a `Application`.
     This merges the global key bindings with the one of the current user
     control.
     """
@@ -927,23 +927,29 @@ class _CombinedRegistry(BaseRegistry):
         self.app = app
         self._cache = SimpleCache()
 
-    def _create_registry(self, current_control, visible_controls):
+    @property
+    def _version(self):
+        """ Not needed - this object is not going to be wrapped in another
+        KeyBindings object. """
+        raise NotImplementedError
+
+    def _create_key_bindings(self, current_control, visible_controls):
         """
-        Create a `Registry` object that merges the `Registry` from the
-        `UIControl` with the other user controls and the global registry.
+        Create a `KeyBindings` object that merges the `KeyBindings` from the
+        `UIControl` with the other user controls and the global key bindings.
         """
         # Collect key bindings of other visible user controls.
         key_bindings = [c.get_key_bindings(self.app) for c in visible_controls]
-        key_bindings = [b.registry for b in key_bindings if b is not None]
+        key_bindings = [b.key_bindings for b in key_bindings if b is not None]
 
-        others_registry = MergedRegistry(
-            [self.app.key_bindings_registry] + key_bindings)
+        others_key_bindings = MergedKeyBindings(
+            [self.app.key_bindings] + key_bindings)
 
         ui_key_bindings = current_control.get_key_bindings(self.app)
 
         if ui_key_bindings is None:
             # No bindings for this user control. Just return everything else.
-            return others_registry
+            return others_key_bindings
         else:
             # Bindings for this user control found.
             # Keep the 'modal' parameter into account.
@@ -951,23 +957,23 @@ class _CombinedRegistry(BaseRegistry):
             def is_not_modal(app):
                 return not ui_key_bindings.modal
 
-            return MergedRegistry([
-                ConditionalRegistry(others_registry, is_not_modal),
-                ui_key_bindings.registry,
+            return MergedKeyBindings([
+                ConditionalKeyBindings(others_key_bindings, is_not_modal),
+                ui_key_bindings.key_bindings,
             ])
 
     @property
-    def _registry(self):
+    def _key_bindings(self):
         current_control = self.app.focussed_control
         visible_controls = self.app.rendered_user_controls
         visible_controls = list(find_all_controls(self.app.layout))#self.app.rendered_user_controls
         key = current_control, frozenset(visible_controls)
 
         return self._cache.get(
-            key, lambda: self._create_registry(current_control, visible_controls))
+            key, lambda: self._create_key_bindings(current_control, visible_controls))
 
     def get_bindings_for_keys(self, keys):
-        return self._registry.get_bindings_for_keys(keys)
+        return self._key_bindings.get_bindings_for_keys(keys)
 
     def get_bindings_starting_with_keys(self, keys):
-        return self._registry.get_bindings_starting_with_keys(keys)
+        return self._key_bindings.get_bindings_starting_with_keys(keys)

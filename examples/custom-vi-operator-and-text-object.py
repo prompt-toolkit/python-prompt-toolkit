@@ -5,19 +5,19 @@ Example of adding a custom Vi operator and text object.
 """
 from __future__ import unicode_literals
 from prompt_toolkit import prompt
-from prompt_toolkit.key_binding.registry import Registry
+from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.key_binding.bindings.vi import create_operator_decorator, create_text_object_decorator, TextObject
 from prompt_toolkit.enums import EditingMode
 
 
 def main():
     # We start with a `Registry` of default key bindings.
-    registry = Registry()
+    bindings = KeyBindings()
 
     # Create the decorators to be used for registering text objects and
     # operators in this registry.
-    operator = create_operator_decorator(registry)
-    text_object = create_text_object_decorator(registry)
+    operator = create_operator_decorator(bindings)
+    text_object = create_text_object_decorator(bindings)
 
     # Create a custom operator.
 
@@ -56,7 +56,7 @@ def main():
     print('-  yA     - yank everything.')
     print('-  RA     - reverse everything.')
 
-    text = prompt('> ', default='hello world', extra_key_bindings=registry,
+    text = prompt('> ', default='hello world', extra_key_bindings=bindings,
                   editing_mode=EditingMode.VI)
     print('You said: %s' % text)
 
