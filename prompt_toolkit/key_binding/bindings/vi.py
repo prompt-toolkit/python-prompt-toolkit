@@ -449,15 +449,13 @@ def load_vi_bindings():
         """
         event.current_buffer.cancel_completion()
 
-    @handle(Keys.Enter, filter=navigation_mode)   # XXX: only if the selected buffer has a return handler.
-    def _(event):
-        """
-        In navigation mode, pressing enter will always return the input.
-        """
-        b = event.current_buffer
+    @Condition
+    def is_returnable(app):
+        return app.current_buffer.is_returnable
 
-        if b.accept_action.is_returnable:
-            b.accept_action.validate_and_handle(event.app, b)
+    # In navigation mode, pressing enter will always return the input.
+    handle(Keys.Enter, filter=navigation_mode & is_returnable)(
+        get_by_name('accept-line'))
 
     # ** In navigation mode **
 

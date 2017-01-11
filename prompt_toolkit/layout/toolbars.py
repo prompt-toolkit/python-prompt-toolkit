@@ -148,7 +148,6 @@ class ArgToolbar(ConditionalContainer):
             filter=HasArg())
 
 
-
 class SearchToolbarControl(BufferControl):
     """
     :param vi_mode: Display '/' and '?' instead of I-search.

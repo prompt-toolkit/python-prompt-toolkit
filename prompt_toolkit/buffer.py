@@ -40,75 +40,6 @@ class EditReadOnlyBuffer(Exception):
     " Attempt editing of read-only :class:`.Buffer`. "
 
 
-class AcceptAction(object):
-    """
-    What to do when the input is accepted by the user.
-    (When Enter was pressed in the command line.)
-
-    :param handler: (optional) A callable which takes a
-        :class:`~prompt_toolkit.application.Application` and
-        :class:`~prompt_toolkit.document.Document`. It is called when the user
-        accepts input.
-    """
-    def __init__(self, handler=None):
-        assert handler is None or callable(handler)
-        self.handler = handler
-
-    @classmethod
-    def run_in_terminal(cls, handler, render_cli_done=False):
-        """
-        Create an :class:`.AcceptAction` that runs the given handler in the
-        terminal.
-
-        :param render_cli_done: When True, render the interface in the 'Done'
-                state first, then execute the function. If False, erase the
-                interface instead.
-        """
-        def _handler(app, buffer):
-            app.run_in_terminal(lambda: handler(app, buffer), render_cli_done=render_cli_done)
-        return AcceptAction(handler=_handler)
-
-    @property
-    def is_returnable(self):
-        """
-        True when there is something handling accept.
-        """
-        return bool(self.handler)
-
-    def validate_and_handle(self, app, buffer):
-        """
-        Validate buffer and handle the accept action.
-        """
-        if buffer.validate():
-            if self.handler:
-                self.handler(app, buffer)
-
-            buffer.append_to_history()
-
-
-def _return_document_handler(app, buffer, _text=False):
-    # Set return value.
-    if _text:
-        app.set_return_value(buffer.document.text)
-    else:
-        app.set_return_value(buffer.document)
-
-    # Make sure that if we run this UI again, that we reset this buffer, next
-    # time.
-    def reset_this_buffer():
-        buffer.reset()
-    app.pre_run_callables.append(reset_this_buffer)
-
-
-def _return_text_handler(app, buffer):
-    return _return_document_handler(app, buffer, _text=True)
-
-
-AcceptAction.RETURN_DOCUMENT = AcceptAction(_return_document_handler)
-AcceptAction.RETURN_TEXT = AcceptAction(_return_text_handler)
-AcceptAction.IGNORE = AcceptAction(handler=None)
-
-
 class ValidationState(object):
     " The validation state of a buffer. This is set after the validation. "
     VALID = 'VALID'
@@ -232,7 +163,7 @@ class Buffer(object):
                  validator=None, get_tempfile_suffix=None, tempfile_suffix='', name='',
                  complete_while_typing=False,
                  enable_history_search=False, document=None,
-                 accept_action=AcceptAction.IGNORE, read_only=False,
+                 accept_handler=None, read_only=False,
                  on_text_changed=None, on_text_insert=None, on_cursor_position_changed=None,
                  on_completions_changed=None, on_suggestion_set=None):
 
@@ -264,7 +195,7 @@ class Buffer(object):
         self.validator = validator
         self.get_tempfile_suffix = get_tempfile_suffix or (lambda: tempfile_suffix)
         self.name = name
-        self.accept_action = accept_action
+        self.accept_handler = accept_handler
 
         # Filters. (Usually, used by the key bindings to drive the buffer.)
         self.complete_while_typing = complete_while_typing
@@ -514,6 +445,13 @@ class Buffer(object):
 
         if cursor_position_changed:
             self._cursor_position_changed()
+
+    @property
+    def is_returnable(self):
+        """
+        True when there is something handling accept.
+        """
+        return bool(self.accept_handler)
 
     # End of <getters/setters>
 
@@ -1518,6 +1456,15 @@ class Buffer(object):
 
             self.loop.run_in_executor(run)
         return async_suggestor
+
+    def validate_and_handle(self, app):
+        """
+        Validate buffer and handle the accept action.
+        """
+        if self.validate():
+            if self.accept_handler:
+                self.accept_handler(app, self)
+            self.append_to_history()
 
 
 def indent(buffer, from_row, to_row, count=1):

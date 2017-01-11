@@ -39,20 +39,8 @@ import types
 import weakref
 
 __all__ = (
-    'AbortAction',
     'Application',
 )
-
-
-class AbortAction(object):
-    """
-    Actions to take on an Exit or Abort exception.
-    """
-    RETRY = 'retry'
-    RAISE_EXCEPTION = 'raise-exception'
-    RETURN_NONE = 'return-none'
-
-    _all = (RETRY, RAISE_EXCEPTION, RETURN_NONE)
 
 
 class Application(object):
@@ -104,7 +92,6 @@ class Application(object):
     def __init__(self, layout=None,
                  style=None,
                  key_bindings=None, clipboard=None,
-                 on_abort=AbortAction.RAISE_EXCEPTION, on_exit=AbortAction.RAISE_EXCEPTION,
                  use_alternate_screen=False, mouse_support=False,
                  get_title=None,
 
@@ -127,8 +114,6 @@ class Application(object):
         assert isinstance(layout, Container)
         assert key_bindings is None or isinstance(key_bindings, KeyBindingsBase)
         assert clipboard is None or isinstance(clipboard, Clipboard)
-        assert on_abort in AbortAction._all
-        assert on_exit in AbortAction._all
         assert isinstance(use_alternate_screen, bool)
         assert get_title is None or callable(get_title)
         assert isinstance(paste_mode, AppFilter)
@@ -157,8 +142,6 @@ class Application(object):
         self.layout = layout
         self.key_bindings = key_bindings
         self.clipboard = clipboard or InMemoryClipboard()
-        self.on_abort = on_abort
-        self.on_exit = on_exit
         self.use_alternate_screen = use_alternate_screen
         self.mouse_support = mouse_support
         self.get_title = get_title
@@ -570,26 +553,12 @@ class Application(object):
     def exit(self):
         " Set exit. When Control-D has been pressed. "
         self._exit_flag = True
-        self._handle_abort_action(self.on_exit, EOFError)
+        self.future.set_exception(EOFError)
 
     def abort(self):
         " Set abort. When Control-C has been pressed. "
         self._abort_flag = True
-        self._handle_abort_action(self.on_abort, KeyboardInterrupt)
-
-    def _handle_abort_action(self, action, exception):
-        " Handle abort/exit action. "
-        if action == AbortAction.RAISE_EXCEPTION:
-            self.future.set_exception(exception)
-
-        elif action == AbortAction.RETRY:
-            self._redraw(render_as_done=True)
-            self.reset()
-            self.renderer.request_absolute_cursor_position()
-            self.current_buffer.reset()
-
-        elif action == AbortAction.RETURN_NONE:
-            self.set_return_value(None)
+        self.future.set_exception(KeyboardInterrupt)
 
     def set_return_value(self, value):
         """

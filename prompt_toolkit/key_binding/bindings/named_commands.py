@@ -128,8 +128,7 @@ def redraw_current_line(event):
 @register('accept-line')
 def accept_line(event):
     " Accept the line regardless of where the cursor is. "
-    b = event.current_buffer
-    b.accept_action.validate_and_handle(event.app, b)
+    event.current_buffer.validate_and_handle(event.app)
 
 
 @register('previous-history')
@@ -522,7 +521,7 @@ def insert_comment(event):
         cursor_position=0)
 
     # Accept input.
-    buff.accept_action.validate_and_handle(event.app, buff)
+    buff.validate_and_handle(event.app)
 
 
 @register('vi-editing-mode')
@@ -562,7 +561,7 @@ def operate_and_get_next(event):
 
     # Accept the current input. (This will also redraw the interface in the
     # 'done' state.)
-    buff.accept_action.validate_and_handle(event.app, buff)
+    buff.validate_and_handle(event.app)
 
     # Set the new index at the start of the next run.
     def set_working_index():
@@ -579,4 +578,4 @@ def edit_and_execute(event):
     buff = event.current_buffer
 
     buff.open_in_editor(event.app)
-    buff.accept_action.validate_and_handle(event.app, buff)
+    buff.validate_and_handle(event.app)

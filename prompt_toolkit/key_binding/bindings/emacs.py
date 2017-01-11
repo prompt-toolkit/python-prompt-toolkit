@@ -124,8 +124,9 @@ def load_emacs_bindings():
         """
         event.app.key_processor.arg = '-'
 
-    is_returnable = Condition(
-        lambda app: app.current_buffer.accept_action.is_returnable)
+    @Condition
+    def is_returnable(app):
+        return app.current_buffer.is_returnable
 
     # Meta + Newline: always accept input.
     handle(Keys.Escape, Keys.Enter, filter=insert_mode & is_returnable)(

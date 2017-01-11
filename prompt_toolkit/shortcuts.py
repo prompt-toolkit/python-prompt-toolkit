@@ -27,7 +27,7 @@ Example::
 from __future__ import unicode_literals
 
 from .auto_suggest import DynamicAutoSuggest
-from .buffer import Buffer, AcceptAction
+from .buffer import Buffer
 from .clipboard import DynamicClipboard, InMemoryClipboard
 from .completion import DynamicCompleter
 from .document import Document
@@ -37,7 +37,7 @@ from .eventloop.defaults import create_event_loop #, create_asyncio_event_loop
 from .filters import IsDone, HasFocus, RendererHeightIsKnown, to_simple_filter, Condition
 from .history import InMemoryHistory, DynamicHistory
 from .input.defaults import create_input
-from .application import Application, AbortAction
+from .application import Application
 from .key_binding.defaults import load_key_bindings
 from .key_binding.key_bindings import KeyBindings, DynamicRegistry, MergedKeyBindings, ConditionalKeyBindings, KeyBindingsBase
 from .keys import Keys
@@ -197,7 +197,7 @@ class Prompt(object):
         'get_bottom_toolbar_tokens', 'style', 'get_prompt_tokens',
         'get_rprompt_tokens', 'multiline', 'get_continuation_tokens',
         'wrap_lines', 'history', 'enable_history_search',
-        'complete_while_typing', 'on_abort', 'on_exit',
+        'complete_while_typing',
         'display_completions_in_columns', 'mouse_support', 'auto_suggest',
         'clipboard', 'get_title', 'validator', 'patch_stdout',
         'refresh_interval', 'extra_input_processor', 'default',
@@ -236,8 +236,6 @@ class Prompt(object):
             extra_input_processor=None,
             extra_key_bindings=None,
             include_default_key_bindings=True,
-            on_abort=AbortAction.RAISE_EXCEPTION,
-            on_exit=AbortAction.RAISE_EXCEPTION,
             erase_when_done=False,
             tempfile_suffix='.txt',
 
@@ -277,14 +275,14 @@ class Prompt(object):
 
         # Store all settings in this class.
         for name in self._fields:
-            if name not in ('on_abort', 'on_exit', 'editing_mode'):
+            if name not in ('editing_mode', ):
                 value = locals()[name]
                 setattr(self, name, value)
 
         self.app, self._default_buffer, self._default_buffer_control = \
-            self._create_application(editing_mode, on_abort, on_exit, erase_when_done)
+            self._create_application(editing_mode, erase_when_done)
 
-    def _create_application(self, editing_mode, on_abort, on_exit, erase_when_done):
+    def _create_application(self, editing_mode, erase_when_done):
         def dyncond(attr_name):
             """
             Dynamically take this setting from this 'Prompt' class.
@@ -306,6 +304,14 @@ class Prompt(object):
             _split_multiline_prompt(self._get_prompt_tokens)
 
         # Create buffers list.
+        def accept(app, buff):
+            """ Accept the content of the default buffer. This is called when
+            the validation succeeds. """
+            app.set_return_value(buff.document.text)
+
+            # Reset content before running again.
+            app.pre_run_callables.append(buff.reset)
+
         default_buffer = Buffer(
             name=DEFAULT_BUFFER,
             loop=self.loop,
@@ -321,7 +327,7 @@ class Prompt(object):
             completer=DynamicCompleter(lambda: self.completer),
             history=DynamicHistory(lambda: self.history),
             auto_suggest=DynamicAutoSuggest(lambda: self.auto_suggest),
-            accept_action=AcceptAction.RETURN_TEXT,
+            accept_handler=accept,
             get_tempfile_suffix=lambda: self.tempfile_suffix)
 
         search_buffer = Buffer(name=SEARCH_BUFFER, loop=self.loop)
@@ -461,11 +467,10 @@ class Prompt(object):
             return (not _true(self.multiline) and
                     self.app.focussed_control == self._default_buffer_control)
 
-        @prompt_bindings.add(Keys.ControlM, filter=do_accept)
+        @prompt_bindings.add(Keys.Enter, filter=do_accept)
         def _(event):
             " Accept input when enter has been pressed. "
-            buff = self._default_buffer
-            buff.accept_action.validate_and_handle(event.app, buff)
+            self._default_buffer.validate_and_handle(event.app)
 
         # Create application
         application = Application(
@@ -486,8 +491,6 @@ class Prompt(object):
             editing_mode=editing_mode,
             erase_when_done=erase_when_done,
             reverse_vi_search_direction=True,
-            on_abort=on_abort,
-            on_exit=on_exit,
 
             # I/O.
             loop=self.loop,
@@ -553,7 +556,7 @@ class Prompt(object):
             get_bottom_toolbar_tokens=None, style=None, get_prompt_tokens=None,
             get_rprompt_tokens=None, multiline=None,
             get_continuation_tokens=None, wrap_lines=None, history=None,
-            enable_history_search=None, on_abort=None, on_exit=None,
+            enable_history_search=None,
             complete_while_typing=None, display_completions_in_columns=None,
             auto_suggest=None, validator=None, clipboard=None,
             mouse_support=None, get_title=None, extra_input_processor=None,
@@ -596,7 +599,7 @@ class Prompt(object):
             get_bottom_toolbar_tokens=None, style=None, get_prompt_tokens=None,
             get_rprompt_tokens=None, multiline=None,
             get_continuation_tokens=None, wrap_lines=None, history=None,
-            enable_history_search=None, on_abort=None, on_exit=None,
+            enable_history_search=None,
             complete_while_typing=None, display_completions_in_columns=None,
             auto_suggest=None, validator=None, clipboard=None,
             mouse_support=None, get_title=None, extra_input_processor=None,
@@ -636,22 +639,6 @@ class Prompt(object):
             This is only available in Python 3.5 or newer.
             """
             raise NotImplementedError
-
-    @property
-    def on_abort(self):
-        return self.app.on_abort
-
-    @on_abort.setter
-    def on_abort(self, value):
-        self.app.on_abort = value
-
-    @property
-    def on_exit(self):
-        return self.app.on_exit
-
-    @on_exit.setter
-    def on_exit(self, value):
-        self.app.on_exit = value
 
     @property
     def editing_mode(self):

@@ -15,7 +15,7 @@ __all__ = (
     'HasValidationError',
     'IsAborting',
     'IsDone',
-    'IsMultiline',
+#    'IsMultiline',
     'IsReadOnly',
     'RendererHeightIsKnown',
     'InEditingMode',
@@ -96,16 +96,16 @@ class HasCompletions(Filter):
         return 'HasCompletions()'
 
 
-@memoized()
-class IsMultiline(Filter):
-    """
-    Enable in multiline mode.
-    """
-    def __call__(self, app):
-        return app.current_buffer.is_multiline()
-
-    def __repr__(self):
-        return 'IsMultiline()'
+#@memoized()
+#class IsMultiline(Filter):
+#    """
+#    Enable in multiline mode.
+#    """
+#    def __call__(self, app):
+#        return app.current_buffer.is_multiline()
+#
+#    def __repr__(self):
+#        return 'IsMultiline()'
 
 
 @memoized()
