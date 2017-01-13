@@ -2,12 +2,41 @@
 Filters that accept a `Application` as argument.
 """
 from __future__ import unicode_literals
-from .base import Filter
+from .base import Filter, Condition
 from prompt_toolkit.cache import memoized
 from prompt_toolkit.enums import EditingMode
 import six
 
 __all__ = (
+    'has_arg',
+    'has_completions',
+    'has_focus',
+    'has_selection',
+    'has_validation_error',
+    'is_aborting',
+    'is_done',
+    'is_read_only',
+    'renderer_height_is_known',
+    'in_editing_mode',
+    'in_paste_mode',
+
+    'vi_mode',
+    'vi_navigation_mode',
+    'vi_insert_mode',
+    'vi_insert_multiple_mode',
+    'vi_replace_mode',
+    'vi_selection_mode',
+    'vi_waiting_for_text_object_mode',
+    'vi_digraph_mode',
+
+    'emacs_mode',
+    'emacs_insert_mode',
+    'emacs_selection_mode',
+
+    'is_searching',
+    'control_is_searchable',
+
+    # Old names.
     'HasArg',
     'HasCompletions',
     'HasFocus',
@@ -15,13 +44,11 @@ __all__ = (
     'HasValidationError',
     'IsAborting',
     'IsDone',
-#    'IsMultiline',
     'IsReadOnly',
     'RendererHeightIsKnown',
     'InEditingMode',
     'InPasteMode',
 
-    # Vi modes.
     'ViMode',
     'ViNavigationMode',
     'ViInsertMode',
@@ -31,157 +58,102 @@ __all__ = (
     'ViWaitingForTextObjectMode',
     'ViDigraphMode',
 
-    # Emacs modes.
     'EmacsMode',
     'EmacsInsertMode',
     'EmacsSelectionMode',
 
-    # Searching
     'IsSearching',
+    'HasSearch',
     'ControlIsSearchable',
 )
 
 
 @memoized()
-class HasFocus(Filter):
+def has_focus(value):
     """
     Enable when this buffer has the focus.
     """
-    def __init__(self, value):
-        from prompt_toolkit.buffer import Buffer
-        from prompt_toolkit.layout.controls import UIControl
-        assert isinstance(value, (six.text_type, Buffer, UIControl)), value
-        self.value = value
+    from prompt_toolkit.buffer import Buffer
+    from prompt_toolkit.layout.controls import UIControl
+    assert isinstance(value, (six.text_type, Buffer, UIControl)), value
 
-        if isinstance(value, six.text_type):
-            def test(app):
-                return app.current_buffer.name == value
-        elif isinstance(value, Buffer):
-            def test(app):
-                return app.current_buffer == value
-        elif isinstance(value, UIControl):
-            def test(app):
-                return app.focussed_control == value
+    if isinstance(value, six.text_type):
+        def test(app):
+            return app.current_buffer.name == value
+    elif isinstance(value, Buffer):
+        def test(app):
+            return app.current_buffer == value
+    elif isinstance(value, UIControl):
+        def test(app):
+            return app.focussed_control == value
 
-        self._test = test
+    @Condition
+    def has_focus_filter(app):
+        return test(app)
+    return has_focus_filter
 
-    def __call__(self, app):
-        return self._test(app)
-
-    def __repr__(self):
-        return 'HasFocus(%r)' % self.value
+HasFocus = has_focus
 
 
-@memoized()
-class HasSelection(Filter):
+@Condition
+def has_selection(app):
     """
     Enable when the current buffer has a selection.
     """
-    def __call__(self, app):
-        return bool(app.current_buffer.selection_state)
-
-    def __repr__(self):
-        return 'HasSelection()'
+    return bool(app.current_buffer.selection_state)
 
 
-@memoized()
-class HasCompletions(Filter):
+@Condition
+def has_completions(app):
     """
     Enable when the current buffer has completions.
     """
-    def __call__(self, app):
-        return app.current_buffer.complete_state is not None
-
-    def __repr__(self):
-        return 'HasCompletions()'
+    return app.current_buffer.complete_state is not None
 
 
-#@memoized()
-#class IsMultiline(Filter):
-#    """
-#    Enable in multiline mode.
-#    """
-#    def __call__(self, app):
-#        return app.current_buffer.is_multiline()
-#
-#    def __repr__(self):
-#        return 'IsMultiline()'
-
-
-@memoized()
-class IsReadOnly(Filter):
+@Condition
+def is_read_only(app):
     """
     True when the current buffer is read only.
     """
-    def __call__(self, app):
-        return app.current_buffer.read_only()
-
-    def __repr__(self):
-        return 'IsReadOnly()'
+    return app.current_buffer.read_only()
 
 
-@memoized()
-class HasValidationError(Filter):
-    """
-    Current buffer has validation error.
-    """
-    def __call__(self, app):
-        return app.current_buffer.validation_error is not None
-
-    def __repr__(self):
-        return 'HasValidationError()'
+@Condition
+def has_validation_error(app):
+    " Current buffer has validation error.  "
+    return app.current_buffer.validation_error is not None
 
 
-@memoized()
-class HasArg(Filter):
-    """
-    Enable when the input processor has an 'arg'.
-    """
-    def __call__(self, app):
-        return app.key_processor.arg is not None
-
-    def __repr__(self):
-        return 'HasArg()'
+@Condition
+def has_arg(app):
+    " Enable when the input processor has an 'arg'. "
+    return app.key_processor.arg is not None
 
 
-@memoized()
-class IsAborting(Filter):
-    """
-    True when aborting. (E.g. Control-C pressed.)
-    """
-    def __call__(self, app):
-        return app.is_aborting
-
-    def __repr__(self):
-        return 'IsAborting()'
+@Condition
+def is_aborting(app):
+    " True when aborting. (E.g. Control-C pressed.) "
+    return app.is_aborting
 
 
-@memoized()
-class IsExiting(Filter):
+@Condition
+def is_exiting(app):
     """
     True when exiting. (E.g. Control-D pressed.)
     """
-    def __call__(self, app):
-        return app.is_exiting
+    return app.is_exiting
 
-    def __repr__(self):
-        return 'IsExiting()'
-
-
-@memoized()
-class IsDone(Filter):
+@Condition
+def is_done(app):
     """
     True when the CLI is returning, aborting or exiting.
     """
-    def __call__(self, app):
-        return app.is_done
-
-    def __repr__(self):
-        return 'IsDone()'
+    return app.is_done
 
 
-@memoized()
-class RendererHeightIsKnown(Filter):
+@Condition
+def renderer_height_is_known(app):
     """
     Only True when the renderer knows it's real height.
 
@@ -191,218 +163,175 @@ class RendererHeightIsKnown(Filter):
     until we receive the height, in order to avoid flickering -- first drawing
     somewhere in the middle, and then again at the bottom.)
     """
-    def __call__(self, app):
-        return app.renderer.height_is_known
-
-    def __repr__(self):
-        return 'RendererHeightIsKnown()'
+    return app.renderer.height_is_known
 
 
 @memoized()
-class InEditingMode(Filter):
-    """
-    Check whether a given editing mode is active. (Vi or Emacs.)
-    """
-    def __init__(self, editing_mode):
-        self._editing_mode = editing_mode
-
-    @property
-    def editing_mode(self):
-        " The given editing mode. (Read-only) "
-        return self._editing_mode
-
-    def __call__(self, app):
-        return app.editing_mode == self.editing_mode
-
-    def __repr__(self):
-        return 'InEditingMode(%r)' % (self.editing_mode, )
+def in_editing_mode(editing_mode):
+    " Check whether a given editing mode is active. (Vi or Emacs.) "
+    @Condition
+    def in_editing_mode_filter(app):
+        return app.editing_mode == editing_mode
+    return in_editing_mode_filter
 
 
-@memoized()
-class InPasteMode(Filter):
-    def __call__(self, app):
-        return app.paste_mode(app)
+InEditingMode = in_editing_mode  # For backwards compatibility.
 
 
-@memoized()
-class ViMode(Filter):
-    def __call__(self, app):
-        return app.editing_mode == EditingMode.VI
-
-    def __repr__(self):
-        return 'ViMode()'
+@Condition
+def in_paste_mode(app):
+    return app.paste_mode(app)
 
 
-@memoized()
-class ViNavigationMode(Filter):
-    """
-    Active when the set for Vi navigation key bindings are active.
-    """
-    def __call__(self, app):
-        from prompt_toolkit.key_binding.vi_state import InputMode
-        if (app.editing_mode != EditingMode.VI
-                or app.vi_state.operator_func
-                or app.vi_state.waiting_for_digraph
-                or app.current_buffer.selection_state):
-            return False
-
-        return (app.vi_state.input_mode == InputMode.NAVIGATION or
-                app.current_buffer.read_only())
-
-    def __repr__(self):
-        return 'ViNavigationMode()'
+@Condition
+def vi_mode(app):
+    return app.editing_mode == EditingMode.VI
 
 
-@memoized()
-class ViInsertMode(Filter):
-    def __call__(self, app):
-        from prompt_toolkit.key_binding.vi_state import InputMode
-        if (app.editing_mode != EditingMode.VI
-                or app.vi_state.operator_func
-                or app.vi_state.waiting_for_digraph
-                or app.current_buffer.selection_state
-                or app.current_buffer.read_only()):
-            return False
+@Condition
+def vi_navigation_mode(app):
+    " Active when the set for Vi navigation key bindings are active. "
+    from prompt_toolkit.key_binding.vi_state import InputMode
+    if (app.editing_mode != EditingMode.VI
+            or app.vi_state.operator_func
+            or app.vi_state.waiting_for_digraph
+            or app.current_buffer.selection_state):
+        return False
 
-        return app.vi_state.input_mode == InputMode.INSERT
-
-    def __repr__(self):
-        return 'ViInsertMode()'
+    return (app.vi_state.input_mode == InputMode.NAVIGATION or
+            app.current_buffer.read_only())
 
 
-@memoized()
-class ViInsertMultipleMode(Filter):
-    def __call__(self, app):
-        from prompt_toolkit.key_binding.vi_state import InputMode
-        if (app.editing_mode != EditingMode.VI
-                or app.vi_state.operator_func
-                or app.vi_state.waiting_for_digraph
-                or app.current_buffer.selection_state
-                or app.current_buffer.read_only()):
-            return False
+@Condition
+def vi_insert_mode(app):
+    from prompt_toolkit.key_binding.vi_state import InputMode
+    if (app.editing_mode != EditingMode.VI
+            or app.vi_state.operator_func
+            or app.vi_state.waiting_for_digraph
+            or app.current_buffer.selection_state
+            or app.current_buffer.read_only()):
+        return False
 
-        return app.vi_state.input_mode == InputMode.INSERT_MULTIPLE
-
-    def __repr__(self):
-        return 'ViInsertMultipleMode()'
+    return app.vi_state.input_mode == InputMode.INSERT
 
 
-@memoized()
-class ViReplaceMode(Filter):
-    def __call__(self, app):
-        from prompt_toolkit.key_binding.vi_state import InputMode
-        if (app.editing_mode != EditingMode.VI
-                or app.vi_state.operator_func
-                or app.vi_state.waiting_for_digraph
-                or app.current_buffer.selection_state
-                or app.current_buffer.read_only()):
-            return False
+@Condition
+def vi_insert_multiple_mode(app):
+    from prompt_toolkit.key_binding.vi_state import InputMode
+    if (app.editing_mode != EditingMode.VI
+            or app.vi_state.operator_func
+            or app.vi_state.waiting_for_digraph
+            or app.current_buffer.selection_state
+            or app.current_buffer.read_only()):
+        return False
 
-        return app.vi_state.input_mode == InputMode.REPLACE
-
-    def __repr__(self):
-        return 'ViReplaceMode()'
+    return app.vi_state.input_mode == InputMode.INSERT_MULTIPLE
 
 
-@memoized()
-class ViSelectionMode(Filter):
-    def __call__(self, app):
-        if app.editing_mode != EditingMode.VI:
-            return False
+@Condition
+def vi_replace_mode(app):
+    from prompt_toolkit.key_binding.vi_state import InputMode
+    if (app.editing_mode != EditingMode.VI
+            or app.vi_state.operator_func
+            or app.vi_state.waiting_for_digraph
+            or app.current_buffer.selection_state
+            or app.current_buffer.read_only()):
+        return False
 
-        return bool(app.current_buffer.selection_state)
-
-    def __repr__(self):
-        return 'ViSelectionMode()'
-
-
-@memoized()
-class ViWaitingForTextObjectMode(Filter):
-    def __call__(self, app):
-        if app.editing_mode != EditingMode.VI:
-            return False
-
-        return app.vi_state.operator_func is not None
-
-    def __repr__(self):
-        return 'ViWaitingForTextObjectMode()'
+    return app.vi_state.input_mode == InputMode.REPLACE
 
 
-@memoized()
-class ViDigraphMode(Filter):
-    def __call__(self, app):
-        if app.editing_mode != EditingMode.VI:
-            return False
+@Condition
+def vi_selection_mode(app):
+    if app.editing_mode != EditingMode.VI:
+        return False
 
-        return app.vi_state.waiting_for_digraph
-
-    def __repr__(self):
-        return 'ViDigraphMode()'
+    return bool(app.current_buffer.selection_state)
 
 
-@memoized()
-class EmacsMode(Filter):
+@Condition
+def vi_waiting_for_text_object_mode(app):
+    if app.editing_mode != EditingMode.VI:
+        return False
+
+    return app.vi_state.operator_func is not None
+
+
+
+@Condition
+def vi_digraph_mode(app):
+    if app.editing_mode != EditingMode.VI:
+        return False
+
+    return app.vi_state.waiting_for_digraph
+
+
+@Condition
+def emacs_mode(app):
     " When the Emacs bindings are active. "
-    def __call__(self, app):
-        return app.editing_mode == EditingMode.EMACS
-
-    def __repr__(self):
-        return 'EmacsMode()'
+    return app.editing_mode == EditingMode.EMACS
 
 
-@memoized()
-class EmacsInsertMode(Filter):
-    def __call__(self, app):
-        if (app.editing_mode != EditingMode.EMACS
-                or app.current_buffer.selection_state
-                or app.current_buffer.read_only()):
-            return False
-        return True
-
-    def __repr__(self):
-        return 'EmacsInsertMode()'
+@Condition
+def emacs_insert_mode(app):
+    if (app.editing_mode != EditingMode.EMACS
+            or app.current_buffer.selection_state
+            or app.current_buffer.read_only()):
+        return False
+    return True
 
 
-@memoized()
-class EmacsSelectionMode(Filter):
-    def __call__(self, app):
-        return (app.editing_mode == EditingMode.EMACS
-                and app.current_buffer.selection_state)
-
-    def __repr__(self):
-        return 'EmacsSelectionMode()'
+@Condition
+def emacs_selection_mode(app):
+    return (app.editing_mode == EditingMode.EMACS
+            and app.current_buffer.selection_state)
 
 
-@memoized()
-class IsSearching(Filter):
+@Condition
+def is_searching(app):
     " When we are searching. "
-    def __call__(self, app):
-        from prompt_toolkit.layout.controls import BufferControl
-        control = app.focus.focussed_control
-        prev = app.focus.previous_focussed_control
+    from prompt_toolkit.layout.controls import BufferControl
+    control = app.focus.focussed_control
+    prev = app.focus.previous_focussed_control
 
-        return (isinstance(prev, BufferControl) and
-                isinstance(control, BufferControl) and
-                prev.search_buffer_control is not None and
-                prev.search_buffer_control == control)
-
-    def __repr__(self):
-        return 'IsSearching()'
+    return (isinstance(prev, BufferControl) and
+            isinstance(control, BufferControl) and
+            prev.search_buffer_control is not None and
+            prev.search_buffer_control == control)
 
 
-@memoized()
-class ControlIsSearchable(Filter):
+@Condition
+def control_is_searchable(app):
     " When the current UIControl is searchable. "
-    def __call__(self, app):
-        from prompt_toolkit.layout.controls import BufferControl
-        control = app.focussed_control
+    from prompt_toolkit.layout.controls import BufferControl
+    control = app.focussed_control
 
-        return (isinstance(control, BufferControl) and
-                control.search_buffer_control is not None)
-
-    def __repr__(self):
-        return 'ControlIsSearchable()'
+    return (isinstance(control, BufferControl) and
+            control.search_buffer_control is not None)
 
 
-# For backwards compatibility.
-HasSearch = IsSearching
+# Keep the original classnames for backwards compatibility.
+HasValidationError = lambda: has_validation_error
+HasArg = lambda: has_arg
+IsAborting = lambda: is_aborting
+IsExiting = lambda: is_exiting
+IsDone = lambda: is_done
+RendererHeightIsKnown = lambda: renderer_height_is_known
+ViNavigationMode = lambda: vi_navigation_mode
+InPasteMode = lambda: in_paste_mode
+EmacsMode = lambda: emacs_mode
+EmacsInsertMode = lambda: emacs_insert_mode
+ViMode = lambda: vi_mode
+IsSearching = lambda: is_searching
+HasSearch = lambda: is_searching
+ControlIsSearchable = lambda: control_is_searchable
+EmacsSelectionMode = lambda: emacs_selection_mode
+ViDigraphMode = lambda: vi_digraph_mode
+ViWaitingForTextObjectMode = lambda: vi_waiting_for_text_object_mode
+ViSelectionMode = lambda: vi_selection_mode
+ViReplaceMode = lambda: vi_replace_mode
+ViInsertMultipleMode = lambda: vi_insert_multiple_mode
+ViInsertMode = lambda: vi_insert_mode
+HasSelection = lambda: has_selection
+HasCompletions = lambda: has_completions
+IsReadOnly = lambda: is_read_only

@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from prompt_toolkit.buffer import SelectionType, indent, unindent
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.enums import SearchDirection
-from prompt_toolkit.filters import Condition, EmacsMode, HasSelection, EmacsInsertMode, HasFocus, HasArg, IsSearching, ControlIsSearchable
+from prompt_toolkit.filters import Condition, emacs_mode, has_selection, emacs_insert_mode, has_arg, is_searching, control_is_searchable
 from prompt_toolkit.completion import CompleteEvent
 
 from .scroll import scroll_page_up, scroll_page_down
@@ -26,8 +26,7 @@ def load_emacs_bindings():
     key_bindings = KeyBindings()
     handle = key_bindings.add
 
-    insert_mode = EmacsInsertMode()
-    has_selection = HasSelection()
+    insert_mode = emacs_insert_mode
 
     @handle(Keys.Escape)
     def _(event):
@@ -101,7 +100,7 @@ def load_emacs_bindings():
         Handle input of arguments.
         The first number needs to be preceeded by escape.
         """
-        @handle(c, filter=HasArg())
+        @handle(c, filter=has_arg)
         @handle(Keys.Escape, c)
         def _(event):
             event.append_to_arg_count(c)
@@ -109,7 +108,7 @@ def load_emacs_bindings():
     for c in '0123456789':
         handle_digit(c)
 
-    @handle(Keys.Escape, '-', filter=~HasArg())
+    @handle(Keys.Escape, '-', filter=~has_arg)
     def _(event):
         """
         """
@@ -296,7 +295,7 @@ def load_emacs_bindings():
 
         unindent(buffer, from_, to + 1, count=event.arg)
 
-    return ConditionalKeyBindings(key_bindings, EmacsMode())
+    return ConditionalKeyBindings(key_bindings, emacs_mode)
 
 
 def load_emacs_open_in_editor_bindings():
@@ -306,7 +305,7 @@ def load_emacs_open_in_editor_bindings():
     key_bindings = KeyBindings()
 
     key_bindings.add(Keys.ControlX, Keys.ControlE,
-                         filter=EmacsMode() & ~HasSelection())(
+                         filter=emacs_mode & ~has_selection)(
          get_by_name('edit-and-execute-command'))
 
     return key_bindings
@@ -315,9 +314,6 @@ def load_emacs_open_in_editor_bindings():
 def load_emacs_search_bindings():
     key_bindings = KeyBindings()
     handle = key_bindings.add
-
-    is_searching = IsSearching()
-    control_is_searchable = ControlIsSearchable()
 
     @handle(Keys.ControlG, filter=is_searching)
     @handle(Keys.ControlC, filter=is_searching)
@@ -399,7 +395,7 @@ def load_emacs_search_bindings():
     def _(event):
         incremental_search(event.app, SearchDirection.FORWARD, count=event.arg)
 
-    return ConditionalKeyBindings(key_bindings, EmacsMode())
+    return ConditionalKeyBindings(key_bindings, emacs_mode)
 
 
 def load_extra_emacs_page_navigation_bindings():
@@ -415,4 +411,4 @@ def load_extra_emacs_page_navigation_bindings():
     handle(Keys.Escape, 'v')(scroll_page_up)
     handle(Keys.PageUp)(scroll_page_up)
 
-    return ConditionalKeyBindings(key_bindings, EmacsMode())
+    return ConditionalKeyBindings(key_bindings, emacs_mode)

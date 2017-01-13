@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from prompt_toolkit.enums import DEFAULT_BUFFER
-from prompt_toolkit.filters import HasSelection, Condition, EmacsInsertMode, ViInsertMode, InPasteMode
+from prompt_toolkit.filters import has_selection, Condition, emacs_insert_mode, vi_insert_mode, in_paste_mode
 from prompt_toolkit.key_binding.key_processor import KeyPress
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout.screen import Point
@@ -29,9 +29,8 @@ def if_no_repeat(event):
 
 def load_basic_bindings():
     key_bindings = KeyBindings()
-    insert_mode = ViInsertMode() | EmacsInsertMode()
+    insert_mode = vi_insert_mode | emacs_insert_mode
     handle = key_bindings.add
-    has_selection = HasSelection()
 
     @handle(Keys.ControlA)
     @handle(Keys.ControlB)
@@ -152,8 +151,6 @@ def load_basic_bindings():
 
     text_before_cursor = Condition(lambda app: app.current_buffer.text)
     handle(Keys.ControlD, filter=text_before_cursor & insert_mode)(get_by_name('delete-char'))
-
-    in_paste_mode = InPasteMode()
 
     @handle(Keys.Enter, filter=insert_mode)
     def _(event):
