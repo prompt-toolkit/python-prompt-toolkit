@@ -44,6 +44,9 @@ Changes:
     bindings.
   * `KeyBindingManager` has been removed.
 
+
+- `run_sub_applications` returns a future instead of taking a callback.
+
 - Deprecated 
 
 Migrating readline applications:

@@ -483,6 +483,7 @@ class Application(object):
             done-- is handled differently.
         """
         assert isinstance(application, Application)
+        assert isinstance(_from_application_generator, bool)
 
         assert application.loop == self.loop
         application.input = self.input
