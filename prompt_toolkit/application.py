@@ -15,10 +15,9 @@ from .key_binding.key_processor import KeyProcessor
 from .key_binding.key_bindings import KeyBindings, KeyBindingsBase, MergedKeyBindings, ConditionalKeyBindings
 from .key_binding.vi_state import ViState
 from .keys import Keys
+from .layout.layout import Layout
 from .layout.containers import Container, Window
 from .layout.controls import BufferControl, UIControl
-from .layout.focus import Focus
-from .layout.utils import find_all_controls
 from .output import Output
 from .output.defaults import create_output
 from .renderer import Renderer, print_tokens
@@ -48,7 +47,7 @@ class Application(object):
     The main Application class!
     This glues everything together.
 
-    :param layout: A :class:`~prompt_toolkit.layout.containers.Container` instance.
+    :param layout: A :class:`~prompt_toolkit.layout.layout.Layout` instance.
     :param key_bindings:
         :class:`~prompt_toolkit.key_binding.key_bindings.KeyBindingsBase` instance for
         the key bindings.
@@ -111,7 +110,7 @@ class Application(object):
         mouse_support = to_app_filter(mouse_support)
         reverse_vi_search_direction = to_app_filter(reverse_vi_search_direction)
 
-        assert isinstance(layout, Container)
+        assert isinstance(layout, Layout)
         assert key_bindings is None or isinstance(key_bindings, KeyBindingsBase)
         assert clipboard is None or isinstance(clipboard, Clipboard)
         assert isinstance(use_alternate_screen, bool)
@@ -162,8 +161,6 @@ class Application(object):
         self.output = output or create_output()
         self.input = input or create_input(sys.stdin)
 
-        self.focus = Focus(layout, focussed_control)
-
         # List of 'extra' functions to execute before a Application.run.
         self.pre_run_callables = []
 
@@ -213,13 +210,13 @@ class Application(object):
     @property
     def focussed_control(self):
         " Get the `UIControl` to has the focus. "  # This is a shortcut.
-        return self.focus.focussed_control
+        return self.layout.focussed_control
 
     @focussed_control.setter
     def focussed_control(self, ui_control):
         " Set `UIControl` to receive the focus. "  # This is a shortcut.
         assert isinstance(ui_control, UIControl)
-        self.focus.focussed_control = ui_control
+        self.layout.focussed_control = ui_control
 
     @property
     def focussed_window(self):
@@ -255,7 +252,7 @@ class Application(object):
         Return the current `SearchState`. (The one for the focussed
         `BufferControl`.)
         """
-        ui_control = self.focus.focussed_control
+        ui_control = self.layout.focussed_control
         if isinstance(ui_control, BufferControl):
             return ui_control.search_state
         else:
@@ -371,7 +368,7 @@ class Application(object):
         #       event propagation. (Any control should be able to invalidate
         #       itself.)
         def gather_events():
-            for c in find_all_controls(self.layout):
+            for c in self.layout.find_all_controls():
                 if isinstance(c, BufferControl):
                     yield c.buffer.on_completions_changed
                     yield c.buffer.on_suggestion_set
@@ -902,13 +899,13 @@ class _CombinedRegistry(KeyBindingsBase):
         KeyBindings object. """
         raise NotImplementedError
 
-    def _create_key_bindings(self, current_control, visible_controls):
+    def _create_key_bindings(self, current_control, other_controls):
         """
         Create a `KeyBindings` object that merges the `KeyBindings` from the
         `UIControl` with the other user controls and the global key bindings.
         """
         # Collect key bindings of other visible user controls.
-        key_bindings = [c.get_key_bindings(self.app) for c in visible_controls]
+        key_bindings = [c.get_key_bindings(self.app) for c in other_controls]
         key_bindings = [b.key_bindings for b in key_bindings if b is not None]
 
         others_key_bindings = MergedKeyBindings(
@@ -933,13 +930,14 @@ class _CombinedRegistry(KeyBindingsBase):
 
     @property
     def _key_bindings(self):
+        assert self.app.layout.focussed_control
+        assert self.app.focussed_control
         current_control = self.app.focussed_control
-        visible_controls = self.app.rendered_user_controls
-        visible_controls = list(find_all_controls(self.app.layout))#self.app.rendered_user_controls
-        key = current_control, frozenset(visible_controls)
+        other_controls = list(self.app.layout.find_all_controls())
+        key = current_control, frozenset(other_controls)
 
         return self._cache.get(
-            key, lambda: self._create_key_bindings(current_control, visible_controls))
+            key, lambda: self._create_key_bindings(current_control, other_controls))
 
     def get_bindings_for_keys(self, keys):
         return self._key_bindings.get_bindings_for_keys(keys)

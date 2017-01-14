@@ -324,7 +324,7 @@ def load_emacs_search_bindings():
         Abort an incremental search and restore the original line.
         """
         event.app.current_buffer.reset()
-        event.app.focus.focus_previous()
+        event.app.focus.pop_focus()
 
     @handle(Keys.Enter, filter=is_searching)
     def _(event):
@@ -348,7 +348,7 @@ def load_emacs_search_bindings():
         search_control.buffer.reset()
 
         # Focus previous document again.
-        event.app.focus.focus_previous()
+        event.app.focus.pop_focus()
 
     @handle(Keys.ControlR, filter=control_is_searchable)
     def _(event):

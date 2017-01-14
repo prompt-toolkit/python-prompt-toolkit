@@ -35,36 +35,6 @@ __all__ = (
 
     'is_searching',
     'control_is_searchable',
-
-    # Old names.
-    'HasArg',
-    'HasCompletions',
-    'HasFocus',
-    'HasSelection',
-    'HasValidationError',
-    'IsAborting',
-    'IsDone',
-    'IsReadOnly',
-    'RendererHeightIsKnown',
-    'InEditingMode',
-    'InPasteMode',
-
-    'ViMode',
-    'ViNavigationMode',
-    'ViInsertMode',
-    'ViInsertMultipleMode',
-    'ViReplaceMode',
-    'ViSelectionMode',
-    'ViWaitingForTextObjectMode',
-    'ViDigraphMode',
-
-    'EmacsMode',
-    'EmacsInsertMode',
-    'EmacsSelectionMode',
-
-    'IsSearching',
-    'HasSearch',
-    'ControlIsSearchable',
 )
 
 
@@ -91,8 +61,6 @@ def has_focus(value):
     def has_focus_filter(app):
         return test(app)
     return has_focus_filter
-
-HasFocus = has_focus
 
 
 @Condition
@@ -173,9 +141,6 @@ def in_editing_mode(editing_mode):
     def in_editing_mode_filter(app):
         return app.editing_mode == editing_mode
     return in_editing_mode_filter
-
-
-InEditingMode = in_editing_mode  # For backwards compatibility.
 
 
 @Condition
@@ -291,8 +256,8 @@ def emacs_selection_mode(app):
 def is_searching(app):
     " When we are searching. "
     from prompt_toolkit.layout.controls import BufferControl
-    control = app.focus.focussed_control
-    prev = app.focus.previous_focussed_control
+    control = app.layout.focussed_control
+    prev = app.layout.previous_focussed_control
 
     return (isinstance(prev, BufferControl) and
             isinstance(control, BufferControl) and
@@ -308,30 +273,3 @@ def control_is_searchable(app):
 
     return (isinstance(control, BufferControl) and
             control.search_buffer_control is not None)
-
-
-# Keep the original classnames for backwards compatibility.
-HasValidationError = lambda: has_validation_error
-HasArg = lambda: has_arg
-IsAborting = lambda: is_aborting
-IsExiting = lambda: is_exiting
-IsDone = lambda: is_done
-RendererHeightIsKnown = lambda: renderer_height_is_known
-ViNavigationMode = lambda: vi_navigation_mode
-InPasteMode = lambda: in_paste_mode
-EmacsMode = lambda: emacs_mode
-EmacsInsertMode = lambda: emacs_insert_mode
-ViMode = lambda: vi_mode
-IsSearching = lambda: is_searching
-HasSearch = lambda: is_searching
-ControlIsSearchable = lambda: control_is_searchable
-EmacsSelectionMode = lambda: emacs_selection_mode
-ViDigraphMode = lambda: vi_digraph_mode
-ViWaitingForTextObjectMode = lambda: vi_waiting_for_text_object_mode
-ViSelectionMode = lambda: vi_selection_mode
-ViReplaceMode = lambda: vi_replace_mode
-ViInsertMultipleMode = lambda: vi_insert_multiple_mode
-ViInsertMode = lambda: vi_insert_mode
-HasSelection = lambda: has_selection
-HasCompletions = lambda: has_completions
-IsReadOnly = lambda: is_read_only

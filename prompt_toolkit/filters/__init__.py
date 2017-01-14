@@ -34,3 +34,6 @@ from .base import *
 from .app import *
 from .types import *
 from .utils import *
+
+# For backwards-compatibility. Keep this import.
+from .cli import *

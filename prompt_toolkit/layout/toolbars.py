@@ -26,7 +26,7 @@ __all__ = (
 )
 
 
-class TokenListToolbar(ConditionalContainer):
+class TokenListToolbar(ConditionalContainer):  # XXX: don't wrap in ConditionalContainer!
     def __init__(self, get_tokens, filter=Always(), **kw):
         super(TokenListToolbar, self).__init__(
             content=Window(
@@ -71,14 +71,14 @@ class SystemToolbarControl(BufferControl):
         def _(event):
             " Hide system prompt. "
             self.system_buffer.reset()
-            event.app.focus.focus_previous()
+            event.app.focus.pop_focus()
 
         @handle(Keys.Enter, filter=has_focus)
         def _(event):
             " Run system command. "
             event.app.run_system_command(self.system_buffer.text)
             self.system_buffer.reset(append_to_history=True)
-            event.app.focus.focus_previous()
+            event.app.focus.pop_focus()
 
         # Vi.
         vi_bindings = KeyBindings()
@@ -96,7 +96,7 @@ class SystemToolbarControl(BufferControl):
             " Hide system prompt. "
             event.app.vi_state.input_mode = InputMode.NAVIGATION
             self.system_buffer.reset()
-            event.app.focus.focus_previous()
+            event.app.focus.pop_focus()
 
         @handle(Keys.Enter, filter=has_focus)
         def _(event):
@@ -104,7 +104,7 @@ class SystemToolbarControl(BufferControl):
             event.app.vi_state.input_mode = InputMode.NAVIGATION
             event.app.run_system_command(self.system_buffer.text)
             self.system_buffer.reset(append_to_history=True)
-            event.app.focus.focus_previous()
+            event.app.focus.pop_focus()
 
         return MergedKeyBindings([
             ConditionalKeyBindings(emacs_bindings, EmacsMode()),

@@ -4,7 +4,7 @@ from prompt_toolkit.buffer import ClipboardData, indent, unindent, reshape_text
 from prompt_toolkit.document import Document
 from prompt_toolkit.enums import SearchDirection, SYSTEM_BUFFER
 from prompt_toolkit.filters import Filter, Condition, has_arg, Always, is_read_only, is_searching, control_is_searchable
-from prompt_toolkit.filters.app import vi_navigation_mode, vi_insert_mode, vi_insert_multiple_mode, vi_replace_mode, vi_selection_mode, vi_waiting_for_text_object_mode, vi_digraph_mode, ViMode, in_paste_mode
+from prompt_toolkit.filters.app import vi_navigation_mode, vi_insert_mode, vi_insert_multiple_mode, vi_replace_mode, vi_selection_mode, vi_waiting_for_text_object_mode, vi_digraph_mode, vi_mode, in_paste_mode
 from prompt_toolkit.key_binding.digraphs import DIGRAPHS
 from prompt_toolkit.key_binding.vi_state import CharacterFind, InputMode
 from prompt_toolkit.keys import Keys
@@ -1680,7 +1680,7 @@ def load_vi_bindings():
             event.app.vi_state.waiting_for_digraph = False
             event.app.vi_state.digraph_symbol1 = None
 
-    return ConditionalKeyBindings(key_bindings, ViMode())
+    return ConditionalKeyBindings(key_bindings, vi_mode)
 
 
 def load_vi_open_in_editor_bindings():
@@ -1758,7 +1758,7 @@ def load_vi_search_bindings():
 
         # Focus previous document again.
         event.app.vi_state.input_mode = InputMode.NAVIGATION
-        event.app.focus.focus_previous()
+        event.app.focus.pop_focus()
 
     def incremental_search(app, direction, count=1):
         " Apply search, but keep search buffer focussed. "
@@ -1803,9 +1803,9 @@ def load_vi_search_bindings():
         event.app.current_buffer.reset()
         event.app.vi_state.input_mode = InputMode.NAVIGATION
 
-        event.app.focus.focus_previous()
+        event.app.focus.pop_focus()
 
-    return ConditionalKeyBindings(key_bindings, ViMode())
+    return ConditionalKeyBindings(key_bindings, vi_mode)
 
 
 def load_extra_vi_page_navigation_bindings():
@@ -1825,4 +1825,4 @@ def load_extra_vi_page_navigation_bindings():
     handle(Keys.PageDown)(scroll_page_down)
     handle(Keys.PageUp)(scroll_page_up)
 
-    return ConditionalKeyBindings(key_bindings, ViMode())
+    return ConditionalKeyBindings(key_bindings, vi_mode)

@@ -421,7 +421,7 @@ class Renderer(object):
             self._attrs_for_token = _TokenToAttrsCache(self.style.get_attrs_for_token)
         self._last_style_hash = self.style.invalidation_hash()
 
-        layout.write_to_screen(app, screen, mouse_handlers, WritePosition(
+        layout.container.write_to_screen(app, screen, mouse_handlers, WritePosition(
             xpos=0,
             ypos=0,
             width=size.columns,

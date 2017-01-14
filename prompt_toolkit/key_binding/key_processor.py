@@ -8,7 +8,7 @@ correct callbacks when new key presses are feed through `feed`.
 """
 from __future__ import unicode_literals
 from prompt_toolkit.buffer import EditReadOnlyBuffer
-from prompt_toolkit.filters.app import ViNavigationMode
+from prompt_toolkit.filters.app import vi_navigation_mode
 from prompt_toolkit.keys import Keys, Key
 from prompt_toolkit.utils import Event
 
@@ -281,7 +281,7 @@ class KeyProcessor(object):
             buff = app.current_buffer
             preferred_column = buff.preferred_column
 
-            if (ViNavigationMode()(event.app) and
+            if (vi_navigation_mode(event.app) and
                     buff.document.is_cursor_at_the_end_of_line and
                     len(buff.document.current_line) > 0):
                 buff.cursor_position -= 1
