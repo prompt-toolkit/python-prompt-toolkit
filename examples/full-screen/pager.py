@@ -8,7 +8,7 @@ from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.enums import DEFAULT_BUFFER
 from prompt_toolkit.eventloop.defaults import create_event_loop
 from prompt_toolkit.key_binding.defaults import load_key_bindings
-from prompt_toolkit.key_binding.registry import Registry, MergedRegistry
+from prompt_toolkit.key_binding.key_bindings import KeyBindings, MergedKeyBindings
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout.containers import HSplit, Window
 from prompt_toolkit.layout.controls import BufferControl, TokenListControl
@@ -16,6 +16,7 @@ from prompt_toolkit.layout.margins import ScrollbarMargin, NumberredMargin
 from prompt_toolkit.layout.dimension import LayoutDimension as D
 from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.layout.processors import HighlightSearchProcessor
+from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.layout.screen import Char
 from prompt_toolkit.styles import PygmentsStyle
 from prompt_toolkit.token import Token
@@ -46,7 +47,7 @@ def get_statusbar_tokens(app):
 buffer_control = BufferControl(buffer=default_buffer, lexer=PygmentsLexer(PythonLexer))
 
 
-layout = HSplit([
+root_container = HSplit([
     # The top toolbar.
     Window(content=TokenListControl(
         get_statusbar_tokens, default_char=Char(token=Token.Status)),
@@ -63,10 +64,10 @@ layout = HSplit([
 
 
 # Key bindings.
-registry = Registry()
+bindings = KeyBindings()
 
-@registry.add_binding(Keys.ControlC)
-@registry.add_binding('q')
+@bindings.add(Keys.ControlC)
+@bindings.add('q')
 def _(event):
     " Quit. "
     event.app.set_return_value(None)
@@ -80,14 +81,16 @@ style = PygmentsStyle.from_defaults({
 # create application.
 application = Application(
     loop=loop,
-    layout=layout,
-    key_bindings_registry=MergedRegistry([
+    layout=Layout(
+        root_container,
+        focussed_control=buffer_control,
+    ),
+    key_bindings=MergedKeyBindings([
         load_key_bindings(enable_search=True, enable_extra_page_navigation=True),
-        registry,
+        bindings,
     ]),
     mouse_support=True,
     style=style,
-    focussed_control=buffer_control,
 
     # Using an alternate screen buffer means as much as: "run full screen".
     # It switches the terminal to an alternate screen.
