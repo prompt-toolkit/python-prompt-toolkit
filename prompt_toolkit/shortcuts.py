@@ -414,12 +414,12 @@ class Prompt(object):
                             wrap_lines=dyncond('wrap_lines'),
                         ),
                         Condition(lambda app:
-                            app.focussed_control != search_buffer_control),
+                            app.layout.focussed_control != search_buffer_control),
                     ),
                     ConditionalContainer(
                         Window(search_buffer_control),
                         Condition(lambda app:
-                            app.focussed_control == search_buffer_control),
+                            app.layout.focussed_control == search_buffer_control),
                     ),
                 ]),
                 [
@@ -465,7 +465,7 @@ class Prompt(object):
         @Condition
         def do_accept(app):
             return (not _true(self.multiline) and
-                    self.app.focussed_control == self._default_buffer_control)
+                    self.app.layout.focussed_control == self._default_buffer_control)
 
         @prompt_bindings.add(Keys.Enter, filter=do_accept)
         def _(event):
@@ -503,15 +503,15 @@ class Prompt(object):
         '''
         def on_render(app):
             multiline = _true(self.multiline)
-            focussed_control = app.focussed_control
+            focussed_control = app.layout.focussed_control
 
             if multiline:
                 if focussed_control == search_buffer_control:
-                    app.focussed_control = search_toolbar.control
+                    app.layout.focussed_control = search_toolbar.control
                     app.invalidate()
             else:
                 if focussed_control == search_toolbar.control:
-                    app.focussed_control = search_buffer_control
+                    app.layout.focussed_control = search_buffer_control
                     app.invalidate()
 
         app.on_render += on_render

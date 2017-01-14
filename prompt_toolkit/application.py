@@ -205,30 +205,6 @@ class Application(object):
         self.reset()
 
     @property
-    def focussed_control(self):
-        " Get the `UIControl` to has the focus. "  # This is a shortcut.
-        return self.layout.focussed_control
-
-    @focussed_control.setter
-    def focussed_control(self, ui_control):
-        " Set `UIControl` to receive the focus. "  # This is a shortcut.
-        assert isinstance(ui_control, UIControl)
-        self.layout.focussed_control = ui_control
-
-    @property
-    def focussed_window(self):
-        " Return the `Window` object that is currently focussed. "
-        for item in self.layout.walk():
-            if isinstance(item, Window) and item.content == self.focussed_control:
-                return item
-
-    @focussed_window.setter
-    def focussed_window(self, value):
-        " Set the `Window` object to be currently focussed. "
-        assert isinstance(value, Window)
-        self.focussed_control = value.content
-
-    @property
     def current_buffer(self):
         """
         The currently focussed :class:`~.Buffer`.
@@ -237,7 +213,7 @@ class Application(object):
         has the focus. In this case, it's really not practical to check for
         `None` values or catch exceptions every time.)
         """
-        ui_control = self.focussed_control
+        ui_control = self.layout.focussed_control
         if isinstance(ui_control, BufferControl):
             return ui_control.buffer
         else:
@@ -927,9 +903,7 @@ class _CombinedRegistry(KeyBindingsBase):
 
     @property
     def _key_bindings(self):
-        assert self.app.layout.focussed_control
-        assert self.app.focussed_control
-        current_control = self.app.focussed_control
+        current_control = self.app.layout.focussed_control
         other_controls = list(self.app.layout.find_all_controls())
         key = current_control, frozenset(other_controls)
 

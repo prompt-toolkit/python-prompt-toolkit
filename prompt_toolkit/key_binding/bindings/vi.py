@@ -849,7 +849,7 @@ def load_vi_bindings():
         """
         Go to previous occurence of this word.
         """
-        b = event.app.current_buffer
+        b = event.current_buffer
         search_state = event.app.current_search_state
 
         search_state.text = b.document.get_word_under_cursor()
@@ -863,7 +863,7 @@ def load_vi_bindings():
         """
         Go to next occurence of this word.
         """
-        b = event.app.current_buffer
+        b = event.current_buffer
         search_state = event.app.current_search_state
 
         search_state.text = b.document.get_word_under_cursor()
@@ -1260,7 +1260,7 @@ def load_vi_bindings():
         Moves to the start of the visible region. (Below the scroll offset.)
         Implements 'cH', 'dH', 'H'.
         """
-        w = event.app.focussed_window
+        w = event.app.layout.focussed_window
         b = event.current_buffer
 
         if w and w.render_info:
@@ -1281,7 +1281,7 @@ def load_vi_bindings():
         Moves cursor to the vertical center of the visible region.
         Implements 'cM', 'dM', 'M'.
         """
-        w = event.app.focussed_window
+        w = event.app.layout.focussed_window
         b = event.current_buffer
 
         if w and w.render_info:
@@ -1301,7 +1301,7 @@ def load_vi_bindings():
         """
         Moves to the end of the visible region. (Above the scroll offset.)
         """
-        w = event.app.focussed_window
+        w = event.app.layout.focussed_window
         b = event.current_buffer
 
         if w and w.render_info:
@@ -1359,8 +1359,8 @@ def load_vi_bindings():
         """
         Scrolls the window to makes the current line the first line in the visible region.
         """
-        b = event.app.current_buffer
-        event.app.focussed_window.vertical_scroll = b.document.cursor_position_row
+        b = event.current_buffer
+        event.app.layout.focussed_window.vertical_scroll = b.document.cursor_position_row
 
     @handle('z', '-', filter=vi_navigation_mode|vi_selection_mode)
     @handle('z', 'b', filter=vi_navigation_mode|vi_selection_mode)
@@ -1371,15 +1371,15 @@ def load_vi_bindings():
         # We can safely set the scroll offset to zero; the Window will meke
         # sure that it scrolls at least enough to make the cursor visible
         # again.
-        event.app.focussed_window.vertical_scroll = 0
+        event.app.layout.focussed_window.vertical_scroll = 0
 
     @handle('z', 'z', filter=vi_navigation_mode|vi_selection_mode)
     def _(event):
         """
         Center Window vertically around cursor.
         """
-        w = event.app.focussed_window
-        b = event.app.current_buffer
+        w = event.app.layout.focussed_window
+        b = event.current_buffer
 
         if w and w.render_info:
             info = w.render_info
@@ -1479,7 +1479,7 @@ def load_vi_bindings():
         """
         Like g0, but half a screenwidth to the right. (Or as much as possible.)
         """
-        w = event.app.focussed_window
+        w = event.app.layout.focussed_window
         buff = event.current_buffer
 
         if w and w.render_info:
@@ -1716,7 +1716,7 @@ def load_vi_search_bindings():
         event.app.vi_state.input_mode = InputMode.INSERT
 
         # Focus search buffer.
-        event.app.focussed_control = control.search_buffer_control
+        event.app.layout.focussed_control = control.search_buffer_control
 
     @handle('?', filter=(vi_navigation_mode|vi_selection_mode)&~reverse_vi_search_direction)
     @handle('/', filter=(vi_navigation_mode|vi_selection_mode)&reverse_vi_search_direction)
@@ -1733,7 +1733,7 @@ def load_vi_search_bindings():
         event.app.vi_state.input_mode = InputMode.INSERT
 
         # Focus search buffer.
-        event.app.focussed_control = control.search_buffer_control
+        event.app.layout.focussed_control = control.search_buffer_control
 
     @handle(Keys.Enter, filter=is_searching)
     def _(event):

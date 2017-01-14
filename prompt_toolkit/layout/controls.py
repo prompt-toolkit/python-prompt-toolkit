@@ -656,7 +656,7 @@ class BufferControl(UIControl):
         # If there is an auto completion going on, use that start point for a
         # pop-up menu position. (But only when this buffer has the focus --
         # there is only one place for a menu, determined by the focussed buffer.)
-        if app.focussed_control == self:
+        if app.layout.focussed_control == self:
             menu_position = self.menu_position(app) if self.menu_position else None
             if menu_position is not None:
                 assert isinstance(menu_position, int)
@@ -685,7 +685,7 @@ class BufferControl(UIControl):
         position = mouse_event.position
 
         # Focus buffer when clicked.
-        if app.focussed_control == self:
+        if app.layout.focussed_control == self:
             if self._last_get_processed_line:
                 processed_line = self._last_get_processed_line(position.y)
 
@@ -729,7 +729,7 @@ class BufferControl(UIControl):
                 # Focus happens on mouseup. (If we did this on mousedown, the
                 # up event will be received at the point where this widget is
                 # focussed and be handled anyway.)
-                app.focussed_control = self
+                app.layout.focussed_control = self
             else:
                 return NotImplemented
 

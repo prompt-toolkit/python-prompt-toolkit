@@ -323,7 +323,7 @@ def load_emacs_search_bindings():
         """
         Abort an incremental search and restore the original line.
         """
-        event.app.current_buffer.reset()
+        event.current_buffer.reset()
         event.app.layout.pop_focus()
 
     @handle(Keys.Enter, filter=is_searching)
@@ -356,7 +356,7 @@ def load_emacs_search_bindings():
         search_state = control.search_state
 
         search_state.direction = SearchDirection.BACKWARD
-        event.app.focussed_control = control.search_buffer_control
+        event.app.layout.focussed_control = control.search_buffer_control
 
     @handle(Keys.ControlS, filter=control_is_searchable)
     def _(event):
@@ -364,7 +364,7 @@ def load_emacs_search_bindings():
         search_state = control.search_state
 
         search_state.direction = SearchDirection.FORWARD
-        event.app.focussed_control = control.search_buffer_control
+        event.app.layout.focussed_control = control.search_buffer_control
 
     def incremental_search(app, direction, count=1):
         " Apply search, but keep search buffer focussed. "

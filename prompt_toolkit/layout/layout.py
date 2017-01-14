@@ -60,6 +60,19 @@ class Layout(object):
             self._stack.append(control)
 
     @property
+    def focussed_window(self):
+        " Return the `Window` object that is currently focussed. "
+        for item in self.walk():
+            if isinstance(item, Window) and item.content == self.focussed_control:
+                return item
+
+    @focussed_window.setter
+    def focussed_window(self, value):
+        " Set the `Window` object to be currently focussed. "
+        assert isinstance(value, Window)
+        self.focussed_control = value.content
+
+    @property
     def previous_focussed_control(self):
         """
         Get the `UIControl` to previously had the focus.

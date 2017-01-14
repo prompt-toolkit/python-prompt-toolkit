@@ -63,7 +63,7 @@ class SystemToolbarControl(BufferControl):
                 self.enable)
         def _(event):
             " M-'!' will focus this user control. "
-            event.app.focussed_control = self
+            event.app.layout.focussed_control = self
 
         @handle(Keys.Escape, filter=has_focus)
         @handle(Keys.ControlG, filter=has_focus)
@@ -88,7 +88,7 @@ class SystemToolbarControl(BufferControl):
         def _(event):
             " Focus. "
             event.app.vi_state.input_mode = InputMode.INSERT
-            event.app.focussed_control = self
+            event.app.layout.focussed_control = self
 
         @handle(Keys.Escape, filter=has_focus)
         @handle(Keys.ControlC, filter=has_focus)

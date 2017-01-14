@@ -1087,7 +1087,7 @@ class Window(Container):
             wrap_lines=wrap_lines, highlight_lines=True,
             vertical_scroll_2=self.vertical_scroll_2,
             always_hide_cursor=self.always_hide_cursor(app),
-            has_focus=app.focussed_control == self.content)
+            has_focus=app.layout.focussed_control == self.content)
 
         # Remember render info. (Set before generating the margins. They need this.)
         x_offset=write_position.xpos + sum(left_margin_widths)

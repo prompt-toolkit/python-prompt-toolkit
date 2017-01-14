@@ -169,7 +169,7 @@ def reverse_search_history(event):
 
     if control.search_buffer_control:
         event.app.current_search_state.direction = SearchDirection.BACKWARD
-        event.app.focussed_control = control.search_buffer_control
+        event.app.layout.focussed_control = control.search_buffer_control
 
 
 #
