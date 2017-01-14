@@ -1017,10 +1017,10 @@ class Window(Container):
         # When a 'preferred' dimension is given by the UIControl, make sure
         # that it stays within the bounds of the Window.
         if preferred is not None:
-            if dimension.max:
+            if dimension.max_specified:
                 preferred = min(preferred, dimension.max)
 
-            if dimension.min:
+            if dimension.min_specified:
                 preferred = max(preferred, dimension.min)
 
         # When a `dont_extend` flag has been given, use the preferred dimension
@@ -1028,10 +1028,12 @@ class Window(Container):
         if dont_extend and preferred is not None:
             max_ = min(dimension.max, preferred)
         else:
-            max_ = dimension.max
+            max_ = (dimension.max if dimension.max_specified else None)
+
+        min_ = (dimension.min if dimension.min_specified else None)
 
         return LayoutDimension(
-            min=dimension.min, max=max_,
+            min=min_, max=max_,
             preferred=preferred, weight=dimension.weight)
 
     def _get_ui_content(self, app, width, height):

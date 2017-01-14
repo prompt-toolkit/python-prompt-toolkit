@@ -193,17 +193,17 @@ class TokenListControl(UIControl):
         The list of tokens can also contain tuples of three items, looking like:
         (Token, text, handler). When mouse support is enabled and the user
         clicks on this token, then the given handler is called. That handler
-        should accept two inputs: (CommandLineInterface, MouseEvent) and it
-        should either handle the event or return `NotImplemented` in case we
-        want the containing Window to handle this event.
+        should accept two inputs: (Application, MouseEvent) and it should
+        either handle the event or return `NotImplemented` in case we want the
+        containing Window to handle this event.
 
-    :param get_tokens: Callable that takes a `CommandLineInterface` instance
-        and returns the list of (Token, text) tuples to be displayed right now.
+    :param get_tokens: Callable that takes an `Application` instance and
+        returns the list of (Token, text) tuples to be displayed right now.
     :param default_char: default :class:`.Char` (character and Token) to use
         for the background when there is more space available than `get_tokens`
         returns.
     :param get_default_char: Like `default_char`, but this is a callable that
-        takes a :class:`prompt_toolkit.interface.CommandLineInterface` and
+        takes a :class:`prompt_toolkit.application.Application` and
         returns a :class:`.Char` instance.
     """
     def __init__(self, get_tokens, default_char=None, get_default_char=None,
@@ -374,7 +374,7 @@ class FillControl(UIControl):
     (Also helpful for debugging.)
 
     :param char: :class:`.Char` instance to use for filling.
-    :param get_char: A callable that takes a CommandLineInterface and returns a
+    :param get_char: A callable that takes an `Application` and returns a
         :class:`.Char` object.
     """
     def __init__(self, char=None, get_char=None):
