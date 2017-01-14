@@ -1708,7 +1708,7 @@ def load_vi_search_bindings():
         """
         Vi-style forward search.
         """
-        control = event.app.focus.focussed_control
+        control = event.app.layout.focussed_control
         search_state = control.search_state
 
         # Set the ViState.
@@ -1725,7 +1725,7 @@ def load_vi_search_bindings():
         """
         Vi-style backward search.
         """
-        control = event.app.focus.focussed_control
+        control = event.app.layout.focussed_control
         search_state = control.search_state
 
         # Set the ViState.
@@ -1740,8 +1740,8 @@ def load_vi_search_bindings():
         """
         Apply the search. (At the / or ? prompt.)
         """
-        search_control = event.app.focus.focussed_control
-        prev_control = event.app.focus.previous_focussed_control
+        search_control = event.app.layout.focussed_control
+        prev_control = event.app.layout.previous_focussed_control
         search_state = prev_control.search_state
 
         # Update search state.
@@ -1758,14 +1758,14 @@ def load_vi_search_bindings():
 
         # Focus previous document again.
         event.app.vi_state.input_mode = InputMode.NAVIGATION
-        event.app.focus.pop_focus()
+        event.app.layout.pop_focus()
 
     def incremental_search(app, direction, count=1):
         " Apply search, but keep search buffer focussed. "
         assert is_searching(app)
 
-        search_control = app.focus.focussed_control
-        prev_control = app.focus.previous_focussed_control
+        search_control = app.layout.focussed_control
+        prev_control = app.layout.previous_focussed_control
         search_state = prev_control.search_state
 
         # Update search_state.
@@ -1803,7 +1803,7 @@ def load_vi_search_bindings():
         event.app.current_buffer.reset()
         event.app.vi_state.input_mode = InputMode.NAVIGATION
 
-        event.app.focus.pop_focus()
+        event.app.layout.pop_focus()
 
     return ConditionalKeyBindings(key_bindings, vi_mode)
 

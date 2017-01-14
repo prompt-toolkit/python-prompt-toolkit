@@ -60,7 +60,6 @@ class Application(object):
     :param reverse_vi_search_direction: Normally, in Vi mode, a '/' searches
         forward and a '?' searches backward. In readline mode, this is usually
         reversed.
-    :param focussed_control: The `UIControl` object that gets the initially the focus.
 
     Filters:
 
@@ -98,7 +97,6 @@ class Application(object):
                  editing_mode=EditingMode.EMACS,
                  erase_when_done=False,
                  reverse_vi_search_direction=False,
-                 focussed_control=None,
 
                  on_input_timeout=None,
                  on_reset=None, on_render=None, on_invalidate=None,
@@ -120,7 +118,6 @@ class Application(object):
         assert on_input_timeout is None or callable(on_input_timeout)
         assert style is None or isinstance(style, Style)
         assert isinstance(erase_when_done, bool)
-        assert focussed_control is None or isinstance(focussed_control, UIControl)
 
         assert on_reset is None or callable(on_reset)
         assert on_render is None or callable(on_render)
