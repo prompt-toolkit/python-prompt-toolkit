@@ -45,6 +45,7 @@ from .layout import Window, HSplit, FloatContainer, Float
 from .layout.containers import ConditionalContainer
 from .layout.controls import BufferControl, TokenListControl
 from .layout.dimension import LayoutDimension
+from .layout.layout import Layout
 from .layout.lexers import DynamicLexer
 from .layout.margins import PromptMargin, ConditionalMargin
 from .layout.menus import CompletionsMenu, MultiColumnCompletionsMenu
@@ -474,8 +475,7 @@ class Prompt(object):
 
         # Create application
         application = Application(
-            layout=layout,
-            focussed_control=default_buffer_control,
+            layout=Layout(layout, default_buffer_control),
             style=DynamicStyle(lambda: self.style or DEFAULT_STYLE),
             clipboard=DynamicClipboard(lambda: self.clipboard),
             key_bindings=MergedKeyBindings([
