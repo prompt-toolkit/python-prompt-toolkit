@@ -9,10 +9,10 @@ from six import with_metaclass
 from six.moves import range
 
 from .controls import UIControl, TokenListControl, UIContent
-from .dimension import LayoutDimension, sum_layout_dimensions, max_layout_dimensions
+from .dimension import Dimension, sum_layout_dimensions, max_layout_dimensions
 from .margins import Margin
 from .screen import Point, WritePosition, _CHAR_CACHE
-from .utils import token_list_to_text, explode_tokens
+from .utils import token_list_to_text, explode_tokens, token_list_width
 from prompt_toolkit.cache import SimpleCache
 from prompt_toolkit.filters import to_app_filter, ViInsertMode, EmacsInsertMode
 from prompt_toolkit.mouse_events import MouseEvent, MouseEventType
@@ -31,6 +31,7 @@ __all__ = (
     'ConditionalContainer',
     'ScrollOffsets',
     'ColorColumn',
+    'to_container',
 )
 
 Transparent = Token.Transparent
@@ -50,7 +51,7 @@ class Container(with_metaclass(ABCMeta, object)):
     @abstractmethod
     def preferred_width(self, app, max_available_width):
         """
-        Return a :class:`~prompt_toolkit.layout.dimension.LayoutDimension` that
+        Return a :class:`~prompt_toolkit.layout.dimension.Dimension` that
         represents the desired width for this container.
 
         :param app: :class:`~prompt_toolkit.application.Application`.
@@ -59,7 +60,7 @@ class Container(with_metaclass(ABCMeta, object)):
     @abstractmethod
     def preferred_height(self, app, width, max_available_height):
         """
-        Return a :class:`~prompt_toolkit.layout.dimension.LayoutDimension` that
+        Return a :class:`~prompt_toolkit.layout.dimension.Dimension` that
         represents the desired height for this container.
 
         :param app: :class:`~prompt_toolkit.application.Application`.
@@ -97,7 +98,7 @@ class HSplit(Container):
         there is not enough space for all the children. By default, this is a
         "Window too small" message.
     :param get_dimensions: (`None` or a callable that takes a
-        `Application` and returns a list of `LayoutDimension`
+        `Application` and returns a list of `Dimension`
         instances.) By default the dimensions are taken from the children and
         divided by the available space. However, when `get_dimensions` is specified,
         this is taken instead.
@@ -107,12 +108,11 @@ class HSplit(Container):
     """
     def __init__(self, children, window_too_small=None,
                  get_dimensions=None, report_dimensions_callback=None):
-        assert all(isinstance(c, Container) for c in children)
         assert window_too_small is None or isinstance(window_too_small, Container)
         assert get_dimensions is None or callable(get_dimensions)
         assert report_dimensions_callback is None or callable(report_dimensions_callback)
 
-        self.children = children
+        self.children = [to_container(c) for c in children]
         self.window_too_small = window_too_small or _window_too_small()
         self.get_dimensions = get_dimensions
         self.report_dimensions_callback = report_dimensions_callback
@@ -122,7 +122,7 @@ class HSplit(Container):
             dimensions = [c.preferred_width(app, max_available_width) for c in self.children]
             return max_layout_dimensions(dimensions)
         else:
-            return LayoutDimension(0)
+            return Dimension(0)
 
     def preferred_height(self, app, width, max_available_height):
         dimensions = [c.preferred_height(app, width, max_available_height) for c in self.children]
@@ -226,7 +226,7 @@ class VSplit(Container):
         there is not enough space for all the children. By default, this is a
         "Window too small" message.
     :param get_dimensions: (`None` or a callable that takes a
-        `Application` and returns a list of `LayoutDimension`
+        `Application` and returns a list of `Dimension`
         instances.) By default the dimensions are taken from the children and
         divided by the available space. However, when `get_dimensions` is specified,
         this is taken instead.
@@ -236,12 +236,11 @@ class VSplit(Container):
     """
     def __init__(self, children, window_too_small=None,
                  get_dimensions=None, report_dimensions_callback=None):
-        assert all(isinstance(c, Container) for c in children)
         assert window_too_small is None or isinstance(window_too_small, Container)
         assert get_dimensions is None or callable(get_dimensions)
         assert report_dimensions_callback is None or callable(report_dimensions_callback)
 
-        self.children = children
+        self.children = [to_container(c) for c in children]
         self.window_too_small = window_too_small or _window_too_small()
         self.get_dimensions = get_dimensions
         self.report_dimensions_callback = report_dimensions_callback
@@ -253,7 +252,7 @@ class VSplit(Container):
     def preferred_height(self, app, width, max_available_height):
         sizes = self._divide_widths(app, width)
         if sizes is None:
-            return LayoutDimension()
+            return Dimension()
         else:
             dimensions = [c.preferred_height(app, s, max_available_height)
                           for s, c in zip(sizes, self.children)]
@@ -371,10 +370,9 @@ class FloatContainer(Container):
                        ])
     """
     def __init__(self, content, floats):
-        assert isinstance(content, Container)
         assert all(isinstance(f, Float) for f in floats)
 
-        self.content = content
+        self.content = to_container(content)
         self.floats = floats
 
     def reset(self):
@@ -553,7 +551,6 @@ class Float(object):
                  width=None, height=None, get_width=None, get_height=None,
                  xcursor=False, ycursor=False, content=None,
                  hide_when_covering_content=False):
-        assert isinstance(content, Container)
         assert width is None or get_width is None
         assert height is None or get_height is None
 
@@ -571,7 +568,7 @@ class Float(object):
         self.xcursor = xcursor
         self.ycursor = ycursor
 
-        self.content = content
+        self.content = to_container(content)
         self.hide_when_covering_content = hide_when_covering_content
 
     def get_width(self, app):
@@ -837,15 +834,23 @@ class ColorColumn(object):
 _in_insert_mode = ViInsertMode() | EmacsInsertMode()
 
 
+class Align:
+    " Alignment of Window content. "
+    LEFT = 'LEFT'
+    RIGHT = 'RIGHT'
+    CENTER = 'CENTER'
+    _ALL = (LEFT, RIGHT, CENTER)
+
+
 class Window(Container):
     """
     Container that holds a control.
 
     :param content: :class:`~prompt_toolkit.layout.controls.UIControl` instance.
-    :param width: :class:`~prompt_toolkit.layout.dimension.LayoutDimension` instance.
-    :param height: :class:`~prompt_toolkit.layout.dimension.LayoutDimension` instance.
-    :param get_width: callable which takes a `Application` and returns a `LayoutDimension`.
-    :param get_height: callable which takes a `Application` and returns a `LayoutDimension`.
+    :param width: :class:`~prompt_toolkit.layout.dimension.Dimension` instance.
+    :param height: :class:`~prompt_toolkit.layout.dimension.Dimension` instance.
+    :param get_width: callable which takes a `Application` and returns a `Dimension`.
+    :param get_height: callable which takes a `Application` and returns a `Dimension`.
     :param dont_extend_width: When `True`, don't take up more width then the
                               preferred width reported by the control.
     :param dont_extend_height: When `True`, don't take up more width then the
@@ -888,6 +893,8 @@ class Window(Container):
         if `cursorline` is True.
     :param cursorcolumn_token: The token to be used for highlighting the current line,
         if `cursorcolumn` is True.
+    :param align: alignment of content.
+    :param token: If given, apply this token to all of the cells in this window.
     """
     def __init__(self, content, width=None, height=None, get_width=None,
                  get_height=None, dont_extend_width=False, dont_extend_height=False,
@@ -895,10 +902,11 @@ class Window(Container):
                  allow_scroll_beyond_bottom=False, wrap_lines=False,
                  get_vertical_scroll=None, get_horizontal_scroll=None, always_hide_cursor=False,
                  cursorline=False, cursorcolumn=False, get_colorcolumns=None,
-                 cursorline_token=Token.CursorLine, cursorcolumn_token=Token.CursorColumn):
+                 cursorline_token=Token.CursorLine, cursorcolumn_token=Token.CursorColumn,
+                 align=Align.LEFT, token=None):
         assert isinstance(content, UIControl)
-        assert width is None or isinstance(width, LayoutDimension)
-        assert height is None or isinstance(height, LayoutDimension)
+        assert width is None or isinstance(width, Dimension)
+        assert height is None or isinstance(height, Dimension)
         assert get_width is None or callable(get_width)
         assert get_height is None or callable(get_height)
         assert width is None or get_width is None
@@ -909,6 +917,8 @@ class Window(Container):
         assert get_vertical_scroll is None or callable(get_vertical_scroll)
         assert get_horizontal_scroll is None or callable(get_horizontal_scroll)
         assert get_colorcolumns is None or callable(get_colorcolumns)
+        assert align in Align._ALL
+        assert token is None or isinstance(token, tuple)
 
         self.allow_scroll_beyond_bottom = to_app_filter(allow_scroll_beyond_bottom)
         self.always_hide_cursor = to_app_filter(always_hide_cursor)
@@ -929,6 +939,8 @@ class Window(Container):
         self.get_colorcolumns = get_colorcolumns or (lambda app: [])
         self.cursorline_token = cursorline_token
         self.cursorcolumn_token = cursorcolumn_token
+        self.align = align
+        self.token = token
 
         # Cache for the screens generated by the margin.
         self._ui_content_cache = SimpleCache(maxsize=8)
@@ -1003,11 +1015,11 @@ class Window(Container):
     @staticmethod
     def _merge_dimensions(dimension, preferred=None, dont_extend=False):
         """
-        Take the LayoutDimension from this `Window` class and the received
-        preferred size from the `UIControl` and return a `LayoutDimension` to
-        report to the parent container.
+        Take the Dimension from this `Window` class and the received preferred
+        size from the `UIControl` and return a `Dimension` to report to the
+        parent container.
         """
-        dimension = dimension or LayoutDimension()
+        dimension = dimension or Dimension()
 
         # When a preferred dimension was explicitly given to the Window,
         # ignore the UIControl.
@@ -1032,7 +1044,7 @@ class Window(Container):
 
         min_ = (dimension.min if dimension.min_specified else None)
 
-        return LayoutDimension(
+        return Dimension(
             min=min_, max=max_,
             preferred=preferred, weight=dimension.weight)
 
@@ -1089,7 +1101,8 @@ class Window(Container):
             wrap_lines=wrap_lines, highlight_lines=True,
             vertical_scroll_2=self.vertical_scroll_2,
             always_hide_cursor=self.always_hide_cursor(app),
-            has_focus=app.layout.focussed_control == self.content)
+            has_focus=app.layout.focussed_control == self.content,
+            align=self.align)
 
         # Remember render info. (Set before generating the margins. They need this.)
         x_offset=write_position.xpos + sum(left_margin_widths)
@@ -1189,10 +1202,14 @@ class Window(Container):
             self._copy_margin(app, margin_screen, screen, write_position, move_x, width)
             move_x += width
 
+        # Apply 'self.token'
+        self._apply_token(screen, write_position)
+
     def _copy_body(self, app, ui_content, new_screen, write_position, move_x,
                    width, vertical_scroll=0, horizontal_scroll=0,
                    wrap_lines=False, highlight_lines=False,
-                   vertical_scroll_2=0, always_hide_cursor=False, has_focus=False):
+                   vertical_scroll_2=0, always_hide_cursor=False,
+                   has_focus=False, align=Align.LEFT):
         """
         Copy the UIContent into the output screen.
         """
@@ -1232,6 +1249,17 @@ class Window(Container):
                 visible_line_to_row_col[y] = (lineno, horizontal_scroll)
                 new_buffer_row = new_buffer[y + ypos]
 
+                # Align this line.
+                if align == Align.CENTER:
+                    line_width = token_list_width(line)
+                    if line_width < width:
+                        x += (width - line_width) // 2
+                elif align == Align.RIGHT:
+                    line_width = token_list_width(line)
+                    if line_width < width:
+                        x += (width - line_width) + 1
+
+                # Copy line.
                 for token, text in line:
                     # Remember raw VT escape sequences. (E.g. FinalTerm's
                     # escape sequences.)
@@ -1337,6 +1365,20 @@ class Window(Container):
         new_screen.height = max(new_screen.height, ypos + write_position.height)
 
         return visible_line_to_row_col, rowcol_to_yx
+
+    def _apply_token(self, new_screen, write_position):
+        if self.token is not None:
+            xmin = write_position.xpos
+            xmax = write_position.xpos + write_position.width
+            char_cache = _CHAR_CACHE
+            data_buffer = new_screen.data_buffer
+            append_token = (':', ) + tuple(self.token)
+
+            for y in range(write_position.ypos, write_position.ypos + write_position.height):
+                row = data_buffer[y]
+                for x in range(xmin, xmax):
+                    cell = row[x]
+                    row[x] = char_cache[cell.char, cell.token + append_token]
 
     def _highlight_digraph(self, app, new_screen):
         """
@@ -1651,13 +1693,13 @@ class ConditionalContainer(Container):
         if self.filter(app):
             return self.content.preferred_width(app, max_available_width)
         else:
-            return LayoutDimension.exact(0)
+            return Dimension.zero()
 
     def preferred_height(self, app, width, max_available_height):
         if self.filter(app):
             return self.content.preferred_height(app, width, max_available_height)
         else:
-            return LayoutDimension.exact(0)
+            return Dimension.zero()
 
     def write_to_screen(self, app, screen, mouse_handlers, write_position):
         if self.filter(app):
@@ -1665,3 +1707,16 @@ class ConditionalContainer(Container):
 
     def walk(self):
         return self.content.walk()
+
+
+def to_container(container_or_ui_control):
+    """
+    Make sure that the given user control is wrapped in a Window. If the given
+    object is already a `Container` object, return it as-is.
+    """
+    assert isinstance(container_or_ui_control, (Container, UIControl))
+
+    if isinstance(container_or_ui_control, Container):
+        return container_or_ui_control
+    else:
+        return Window(content=container_or_ui_control)

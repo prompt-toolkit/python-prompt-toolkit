@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from .containers import Window, ConditionalContainer
 from .controls import BufferControl, TokenListControl, UIControl, UIContent, UIControlKeyBindings
-from .dimension import LayoutDimension
+from .dimension import Dimension
 from .lexers import SimpleLexer
 from .processors import BeforeInput
 from .screen import Char
@@ -31,7 +31,7 @@ class TokenListToolbar(ConditionalContainer):  # XXX: don't wrap in ConditionalC
         super(TokenListToolbar, self).__init__(
             content=Window(
                 TokenListControl(get_tokens, **kw),
-                height=LayoutDimension.exact(1)),
+                height=Dimension.exact(1)),
             filter=filter)
 
 
@@ -144,7 +144,7 @@ class ArgToolbar(ConditionalContainer):
         super(ArgToolbar, self).__init__(
             content=Window(
                 ArgToolbarControl(),
-                height=LayoutDimension.exact(1)),
+                height=Dimension.exact(1)),
             filter=HasArg())
 
 
@@ -179,7 +179,7 @@ class SearchToolbar(ConditionalContainer):
     def __init__(self, search_buffer, vi_mode=False):
         control = SearchToolbarControl(search_buffer, vi_mode=vi_mode)
         super(SearchToolbar, self).__init__(
-            content=Window(control, height=LayoutDimension.exact(1)),
+            content=Window(control, height=Dimension.exact(1)),
             filter=IsSearching() & ~IsDone())
 
         self.control = control
@@ -247,7 +247,7 @@ class CompletionsToolbar(ConditionalContainer):
         super(CompletionsToolbar, self).__init__(
             content=Window(
                 CompletionsToolbarControl(),
-                height=LayoutDimension.exact(1)),
+                height=Dimension.exact(1)),
             filter=HasCompletions() & ~IsDone() & extra_filter)
 
 
@@ -280,5 +280,5 @@ class ValidationToolbar(ConditionalContainer):
         super(ValidationToolbar, self).__init__(
             content=Window(
                 ValidationToolbarControl(show_position=show_position),
-                height=LayoutDimension.exact(1)),
+                height=Dimension.exact(1)),
             filter=HasValidationError() & ~IsDone())

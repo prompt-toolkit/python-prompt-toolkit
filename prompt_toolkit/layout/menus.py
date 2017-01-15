@@ -8,7 +8,7 @@ from prompt_toolkit.utils import get_cwidth
 
 from .containers import Window, HSplit, ConditionalContainer, ScrollOffsets
 from .controls import UIControl, UIContent
-from .dimension import LayoutDimension
+from .dimension import Dimension
 from .margins import ScrollbarMargin
 from .screen import Point, Char
 
@@ -186,8 +186,8 @@ class CompletionsMenu(ConditionalContainer):
         super(CompletionsMenu, self).__init__(
             content=Window(
                 content=CompletionsMenuControl(),
-                width=LayoutDimension(min=8),
-                height=LayoutDimension(min=1, max=max_height),
+                width=Dimension(min=8),
+                height=Dimension(min=1, max=max_height),
                 scroll_offsets=ScrollOffsets(top=scroll_offset, bottom=scroll_offset),
                 right_margins=[ScrollbarMargin(display_arrows=display_arrows)],
                 dont_extend_width=True,
@@ -442,8 +442,8 @@ class MultiColumnCompletionsMenu(HSplit):
             content=Window(
                 content=MultiColumnCompletionMenuControl(
                     min_rows=min_rows, suggested_max_column_width=suggested_max_column_width),
-                width=LayoutDimension(min=8),
-                height=LayoutDimension(min=1)),
+                width=Dimension(min=8),
+                height=Dimension(min=1)),
             filter=full_filter)
 
         meta_window = ConditionalContainer(

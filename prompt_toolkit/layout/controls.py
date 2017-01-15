@@ -206,15 +206,11 @@ class TokenListControl(UIControl):
         takes a :class:`prompt_toolkit.application.Application` and
         returns a :class:`.Char` instance.
     """
-    def __init__(self, get_tokens, default_char=None, get_default_char=None,
-                 align_right=False, align_center=False):
+    def __init__(self, get_tokens, default_char=None, get_default_char=None):
         assert callable(get_tokens)
         assert default_char is None or isinstance(default_char, Char)
         assert get_default_char is None or callable(get_default_char)
         assert not (default_char and get_default_char)
-
-        self.align_right = to_app_filter(align_right)
-        self.align_center = to_app_filter(align_center)
 
         self.get_tokens = get_tokens
 
@@ -265,28 +261,9 @@ class TokenListControl(UIControl):
     def create_content(self, app, width, height):
         # Get tokens
         tokens_with_mouse_handlers = self._get_tokens_cached(app)
-
         default_char = self.get_default_char(app)
 
-        # Wrap/align right/center parameters.
-        right = self.align_right(app)
-        center = self.align_center(app)
-
-        def process_line(line):
-            " Center or right align a single line. "
-            used_width = token_list_width(line)
-            padding = width - used_width
-            if center:
-                padding = int(padding / 2)
-            return [(default_char.token, default_char.char * padding)] + line
-
-        if right or center:
-            token_lines_with_mouse_handlers = []
-
-            for line in split_lines(tokens_with_mouse_handlers):
-                token_lines_with_mouse_handlers.append(process_line(line))
-        else:
-            token_lines_with_mouse_handlers = list(split_lines(tokens_with_mouse_handlers))
+        token_lines_with_mouse_handlers = list(split_lines(tokens_with_mouse_handlers))
 
         # Strip mouse handlers from tokens.
         token_lines = [
@@ -313,7 +290,7 @@ class TokenListControl(UIControl):
 
         # Create content, or take it from the cache.
         key = (default_char.char, default_char.token,
-                tuple(tokens_with_mouse_handlers), width, right, center)
+                tuple(tokens_with_mouse_handlers), width)
 
         def get_content():
             return UIContent(get_line=lambda i: token_lines[i],

@@ -44,7 +44,7 @@ from .keys import Keys
 from .layout import Window, HSplit, FloatContainer, Float
 from .layout.containers import ConditionalContainer
 from .layout.controls import BufferControl, TokenListControl
-from .layout.dimension import LayoutDimension
+from .layout.dimension import Dimension
 from .layout.layout import Layout
 from .layout.lexers import DynamicLexer
 from .layout.margins import PromptMargin, ConditionalMargin
@@ -364,7 +364,7 @@ class Prompt(object):
         bottom_toolbar = ConditionalContainer(
             Window(TokenListControl(lambda app: self.get_bottom_toolbar_tokens(app),
                                     default_char=Char(' ', Token.Toolbar)),
-                                    height=LayoutDimension.exact(1)),
+                                    height=Dimension.exact(1)),
             filter=~IsDone() & RendererHeightIsKnown() &
                     Condition(lambda app: self.get_bottom_toolbar_tokens is not None))
 
@@ -663,9 +663,9 @@ class Prompt(object):
             # `complete_while_typing` is true and we expect completions very
             # soon.
             if buff.complete_while_typing() or buff.complete_state is not None:
-                return LayoutDimension(min=space)
+                return Dimension(min=space)
 
-        return LayoutDimension()
+        return Dimension()
 
     def _get_prompt_tokens(self, app):
         if self.get_prompt_tokens is None:

@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 from .containers import Container
 from .controls import UIControl
-from .containers import Window
+from .containers import Window, to_container
 
 __all__ = (
     'Layout',
@@ -18,10 +18,9 @@ class Layout(object):
     :param focussed_control: The `UIControl` to be focused initially.
     """
     def __init__(self, container, focussed_control=None):
-        assert isinstance(container, Container)
         assert focussed_control is None or isinstance(focussed_control, UIControl)
 
-        self.container = container
+        self.container = to_container(container)
         self._stack = []
 
         if focussed_control is None:
