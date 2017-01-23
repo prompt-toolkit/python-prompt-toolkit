@@ -1709,14 +1709,26 @@ class ConditionalContainer(Container):
         return self.content.walk()
 
 
-def to_container(container_or_ui_control):
+def to_container(container):
     """
-    Make sure that the given user control is wrapped in a Window. If the given
-    object is already a `Container` object, return it as-is.
+    Make sure that the given object is a `Container`.
     """
-    assert isinstance(container_or_ui_control, (Container, UIControl))
-
-    if isinstance(container_or_ui_control, Container):
-        return container_or_ui_control
+    if isinstance(container, Container):
+        return container
+    elif hasattr(container, '__pt_container__'):
+        return container.__pt_container__()
     else:
-        return Window(content=container_or_ui_control)
+        raise ValueError
+
+def to_window(container):
+    """
+    Make sure that the given argument is a `Window`.
+    """
+    if isinstance(container, Window):
+        return container
+    elif hasattr(container, '__pt_container__'):
+        container = container.__pt_container__()
+        assert isinstance(container, Window)
+        return container
+    else:
+        raise ValueError

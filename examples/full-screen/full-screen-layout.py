@@ -14,9 +14,9 @@ from prompt_toolkit.eventloop.defaults import create_event_loop
 from prompt_toolkit.key_binding.defaults import load_key_bindings
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, MergedKeyBindings
 from prompt_toolkit.keys import Keys
-from prompt_toolkit.layout.containers import VSplit, HSplit, Window
+from prompt_toolkit.layout.containers import VSplit, HSplit, Window, Align
 from prompt_toolkit.layout.controls import BufferControl, FillControl, TokenListControl
-from prompt_toolkit.layout.dimension import LayoutDimension as D
+from prompt_toolkit.layout.dimension import Dimension as D
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.token import Token
 
@@ -44,12 +44,12 @@ right_buffer = Buffer(loop=loop)
 # 1. First we create the layout
 #    --------------------------
 
-left_buffer_control = BufferControl(buffer=left_buffer)
-right_buffer_control = BufferControl(buffer=right_buffer)
+left_window = Window(BufferControl(buffer=left_buffer))
+right_window = Window(BufferControl(buffer=right_buffer))
 
 
 body = VSplit([
-    Window(content=left_buffer_control),
+    left_window,
 
     # A vertical line in the middle. We explicitely specify the width, to make
     # sure that the layout engine will not try to divide the whole width by
@@ -59,7 +59,7 @@ body = VSplit([
            content=FillControl.from_character_and_token('|', token=Token.Line)),
 
     # Display the Result buffer on the right.
-    Window(content=right_buffer_control)
+    right_window,
 ])
 
 # As a demonstration. Let's add a title bar to the top, displaying "Hello world".
@@ -78,7 +78,8 @@ def get_titlebar_tokens(app):
 root_container = HSplit([
     # The titlebar.
     Window(height=D.exact(1),
-           content=TokenListControl(get_titlebar_tokens, align_center=True)),
+           content=TokenListControl(get_titlebar_tokens),
+           align=Align.CENTER),
 
     # Horizontal separator.
     Window(height=D.exact(1),
@@ -98,7 +99,7 @@ root_container = HSplit([
 # `load_default_key_bindings` utility function to create a registry that
 # already contains the default key bindings.
 
-bindings = KeyBindings()
+kb = KeyBindings()
 
 # Now add the Ctrl-Q binding. We have to pass `eager=True` here. The reason is
 # that there is another key *sequence* that starts with Ctrl-Q as well. Yes, a
@@ -117,8 +118,8 @@ bindings = KeyBindings()
 # `eager=True` to all key bindings, but do it when it conflicts with another
 # existing key binding, and you definitely want to override that behaviour.
 
-@bindings.add(Keys.ControlC, eager=True)
-@bindings.add(Keys.ControlQ, eager=True)
+@kb.add(Keys.ControlC, eager=True)
+@kb.add(Keys.ControlQ, eager=True)
 def _(event):
     """
     Pressing Ctrl-Q or Ctrl-C will exit the user interface.
@@ -132,7 +133,7 @@ def _(event):
     event.app.set_return_value(None)
 
 all_bindings = MergedKeyBindings([
-    bindings,
+    kb,
     load_key_bindings()
 ])
 
@@ -157,7 +158,7 @@ left_buffer.on_text_changed += default_buffer_changed
 
 application = Application(
     loop=loop,
-    layout=Layout(root_container, focussed_control=left_buffer_control),
+    layout=Layout(root_container, focussed_window=left_window),
     key_bindings=all_bindings,
 
     # Let's add mouse support!

@@ -1699,10 +1699,10 @@ def load_vi_search_bindings():
 
     @Condition
     def reverse_vi_search_direction(app):
-        return app.application.reverse_vi_search_direction(app)
+        return app.reverse_vi_search_direction(app)
 
-    @handle('/', filter=(vi_navigation_mode|vi_selection_mode)&~reverse_vi_search_direction)
-    @handle('?', filter=(vi_navigation_mode|vi_selection_mode)&reverse_vi_search_direction)
+    @handle('/', filter=(vi_navigation_mode|vi_selection_mode)&~reverse_vi_search_direction&control_is_searchable)
+    @handle('?', filter=(vi_navigation_mode|vi_selection_mode)&reverse_vi_search_direction&control_is_searchable)
     @handle(Keys.ControlS, filter=control_is_searchable)
     def _(event):
         """
@@ -1718,8 +1718,8 @@ def load_vi_search_bindings():
         # Focus search buffer.
         event.app.layout.focussed_control = control.search_buffer_control
 
-    @handle('?', filter=(vi_navigation_mode|vi_selection_mode)&~reverse_vi_search_direction)
-    @handle('/', filter=(vi_navigation_mode|vi_selection_mode)&reverse_vi_search_direction)
+    @handle('?', filter=(vi_navigation_mode|vi_selection_mode)&~reverse_vi_search_direction&control_is_searchable)
+    @handle('/', filter=(vi_navigation_mode|vi_selection_mode)&reverse_vi_search_direction&control_is_searchable)
     @handle(Keys.ControlR, filter=control_is_searchable)
     def _(event):
         """

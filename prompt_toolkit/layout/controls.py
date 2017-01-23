@@ -96,13 +96,22 @@ class UIControl(with_metaclass(ABCMeta, object)):
 class UIControlKeyBindings(object):
     """
     Key bindings for a user control.
+
+    :param key_bindings: `KeyBindings` object that contains the key bindings
+        which are active when this user control has the focus.
+    :param global_key_bindings: `KeyBindings` object that contains the bindings
+        which are always active, even when other user controls have the focus.
+        (Except if another 'modal' control has the focus.)
+    :param modal: If true, mark this user control as modal.
     """
-    def __init__(self, key_bindings, modal=False):
+    def __init__(self, key_bindings=None, global_key_bindings=None, modal=False):
         from prompt_toolkit.key_binding.key_bindings import KeyBindingsBase
-        assert isinstance(key_bindings, KeyBindingsBase)
+        assert key_bindings is None or isinstance(key_bindings, KeyBindingsBase)
+        assert global_key_bindings is None or isinstance(global_key_bindings, KeyBindingsBase)
         assert isinstance(modal, bool)
 
         self.key_bindings = key_bindings
+        self.global_key_bindings = global_key_bindings
         self.modal = modal
 
 
@@ -205,12 +214,15 @@ class TokenListControl(UIControl):
     :param get_default_char: Like `default_char`, but this is a callable that
         takes a :class:`prompt_toolkit.application.Application` and
         returns a :class:`.Char` instance.
+    :param get_key_bindings:
     """
-    def __init__(self, get_tokens, default_char=None, get_default_char=None):
+    def __init__(self, get_tokens, default_char=None, get_default_char=None,
+                 get_key_bindings=None):
         assert callable(get_tokens)
         assert default_char is None or isinstance(default_char, Char)
         assert get_default_char is None or callable(get_default_char)
         assert not (default_char and get_default_char)
+        assert get_key_bindings is None or callable(get_key_bindings)
 
         self.get_tokens = get_tokens
 
@@ -221,6 +233,7 @@ class TokenListControl(UIControl):
             get_default_char = lambda _: Char(' ', Token.Transparent)
 
         self.get_default_char = get_default_char
+        self._get_key_bindings = get_key_bindings
 
         #: Cache for the content.
         self._content_cache = SimpleCache(maxsize=18)
@@ -343,6 +356,10 @@ class TokenListControl(UIControl):
 
         # Otherwise, don't handle here.
         return NotImplemented
+
+    def get_key_bindings(self, app):
+        if self._get_key_bindings:
+            return self._get_key_bindings(app)
 
 
 class FillControl(UIControl):

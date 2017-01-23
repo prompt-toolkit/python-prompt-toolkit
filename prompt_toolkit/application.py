@@ -878,9 +878,10 @@ class _CombinedRegistry(KeyBindingsBase):
         Create a `KeyBindings` object that merges the `KeyBindings` from the
         `UIControl` with the other user controls and the global key bindings.
         """
-        # Collect key bindings of other visible user controls.
+        # Collect global key bindings of other visible user controls.
         key_bindings = [c.get_key_bindings(self.app) for c in other_controls]
-        key_bindings = [b.key_bindings for b in key_bindings if b is not None]
+        key_bindings = [b.global_key_bindings for b in key_bindings
+                        if b and b.global_key_bindings]
 
         others_key_bindings = MergedKeyBindings(
             [self.app.key_bindings] + key_bindings)
