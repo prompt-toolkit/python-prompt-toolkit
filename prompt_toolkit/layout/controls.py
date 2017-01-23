@@ -126,23 +126,19 @@ class UIContent(object):
     :param cursor_position: a :class:`.Point` for the cursor position.
     :param menu_position: a :class:`.Point` for the menu position.
     :param show_cursor: Make the cursor visible.
-    :param default_char: The default :class:`.Char` for filling the background.
     """
     def __init__(self, get_line=None, line_count=0,
-                 cursor_position=None, menu_position=None, show_cursor=True,
-                 default_char=None):
+                 cursor_position=None, menu_position=None, show_cursor=True):
         assert callable(get_line)
         assert isinstance(line_count, six.integer_types)
         assert cursor_position is None or isinstance(cursor_position, Point)
         assert menu_position is None or isinstance(menu_position, Point)
-        assert default_char is None or isinstance(default_char, Char)
 
         self.get_line = get_line
         self.line_count = line_count
         self.cursor_position = cursor_position or Point(0, 0)
         self.menu_position = menu_position
         self.show_cursor = show_cursor
-        self.default_char = default_char
 
         # Cache for line heights. Maps (lineno, width) -> height.
         self._line_heights = {}
@@ -208,31 +204,14 @@ class TokenListControl(UIControl):
 
     :param get_tokens: Callable that takes an `Application` instance and
         returns the list of (Token, text) tuples to be displayed right now.
-    :param default_char: default :class:`.Char` (character and Token) to use
-        for the background when there is more space available than `get_tokens`
-        returns.
-    :param get_default_char: Like `default_char`, but this is a callable that
-        takes a :class:`prompt_toolkit.application.Application` and
-        returns a :class:`.Char` instance.
     :param get_key_bindings:
     """
-    def __init__(self, get_tokens, default_char=None, get_default_char=None,
-                 get_key_bindings=None):
+    def __init__(self, get_tokens, get_key_bindings=None):
         assert callable(get_tokens)
-        assert default_char is None or isinstance(default_char, Char)
-        assert get_default_char is None or callable(get_default_char)
-        assert not (default_char and get_default_char)
         assert get_key_bindings is None or callable(get_key_bindings)
 
         self.get_tokens = get_tokens
 
-        # Construct `get_default_char` callable.
-        if default_char:
-            get_default_char = lambda _: default_char
-        elif not get_default_char:
-            get_default_char = lambda _: Char(' ', Token.Transparent)
-
-        self.get_default_char = get_default_char
         self._get_key_bindings = get_key_bindings
 
         #: Cache for the content.
@@ -274,8 +253,6 @@ class TokenListControl(UIControl):
     def create_content(self, app, width, height):
         # Get tokens
         tokens_with_mouse_handlers = self._get_tokens_cached(app)
-        default_char = self.get_default_char(app)
-
         token_lines_with_mouse_handlers = list(split_lines(tokens_with_mouse_handlers))
 
         # Strip mouse handlers from tokens.
@@ -302,13 +279,11 @@ class TokenListControl(UIControl):
             return None
 
         # Create content, or take it from the cache.
-        key = (default_char.char, default_char.token,
-                tuple(tokens_with_mouse_handlers), width)
+        key = (tuple(tokens_with_mouse_handlers), width)
 
         def get_content():
             return UIContent(get_line=lambda i: token_lines[i],
                              line_count=len(token_lines),
-                             default_char=default_char,
                              cursor_position=get_cursor_position())
 
         return self._content_cache.get(key, get_content)
@@ -372,16 +347,16 @@ class FillControl(UIControl):
         :class:`.Char` object.
     """
     def __init__(self, char=None, get_char=None):
-        assert char is None or isinstance(char, Char)
+        assert char is None or isinstance(char, six.text_type)
         assert get_char is None or callable(get_char)
         assert not (char and get_char)
 
         self.char = char
         self.get_char = get_char
 
-    @classmethod
-    def from_character_and_token(cls, character=' ', token=Token):
-        return cls(char=Char(character, token))
+#    @classmethod
+#    def from_character_and_token(cls, character=' ', token=Token):
+#        return cls(char=Char(character, token))
 
     def __repr__(self):
         if self.char:
@@ -393,18 +368,17 @@ class FillControl(UIControl):
         pass
 
     def create_content(self, app, width, height):
-        def get_line(i):
-            return []
+        char = self.get_char(app) if self.get_char else self.char
 
-        if self.get_char:
-            char = self.get_char(app)
-        else:
-            char = self.char or Char()
+        def get_line(i):
+            if char:
+                return [(Token, char * width)]
+            else:
+                return []
 
         return UIContent(
             get_line=get_line,
-            line_count=100 ** 100,  # Something very big.
-            default_char=char)
+            line_count=100 ** 100)  # Something very big.
 
 
 _ProcessedLine = namedtuple('_ProcessedLine', 'tokens source_to_display display_to_source')
@@ -421,8 +395,6 @@ class BufferControl(UIControl):
     :param lexer: :class:`~prompt_toolkit.layout.lexers.Lexer` instance for syntax highlighting.
     :param preview_search: `bool` or `AppFilter`: Show search while typing.
     :param get_search_state: Callable that returns the SearchState to be used.
-    :param default_char: :class:`.Char` instance to use to fill the background. This is
-        transparent by default.
     :param focus_on_click: Focus this buffer when it's click, but not yet focussed.
     """
     def __init__(self,
@@ -434,7 +406,6 @@ class BufferControl(UIControl):
                  get_search_buffer_control=None,
                  get_search_state=None,
                  menu_position=None,
-                 default_char=None,
                  focus_on_click=False):
         assert isinstance(buffer, Buffer)
         assert input_processor is None or isinstance(input_processor, Processor)
@@ -444,7 +415,6 @@ class BufferControl(UIControl):
         assert get_search_buffer_control is None or callable(get_search_buffer_control)
         assert not (search_buffer_control and get_search_buffer_control)
         assert get_search_state is None or callable(get_search_state)
-        assert default_char is None or isinstance(default_char, Char)
 
         # Default search state.
         if get_search_state is None:
@@ -468,7 +438,6 @@ class BufferControl(UIControl):
         self.buffer = buffer
         self.menu_position = menu_position
         self.lexer = lexer or SimpleLexer()
-        self.default_char = default_char or Char(token=Token.Transparent)
         self.get_search_buffer_control = get_search_buffer_control
         self._search_buffer_control = search_buffer_control
 
@@ -637,15 +606,14 @@ class BufferControl(UIControl):
             # all the lines, not just the line containing the cursor. (Because
             # otherwise, line wrapping/scrolling could change when moving the
             # cursor around.)
-            tokens = tokens + [(self.default_char.token, ' ')]
+            tokens = tokens + [(Token, ' ')]
             return tokens
 
         content = UIContent(
             get_line=get_line,
             line_count=document.line_count,
             cursor_position=translate_rowcol(document.cursor_position_row,
-                                             document.cursor_position_col),
-            default_char=self.default_char)
+                                             document.cursor_position_col))
 
         # If there is an auto completion going on, use that start point for a
         # pop-up menu position. (But only when this buffer has the focus --

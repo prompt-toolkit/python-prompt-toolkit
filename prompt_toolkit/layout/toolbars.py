@@ -171,7 +171,6 @@ class SearchToolbarControl(BufferControl):
         super(SearchToolbarControl, self).__init__(
             buffer=search_buffer,
             input_processor=BeforeInput(get_before_input),
-            default_char=Char(token=token),
             lexer=SimpleLexer(token=token.Text))
 
 
@@ -179,7 +178,7 @@ class SearchToolbar(ConditionalContainer):
     def __init__(self, search_buffer, vi_mode=False):
         control = SearchToolbarControl(search_buffer, vi_mode=vi_mode)
         super(SearchToolbar, self).__init__(
-            content=Window(control, height=Dimension.exact(1)),
+            content=Window(control, height=Dimension.exact(1), token=Token.Toolbar.Search),
             filter=IsSearching() & ~IsDone())
 
         self.control = control

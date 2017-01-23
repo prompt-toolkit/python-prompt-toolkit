@@ -3,29 +3,32 @@
 """
 from __future__ import unicode_literals
 
+from functools import partial
 from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer
+from prompt_toolkit.document import Document
 from prompt_toolkit.enums import DEFAULT_BUFFER
 from prompt_toolkit.eventloop.defaults import create_event_loop
 from prompt_toolkit.key_binding.defaults import load_key_bindings
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, MergedKeyBindings
 from prompt_toolkit.keys import Keys
-from prompt_toolkit.layout.containers import VSplit, HSplit, Window, Align
-from prompt_toolkit.layout.controls import BufferControl, FillControl, TokenListControl
+from prompt_toolkit.layout.containers import VSplit, HSplit, Window, Align, to_window, to_container, FloatContainer, Float, Container
+from prompt_toolkit.layout.controls import BufferControl, FillControl, TokenListControl, UIControlKeyBindings
 from prompt_toolkit.layout.dimension import Dimension as D
 from prompt_toolkit.layout.layout import Layout
+from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.layout.screen import Char
 from prompt_toolkit.layout.toolbars import TokenListToolbar
 from prompt_toolkit.styles.from_dict import style_from_dict
+from prompt_toolkit.styles.from_pygments import style_from_pygments
 from prompt_toolkit.token import Token
-from prompt_toolkit.document import Document
 from prompt_toolkit.utils import get_cwidth
-
+from prompt_toolkit.eventloop.base import EventLoop
+from pygments.lexers import HtmlLexer
 
 loop = create_event_loop()
 
 
-# <<<
 class BORDER:
     " Box drawing characters. "
     HORIZONTAL = '\u2501'
@@ -36,177 +39,318 @@ class BORDER:
     BOTTOM_RIGHT = '\u251b'
     LIGHT_VERTICAL = '\u2502'
 
-def label(loop, text, token=None):
-    if '\n' in text:
-        width = None
-    else:
-        width = get_cwidth(text)
 
-    buff = Buffer(loop=loop, document=Document(text))
-    return Window(content=BufferControl(buff),
-            align=Align.CENTER, token=token, width=D(preferred=width))
+class TextArea(object):
+    def __init__(self, loop, text=''):
+        assert isinstance(loop, EventLoop)
 
-def create_button(text, action=None):
-    def get_token(app):
-        if app.layout.focussed_control == control:
+        self.buffer = Buffer(loop=loop)
+
+        self.window = Window(
+            content=BufferControl(buffer=self.buffer, lexer=PygmentsLexer(HtmlLexer)),
+            token=Token.TextArea,
+            #align=Align.CENTER,
+            wrap_lines=True)
+
+    def __pt_container__(self):
+        return self.window
+
+
+class Label(object):
+    def __init__(self, loop, text, token=None):
+        assert isinstance(loop, EventLoop)
+
+        if '\n' in text:
+            width = D()
+        else:
+            width = D.exact(get_cwidth(text))
+
+        buff = Buffer(loop=loop, document=Document(text, 0))
+        self.window = Window(
+            content=BufferControl(buff),
+            # align=Align.CENTER,
+            token=token, width=width)
+
+    def __pt_container__(self):
+        return self.window
+
+class Fill(object):
+    def __init__(self, token=Token, char='', width=None, height=None):
+        self.window = Window(
+            token=token,
+            content=FillControl(char=char),
+            width=width,
+            height=height)
+
+    def __pt_container__(self):
+        return self.window
+
+
+class Frame(object):
+    def __init__(self, loop, body, title=''):
+        assert isinstance(loop, EventLoop)
+
+        fill = partial(Fill, token=Token.Window.Border)
+
+        self.container = HSplit([
+            VSplit([
+                fill(width=D.exact(1), height=D.exact(1), char=BORDER.TOP_LEFT),
+                #Window(fill(BORDER.HORIZONTAL)),
+                Label(loop, '{}'.format(title), token=Token.Frame.Label),
+                fill(char=BORDER.HORIZONTAL),
+                fill(width=D.exact(1), height=D.exact(1), char=BORDER.TOP_RIGHT),
+            ]),
+            VSplit([
+                fill(width=D.exact(1), char=BORDER.VERTICAL),
+                body,
+                fill(width=D.exact(1), char=BORDER.VERTICAL),
+            ]),
+            VSplit([
+                fill(width=D.exact(1), height=D.exact(1), char=BORDER.BOTTOM_LEFT),
+                fill(char=BORDER.HORIZONTAL),
+                fill(width=D.exact(1), height=D.exact(1), char=BORDER.BOTTOM_RIGHT),
+            ]),
+        ])
+
+    def __pt_container__(self):
+        return self.container
+
+
+class MenuContainer(object):
+    def __init__(self, body, menus=''):
+        self.body = body
+
+        self.container = FloatContainer(
+            content=HSplit([
+                # The titlebar.
+                Window(height=D.exact(1),
+                       content=TokenListControl(self._get_menu_tokens),
+                        token=Token.MenuBar),
+
+            #    # Horizontal separator.
+            #    Window(height=D.exact(1),
+            #           content=FillControl(char='-'),
+            #           token=Token.Line),
+
+                # The 'body', like defined above.
+                body,
+            ]),
+            floats=[
+                Float(top=1, left=1, content=self._file_menu(), transparant=False),
+#                Float(content=dialog()),
+            ]
+        )
+
+    def _get_menu_tokens(self, app):
+        return [
+            (Token.MenuBar, ' '),
+            (Token.Menu, 'File'),
+            (Token.MenuBar, ' Edit '),
+            (Token.MenuBar, ' Info '),
+        ]
+
+    def _file_menu(self):
+        def get_tokens(app):
+            return [
+                (Token.Menu, ' Open \n'),
+                (Token.Menu, '------------\n'),
+                (Token.Menu, ' Save \n'),
+                (Token.Menu, ' Save as '),
+            ]
+
+        return Window(TokenListControl(get_tokens), token=Token.Menu)
+
+    def __pt_container__(self):
+        return self.container
+
+
+class MenuItem(object):
+    def __init__(self, text='', handler=None, submenu=None, shortcut=None):
+        self.text = text
+        self.handler = handler
+        self.submenu = submenu
+        self.shortcut = shortcut
+
+class Menu(Container):
+    def __init__(self, items):
+        control = TokenListControl(self._get_tokens)
+
+
+
+
+class Button(object):
+    def __init__(self, text, action=None, width=12):
+        assert callable(action)
+        assert isinstance(width, int)
+
+        self.text = text
+        self.action = action
+        self.width = width
+        self.control = TokenListControl(
+            self._get_tokens,
+            get_key_bindings=self._get_key_bindings)
+
+        self.window = Window(
+            self.control,
+            align=Align.CENTER,
+            height=D.exact(1),
+            width=D.exact(width),
+            get_token=self._get_token)
+
+    def _get_token(self, app):
+        if app.layout.focussed_control == self.control:
             return Token.Button.Focussed
         else:
             return Token.Button
 
-    def get_tokens(app):
-        token = get_token(app)
-        return [
-            (token, '<'),
-            (token.Text, '{}'.format(text)),
-            (token, '>'),
-        ]
+    def _get_tokens(self, app):
+        token = Token.Button
+        text = ('{:^%s}' % (self.width - 2)).format(self.text)
 
-    def get_char(app):
-        return Char(' ', get_token(app))
+        if app.layout.focussed_control == self.control:
+            return [
+                (token.Arrow | token.Focussed, '<'),
+                (token.Text | token.Focussed, text),
+                (token.Arrow | token.Focussed, '>'),
+            ]
+        else:
+            return [
+                (token.Arrow, '<'),
+                (token.Text, text),
+                (token.Arrow, '>'),
+            ]
 
-    control = TokenListControl(
-        get_tokens,
-        get_default_char=get_char)
+    def _get_key_bindings(self, app):
+        kb = KeyBindings()
+        @kb.add(' ')
+        @kb.add(Keys.Enter)
+        def _(event):
+            self.action(app)
 
-    return Window(control, align=Align.CENTER)
+        return UIControlKeyBindings(kb, modal=False)
+
+    def __pt_container__(self):
+        return self.window
 
 
-def create_text_field(loop, text=''):
-    buff = Buffer(loop=loop)
-    return Window(content=BufferControl(buffer=buff),
-                  token=Token.TextField)
+class VerticalLine(object):
+    def __init__(self):
+        self.window = Fill(
+            char=BORDER.VERTICAL,
+            token=Token.Line,
+            width=D.exact(1))
 
-def create_frame(loop, body, title=' Title '):
-#    assert isinstance(body, Container)
+    def __pt_container__(self):
+        return self.window
 
-    return HSplit([
-        VSplit([
-            Window(width=D.exact(1), height=D.exact(1),
-                   content=FillControl.from_character_and_token(
-                       BORDER.TOP_LEFT, token=Token.Window.Border)),
-            Window(FillControl.from_character_and_token(
-                BORDER.HORIZONTAL, token=Token.Window.Border)),
-            label(loop, title, token=Token.Label),
-            Window(FillControl.from_character_and_token(
-                BORDER.HORIZONTAL, token=Token.Window.Border)),
-#            TokenListToolbar(
-#                get_tokens=lambda app, ctrl: [(Token.Window.Title, ' %s ' % title)],
-#                align_center=True,
-#                default_char=Char(BORDER.HORIZONTAL, Token.Window.Border)),
-            Window(width=D.exact(1), height=D.exact(1),
-                   content=FillControl.from_character_and_token(
-                       BORDER.TOP_RIGHT, token=Token.Window.Border)),
-        ]),
-        VSplit([
-            Window(width=D.exact(1),
-                   content=FillControl.from_character_and_token(
-                       BORDER.VERTICAL, token=Token.Window.Border)),
-            body,
-            Window(width=D.exact(1),
-                   content=FillControl.from_character_and_token(
-                       BORDER.VERTICAL, token=Token.Window.Border)),
-        ]),
-        VSplit([
-            Window(width=D.exact(1), height=D.exact(1),
-                   content=FillControl.from_character_and_token(
-                       BORDER.BOTTOM_LEFT, token=Token.Window.Border)),
-            Window(height=D.exact(1),
-                   content=FillControl.from_character_and_token(
-                       BORDER.HORIZONTAL, token=Token.Window.Border)),
-            Window(width=D.exact(1), height=D.exact(1),
-                   content=FillControl.from_character_and_token(
-                       BORDER.BOTTOM_RIGHT, token=Token.Window.Border)),
-        ]),
-    ])
 
+class HorizontalLine(object):
+    def __init__(self):
+        self.window = Fill(
+            char=BORDER.HORIZONTAL,
+            token=Token.Line,
+            height=D.exact(1))
+
+    def __pt_container__(self):
+        return self.window
 
 # >>>
 
 
 def create_pane():
-    return Window(FillControl.from_character_and_token(' ', Token))
+    return Window(FillControl())
 
-def vertical_line():
-    return Window(FillControl.from_character_and_token(BORDER.VERTICAL, Token.Line), width=D.exact(1))
 
-def horizontal_line():
-    return Window(FillControl.from_character_and_token(BORDER.HORIZONTAL, Token.Line), height=D.exact(1))
+def accept_yes(app):
+    app.set_return_value(True)
 
-yes_button = create_button('Yes')
-no_button = create_button('No')
-textfield = create_text_field(loop)
+def accept_no(app):
+    app.set_return_value(False)
+
+
+# Make partials that pass the loop everywhere.
+Frame_ = partial(Frame, loop=loop)
+Button_ = partial(Button, loop=loop)
+Label_ = partial(Label, loop=loop)
+TextField_ = partial(TextArea, loop=loop)
+
+
+yes_button = Button('Yes', action=accept_yes)
+no_button = Button('No', action=accept_no)
+textfield = TextField_()
+textfield2 = TextField_()
 
 root_container = HSplit([
     VSplit([
-        create_frame(loop, label(loop, 'hello world\ntest')),
-        create_frame(loop, label(loop, 'right frame\ncontent')),
-        create_frame(loop, label(loop, 'right frame\ncontent')),
+#        Frame_(title='Test', body=Label('hello world\ntest')),
+        Frame_(body=Label_(text='right frame\ncontent')),
+        Frame_(title='Hello', body=Label_(text='right frame\ncontent')),
     ]),
     VSplit([
-        create_frame(loop, textfield),
-        create_frame(loop, VSplit([
-            create_frame(loop, label(loop, 'right frame\ncontent')),
-            label(loop, 'right frame\ncontent'),
-            vertical_line(),
-            create_frame(loop, label(loop, 'right frame\ncontent')),
+        Frame_(body=textfield),
+        Frame_(body=VSplit([
+            Frame_(body=Label_(text='right frame\ncontent')),
+            Label_(text='right frame\ncontent'),
+            VerticalLine(),
+            Frame_(body=Label_(text='right frame\ncontent')),
         ])),
+        Frame_(body=textfield2),
     ]),
     create_pane(),
     VSplit([
         create_pane(),
         yes_button,
-        create_pane(),
         no_button,
         create_pane(),
     ]),
     create_pane(),
 ])
 
+root_container = MenuContainer(root_container)
+
+# Global key bindings.
 
 bindings = KeyBindings()
 
-
-#@bindings.add('y')
-#@bindings.add('Y')
-#def _(event):
-#    event.app.set_return_value(True)
-#
-#@bindings.add('n')
-#@bindings.add('N')
-#def _(event):
-#    event.app.set_return_value(False)
-
+widgets = [to_window(w) for w in 
+    (yes_button, no_button, textfield, textfield2)
+]
 
 @bindings.add(Keys.Tab)
 def _(event):
-    widgets = [yes_button.content, no_button.content, textfield.content]
-    index = widgets.index(event.app.layout.focussed_control)
+    index = widgets.index(event.app.layout.focussed_window)
     index = (index + 1) % len(widgets)
-    event.app.layout.focussed_control = widgets[index]
+    event.app.layout.focussed_window = widgets[index]
+
+#@bindings.add(Keys.BackTab)
+#def _(event):
+#    widgets = [yes_button, no_button, textfield, textfield2]
+#    widgets = [to_window(w) for w in widgets]
+#    index = widgets.index(event.app.layout.focussed_window)
+#    index = (index - 1) % len(widgets)
+#    event.app.layout.focussed_window = widgets[index]
 
 
-@bindings.add(' ')
-#@bindings.add(Keys.Enter)
-def _(event):
-    if event.app.layout.focussed_control == yes_button.content:
-        event.app.set_return_value(True)
-    elif event.app.layout.focussed_control == no_button.content:
-        event.app.set_return_value(False)
-
-
-style = style_from_dict({
-    Token.Button: 'bg:#888888 #ffffff',
-    Token.Button.Text: '',
+style = style_from_pygments(style_dict={
+    Token.Button.Text: '#888888',
+    Token.Button.Focussed: 'reverse',
+    Token.Button.Arrow: 'bold',
     Token.Button.Focussed: 'bg:#880000 #ffffff',
-    Token.Button.Focussed.Text: 'underline',
-    Token.Label: 'reverse',
-    Token.TextField: 'bg:#ffff00',
+    Token.TextArea: 'bg:#ffffaa',
+    Token.Focussed: 'bg:#00ff00 #00ff00',
+    Token.Label: '#888888 reverse',
+    Token.Window.Border: '#888888',
+
+    Token.MenuBar: 'bg:#0000ff #ffff00',
+    Token.Menu: 'bg:#008888 #ffffff',
+    Token.DialogTitle: 'bg:#444444 #ffffff',
+    Token.DialogBody: 'bg:#888888',
 })
 
 
 application = Application(
     loop=loop,
-    layout=Layout(root_container, focussed_control=yes_button.content),
+    layout=Layout(root_container, focussed_window=yes_button.__pt_container__()),
     key_bindings=MergedKeyBindings([
         load_key_bindings(),
         bindings,
@@ -219,7 +363,6 @@ application = Application(
     # Using an alternate screen buffer means as much as: "run full screen".
     # It switches the terminal to an alternate screen.
     use_alternate_screen=True)
-
 
 
 def run():

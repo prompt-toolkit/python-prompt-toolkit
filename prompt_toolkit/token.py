@@ -30,13 +30,23 @@ class _TokenType(tuple):
     def __repr__(self):
         return 'Token' + (self and '.' or '') + '.'.join(self)
 
+    def __or__(self, other):
+        """
+        Concatenate two token types. (Compare it with an HTML element that has
+        two classnames.) The styling of those two tokens will be combined.
+        """
+        assert isinstance(other, _TokenType), other
+        return _TokenType(tuple(self) + (':', ) + tuple(other))
 
-# Prefer the Token class from Pygments. If Pygments is not installed, use our
-# minimalistic Token class.
-try:
-    from pygments.token import Token
-except ImportError:
-    Token = _TokenType()
+
+
+#  # Prefer the Token class from Pygments. If Pygments is not installed, use our
+#  # minimalistic Token class.
+#  try:
+#      from pygments.token import Token
+#  except ImportError:
+#      Token = _TokenType()
+Token = _TokenType()
 
 
 # Built-in tokens:
