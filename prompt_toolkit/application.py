@@ -16,8 +16,7 @@ from .key_binding.key_bindings import KeyBindings, KeyBindingsBase, MergedKeyBin
 from .key_binding.vi_state import ViState
 from .keys import Keys
 from .layout.layout import Layout
-from .layout.containers import Container, Window
-from .layout.controls import BufferControl, UIControl
+from .layout.controls import BufferControl
 from .output import Output
 from .output.defaults import create_output
 from .renderer import Renderer, print_tokens

@@ -1,5 +1,7 @@
+"""
+Wrapper for the layout.
+"""
 from __future__ import unicode_literals
-from .containers import Container
 from .controls import UIControl
 from .containers import Window, to_container
 

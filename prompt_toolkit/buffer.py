@@ -28,7 +28,6 @@ import tempfile
 
 __all__ = (
     'EditReadOnlyBuffer',
-    'AcceptAction',
     'Buffer',
     'indent',
     'unindent',

@@ -20,8 +20,8 @@ from prompt_toolkit.utils import get_cwidth
 from .lexers import Lexer, SimpleLexer
 from .processors import Processor, TransformationInput, HighlightSearchProcessor, HighlightSelectionProcessor, DisplayMultipleCursors, MergedProcessor
 
-from .screen import Char, Point
-from .utils import token_list_width, split_lines, token_list_to_text
+from .screen import Point
+from .utils import split_lines, token_list_to_text
 
 import six
 import time
@@ -337,14 +337,14 @@ class TokenListControl(UIControl):
             return self._get_key_bindings(app)
 
 
-class FillControl(UIControl):
+class FillControl(UIControl):  # XXX: Todo: check whether this is needed anymore... The Window class implements all of this...
     """
     Fill whole control with characters with this token.
     (Also helpful for debugging.)
 
-    :param char: :class:`.Char` instance to use for filling.
+    :param char: Character to be used for filling.
     :param get_char: A callable that takes an `Application` and returns a
-        :class:`.Char` object.
+        character.
     """
     def __init__(self, char=None, get_char=None):
         assert char is None or isinstance(char, six.text_type)
@@ -353,10 +353,6 @@ class FillControl(UIControl):
 
         self.char = char
         self.get_char = get_char
-
-#    @classmethod
-#    def from_character_and_token(cls, character=' ', token=Token):
-#        return cls(char=Char(character, token))
 
     def __repr__(self):
         if self.char:
@@ -369,6 +365,7 @@ class FillControl(UIControl):
 
     def create_content(self, app, width, height):
         char = self.get_char(app) if self.get_char else self.char
+        assert len(char) == 1
 
         def get_line(i):
             if char:

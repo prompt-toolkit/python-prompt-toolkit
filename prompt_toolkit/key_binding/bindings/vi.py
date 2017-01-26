@@ -2,8 +2,8 @@
 from __future__ import unicode_literals
 from prompt_toolkit.buffer import ClipboardData, indent, unindent, reshape_text
 from prompt_toolkit.document import Document
-from prompt_toolkit.enums import SearchDirection, SYSTEM_BUFFER
-from prompt_toolkit.filters import Filter, Condition, has_arg, Always, is_read_only, is_searching, control_is_searchable
+from prompt_toolkit.enums import SearchDirection
+from prompt_toolkit.filters import Condition, has_arg, Always, is_read_only, is_searching, control_is_searchable
 from prompt_toolkit.filters.app import vi_navigation_mode, vi_insert_mode, vi_insert_multiple_mode, vi_replace_mode, vi_selection_mode, vi_waiting_for_text_object_mode, vi_digraph_mode, vi_mode, in_paste_mode
 from prompt_toolkit.key_binding.digraphs import DIGRAPHS
 from prompt_toolkit.key_binding.vi_state import CharacterFind, InputMode
@@ -14,7 +14,6 @@ from .scroll import scroll_forward, scroll_backward, scroll_half_page_up, scroll
 from .named_commands import get_by_name
 from ..key_bindings import KeyBindings, ConditionalKeyBindings, KeyBindingsBase
 
-import prompt_toolkit.filters as filters
 from six.moves import range
 import codecs
 import six

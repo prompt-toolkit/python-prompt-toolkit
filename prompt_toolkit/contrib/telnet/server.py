@@ -31,7 +31,6 @@ from six import int2byte, text_type, binary_type
 from codecs import getincrementaldecoder
 
 from prompt_toolkit.application import Application
-from prompt_toolkit.enums import DEFAULT_BUFFER
 from prompt_toolkit.eventloop.base import EventLoop
 from prompt_toolkit.input.vt100 import InputStream
 from prompt_toolkit.layout.screen import Size
