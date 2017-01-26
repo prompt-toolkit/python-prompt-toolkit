@@ -82,8 +82,7 @@ class CompletionsMenuControl(UIControl):
 
             return UIContent(get_line=get_line,
                              cursor_position=Point(x=0, y=index or 0),
-                             line_count=len(completions),
-                             default_char=Char(' ', self.token))
+                             line_count=len(completions))
 
         return UIContent()
 
@@ -191,6 +190,7 @@ class CompletionsMenu(ConditionalContainer):
                 scroll_offsets=ScrollOffsets(top=scroll_offset, bottom=scroll_offset),
                 right_margins=[ScrollbarMargin(display_arrows=display_arrows)],
                 dont_extend_width=True,
+                token=Token.Menu.Completions,
             ),
             # Show when there are completions but not at the point we are
             # returning the input.
