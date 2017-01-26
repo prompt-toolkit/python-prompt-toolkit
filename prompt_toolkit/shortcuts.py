@@ -42,7 +42,7 @@ from .key_binding.defaults import load_key_bindings
 from .key_binding.key_bindings import KeyBindings, DynamicRegistry, MergedKeyBindings, ConditionalKeyBindings, KeyBindingsBase
 from .keys import Keys
 from .layout import Window, HSplit, FloatContainer, Float
-from .layout.containers import ConditionalContainer
+from .layout.containers import ConditionalContainer, Align
 from .layout.controls import BufferControl, TokenListControl
 from .layout.dimension import Dimension
 from .layout.layout import Layout
@@ -50,7 +50,6 @@ from .layout.lexers import DynamicLexer
 from .layout.margins import PromptMargin, ConditionalMargin
 from .layout.menus import CompletionsMenu, MultiColumnCompletionsMenu
 from .layout.processors import Processor, DynamicProcessor, PasswordProcessor, ConditionalProcessor, AppendAutoSuggestion, HighlightSearchProcessor, HighlightSelectionProcessor, DisplayMultipleCursors, BeforeInput, ReverseSearchProcessor, ShowArg, MergedProcessor
-from .layout.screen import Char
 from .layout.toolbars import ValidationToolbar, SystemToolbar, ArgToolbar, SearchToolbar
 from .layout.utils import explode_tokens
 from .output.defaults import create_output
@@ -116,7 +115,8 @@ class _RPrompt(Window):
     " The prompt that is displayed on the right side of the Window. "
     def __init__(self, get_tokens):
         super(_RPrompt, self).__init__(
-            TokenListControl(get_tokens, align_right=True))
+            TokenListControl(get_tokens),
+            align=Align.RIGHT)
 
 
 def _true(value):
@@ -362,8 +362,8 @@ class Prompt(object):
 
         # Create bottom toolbars.
         bottom_toolbar = ConditionalContainer(
-            Window(TokenListControl(lambda app: self.get_bottom_toolbar_tokens(app),
-                                    default_char=Char(' ', Token.Toolbar)),
+            Window(TokenListControl(lambda app: self.get_bottom_toolbar_tokens(app)),
+                                    token=Token.Toolbar,
                                     height=Dimension.exact(1)),
             filter=~IsDone() & RendererHeightIsKnown() &
                     Condition(lambda app: self.get_bottom_toolbar_tokens is not None))
@@ -390,6 +390,19 @@ class Prompt(object):
             lexer=DynamicLexer(lambda: self.lexer),
             preview_search=True)
 
+        default_buffer_window = Window(
+            default_buffer_control,
+            get_height=self._get_default_buffer_control_height,
+            left_margins=[
+                # In multiline mode, use the window margin to display
+                # the prompt and continuation tokens.
+                ConditionalMargin(
+                    PromptMargin(get_prompt_tokens_2, self._get_continuation_tokens),
+                    filter=dyncond('multiline'),
+                )
+            ],
+            wrap_lines=dyncond('wrap_lines'))
+
         # Build the layout.
         layout = HSplit([
             # The main input, with completion menus floating on top of it.
@@ -402,18 +415,7 @@ class Prompt(object):
                         Condition(has_before_tokens)
                     ),
                     ConditionalContainer(
-                        Window(default_buffer_control,
-                            get_height=self._get_default_buffer_control_height,
-                            left_margins=[
-                                # In multiline mode, use the window margin to display
-                                # the prompt and continuation tokens.
-                                ConditionalMargin(
-                                    PromptMargin(get_prompt_tokens_2, self._get_continuation_tokens),
-                                    filter=dyncond('multiline'),
-                                )
-                            ],
-                            wrap_lines=dyncond('wrap_lines'),
-                        ),
+                        default_buffer_window,
                         Condition(lambda app:
                             app.layout.focussed_control != search_buffer_control),
                     ),
@@ -475,7 +477,7 @@ class Prompt(object):
 
         # Create application
         application = Application(
-            layout=Layout(layout, default_buffer_control),
+            layout=Layout(layout, default_buffer_window),
             style=DynamicStyle(lambda: self.style or DEFAULT_STYLE),
             clipboard=DynamicClipboard(lambda: self.clipboard),
             key_bindings=MergedKeyBindings([

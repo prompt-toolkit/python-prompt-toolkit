@@ -5,11 +5,10 @@ from .controls import BufferControl, TokenListControl, UIControl, UIContent, UIC
 from .dimension import Dimension
 from .lexers import SimpleLexer
 from .processors import BeforeInput
-from .screen import Char
 from .utils import token_list_len
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.enums import SYSTEM_BUFFER, SearchDirection
-from prompt_toolkit.filters import HasFocus, HasArg, HasCompletions, HasValidationError, IsSearching, Always, IsDone, EmacsMode, ViMode, ViNavigationMode, IsSearching
+from prompt_toolkit.filters import HasFocus, HasArg, HasCompletions, HasValidationError, IsSearching, Always, IsDone, EmacsMode, ViMode, ViNavigationMode
 from prompt_toolkit.filters import to_app_filter
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, MergedKeyBindings, ConditionalKeyBindings
 from prompt_toolkit.key_binding.vi_state import InputMode
@@ -46,8 +45,7 @@ class SystemToolbarControl(BufferControl):
 
         super(SystemToolbarControl, self).__init__(
             buffer=self.system_buffer,
-            default_char=Char(token=token),
-            lexer=SimpleLexer(token=token.Text),
+            lexer=SimpleLexer(token=Token.Toolbar.System.Text),
             input_processor=BeforeInput.static('Shell command: ', token))
 
         self._bindings = self._build_key_bindings()
@@ -120,7 +118,8 @@ class SystemToolbar(ConditionalContainer):
         self.control = SystemToolbarControl(loop=loop, enable=enable)
         super(SystemToolbar, self).__init__(
             content=Window(self.control,
-                height=LayoutDimension.exact(1)),
+                height=Dimension.exact(1),
+                token=Token.Toolbar.System),
             filter=HasFocus(self.control.system_buffer) & ~IsDone())
 
 
