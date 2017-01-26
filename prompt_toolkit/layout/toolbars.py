@@ -8,7 +8,7 @@ from .processors import BeforeInput
 from .utils import token_list_len
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.enums import SYSTEM_BUFFER, SearchDirection
-from prompt_toolkit.filters import HasFocus, HasArg, HasCompletions, HasValidationError, IsSearching, Always, IsDone, EmacsMode, ViMode, ViNavigationMode
+from prompt_toolkit.filters import has_focus, has_arg, has_completions, has_validation_error, is_searching, Always, is_done, emacs_mode, vi_mode, vi_navigation_mode
 from prompt_toolkit.filters import to_app_filter
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, MergedKeyBindings, ConditionalKeyBindings
 from prompt_toolkit.key_binding.vi_state import InputMode
@@ -48,30 +48,44 @@ class SystemToolbarControl(BufferControl):
             lexer=SimpleLexer(token=Token.Toolbar.System.Text),
             input_processor=BeforeInput.static('Shell command: ', token))
 
+        self._global_bindings = self._build_global_key_bindings()
         self._bindings = self._build_key_bindings()
 
-    def _build_key_bindings(self):
-        has_focus = HasFocus(self.system_buffer)
+    def _build_global_key_bindings(self):
+        focussed = has_focus(self.system_buffer)
 
-        # Emacs
-        emacs_bindings = KeyBindings()
-        handle = emacs_bindings.add
+        bindings = KeyBindings()
 
-        @handle(Keys.Escape, '!', filter= ~has_focus & EmacsMode() &
+        @bindings.add(Keys.Escape, '!', filter= ~focussed & emacs_mode &
                 self.enable)
         def _(event):
             " M-'!' will focus this user control. "
             event.app.layout.focussed_control = self
 
-        @handle(Keys.Escape, filter=has_focus)
-        @handle(Keys.ControlG, filter=has_focus)
-        @handle(Keys.ControlC, filter=has_focus)
+        @bindings.add('!', filter=~focussed & vi_mode & vi_navigation_mode)
+        def _(event):
+            " Focus. "
+            event.app.vi_state.input_mode = InputMode.INSERT
+            event.app.layout.focussed_control = self
+
+        return bindings
+
+    def _build_key_bindings(self):
+        focussed = has_focus(self.system_buffer)
+
+        # Emacs
+        emacs_bindings = KeyBindings()
+        handle = emacs_bindings.add
+
+        @handle(Keys.Escape, filter=focussed)
+        @handle(Keys.ControlG, filter=focussed)
+        @handle(Keys.ControlC, filter=focussed)
         def _(event):
             " Hide system prompt. "
             self.system_buffer.reset()
             event.app.layout.pop_focus()
 
-        @handle(Keys.Enter, filter=has_focus)
+        @handle(Keys.Enter, filter=focussed)
         def _(event):
             " Run system command. "
             event.app.run_system_command(self.system_buffer.text)
@@ -82,21 +96,15 @@ class SystemToolbarControl(BufferControl):
         vi_bindings = KeyBindings()
         handle = vi_bindings.add
 
-        @handle('!', filter=~has_focus & ViNavigationMode())
-        def _(event):
-            " Focus. "
-            event.app.vi_state.input_mode = InputMode.INSERT
-            event.app.layout.focussed_control = self
-
-        @handle(Keys.Escape, filter=has_focus)
-        @handle(Keys.ControlC, filter=has_focus)
+        @handle(Keys.Escape, filter=focussed)
+        @handle(Keys.ControlC, filter=focussed)
         def _(event):
             " Hide system prompt. "
             event.app.vi_state.input_mode = InputMode.NAVIGATION
             self.system_buffer.reset()
             event.app.layout.pop_focus()
 
-        @handle(Keys.Enter, filter=has_focus)
+        @handle(Keys.Enter, filter=focussed)
         def _(event):
             " Run system command. "
             event.app.vi_state.input_mode = InputMode.NAVIGATION
@@ -105,12 +113,15 @@ class SystemToolbarControl(BufferControl):
             event.app.layout.pop_focus()
 
         return MergedKeyBindings([
-            ConditionalKeyBindings(emacs_bindings, EmacsMode()),
-            ConditionalKeyBindings(vi_bindings, ViMode()),
+            ConditionalKeyBindings(emacs_bindings, emacs_mode),
+            ConditionalKeyBindings(vi_bindings, vi_mode),
         ])
 
     def get_key_bindings(self, app):
-        return UIControlKeyBindings(key_bindings=self._bindings, modal=False)
+        return UIControlKeyBindings(
+            global_key_bindings=self._global_bindings,
+            key_bindings=self._bindings,
+            modal=False)
 
 
 class SystemToolbar(ConditionalContainer):
@@ -120,7 +131,7 @@ class SystemToolbar(ConditionalContainer):
             content=Window(self.control,
                 height=Dimension.exact(1),
                 token=Token.Toolbar.System),
-            filter=HasFocus(self.control.system_buffer) & ~IsDone())
+            filter=has_focus(self.control.system_buffer) & ~is_done)
 
 
 class ArgToolbarControl(TokenListControl):
@@ -144,7 +155,7 @@ class ArgToolbar(ConditionalContainer):
             content=Window(
                 ArgToolbarControl(),
                 height=Dimension.exact(1)),
-            filter=HasArg())
+            filter=has_arg)
 
 
 class SearchToolbarControl(BufferControl):
@@ -155,7 +166,6 @@ class SearchToolbarControl(BufferControl):
         assert isinstance(search_buffer, Buffer)
 
         token = Token.Toolbar.Search
-        is_searching = IsSearching()
 
         def get_before_input(app):
             if not is_searching(app):
@@ -178,7 +188,7 @@ class SearchToolbar(ConditionalContainer):
         control = SearchToolbarControl(search_buffer, vi_mode=vi_mode)
         super(SearchToolbar, self).__init__(
             content=Window(control, height=Dimension.exact(1), token=Token.Toolbar.Search),
-            filter=IsSearching() & ~IsDone())
+            filter=is_searching & ~is_done)
 
         self.control = control
 
@@ -246,7 +256,7 @@ class CompletionsToolbar(ConditionalContainer):
             content=Window(
                 CompletionsToolbarControl(),
                 height=Dimension.exact(1)),
-            filter=HasCompletions() & ~IsDone() & extra_filter)
+            filter=has_completions & ~is_done & extra_filter)
 
 
 class ValidationToolbarControl(TokenListControl):
@@ -279,4 +289,4 @@ class ValidationToolbar(ConditionalContainer):
             content=Window(
                 ValidationToolbarControl(show_position=show_position),
                 height=Dimension.exact(1)),
-            filter=HasValidationError() & ~IsDone())
+            filter=has_validation_error & ~is_done)
