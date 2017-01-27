@@ -565,7 +565,8 @@ def operate_and_get_next(event):
 
     # Set the new index at the start of the next run.
     def set_working_index():
-        buff.working_index = new_index
+        if new_index < len(buff._working_lines):
+            buff.working_index = new_index
 
     event.app.pre_run_callables.append(set_working_index)
 
