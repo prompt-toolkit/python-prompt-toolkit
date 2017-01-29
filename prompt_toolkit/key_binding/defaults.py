@@ -19,7 +19,7 @@ __all__ = (
 def load_key_bindings(
         enable_abort_and_exit_bindings=False,
         enable_system_bindings=False,
-        enable_search=False,
+        enable_search=True,
         enable_open_in_editor=False,
         enable_extra_page_navigation=False,
         enable_auto_suggest_bindings=False):

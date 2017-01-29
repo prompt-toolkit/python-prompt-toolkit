@@ -127,8 +127,16 @@ def load_emacs_bindings():
     def is_returnable(app):
         return app.current_buffer.is_returnable
 
-    # Meta + Newline: always accept input.
+    @Condition
+    def is_multiline(app):
+        return app.current_buffer.multiline()
+
+    # Meta + Enter: always accept input.
     handle(Keys.Escape, Keys.Enter, filter=insert_mode & is_returnable)(
+        get_by_name('accept-line'))
+
+    # Enter: accept input in single line mode.
+    handle(Keys.Enter, filter=insert_mode & is_returnable & ~is_multiline)(
         get_by_name('accept-line'))
 
     def character_search(buff, char, count):

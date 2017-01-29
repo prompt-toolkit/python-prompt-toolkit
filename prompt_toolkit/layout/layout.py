@@ -46,8 +46,22 @@ class Layout(object):
         for container in self.find_all_windows():
             yield container.content
 
+    def focus(self, value):
+        """
+        Focus the given object.
+
+        :param value: `UIControl` or `Window` instance.
+        """
+        assert isinstance(value, (UIControl, Window))
+
+        if isinstance(value, UIControl):
+            self.focussed_control = value
+        elif isinstance(value, Window):
+            self.focussed_window = value
+
+
     @property
-    def focussed_control(self):
+    def focussed_control(self):  # XXX: rename to current_control.
         """
         Get the `UIControl` to currently has the  focus.
         """

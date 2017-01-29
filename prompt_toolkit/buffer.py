@@ -157,12 +157,14 @@ class Buffer(object):
         browse through the completions, rather than through the history.
     :param read_only: :class:`~prompt_toolkit.filters.SimpleFilter`. When True,
         changes will not be allowed.
+    :param multiline: When set, pressing `Enter` will call the `accept_handler`.
+        Otherwise, pressing `Esc-Enter` is required.
     """
     def __init__(self, loop=None, completer=None, auto_suggest=None, history=None,
                  validator=None, get_tempfile_suffix=None, tempfile_suffix='', name='',
                  complete_while_typing=False,
                  enable_history_search=False, document=None,
-                 accept_handler=None, read_only=False,
+                 accept_handler=None, read_only=False, multiline=True,
                  on_text_changed=None, on_text_insert=None, on_cursor_position_changed=None,
                  on_completions_changed=None, on_suggestion_set=None):
 
@@ -170,6 +172,7 @@ class Buffer(object):
         enable_history_search = to_simple_filter(enable_history_search)
         complete_while_typing = to_simple_filter(complete_while_typing)
         read_only = to_simple_filter(read_only)
+        multiline = to_simple_filter(multiline)
 
         # Validate input.
         assert isinstance(loop, EventLoop)
@@ -200,6 +203,7 @@ class Buffer(object):
         self.complete_while_typing = complete_while_typing
         self.enable_history_search = enable_history_search
         self.read_only = read_only
+        self.multiline = multiline
 
         # Text width. (For wrapping, used by the Vi 'gq' operator.)
         self.text_width = 0

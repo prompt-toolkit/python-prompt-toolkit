@@ -437,8 +437,17 @@ def load_vi_bindings():
     def is_returnable(app):
         return app.current_buffer.is_returnable
 
+    @Condition
+    def is_multiline(app):
+        return app.current_buffer.multiline()
+
     # In navigation mode, pressing enter will always return the input.
     handle(Keys.Enter, filter=vi_navigation_mode & is_returnable)(
+        get_by_name('accept-line'))
+
+    # In insert mode, also accept input when enter is pressed, and the buffer
+    # has been marked as single line.
+    handle(Keys.Enter, filter=is_returnable & ~is_multiline)(
         get_by_name('accept-line'))
 
     # ** In navigation mode **
