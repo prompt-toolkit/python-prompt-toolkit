@@ -1179,8 +1179,8 @@ class Window(Container):
             else:
                 # nobreak.
                 # (No x/y coordinate found for the content. This happens in
-                # case of a FillControl, that only specifies a background, but
-                # doesn't have a content. Report (0,0) instead.)
+                # case of a DummyControl, that does not have any content.
+                # Report (0,0) instead.)
                 result = self.content.mouse_handler(
                     app, MouseEvent(position=Point(x=0, y=0),
                                     event_type=mouse_event.event_type))
