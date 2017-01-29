@@ -64,16 +64,18 @@ class PosixEventLoop(EventLoop):
         if self.closed:
             raise Exception('Event loop already closed.')
 
-        self._running = True
-        self._current_timeout = INPUT_TIMEOUT
+        try:
+            self._running = True
+            self._current_timeout = INPUT_TIMEOUT
 
-        while not future.done():
+            while not future.done():
+                self._run_once()
+
+            # Run one last time, to flush the pending `_calls_from_executor`s.
             self._run_once()
 
-        # Run one last time, to flush the pending `_calls_from_executor`s.
-        self._run_once()
-
-        self._running = False
+        finally:
+            self._running = False
 
     def _run_once(self):
         # Call inputhook.

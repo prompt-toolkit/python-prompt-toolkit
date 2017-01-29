@@ -380,3 +380,8 @@ class KeyPressEvent(object):
             result = "%s%s" % (current, data)
 
         self.key_processor.arg = result
+
+    @property
+    def cli(self):
+        " For backward-compatibility. "
+        return self.app

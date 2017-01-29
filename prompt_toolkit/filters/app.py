@@ -16,6 +16,7 @@ __all__ = (
     'is_aborting',
     'is_done',
     'is_read_only',
+    'is_multiline',
     'renderer_height_is_known',
     'in_editing_mode',
     'in_paste_mode',
@@ -85,6 +86,14 @@ def is_read_only(app):
     True when the current buffer is read only.
     """
     return app.current_buffer.read_only()
+
+
+@Condition
+def is_multiline(app):
+    """
+    True when the current buffer has been marked as multiline.
+    """
+    return app.current_buffer.multiline()
 
 
 @Condition

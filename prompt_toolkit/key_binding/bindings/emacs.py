@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from prompt_toolkit.buffer import SelectionType, indent, unindent
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.enums import SearchDirection
-from prompt_toolkit.filters import Condition, emacs_mode, has_selection, emacs_insert_mode, has_arg, is_searching, control_is_searchable
+from prompt_toolkit.filters import Condition, emacs_mode, has_selection, emacs_insert_mode, has_arg, is_searching, control_is_searchable, is_multiline
 from prompt_toolkit.completion import CompleteEvent
 
 from .scroll import scroll_page_up, scroll_page_down
@@ -126,10 +126,6 @@ def load_emacs_bindings():
     @Condition
     def is_returnable(app):
         return app.current_buffer.is_returnable
-
-    @Condition
-    def is_multiline(app):
-        return app.current_buffer.multiline()
 
     # Meta + Enter: always accept input.
     handle(Keys.Escape, Keys.Enter, filter=insert_mode & is_returnable)(

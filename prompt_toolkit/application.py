@@ -381,6 +381,11 @@ class Application(object):
 
         :returns: A :class:`prompt_toolkit.eventloop.future.Future` object.
         """
+        f, done_cb = self._start(pre_run=pre_run)
+        return f
+
+    def _start(self, pre_run=None):
+        " Like `start`, but also returns the `done()` callback. "
         assert not self._is_running
         self._is_running = True
 
@@ -424,7 +429,7 @@ class Application(object):
             previous_winch_handler = loop.add_signal_handler(
                 signal.SIGWINCH, self._on_resize)
 
-        def done(_):
+        def done():
             # Render UI in 'done' state.
             raw_mode.__exit__(None, None, None)
             self._redraw(render_as_done=True)
@@ -438,16 +443,25 @@ class Application(object):
             if has_sigwinch:
                 loop.add_signal_handler(signal.SIGWINCH, previous_winch_handler)
 
-        f.add_done_callback(done)
-        return f
+        f.add_done_callback(lambda _: done)
+        return f, done
 
     def run(self, pre_run=None):
         """
         A blocking 'run' call that waits until the UI is finished.
         """
-        f = self.start(pre_run=pre_run)
-        self.loop.run_until_complete(f)
-        return f.result()
+        f, done_cb = self._start(pre_run=pre_run)
+        try:
+            self.loop.run_until_complete(f)
+            return f.result()
+        finally:
+            # Make sure that the 'done' callback from the 'start' function has
+            # been called. If something bad happens in the event loop, and an
+            # exception was raised, then we can end up at this point without
+            # having 'f' in the 'done' state.
+            if not f.done():
+                done_cb()
+            assert self._is_running == False
 
     try:
         six.exec_(textwrap.dedent('''

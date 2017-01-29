@@ -14,6 +14,7 @@ __all__ = (
     'IsAborting',
     'IsDone',
     'IsReadOnly',
+    'IsMultiline',
     'RendererHeightIsKnown',
     'InEditingMode',
     'InPasteMode',
@@ -61,6 +62,7 @@ ViInsertMode = lambda: vi_insert_mode
 HasSelection = lambda: has_selection
 HasCompletions = lambda: has_completions
 IsReadOnly = lambda: is_read_only
+IsMultiline = lambda: is_multiline
 
 HasFocus = has_focus  # No lambda here! (Has_focus is callable that returns a callable.)
 InEditingMode = in_editing_mode

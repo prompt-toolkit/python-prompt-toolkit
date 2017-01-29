@@ -117,3 +117,8 @@ def max_layout_dimensions(dimensions):
         return Dimension(min=min_, max=max_, preferred=preferred)
     else:
         return Dimension()
+
+
+
+# For backward-compatibility.
+LayoutDimension = Dimension
