@@ -55,7 +55,7 @@ def has_focus(value):
             return app.current_buffer == value
     elif isinstance(value, UIControl):
         def test(app):
-            return app.layout.focussed_control == value
+            return app.layout.current_control == value
 
     @Condition
     def has_focus_filter(app):
@@ -256,8 +256,8 @@ def emacs_selection_mode(app):
 def is_searching(app):
     " When we are searching. "
     from prompt_toolkit.layout.controls import BufferControl
-    control = app.layout.focussed_control
-    prev = app.layout.previous_focussed_control
+    control = app.layout.current_control
+    prev = app.layout.previous_control
 
     return (isinstance(prev, BufferControl) and
             isinstance(control, BufferControl) and
@@ -269,7 +269,7 @@ def is_searching(app):
 def control_is_searchable(app):
     " When the current UIControl is searchable. "
     from prompt_toolkit.layout.controls import BufferControl
-    control = app.layout.focussed_control
+    control = app.layout.current_control
 
     return (isinstance(control, BufferControl) and
             control.search_buffer_control is not None)

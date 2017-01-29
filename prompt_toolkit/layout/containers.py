@@ -1129,7 +1129,7 @@ class Window(Container):
             wrap_lines=wrap_lines, highlight_lines=True,
             vertical_scroll_2=self.vertical_scroll_2,
             always_hide_cursor=self.always_hide_cursor(app),
-            has_focus=app.layout.focussed_control == self.content,
+            has_focus=app.layout.current_control == self.content,
             align=self.align)
 
         # Remember render info. (Set before generating the margins. They need this.)
@@ -1410,7 +1410,7 @@ class Window(Container):
             fill(token, char)
 
         # Add 'Token.Focussed' if this window got the focus.
-        if app.layout.focussed_window == self:
+        if app.layout.current_window == self:
             fill(Token.Focussed, None)
 
     def _highlight_digraph(self, app, new_screen):

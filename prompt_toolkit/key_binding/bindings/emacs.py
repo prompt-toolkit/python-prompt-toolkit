@@ -340,8 +340,8 @@ def load_emacs_search_bindings():
         When enter pressed in isearch, quit isearch mode. (Multiline
         isearch would be too complicated.)
         """
-        search_control = event.app.layout.focussed_control
-        prev_control = event.app.layout.previous_focussed_control
+        search_control = event.app.layout.current_control
+        prev_control = event.app.layout.previous_control
         search_state = prev_control.search_state
 
         # Update search state.
@@ -360,26 +360,26 @@ def load_emacs_search_bindings():
 
     @handle(Keys.ControlR, filter=control_is_searchable)
     def _(event):
-        control = event.app.layout.focussed_control
+        control = event.app.layout.current_control
         search_state = control.search_state
 
         search_state.direction = SearchDirection.BACKWARD
-        event.app.layout.focussed_control = control.search_buffer_control
+        event.app.layout.current_control = control.search_buffer_control
 
     @handle(Keys.ControlS, filter=control_is_searchable)
     def _(event):
-        control = event.app.layout.focussed_control
+        control = event.app.layout.current_control
         search_state = control.search_state
 
         search_state.direction = SearchDirection.FORWARD
-        event.app.layout.focussed_control = control.search_buffer_control
+        event.app.layout.current_control = control.search_buffer_control
 
     def incremental_search(app, direction, count=1):
         " Apply search, but keep search buffer focussed. "
         assert is_searching(app)
 
-        search_control = app.layout.focussed_control
-        prev_control = app.layout.previous_focussed_control
+        search_control = app.layout.current_control
+        prev_control = app.layout.previous_control
         search_state = prev_control.search_state
 
         # Update search_state.

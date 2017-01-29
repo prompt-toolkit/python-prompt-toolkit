@@ -632,7 +632,7 @@ class ReverseSearchProcessor(Processor):
 
     def _get_main_buffer(self, app, buffer_control):
         from prompt_toolkit.layout.controls import BufferControl
-        prev_control = app.layout.previous_focussed_control
+        prev_control = app.layout.previous_current_control
         if isinstance(prev_control, BufferControl) and \
                 prev_control.search_buffer_control == buffer_control:
             return prev_control, prev_control.search_state

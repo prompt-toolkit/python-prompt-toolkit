@@ -31,8 +31,8 @@ class Layout(object):
             self._stack.append(focussed_window)
 
     def __repr__(self):
-        return 'Layout(%r, focussed_control=%r)' % (
-            self.container, self.focussed_control)
+        return 'Layout(%r, current_control=%r)' % (
+            self.container, self.current_control)
 
     def find_all_windows(self):
         """
@@ -55,20 +55,19 @@ class Layout(object):
         assert isinstance(value, (UIControl, Window))
 
         if isinstance(value, UIControl):
-            self.focussed_control = value
+            self.current_control = value
         elif isinstance(value, Window):
-            self.focussed_window = value
-
+            self.current_window = value
 
     @property
-    def focussed_control(self):  # XXX: rename to current_control.
+    def current_control(self):
         """
         Get the `UIControl` to currently has the  focus.
         """
         return self._stack[-1].content
 
-    @focussed_control.setter
-    def focussed_control(self, control):
+    @current_control.setter
+    def current_control(self, control):
         """
         Set the `UIControl` to receive the focus.
         """
@@ -76,24 +75,24 @@ class Layout(object):
 
         for window in self.find_all_windows():
             if window.content == control:
-                self.focussed_window = window
+                self.current_window = window
                 return
 
         raise ValueError('Control not found in the user interface.')
 
     @property
-    def focussed_window(self):
+    def current_window(self):
         " Return the `Window` object that is currently focussed. "
         return self._stack[-1]
 
-    @focussed_window.setter
-    def focussed_window(self, value):
+    @current_window.setter
+    def current_window(self, value):
         " Set the `Window` object to be currently focussed. "
         assert isinstance(value, Window)
         self._stack.append(value)
 
     @property
-    def previous_focussed_control(self):
+    def previous_control(self):
         """
         Get the `UIControl` to previously had the focus.
         """

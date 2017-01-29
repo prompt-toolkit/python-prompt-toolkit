@@ -1268,7 +1268,7 @@ def load_vi_bindings():
         Moves to the start of the visible region. (Below the scroll offset.)
         Implements 'cH', 'dH', 'H'.
         """
-        w = event.app.layout.focussed_window
+        w = event.app.layout.current_window
         b = event.current_buffer
 
         if w and w.render_info:
@@ -1289,7 +1289,7 @@ def load_vi_bindings():
         Moves cursor to the vertical center of the visible region.
         Implements 'cM', 'dM', 'M'.
         """
-        w = event.app.layout.focussed_window
+        w = event.app.layout.current_window
         b = event.current_buffer
 
         if w and w.render_info:
@@ -1309,7 +1309,7 @@ def load_vi_bindings():
         """
         Moves to the end of the visible region. (Above the scroll offset.)
         """
-        w = event.app.layout.focussed_window
+        w = event.app.layout.current_window
         b = event.current_buffer
 
         if w and w.render_info:
@@ -1368,7 +1368,7 @@ def load_vi_bindings():
         Scrolls the window to makes the current line the first line in the visible region.
         """
         b = event.current_buffer
-        event.app.layout.focussed_window.vertical_scroll = b.document.cursor_position_row
+        event.app.layout.current_window.vertical_scroll = b.document.cursor_position_row
 
     @handle('z', '-', filter=vi_navigation_mode|vi_selection_mode)
     @handle('z', 'b', filter=vi_navigation_mode|vi_selection_mode)
@@ -1379,14 +1379,14 @@ def load_vi_bindings():
         # We can safely set the scroll offset to zero; the Window will meke
         # sure that it scrolls at least enough to make the cursor visible
         # again.
-        event.app.layout.focussed_window.vertical_scroll = 0
+        event.app.layout.current_window.vertical_scroll = 0
 
     @handle('z', 'z', filter=vi_navigation_mode|vi_selection_mode)
     def _(event):
         """
         Center Window vertically around cursor.
         """
-        w = event.app.layout.focussed_window
+        w = event.app.layout.current_window
         b = event.current_buffer
 
         if w and w.render_info:
@@ -1487,7 +1487,7 @@ def load_vi_bindings():
         """
         Like g0, but half a screenwidth to the right. (Or as much as possible.)
         """
-        w = event.app.layout.focussed_window
+        w = event.app.layout.current_window
         buff = event.current_buffer
 
         if w and w.render_info:
@@ -1716,7 +1716,7 @@ def load_vi_search_bindings():
         """
         Vi-style forward search.
         """
-        control = event.app.layout.focussed_control
+        control = event.app.layout.current_control
         search_state = control.search_state
 
         # Set the ViState.
@@ -1724,7 +1724,7 @@ def load_vi_search_bindings():
         event.app.vi_state.input_mode = InputMode.INSERT
 
         # Focus search buffer.
-        event.app.layout.focussed_control = control.search_buffer_control
+        event.app.layout.current_control = control.search_buffer_control
 
     @handle('?', filter=(vi_navigation_mode|vi_selection_mode)&~reverse_vi_search_direction&control_is_searchable)
     @handle('/', filter=(vi_navigation_mode|vi_selection_mode)&reverse_vi_search_direction&control_is_searchable)
@@ -1733,7 +1733,7 @@ def load_vi_search_bindings():
         """
         Vi-style backward search.
         """
-        control = event.app.layout.focussed_control
+        control = event.app.layout.current_control
         search_state = control.search_state
 
         # Set the ViState.
@@ -1741,15 +1741,15 @@ def load_vi_search_bindings():
         event.app.vi_state.input_mode = InputMode.INSERT
 
         # Focus search buffer.
-        event.app.layout.focussed_control = control.search_buffer_control
+        event.app.layout.current_control = control.search_buffer_control
 
     @handle(Keys.Enter, filter=is_searching)
     def _(event):
         """
         Apply the search. (At the / or ? prompt.)
         """
-        search_control = event.app.layout.focussed_control
-        prev_control = event.app.layout.previous_focussed_control
+        search_control = event.app.layout.current_control
+        prev_control = event.app.layout.previous_current_control
         search_state = prev_control.search_state
 
         # Update search state.
@@ -1772,8 +1772,8 @@ def load_vi_search_bindings():
         " Apply search, but keep search buffer focussed. "
         assert is_searching(app)
 
-        search_control = app.layout.focussed_control
-        prev_control = app.layout.previous_focussed_control
+        search_control = app.layout.current_control
+        prev_control = app.layout.previous_current_control
         search_state = prev_control.search_state
 
         # Update search_state.

@@ -417,12 +417,12 @@ class Prompt(object):
                     ConditionalContainer(
                         default_buffer_window,
                         Condition(lambda app:
-                            app.layout.focussed_control != search_buffer_control),
+                            app.layout.current_control != search_buffer_control),
                     ),
                     ConditionalContainer(
                         Window(search_buffer_control),
                         Condition(lambda app:
-                            app.layout.focussed_control == search_buffer_control),
+                            app.layout.current_control == search_buffer_control),
                     ),
                 ]),
                 [
@@ -468,7 +468,7 @@ class Prompt(object):
         @Condition
         def do_accept(app):
             return (not _true(self.multiline) and
-                    self.app.layout.focussed_control == self._default_buffer_control)
+                    self.app.layout.current_control == self._default_buffer_control)
 
         @prompt_bindings.add(Keys.Enter, filter=do_accept)
         def _(event):
@@ -505,15 +505,15 @@ class Prompt(object):
         '''
         def on_render(app):
             multiline = _true(self.multiline)
-            focussed_control = app.layout.focussed_control
+            current_control = app.layout.current_control
 
             if multiline:
-                if focussed_control == search_buffer_control:
-                    app.layout.focussed_control = search_toolbar.control
+                if current_control == search_buffer_control:
+                    app.layout.current_control = search_toolbar.control
                     app.invalidate()
             else:
-                if focussed_control == search_toolbar.control:
-                    app.layout.focussed_control = search_buffer_control
+                if current_control == search_toolbar.control:
+                    app.layout.current_control = search_buffer_control
                     app.invalidate()
 
         app.on_render += on_render

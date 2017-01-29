@@ -165,11 +165,11 @@ def reverse_search_history(event):
     Search backward starting at the current line and moving `up' through
     the history as necessary. This is an incremental search.
     """
-    control = event.app.layout.focussed_control
+    control = event.app.layout.current_control
 
     if control.search_buffer_control:
         event.app.current_search_state.direction = SearchDirection.BACKWARD
-        event.app.layout.focussed_control = control.search_buffer_control
+        event.app.layout.current_control = control.search_buffer_control
 
 
 #

@@ -60,13 +60,13 @@ class SystemToolbarControl(BufferControl):
                 self.enable)
         def _(event):
             " M-'!' will focus this user control. "
-            event.app.layout.focussed_control = self
+            event.app.layout.current_control = self
 
         @bindings.add('!', filter=~focussed & vi_mode & vi_navigation_mode)
         def _(event):
             " Focus. "
             event.app.vi_state.input_mode = InputMode.INSERT
-            event.app.layout.focussed_control = self
+            event.app.layout.current_control = self
 
         return bindings
 

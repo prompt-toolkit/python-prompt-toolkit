@@ -22,7 +22,7 @@ def scroll_forward(event, half=False):
     """
     Scroll window down.
     """
-    w = event.app.layout.focussed_window
+    w = event.app.layout.current_window
     b = event.app.current_buffer
 
     if w and w.render_info:
@@ -53,7 +53,7 @@ def scroll_backward(event, half=False):
     """
     Scroll window up.
     """
-    w = event.app.layout.focussed_window
+    w = event.app.layout.current_window
     b = event.app.current_buffer
 
     if w and w.render_info:
@@ -97,7 +97,7 @@ def scroll_one_line_down(event):
     """
     scroll_offset += 1
     """
-    w = event.app.layout.focussed_window
+    w = event.app.layout.current_window
     b = event.app.current_buffer
 
     if w:
@@ -116,7 +116,7 @@ def scroll_one_line_up(event):
     """
     scroll_offset -= 1
     """
-    w = event.app.layout.focussed_window
+    w = event.app.layout.current_window
     b = event.app.current_buffer
 
     if w:
@@ -143,7 +143,7 @@ def scroll_page_down(event):
     """
     Scroll page down. (Prefer the cursor at the top of the page, after scrolling.)
     """
-    w = event.app.layout.focussed_window
+    w = event.app.layout.current_window
     b = event.app.current_buffer
 
     if w and w.render_info:
@@ -159,7 +159,7 @@ def scroll_page_up(event):
     """
     Scroll page up. (Prefer the cursor at the bottom of the page, after scrolling.)
     """
-    w = event.app.layout.focussed_window
+    w = event.app.layout.current_window
     b = event.app.current_buffer
 
     if w and w.render_info:

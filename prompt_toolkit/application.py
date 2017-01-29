@@ -212,7 +212,7 @@ class Application(object):
         has the focus. In this case, it's really not practical to check for
         `None` values or catch exceptions every time.)
         """
-        ui_control = self.layout.focussed_control
+        ui_control = self.layout.current_control
         if isinstance(ui_control, BufferControl):
             return ui_control.buffer
         else:
@@ -224,7 +224,7 @@ class Application(object):
         Return the current `SearchState`. (The one for the focussed
         `BufferControl`.)
         """
-        ui_control = self.layout.focussed_control
+        ui_control = self.layout.current_control
         if isinstance(ui_control, BufferControl):
             return ui_control.search_state
         else:
@@ -904,7 +904,7 @@ class _CombinedRegistry(KeyBindingsBase):
 
     @property
     def _key_bindings(self):
-        current_control = self.app.layout.focussed_control
+        current_control = self.app.layout.current_control
         other_controls = list(self.app.layout.find_all_controls())
         key = current_control, frozenset(other_controls)
 
