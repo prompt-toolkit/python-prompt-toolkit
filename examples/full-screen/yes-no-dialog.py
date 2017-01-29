@@ -7,19 +7,15 @@ from functools import partial
 from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.document import Document
-from prompt_toolkit.enums import DEFAULT_BUFFER
 from prompt_toolkit.eventloop.defaults import create_event_loop
 from prompt_toolkit.key_binding.defaults import load_key_bindings
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, MergedKeyBindings
 from prompt_toolkit.keys import Keys
-from prompt_toolkit.layout.containers import VSplit, HSplit, Window, Align, to_window, to_container, FloatContainer, Float, Container
+from prompt_toolkit.layout.containers import VSplit, HSplit, Window, Align, to_window, FloatContainer, Float, Container
 from prompt_toolkit.layout.controls import BufferControl, FillControl, TokenListControl, UIControlKeyBindings
 from prompt_toolkit.layout.dimension import Dimension as D
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.layout.lexers import PygmentsLexer
-from prompt_toolkit.layout.screen import Char
-from prompt_toolkit.layout.toolbars import TokenListToolbar
-from prompt_toolkit.styles.from_dict import style_from_dict
 from prompt_toolkit.styles.from_pygments import style_from_pygments
 from prompt_toolkit.token import Token
 from prompt_toolkit.utils import get_cwidth
@@ -75,7 +71,7 @@ class Label(object):
         return self.window
 
 class Fill(object):
-    def __init__(self, token=Token, char='', width=None, height=None):
+    def __init__(self, token=Token, char=' ', width=None, height=None):
         self.window = Window(
             token=token,
             content=FillControl(char=char),
@@ -198,7 +194,7 @@ class Button(object):
             get_token=self._get_token)
 
     def _get_token(self, app):
-        if app.layout.focussed_control == self.control:
+        if app.layout.current_control == self.control:
             return Token.Button.Focussed
         else:
             return Token.Button
@@ -207,7 +203,7 @@ class Button(object):
         token = Token.Button
         text = ('{:^%s}' % (self.width - 2)).format(self.text)
 
-        if app.layout.focussed_control == self.control:
+        if app.layout.current_control == self.control:
             return [
                 (token.Arrow | token.Focussed, '<'),
                 (token.Text | token.Focussed, text),
@@ -258,7 +254,7 @@ class HorizontalLine(object):
 
 
 def create_pane():
-    return Window(FillControl())
+    return Window(FillControl(char=' '))
 
 
 def accept_yes(app):
@@ -312,23 +308,21 @@ root_container = MenuContainer(root_container)
 
 bindings = KeyBindings()
 
-widgets = [to_window(w) for w in 
+widgets = [to_window(w) for w in
     (yes_button, no_button, textfield, textfield2)
 ]
 
 @bindings.add(Keys.Tab)
 def _(event):
-    index = widgets.index(event.app.layout.focussed_window)
+    index = widgets.index(event.app.layout.current_window)
     index = (index + 1) % len(widgets)
-    event.app.layout.focussed_window = widgets[index]
+    event.app.layout.focus(widgets[index])
 
-#@bindings.add(Keys.BackTab)
-#def _(event):
-#    widgets = [yes_button, no_button, textfield, textfield2]
-#    widgets = [to_window(w) for w in widgets]
-#    index = widgets.index(event.app.layout.focussed_window)
-#    index = (index - 1) % len(widgets)
-#    event.app.layout.focussed_window = widgets[index]
+@bindings.add(Keys.BackTab)
+def _(event):
+    index = widgets.index(event.app.layout.current_window)
+    index = (index - 1) % len(widgets)
+    event.app.layout.focus(widgets[index])
 
 
 style = style_from_pygments(style_dict={
@@ -337,7 +331,7 @@ style = style_from_pygments(style_dict={
     Token.Button.Arrow: 'bold',
     Token.Button.Focussed: 'bg:#880000 #ffffff',
     Token.TextArea: 'bg:#ffffaa',
-    Token.Focussed: 'bg:#00ff00 #00ff00',
+    Token.Focussed: 'bg:#33ff00',
     Token.Label: '#888888 reverse',
     Token.Window.Border: '#888888',
 
