@@ -1749,7 +1749,7 @@ def load_vi_search_bindings():
         Apply the search. (At the / or ? prompt.)
         """
         search_control = event.app.layout.current_control
-        prev_control = event.app.layout.previous_current_control
+        prev_control = event.app.layout.previous_control
         search_state = prev_control.search_state
 
         # Update search state.
@@ -1773,7 +1773,7 @@ def load_vi_search_bindings():
         assert is_searching(app)
 
         search_control = app.layout.current_control
-        prev_control = app.layout.previous_current_control
+        prev_control = app.layout.previous_control
         search_state = prev_control.search_state
 
         # Update search_state.
