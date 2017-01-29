@@ -3,10 +3,11 @@ from ctypes import windll, pointer
 from ctypes.wintypes import DWORD
 from six.moves import range
 
-from prompt_toolkit.key_binding.input_processor import KeyPress
+from prompt_toolkit.key_binding.key_processor import KeyPress
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.mouse_events import MouseEventType
 from prompt_toolkit.win32_types import EventTypes, KEY_EVENT_RECORD, MOUSE_EVENT_RECORD, INPUT_RECORD, STD_INPUT_HANDLE
+from .base import Input
 
 import msvcrt
 import os
@@ -14,10 +15,48 @@ import sys
 import six
 
 __all__ = (
+    'Win32Input',
     'ConsoleInputReader',
     'raw_mode',
     'cooked_mode'
 )
+
+
+class Win32Input(Input):
+    """
+    `Input` class that reads from the Windows console.
+    """
+    def __init__(self, stdin=None):
+        self.console_input_reader = ConsoleInputReader()
+
+    def read_keys(self):
+        return self.console_input_reader.read()
+
+    def flush(self):
+        pass
+
+    @property
+    def closed(self):
+        return False
+
+    def raw_mode(self):
+        return raw_mode()
+
+    def cooked_mode(self):
+        return cooked_mode()
+
+    def fileno(self):
+        """
+        The windows console doesn't depend on the file handle.
+        """
+        raise NotImplementedError
+
+    def close(self):
+        self.console_input_reader.close()
+
+    @property
+    def handle(self):
+        return self.console_input_reader.handle
 
 
 class ConsoleInputReader(object):
@@ -42,9 +81,7 @@ class ConsoleInputReader(object):
         b'\x0a': Keys.ControlJ,  # Control-J (10) (Identical to '\n')
         b'\x0b': Keys.ControlK,  # Control-K (delete until end of line; vertical tab)
         b'\x0c': Keys.ControlL,  # Control-L (clear; form feed)
-        b'\x0d': Keys.ControlJ,  # Control-J NOTE: Windows sends \r instead of
-                                 #   \n when pressing enter. We turn it into \n
-                                 #   to be compatible with other platforms.
+        b'\x0d': Keys.ControlM,  # Control-M (enter)
         b'\x0e': Keys.ControlN,  # Control-N (14) (history forward)
         b'\x0f': Keys.ControlO,  # Control-O (15)
         b'\x10': Keys.ControlP,  # Control-P (16) (history back)

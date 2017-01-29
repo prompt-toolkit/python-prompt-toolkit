@@ -27,7 +27,7 @@ example_style = style_from_dict({
 })
 
 
-def get_prompt_tokens(cli):
+def get_prompt_tokens(app):
     return [
         (Token.Username, 'john'),
         (Token.At,       '@'),

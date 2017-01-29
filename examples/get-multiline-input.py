@@ -4,7 +4,7 @@ from prompt_toolkit import prompt
 from prompt_toolkit.token import Token
 
 
-def continuation_tokens(cli, width):
+def continuation_tokens(app, width):
     " The continuation: display dots before all the following lines. "
 
     # (make sure that the width of the continuation does not exceed the given

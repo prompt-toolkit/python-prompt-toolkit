@@ -1,21 +1,21 @@
 #!/usr/bin/env python
 """
 (Python >= 3.5)
-This is an example of how to embed a CommandLineInterface inside an application
-that uses the asyncio eventloop. The ``prompt_toolkit`` library will make sure
-that when other coroutines are writing to stdout, they write above the prompt,
-not destroying the input line.
+This is an example of how to prompt inside an application that uses the asyncio
+eventloop. The ``prompt_toolkit`` library will make sure that when other
+coroutines are writing to stdout, they write above the prompt, not destroying
+the input line.
 This example does several things:
     1. It starts a simple coroutine, printing a counter to stdout every second.
-    2. It starts a simple input/echo cli loop which reads from stdin.
+    2. It starts a simple input/echo app loop which reads from stdin.
 Very important is the following patch. If you are passing stdin by reference to
 other parts of the code, make sure that this patch is applied as early as
 possible. ::
-    sys.stdout = cli.stdout_proxy()
+    sys.stdout = app.stdout_proxy()
 """
 
-from prompt_toolkit.interface import CommandLineInterface
-from prompt_toolkit.shortcuts import create_prompt_application, create_asyncio_eventloop, prompt_async
+from prompt_toolkit.shortcuts import Prompt
+from prompt_toolkit.eventloop.defaults import create_asyncio_event_loop
 
 import asyncio
 import sys
@@ -38,24 +38,23 @@ async def interactive_shell():
     """
     Like `interactive_shell`, but doing things manual.
     """
-    # Create an asyncio `EventLoop` object. This is a wrapper around the
-    # asyncio loop that can be passed into prompt_toolkit.
-    eventloop = create_asyncio_eventloop()
-
-    # Create interface.
-    cli = CommandLineInterface(
-        application=create_prompt_application('Say something inside the event loop: '),
-        eventloop=eventloop)
+    # Create Prompt.
+    prompt = Prompt(
+        'Say something: ',
+        patch_stdout=True,
+        loop=create_asyncio_event_loop(loop))
 
     # Patch stdout in something that will always print *above* the prompt when
     # something is written to stdout.
-    sys.stdout = cli.stdout_proxy()
+    # (This is optional, when `patch_stdout=True` has been given before.)
+
+    ## sys.stdout = prompt.app.stdout_proxy()
 
     # Run echo loop. Read text from stdin, and reply it back.
     while True:
         try:
-            result = await cli.run_async()
-            print('You said: "{0}"'.format(result.text))
+            result = await prompt.prompt_async()
+            print('You said: "{0}"'.format(result))
         except (EOFError, KeyboardInterrupt):
             return
 

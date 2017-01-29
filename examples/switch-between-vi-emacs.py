@@ -5,37 +5,37 @@ Example that displays how to switch between Emacs and Vi input mode.
 """
 from prompt_toolkit import prompt
 from prompt_toolkit.enums import EditingMode
-from prompt_toolkit.key_binding.defaults import load_key_bindings_for_prompt
+from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.styles import style_from_dict
 from prompt_toolkit.token import Token
 
 def run():
-    # Create a `Registry` that contains the default key bindings.
-    registry = load_key_bindings_for_prompt()
+    # Create a `KeyBindings` that contains the default key bindings.
+    bindings = KeyBindings()
 
     # Add an additional key binding for toggling this flag.
-    @registry.add_binding(Keys.F4)
+    @bindings.add(Keys.F4)
     def _(event):
         " Toggle between Emacs and Vi mode. "
-        if event.cli.editing_mode == EditingMode.VI:
-            event.cli.editing_mode = EditingMode.EMACS
+        if event.app.editing_mode == EditingMode.VI:
+            event.app.editing_mode = EditingMode.EMACS
         else:
-            event.cli.editing_mode = EditingMode.VI
+            event.app.editing_mode = EditingMode.VI
 
     # Add a bottom toolbar to display the status.
     style = style_from_dict({
         Token.Toolbar: 'reverse',
     })
 
-    def get_bottom_toolbar_tokens(cli):
+    def get_bottom_toolbar_tokens(app):
         " Display the current input mode. "
-        text = 'Vi' if cli.editing_mode == EditingMode.VI else 'Emacs'
+        text = 'Vi' if app.editing_mode == EditingMode.VI else 'Emacs'
         return [
             (Token.Toolbar, ' [F4] %s ' % text)
         ]
 
-    prompt('> ', key_bindings_registry=registry,
+    prompt('> ', extra_key_bindings=bindings,
            get_bottom_toolbar_tokens=get_bottom_toolbar_tokens,
            style=style)
 

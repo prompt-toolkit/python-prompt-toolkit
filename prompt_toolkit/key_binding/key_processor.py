@@ -1,18 +1,18 @@
 # *** encoding: utf-8 ***
 """
-An :class:`~.InputProcessor` receives callbacks for the keystrokes parsed from
+An :class:`~.KeyProcessor` receives callbacks for the keystrokes parsed from
 the input in the :class:`~prompt_toolkit.inputstream.InputStream` instance.
 
-The `InputProcessor` will according to the implemented keybindings call the
+The `KeyProcessor` will according to the implemented keybindings call the
 correct callbacks when new key presses are feed through `feed`.
 """
 from __future__ import unicode_literals
 from prompt_toolkit.buffer import EditReadOnlyBuffer
-from prompt_toolkit.filters.cli import ViNavigationMode
+from prompt_toolkit.filters.app import vi_navigation_mode
 from prompt_toolkit.keys import Keys, Key
 from prompt_toolkit.utils import Event
 
-from .registry import BaseRegistry
+from .key_bindings import KeyBindingsBase
 
 from collections import deque
 from six.moves import range
@@ -20,7 +20,7 @@ import weakref
 import six
 
 __all__ = (
-    'InputProcessor',
+    'KeyProcessor',
     'KeyPress',
 )
 
@@ -48,14 +48,14 @@ class KeyPress(object):
         return self.key == other.key and self.data == other.data
 
 
-class InputProcessor(object):
+class KeyProcessor(object):
     """
     Statemachine that receives :class:`KeyPress` instances and according to the
-    key bindings in the given :class:`Registry`, calls the matching handlers.
+    key bindings in the given :class:`KeyBindings`, calls the matching handlers.
 
     ::
 
-        p = InputProcessor(registry)
+        p = KeyProcessor(key_bindings)
 
         # Send keys into the processor.
         p.feed(KeyPress(Keys.ControlX, '\x18'))
@@ -65,16 +65,16 @@ class InputProcessor(object):
         p.process_keys()
 
         # Now the ControlX-ControlC callback will be called if this sequence is
-        # registered in the registry.
+        # registered in the key bindings.
 
-    :param registry: `BaseRegistry` instance.
-    :param cli_ref: weakref to `CommandLineInterface`.
+    :param key_bindings: `KeyBindingsBase` instance.
+    :param app_ref: weakref to `Application`.
     """
-    def __init__(self, registry, cli_ref):
-        assert isinstance(registry, BaseRegistry)
+    def __init__(self, key_bindings, app_ref):
+        assert isinstance(key_bindings, KeyBindingsBase)
 
-        self._registry = registry
-        self._cli_ref = cli_ref
+        self._bindings = key_bindings
+        self._app_ref = app_ref
 
         self.beforeKeyPress = Event(self)
         self.afterKeyPress = Event(self)
@@ -122,10 +122,10 @@ class InputProcessor(object):
         that would handle this.
         """
         keys = tuple(k.key for k in key_presses)
-        cli = self._cli_ref()
+        app = self._app_ref()
 
         # Try match, with mode flag
-        return [b for b in self._registry.get_bindings_for_keys(keys) if b.filter(cli)]
+        return [b for b in self._bindings.get_bindings_for_keys(keys) if b.filter(app)]
 
     def _is_prefix_of_longer_match(self, key_presses):
         """
@@ -133,16 +133,16 @@ class InputProcessor(object):
         handler that is bound to a suffix of this keys.
         """
         keys = tuple(k.key for k in key_presses)
-        cli = self._cli_ref()
+        app = self._app_ref()
 
         # Get the filters for all the key bindings that have a longer match.
         # Note that we transform it into a `set`, because we don't care about
         # the actual bindings and executing it more than once doesn't make
         # sense. (Many key bindings share the same filter.)
-        filters = set(b.filter for b in self._registry.get_bindings_starting_with_keys(keys))
+        filters = set(b.filter for b in self._bindings.get_bindings_starting_with_keys(keys))
 
         # When any key binding is active, return True.
-        return any(f(cli) for f in filters)
+        return any(f(app) for f in filters)
 
     def _process(self):
         """
@@ -165,7 +165,7 @@ class InputProcessor(object):
 
                 # When eager matches were found, give priority to them and also
                 # ignore all the longer matches.
-                eager_matches = [m for m in matches if m.eager(self._cli_ref())]
+                eager_matches = [m for m in matches if m.eager(self._app_ref())]
 
                 if eager_matches:
                     matches = eager_matches
@@ -193,13 +193,23 @@ class InputProcessor(object):
                     if not found:
                         del buffer[:1]
 
-    def feed(self, key_press):
+    def feed(self, key_press, first=False):
         """
         Add a new :class:`KeyPress` to the input queue.
         (Don't forget to call `process_keys` in order to process the queue.)
+
+        :param first: If true, insert before everything else.
         """
         assert isinstance(key_press, KeyPress)
-        self.input_queue.append(key_press)
+        if first:
+            self.input_queue.appendleft(key_press)
+        else:
+            self.input_queue.append(key_press)
+
+    def feed_multiple(self, key_presses):
+        """
+        """
+        self.input_queue.extend(key_presses)
 
     def process_keys(self):
         """
@@ -222,9 +232,9 @@ class InputProcessor(object):
                 self.afterKeyPress.fire()
 
         # Invalidate user interface.
-        cli = self._cli_ref()
-        if cli:
-            cli.invalidate()
+        app = self._app_ref()
+        if app:
+            app.invalidate()
 
     def _call_handler(self, handler, key_sequence=None):
         was_recording = self.record_macro
@@ -237,10 +247,10 @@ class InputProcessor(object):
             is_repeat=(handler == self._previous_handler))
 
         # Save the state of the current buffer.
-        cli = event.cli  # Can be `None` (In unit-tests only.)
+        app = event.app  # Can be `None` (In unit-tests only.)
 
-        if handler.save_before(event) and cli:
-            cli.current_buffer.save_to_undo_stack()
+        if handler.save_before(event) and app:
+            app.current_buffer.save_to_undo_stack()
 
         # Call handler.
         try:
@@ -266,12 +276,12 @@ class InputProcessor(object):
         never put the cursor after the last character of a line. (Unless it's
         an empty line.)
         """
-        cli = self._cli_ref()
-        if cli:
-            buff = cli.current_buffer
+        app = self._app_ref()
+        if app:
+            buff = app.current_buffer
             preferred_column = buff.preferred_column
 
-            if (ViNavigationMode()(event.cli) and
+            if (vi_navigation_mode(event.app) and
                     buff.document.is_cursor_at_the_end_of_line and
                     len(buff.document.current_line) > 0):
                 buff.cursor_position -= 1
@@ -286,15 +296,15 @@ class KeyPressEvent(object):
     """
     Key press event, delivered to key bindings.
 
-    :param input_processor_ref: Weak reference to the `InputProcessor`.
+    :param key_processor_ref: Weak reference to the `KeyProcessor`.
     :param arg: Repetition argument.
     :param key_sequence: List of `KeyPress` instances.
     :param previouskey_sequence: Previous list of `KeyPress` instances.
     :param is_repeat: True when the previous event was delivered to the same handler.
     """
-    def __init__(self, input_processor_ref, arg=None, key_sequence=None,
+    def __init__(self, key_processor_ref, arg=None, key_sequence=None,
             previous_key_sequence=None, is_repeat=False):
-        self._input_processor_ref = input_processor_ref
+        self._key_processor_ref = key_processor_ref
         self.key_sequence = key_sequence
         self.previous_key_sequence = previous_key_sequence
 
@@ -312,22 +322,22 @@ class KeyPressEvent(object):
         return self.key_sequence[-1].data
 
     @property
-    def input_processor(self):
-        return self._input_processor_ref()
+    def key_processor(self):
+        return self._key_processor_ref()
 
     @property
-    def cli(self):
+    def app(self):
         """
         Command line interface.
         """
-        return self.input_processor._cli_ref()
+        return self.key_processor._app_ref()
 
     @property
     def current_buffer(self):
         """
         The current buffer.
         """
-        return self.cli.current_buffer
+        return self.app.current_buffer
 
     @property
     def arg(self):
@@ -369,4 +379,9 @@ class KeyPressEvent(object):
         else:
             result = "%s%s" % (current, data)
 
-        self.input_processor.arg = result
+        self.key_processor.arg = result
+
+    @property
+    def cli(self):
+        " For backward-compatibility. "
+        return self.app

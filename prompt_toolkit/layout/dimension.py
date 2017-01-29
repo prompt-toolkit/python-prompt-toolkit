@@ -5,13 +5,13 @@ dimensions for containers and controls.
 from __future__ import unicode_literals
 
 __all__ = (
-    'LayoutDimension',
+    'Dimension',
     'sum_layout_dimensions',
     'max_layout_dimensions',
 )
 
 
-class LayoutDimension(object):
+class Dimension(object):
     """
     Specified dimension (width/height) of a user control or window.
 
@@ -57,36 +57,68 @@ class LayoutDimension(object):
     @classmethod
     def exact(cls, amount):
         """
-        Return a :class:`.LayoutDimension` with an exact size. (min, max and
+        Return a :class:`.Dimension` with an exact size. (min, max and
         preferred set to ``amount``).
         """
         return cls(min=amount, max=amount, preferred=amount)
 
+    @classmethod
+    def zero(cls):
+        """
+        Create a dimension that represents a zero size. (Used for 'invisible'
+        controls.)
+        """
+        return cls.exact(amount=0)
+
+    def is_zero(self):
+        " True if this `Dimension` represents a zero size. "
+        return self.preferred == 0 or self.max == 0
+
     def __repr__(self):
-        return 'LayoutDimension(min=%r, max=%r, preferred=%r, weight=%r)' % (
+        return 'Dimension(min=%r, max=%r, preferred=%r, weight=%r)' % (
             self.min, self.max, self.preferred, self.weight)
 
-    def __add__(self, other):
-        return sum_layout_dimensions([self, other])
+#    def __add__(self, other):
+#        return sum_layout_dimensions([self, other])
 
 
 def sum_layout_dimensions(dimensions):
     """
-    Sum a list of :class:`.LayoutDimension` instances.
+    Sum a list of :class:`.Dimension` instances.
     """
-    min = sum([d.min for d in dimensions if d.min is not None])
-    max = sum([d.max for d in dimensions if d.max is not None])
-    preferred = sum([d.preferred for d in dimensions])
+    min = sum(d.min for d in dimensions)
+    max = sum(d.max for d in dimensions)
+    preferred = sum(d.preferred for d in dimensions)
 
-    return LayoutDimension(min=min, max=max, preferred=preferred)
+    return Dimension(min=min, max=max, preferred=preferred)
 
 
 def max_layout_dimensions(dimensions):
     """
-    Take the maximum of a list of :class:`.LayoutDimension` instances.
+    Take the maximum of a list of :class:`.Dimension` instances.
+    Used when we have a HSplit/VSplit, and we want to get the best width/height.)
     """
-    min_ = max([d.min for d in dimensions if d.min is not None])
-    max_ = max([d.max for d in dimensions if d.max is not None])
-    preferred = max([d.preferred for d in dimensions])
+    # If all dimensions are size zero. Return zero.
+    # (This is important for HSplit/VSplit, to report the right values to their
+    # parent when all children are invisible.)
+    if all(d.is_zero() for d in dimensions):
+        return dimensions[0]
 
-    return LayoutDimension(min=min_, max=max_, preferred=preferred)
+    # Ignore empty dimensions. (They should not reduce the size of others.)
+    dimensions = [d for d in dimensions if not d.is_zero()]
+
+    if dimensions:
+        # The the maximum dimension.
+        # But we can't go larger than the smallest 'max'.
+        min_ = max(d.min for d in dimensions)
+        max_ = min(d.max for d in dimensions)
+        preferred = max(d.preferred for d in dimensions)
+
+        return Dimension(min=min_, max=max_, preferred=preferred)
+    else:
+        return Dimension()
+
+
+
+# For backward-compatibility.
+LayoutDimension = Dimension

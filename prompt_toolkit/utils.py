@@ -78,7 +78,8 @@ class Event(object):
         """
         Remove a handler from this callback.
         """
-        self._handlers.remove(handler)
+        if handler in self._handlers:
+            self._handlers.remove(handler)
         return self
 
 

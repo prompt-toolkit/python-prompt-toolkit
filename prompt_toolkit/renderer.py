@@ -4,7 +4,7 @@ Renders the command line on the console.
 """
 from __future__ import unicode_literals
 
-from prompt_toolkit.filters import to_cli_filter
+from prompt_toolkit.filters import to_app_filter
 from prompt_toolkit.layout.mouse_handlers import MouseHandlers
 from prompt_toolkit.layout.screen import Point, Screen, WritePosition
 from prompt_toolkit.output import Output
@@ -232,7 +232,7 @@ class Renderer(object):
 
         output = Vt100_Output.from_pty(sys.stdout)
         r = Renderer(style, output)
-        r.render(cli, layout=...)
+        r.render(app, layout=...)
     """
     def __init__(self, style, output, use_alternate_screen=False, mouse_support=False):
         assert isinstance(style, Style)
@@ -241,7 +241,7 @@ class Renderer(object):
         self.style = style
         self.output = output
         self.use_alternate_screen = use_alternate_screen
-        self.mouse_support = to_cli_filter(mouse_support)
+        self.mouse_support = to_app_filter(mouse_support)
 
         self._in_alternate_screen = False
         self._mouse_support_enabled = False
@@ -364,7 +364,7 @@ class Renderer(object):
 
         self.waiting_for_cpr = False
 
-    def render(self, cli, layout, is_done=False):
+    def render(self, app, layout, is_done=False):
         """
         Render the current interface to the output.
 
@@ -384,7 +384,7 @@ class Renderer(object):
             self._bracketed_paste_enabled = True
 
         # Enable/disable mouse support.
-        needs_mouse_support = self.mouse_support(cli)
+        needs_mouse_support = self.mouse_support(app)
 
         if needs_mouse_support and not self._mouse_support_enabled:
             output.enable_mouse_support()
@@ -421,7 +421,7 @@ class Renderer(object):
             self._attrs_for_token = _TokenToAttrsCache(self.style.get_attrs_for_token)
         self._last_style_hash = self.style.invalidation_hash()
 
-        layout.write_to_screen(cli, screen, mouse_handlers, WritePosition(
+        layout.container.write_to_screen(app, screen, mouse_handlers, WritePosition(
             xpos=0,
             ypos=0,
             width=size.columns,
@@ -430,7 +430,7 @@ class Renderer(object):
         ))
 
         # When grayed. Replace all tokens in the new screen.
-        if cli.is_aborting or cli.is_exiting:
+        if app.is_aborting or app.is_exiting:
             screen.replace_all_tokens(Token.Aborted)
 
         # Process diff and write to output.
@@ -445,7 +445,7 @@ class Renderer(object):
         self.mouse_handlers = mouse_handlers
 
         # Write title if it changed.
-        new_title = cli.terminal_title
+        new_title = app.terminal_title
 
         if new_title != self._last_title:
             if new_title is None:
@@ -455,6 +455,9 @@ class Renderer(object):
             self._last_title = new_title
 
         output.flush()
+
+        if is_done:
+            self.reset()
 
     def erase(self, leave_alternate_screen=True, erase_title=True):
         """

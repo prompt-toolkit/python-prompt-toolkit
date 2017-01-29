@@ -8,7 +8,7 @@ from prompt_toolkit.token import Token
 import datetime
 
 
-def get_prompt_tokens(cli):
+def get_prompt_tokens(app):
     " Tokens to be shown before the prompt. "
     now = datetime.datetime.now()
     return [

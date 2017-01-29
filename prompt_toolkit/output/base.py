@@ -8,6 +8,7 @@ from prompt_toolkit.layout.screen import Size
 
 __all__ = (
     'Output',
+    'DummyOutput',
 )
 
 

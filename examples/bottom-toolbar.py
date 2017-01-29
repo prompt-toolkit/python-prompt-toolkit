@@ -14,7 +14,7 @@ test_style = style_from_dict({
 
 
 def main():
-    def get_bottom_toolbar_tokens(cli):
+    def get_bottom_toolbar_tokens(app):
         return [(Token.Toolbar, ' This is a toolbar. ')]
 
     text = prompt('Say something: ',
