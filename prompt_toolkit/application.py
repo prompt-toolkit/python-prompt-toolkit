@@ -443,7 +443,7 @@ class Application(object):
             if has_sigwinch:
                 loop.add_signal_handler(signal.SIGWINCH, previous_winch_handler)
 
-        f.add_done_callback(lambda _: done)
+        f.add_done_callback(lambda _: done())
         return f, done
 
     def run(self, pre_run=None):
@@ -461,7 +461,7 @@ class Application(object):
             # having 'f' in the 'done' state.
             if not f.done():
                 done_cb()
-            assert self._is_running == False
+            assert not self._is_running
 
     try:
         six.exec_(textwrap.dedent('''
