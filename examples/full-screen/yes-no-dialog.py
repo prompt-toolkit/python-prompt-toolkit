@@ -12,7 +12,7 @@ from prompt_toolkit.key_binding.defaults import load_key_bindings
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, MergedKeyBindings
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout.containers import VSplit, HSplit, Window, Align, to_window, FloatContainer, Float, Container
-from prompt_toolkit.layout.controls import BufferControl, FillControl, TokenListControl, UIControlKeyBindings
+from prompt_toolkit.layout.controls import BufferControl, TokenListControl, UIControlKeyBindings
 from prompt_toolkit.layout.dimension import Dimension as D
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.layout.lexers import PygmentsLexer
@@ -74,7 +74,7 @@ class Fill(object):
     def __init__(self, token=Token, char=' ', width=None, height=None):
         self.window = Window(
             token=token,
-            content=FillControl(char=char),
+            char=char,
             width=width,
             height=height)
 
@@ -254,7 +254,7 @@ class HorizontalLine(object):
 
 
 def create_pane():
-    return Window(FillControl(char=' '))
+    return Window()
 
 
 def accept_yes(app):

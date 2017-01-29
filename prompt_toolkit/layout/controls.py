@@ -29,7 +29,7 @@ import time
 
 __all__ = (
     'BufferControl',
-    'FillControl',
+    'DummyControl',
     'TokenListControl',
     'UIControl',
     'UIControlKeyBindings',
@@ -337,45 +337,59 @@ class TokenListControl(UIControl):
             return self._get_key_bindings(app)
 
 
-class FillControl(UIControl):  # XXX: Todo: check whether this is needed anymore... The Window class implements all of this...
+class DummyControl(UIControl):
     """
-    Fill whole control with characters with this token.
-    (Also helpful for debugging.)
+    A dummy control object that doesn't paint any content.
 
-    :param char: Character to be used for filling.
-    :param get_char: A callable that takes an `Application` and returns a
-        character.
+    Useful for filling a Window. (The `token` and `char` attributes of the
+    `Window` class can be used to define the filling.)
     """
-    def __init__(self, char=None, get_char=None):
-        assert char is None or isinstance(char, six.text_type)
-        assert get_char is None or callable(get_char)
-        assert not (char and get_char)
-
-        self.char = char
-        self.get_char = get_char
-
-    def __repr__(self):
-        if self.char:
-            return '%s(char=%r)' % (self.__class__.__name__, self.char)
-        else:
-            return '%s(get_char=%r)' % (self.__class__.__name__, self.get_char)
-
-    def reset(self):
-        pass
-
     def create_content(self, app, width, height):
-        char = self.get_char(app) if self.get_char else self.char
-        assert len(char) == 1
-
         def get_line(i):
-            if char:
-                return [(Token, char * width)]
-            else:
-                return []
+            return []
 
         return UIContent(
             get_line=get_line,
             line_count=100 ** 100)  # Something very big.
+
+
+
+#class FillControl(UIControl):  # XXX: Todo: check whether this is needed anymore... The Window class implements all of this...
+#    """
+#    Fill whole control with characters with this token.
+#    (Also helpful for debugging.)
+#
+#    :param char: Character to be used for filling.
+#    :param get_char: A callable that takes an `Application` and returns a
+#        character.
+#    """
+#    def __init__(self, char=None, get_char=None):
+#        assert char is None or isinstance(char, six.text_type)
+#        assert get_char is None or callable(get_char)
+#        assert not (char and get_char)
+#
+#        self.char = char
+#        self.get_char = get_char
+#
+#    def __repr__(self):
+#        if self.char:
+#            return '%s(char=%r)' % (self.__class__.__name__, self.char)
+#        else:
+#            return '%s(get_char=%r)' % (self.__class__.__name__, self.get_char)
+#
+#    def create_content(self, app, width, height):
+#        char = self.get_char(app) if self.get_char else self.char
+#        assert len(char) == 1
+#
+#        def get_line(i):
+#            if char:
+#                return [(Token, char * width)]
+#            else:
+#                return []
+#
+#        return UIContent(
+#            get_line=get_line,
+#            line_count=100 ** 100)  # Something very big.
 
 
 _ProcessedLine = namedtuple('_ProcessedLine', 'tokens source_to_display display_to_source')

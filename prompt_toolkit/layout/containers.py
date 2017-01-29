@@ -8,7 +8,7 @@ from abc import ABCMeta, abstractmethod
 from six import with_metaclass, text_type
 from six.moves import range
 
-from .controls import UIControl, TokenListControl, UIContent
+from .controls import UIControl, TokenListControl, UIContent, DummyControl
 from .dimension import Dimension, sum_layout_dimensions, max_layout_dimensions
 from .margins import Margin
 from .screen import Point, WritePosition, _CHAR_CACHE
@@ -916,7 +916,7 @@ class Window(Container):
     :param get_token: Callable that takes an `Application` and returns the token
         to be applied to all the cells in this window.
     """
-    def __init__(self, content, width=None, height=None, get_width=None,
+    def __init__(self, content=None, width=None, height=None, get_width=None,
                  get_height=None, dont_extend_width=False, dont_extend_height=False,
                  left_margins=None, right_margins=None, scroll_offsets=None,
                  allow_scroll_beyond_bottom=False, wrap_lines=False,
@@ -924,7 +924,7 @@ class Window(Container):
                  cursorline=False, cursorcolumn=False, get_colorcolumns=None,
                  cursorline_token=Token.CursorLine, cursorcolumn_token=Token.CursorColumn,
                  align=Align.LEFT, token=None, get_token=None, char=None, get_char=None):
-        assert isinstance(content, UIControl)
+        assert content is None or isinstance(content, UIControl)
         assert width is None or isinstance(width, Dimension)
         assert height is None or isinstance(height, Dimension)
         assert get_width is None or callable(get_width)
@@ -951,7 +951,7 @@ class Window(Container):
         self.cursorline = to_app_filter(cursorline)
         self.cursorcolumn = to_app_filter(cursorcolumn)
 
-        self.content = content
+        self.content = content or DummyControl()
         self.dont_extend_width = dont_extend_width
         self.dont_extend_height = dont_extend_height
         self.left_margins = left_margins or []
