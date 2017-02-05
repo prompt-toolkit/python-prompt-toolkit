@@ -17,7 +17,7 @@ example_style = style_from_dict({
 })
 
 
-def get_rprompt_tokens(cli):
+def get_rprompt_tokens(app):
     return [
         (Token, ' '),
         (Token.RPrompt, '<rprompt>'),

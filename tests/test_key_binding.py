@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from prompt_toolkit.key_binding.input_processor import InputProcessor, KeyPress
+from prompt_toolkit.key_binding.key_processor import KeyProcessor, KeyPress
 from prompt_toolkit.key_binding.registry import Registry
 from prompt_toolkit.keys import Keys
 
@@ -38,7 +38,7 @@ def registry(handlers):
 
 @pytest.fixture
 def processor(registry):
-    return InputProcessor(registry, lambda: None)
+    return KeyProcessor(registry, lambda: None)
 
 
 def test_feed_simple(processor, handlers):

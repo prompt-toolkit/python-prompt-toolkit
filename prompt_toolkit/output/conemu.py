@@ -2,8 +2,8 @@ from __future__ import unicode_literals
 
 from prompt_toolkit.renderer import Output
 
-from .win32_output import Win32Output
-from .vt100_output import Vt100_Output
+from .vt100 import Vt100_Output
+from .win32 import Win32Output
 
 __all__ = (
     'ConEmuOutput',

@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 from prompt_toolkit.enums import DEFAULT_BUFFER
-from prompt_toolkit.filters import HasSelection, Condition, EmacsInsertMode, ViInsertMode
+from prompt_toolkit.filters import HasSelection, Condition, EmacsInsertMode, ViInsertMode, InPasteMode
+from prompt_toolkit.key_binding.key_processor import KeyPress
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout.screen import Point
 from prompt_toolkit.mouse_events import MouseEventType, MouseEvent
@@ -149,22 +150,25 @@ def load_basic_bindings():
 
     # CTRL keys.
 
-    text_before_cursor = Condition(lambda cli: cli.current_buffer.text)
+    text_before_cursor = Condition(lambda app: app.current_buffer.text)
     handle(Keys.ControlD, filter=text_before_cursor & insert_mode)(get_by_name('delete-char'))
 
-    is_multiline = Condition(lambda cli: cli.current_buffer.is_multiline())
-    is_returnable = Condition(lambda cli: cli.current_buffer.accept_action.is_returnable)
+    in_paste_mode = InPasteMode()
 
-    @handle(Keys.ControlJ, filter=is_multiline & insert_mode)
+    @handle(Keys.Enter, filter=insert_mode)
     def _(event):
         " Newline (in case of multiline input. "
-        event.current_buffer.newline(copy_margin=not event.cli.in_paste_mode)
+        event.current_buffer.newline(copy_margin=not in_paste_mode(event.app))
 
-    @handle(Keys.ControlJ, filter=~is_multiline & is_returnable)
+    @handle(Keys.ControlJ)
     def _(event):
-        " Enter, accept input. "
-        buff = event.current_buffer
-        buff.accept_action.validate_and_handle(event.cli, buff)
+        r"""
+        By default, handle \n as if it were a \r (enter).
+        (It appears that some terminals send \n instead of \r when pressing
+        enter. - at least the Linux subsytem for Windows.)
+        """
+        event.key_processor.feed(
+            KeyPress(Keys.ControlM, '\r'))
 
     # Delete the word before the cursor.
 
@@ -179,7 +183,7 @@ def load_basic_bindings():
     @handle(Keys.Delete, filter=has_selection)
     def _(event):
         data = event.current_buffer.cut_selection()
-        event.cli.clipboard.set_data(data)
+        event.app.clipboard.set_data(data)
 
     # Global bindings.
 
@@ -206,7 +210,7 @@ def load_basic_bindings():
         row, col = map(int, event.data[2:-1].split(';'))
 
         # Report absolute cursor position to the renderer.
-        event.cli.renderer.report_absolute_cursor_row(row)
+        event.app.renderer.report_absolute_cursor_row(row)
 
     @handle(Keys.BracketedPaste)
     def _(event):
@@ -221,13 +225,13 @@ def load_basic_bindings():
 
         event.current_buffer.insert_text(data)
 
-    @handle(Keys.Any, filter=Condition(lambda cli: cli.quoted_insert), eager=True)
+    @handle(Keys.Any, filter=Condition(lambda app: app.quoted_insert), eager=True)
     def _(event):
         """
         Handle quoted insert.
         """
         event.current_buffer.insert_text(event.data, overwrite=False)
-        event.cli.quoted_insert = False
+        event.app.quoted_insert = False
 
     return registry
 
@@ -300,17 +304,17 @@ def load_mouse_bindings():
         y -= 1
 
         # Only handle mouse events when we know the window height.
-        if event.cli.renderer.height_is_known and mouse_event is not None:
+        if event.app.renderer.height_is_known and mouse_event is not None:
             # Take region above the layout into account. The reported
             # coordinates are absolute to the visible part of the terminal.
             try:
-                y -= event.cli.renderer.rows_above_layout
+                y -= event.app.renderer.rows_above_layout
             except HeightIsUnknownError:
                 return
 
             # Call the mouse handler from the renderer.
-            handler = event.cli.renderer.mouse_handlers.mouse_handlers[x,y]
-            handler(event.cli, MouseEvent(position=Point(x=x, y=y),
+            handler = event.app.renderer.mouse_handlers.mouse_handlers[x,y]
+            handler(event.app, MouseEvent(position=Point(x=x, y=y),
                                           event_type=mouse_event))
 
     @registry.add_binding(Keys.WindowsMouseEvent)
@@ -326,13 +330,13 @@ def load_mouse_bindings():
         y = int(y)
 
         # Make coordinates absolute to the visible part of the terminal.
-        screen_buffer_info = event.cli.renderer.output.get_win32_screen_buffer_info()
-        rows_above_cursor = screen_buffer_info.dwCursorPosition.Y - event.cli.renderer._cursor_pos.y
+        screen_buffer_info = event.app.renderer.output.get_win32_screen_buffer_info()
+        rows_above_cursor = screen_buffer_info.dwCursorPosition.Y - event.app.renderer._cursor_pos.y
         y -= rows_above_cursor
 
         # Call the mouse event handler.
-        handler = event.cli.renderer.mouse_handlers.mouse_handlers[x,y]
-        handler(event.cli, MouseEvent(position=Point(x=x, y=y),
+        handler = event.app.renderer.mouse_handlers.mouse_handlers[x,y]
+        handler(event.app, MouseEvent(position=Point(x=x, y=y),
                                       event_type=event_type))
 
     return registry
@@ -348,14 +352,14 @@ def load_abort_and_exit_bindings():
     @handle(Keys.ControlC)
     def _(event):
         " Abort when Control-C has been pressed. "
-        event.cli.abort()
+        event.app.abort()
 
     @Condition
-    def ctrl_d_condition(cli):
+    def ctrl_d_condition(app):
         """ Ctrl-D binding is only active when the default buffer is selected
         and empty. """
-        return (cli.current_buffer_name == DEFAULT_BUFFER and
-                not cli.current_buffer.text)
+        return (app.current_buffer.name == DEFAULT_BUFFER and
+                not app.current_buffer.text)
 
     handle(Keys.ControlD, filter=ctrl_d_condition)(get_by_name('end-of-file'))
 
@@ -369,14 +373,14 @@ def load_basic_system_bindings():
     registry = Registry()
 
     suspend_supported = Condition(
-        lambda cli: suspend_to_background_supported())
+        lambda app: suspend_to_background_supported())
 
     @registry.add_binding(Keys.ControlZ, filter=suspend_supported)
     def _(event):
         """
         Suspend process to background.
         """
-        event.cli.suspend_to_background()
+        event.app.suspend_to_background()
 
     return registry
 
@@ -389,9 +393,9 @@ def load_auto_suggestion_bindings():
     handle = registry.add_binding
 
     suggestion_available = Condition(
-        lambda cli:
-            cli.current_buffer.suggestion is not None and
-            cli.current_buffer.document.is_cursor_at_the_end)
+        lambda app:
+            app.current_buffer.suggestion is not None and
+            app.current_buffer.document.is_cursor_at_the_end)
 
     @handle(Keys.ControlF, filter=suggestion_available)
     @handle(Keys.ControlE, filter=suggestion_available)

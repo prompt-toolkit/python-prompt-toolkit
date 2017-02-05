@@ -2,8 +2,8 @@
 from __future__ import unicode_literals
 from prompt_toolkit.buffer import SelectionType, indent, unindent
 from prompt_toolkit.keys import Keys
-from prompt_toolkit.enums import IncrementalSearchDirection, SEARCH_BUFFER, SYSTEM_BUFFER
-from prompt_toolkit.filters import Condition, EmacsMode, HasSelection, EmacsInsertMode, HasFocus, HasArg
+from prompt_toolkit.enums import SearchDirection
+from prompt_toolkit.filters import Condition, EmacsMode, HasSelection, EmacsInsertMode, HasFocus, HasArg, IsSearching, ControlIsSearchable
 from prompt_toolkit.completion import CompleteEvent
 
 from .scroll import scroll_page_up, scroll_page_down
@@ -13,7 +13,6 @@ from ..registry import Registry, ConditionalRegistry
 __all__ = (
     'load_emacs_bindings',
     'load_emacs_search_bindings',
-    'load_emacs_system_bindings',
     'load_extra_emacs_page_navigation_bindings',
 )
 
@@ -24,7 +23,7 @@ def load_emacs_bindings():
     """
     # Overview of Readline emacs commands:
     # http://www.catonmat.net/download/readline-emacs-editing-mode-cheat-sheet.pdf
-    registry = ConditionalRegistry(Registry(), EmacsMode())
+    registry = Registry()
     handle = registry.add_binding
 
     insert_mode = EmacsInsertMode()
@@ -117,19 +116,19 @@ def load_emacs_bindings():
         if event._arg is None:
             event.append_to_arg_count('-')
 
-    @handle('-', filter=Condition(lambda cli: cli.input_processor.arg == '-'))
+    @handle('-', filter=Condition(lambda app: app.key_processor.arg == '-'))
     def _(event):
         """
         When '-' is typed again, after exactly '-' has been given as an
         argument, ignore this.
         """
-        event.cli.input_processor.arg = '-'
+        event.app.key_processor.arg = '-'
 
     is_returnable = Condition(
-        lambda cli: cli.current_buffer.accept_action.is_returnable)
+        lambda app: app.current_buffer.accept_action.is_returnable)
 
     # Meta + Newline: always accept input.
-    handle(Keys.Escape, Keys.ControlJ, filter=insert_mode & is_returnable)(
+    handle(Keys.Escape, Keys.Enter, filter=insert_mode & is_returnable)(
         get_by_name('accept-line'))
 
     def character_search(buff, char, count):
@@ -230,7 +229,7 @@ def load_emacs_bindings():
         Cut selected text.
         """
         data = event.current_buffer.cut_selection()
-        event.cli.clipboard.set_data(data)
+        event.app.clipboard.set_data(data)
 
     @handle(Keys.Escape, 'w', filter=has_selection)
     def _(event):
@@ -238,7 +237,7 @@ def load_emacs_bindings():
         Copy selected text.
         """
         data = event.current_buffer.copy_selection()
-        event.cli.clipboard.set_data(data)
+        event.app.clipboard.set_data(data)
 
     @handle(Keys.Escape, Keys.Left)
     def _(event):
@@ -266,7 +265,7 @@ def load_emacs_bindings():
         if b.complete_state:
             b.complete_next()
         else:
-            event.cli.start_completion(select_first=True)
+            b.start_completion(select_first=True)
 
     @handle(Keys.ControlC, '>', filter=has_selection)
     def _(event):
@@ -296,7 +295,7 @@ def load_emacs_bindings():
 
         unindent(buffer, from_, to + 1, count=event.arg)
 
-    return registry
+    return ConditionalRegistry(registry, EmacsMode())
 
 
 def load_emacs_open_in_editor_bindings():
@@ -312,127 +311,94 @@ def load_emacs_open_in_editor_bindings():
     return registry
 
 
-def load_emacs_system_bindings():
-    registry = ConditionalRegistry(Registry(), EmacsMode())
+def load_emacs_search_bindings():
+    registry = Registry()
     handle = registry.add_binding
 
-    has_focus = HasFocus(SYSTEM_BUFFER)
+    is_searching = IsSearching()
+    control_is_searchable = ControlIsSearchable()
 
-    @handle(Keys.Escape, '!', filter= ~has_focus)
-    def _(event):
-        """
-        M-'!' opens the system prompt.
-        """
-        event.cli.push_focus(SYSTEM_BUFFER)
-
-    @handle(Keys.Escape, filter=has_focus)
-    @handle(Keys.ControlG, filter=has_focus)
-    @handle(Keys.ControlC, filter=has_focus)
-    def _(event):
-        """
-        Cancel system prompt.
-        """
-        event.cli.buffers[SYSTEM_BUFFER].reset()
-        event.cli.pop_focus()
-
-    @handle(Keys.ControlJ, filter=has_focus)
-    def _(event):
-        """
-        Run system command.
-        """
-        system_line = event.cli.buffers[SYSTEM_BUFFER]
-        event.cli.run_system_command(system_line.text)
-        system_line.reset(append_to_history=True)
-
-        # Focus previous buffer again.
-        event.cli.pop_focus()
-
-    return registry
-
-
-def load_emacs_search_bindings(get_search_state=None):
-    registry = ConditionalRegistry(Registry(), EmacsMode())
-    handle = registry.add_binding
-
-    has_focus = HasFocus(SEARCH_BUFFER)
-
-    assert get_search_state is None or callable(get_search_state)
-
-    if not get_search_state:
-        def get_search_state(cli): return cli.search_state
-
-    @handle(Keys.ControlG, filter=has_focus)
-    @handle(Keys.ControlC, filter=has_focus)
+    @handle(Keys.ControlG, filter=is_searching)
+    @handle(Keys.ControlC, filter=is_searching)
     # NOTE: the reason for not also binding Escape to this one, is that we want
     #       Alt+Enter to accept input directly in incremental search mode.
     def _(event):
         """
         Abort an incremental search and restore the original line.
         """
-        search_buffer = event.cli.buffers[SEARCH_BUFFER]
+        event.app.current_buffer.reset()
+        event.app.focus.focus_previous()
 
-        search_buffer.reset()
-        event.cli.pop_focus()
-
-    @handle(Keys.ControlJ, filter=has_focus)
+    @handle(Keys.Enter, filter=is_searching)
     def _(event):
         """
         When enter pressed in isearch, quit isearch mode. (Multiline
         isearch would be too complicated.)
         """
-        input_buffer = event.cli.buffers.previous(event.cli)
-        search_buffer = event.cli.buffers[SEARCH_BUFFER]
+        search_control = event.app.focus.focussed_control
+        prev_control = event.app.focus.previous_focussed_control
+        search_state = prev_control.search_state
 
         # Update search state.
-        if search_buffer.text:
-            get_search_state(event.cli).text = search_buffer.text
+        if search_control.buffer.text:
+            search_state.text = search_control.buffer.text
 
         # Apply search.
-        input_buffer.apply_search(get_search_state(event.cli), include_current_position=True)
+        prev_control.buffer.apply_search(search_state, include_current_position=True)
 
         # Add query to history of search line.
-        search_buffer.append_to_history()
-        search_buffer.reset()
+        search_control.buffer.append_to_history()
+        search_control.buffer.reset()
 
         # Focus previous document again.
-        event.cli.pop_focus()
+        event.app.focus.focus_previous()
 
-    @handle(Keys.ControlR, filter= ~has_focus)
+    @handle(Keys.ControlR, filter=control_is_searchable)
     def _(event):
-        get_search_state(event.cli).direction = IncrementalSearchDirection.BACKWARD
-        event.cli.push_focus(SEARCH_BUFFER)
+        control = event.app.focus.focussed_control
+        search_state = control.search_state
 
-    @handle(Keys.ControlS, filter= ~has_focus)
+        search_state.direction = SearchDirection.BACKWARD
+        event.app.focussed_control = control.search_buffer_control
+
+    @handle(Keys.ControlS, filter=control_is_searchable)
     def _(event):
-        get_search_state(event.cli).direction = IncrementalSearchDirection.FORWARD
-        event.cli.push_focus(SEARCH_BUFFER)
+        control = event.app.focus.focussed_control
+        search_state = control.search_state
 
-    def incremental_search(cli, direction, count=1):
+        search_state.direction = SearchDirection.FORWARD
+        event.app.focussed_control = control.search_buffer_control
+
+    def incremental_search(app, direction, count=1):
         " Apply search, but keep search buffer focussed. "
+        assert is_searching(app)
+
+        search_control = app.focus.focussed_control
+        prev_control = app.focus.previous_focussed_control
+        search_state = prev_control.search_state
+
         # Update search_state.
-        search_state = get_search_state(cli)
         direction_changed = search_state.direction != direction
 
-        search_state.text = cli.buffers[SEARCH_BUFFER].text
+        search_state.text = search_control.buffer.text
         search_state.direction = direction
 
         # Apply search to current buffer.
         if not direction_changed:
-            input_buffer = cli.buffers.previous(cli)
-            input_buffer.apply_search(search_state,
-                                      include_current_position=False, count=count)
+            prev_control.buffer.apply_search(
+                search_state, include_current_position=False, count=count)
 
-    @handle(Keys.ControlR, filter=has_focus)
-    @handle(Keys.Up, filter=has_focus)
+    @handle(Keys.ControlR, filter=is_searching)
+    @handle(Keys.Up, filter=is_searching)
     def _(event):
-        incremental_search(event.cli, IncrementalSearchDirection.BACKWARD, count=event.arg)
+        incremental_search(event.app, SearchDirection.BACKWARD, count=event.arg)
 
-    @handle(Keys.ControlS, filter=has_focus)
-    @handle(Keys.Down, filter=has_focus)
+    @handle(Keys.ControlS, filter=is_searching)
+    @handle(Keys.Down, filter=is_searching)
     def _(event):
-        incremental_search(event.cli, IncrementalSearchDirection.FORWARD, count=event.arg)
+        incremental_search(event.app, SearchDirection.FORWARD, count=event.arg)
 
-    return registry
+    return ConditionalRegistry(registry, EmacsMode())
 
 
 def load_extra_emacs_page_navigation_bindings():
@@ -440,7 +406,7 @@ def load_extra_emacs_page_navigation_bindings():
     Key bindings, for scrolling up and down through pages.
     This are separate bindings, because GNU readline doesn't have them.
     """
-    registry = ConditionalRegistry(Registry(), EmacsMode())
+    registry = Registry()
     handle = registry.add_binding
 
     handle(Keys.ControlV)(scroll_page_down)
@@ -448,4 +414,4 @@ def load_extra_emacs_page_navigation_bindings():
     handle(Keys.Escape, 'v')(scroll_page_up)
     handle(Keys.PageUp)(scroll_page_up)
 
-    return registry
+    return ConditionalRegistry(registry, EmacsMode())

@@ -3,25 +3,17 @@ Parser for VT100 input stream.
 """
 from __future__ import unicode_literals
 
-import os
 import re
 import six
-import termios
-import tty
 
 from six.moves import range
 
 from ..keys import Keys
-from ..key_binding.input_processor import KeyPress
+from ..key_binding.key_processor import KeyPress
 
 __all__ = (
-    'InputStream',
-    'raw_mode',
-    'cooked_mode',
+    'Vt100Parser',
 )
-
-_DEBUG_RENDERER_INPUT = False
-_DEBUG_RENDERER_INPUT_FILENAME = 'prompt-toolkit-render-input.log'
 
 
 # Regex matching any CPR response
@@ -217,21 +209,20 @@ class _IsPrefixOfLongerMatchCache(dict):
 _IS_PREFIX_OF_LONGER_MATCH_CACHE = _IsPrefixOfLongerMatchCache()
 
 
-class InputStream(object):
+class Vt100Parser(object):
     """
     Parser for VT100 input stream.
-
-    Feed the data through the `feed` method and the correct callbacks of the
-    `input_processor` will be called.
+    Data can be fed throughthe `feed` method and the given callback will be
+    called with KeyPress objects.
 
     ::
 
         def callback(key):
             pass
-        i = InputStream(callback)
+        i = Vt100Parser(callback)
         i.feed('data\x01...')
 
-    :attr input_processor: :class:`~prompt_toolkit.key_binding.InputProcessor` instance.
+    :attr feed_key_callback: Function that will be called when a key is parsed.
     """
     # Lookup table of ANSI escape sequences for a VT100 terminal
     # Hint: in order to know what sequences your terminal writes to stdin, run
@@ -241,9 +232,6 @@ class InputStream(object):
 
         self.feed_key_callback = feed_key_callback
         self.reset()
-
-        if _DEBUG_RENDERER_INPUT:
-            self.LOG = open(_DEBUG_RENDERER_INPUT_FILENAME, 'ab')
 
     def reset(self, request=False):
         self._in_bracketed_paste = False
@@ -347,10 +335,6 @@ class InputStream(object):
         """
         assert isinstance(data, six.text_type)
 
-        if _DEBUG_RENDERER_INPUT:
-            self.LOG.write(repr(data).encode('utf-8') + b'\n')
-            self.LOG.flush()
-
         # Handle bracketed paste. (We bypass the parser that matches all other
         # key presses and keep reading input until we see the end mark.)
         # This is much faster then parsing character by character.
@@ -381,20 +365,6 @@ class InputStream(object):
                     self.feed(data[i:])
                     break
                 else:
-                    # Replace \r by \n. (Some clients send \r instead of \n
-                    # when enter is pressed. E.g. telnet and some other
-                    # terminals.)
-
-                    # XXX: We should remove this in a future version. It *is*
-                    #      now possible to recognise the difference.
-                    #      (We remove ICRNL/INLCR/IGNCR below.)
-                    #      However, this breaks IPython and maybe other applications,
-                    #      because they bind ControlJ (\n) for handling the Enter key.
-
-                    #      When this is removed, replace Enter=ControlJ by
-                    #      Enter=ControlM in keys.py.
-                    if c == '\r':
-                        c = '\n'
                     self._input_parser.send(c)
 
     def flush(self):
@@ -417,96 +387,3 @@ class InputStream(object):
         """
         self.feed(data)
         self.flush()
-
-
-class raw_mode(object):
-    """
-    ::
-
-        with raw_mode(stdin):
-            ''' the pseudo-terminal stdin is now used in raw mode '''
-
-    We ignore errors when executing `tcgetattr` fails.
-    """
-    # There are several reasons for ignoring errors:
-    # 1. To avoid the "Inappropriate ioctl for device" crash if somebody would
-    #    execute this code (In a Python REPL, for instance):
-    #
-    #         import os; f = open(os.devnull); os.dup2(f.fileno(), 0)
-    #
-    #    The result is that the eventloop will stop correctly, because it has
-    #    to logic to quit when stdin is closed. However, we should not fail at
-    #    this point. See:
-    #      https://github.com/jonathanslenders/python-prompt-toolkit/pull/393
-    #      https://github.com/jonathanslenders/python-prompt-toolkit/issues/392
-
-    # 2. Related, when stdin is an SSH pipe, and no full terminal was allocated.
-    #    See: https://github.com/jonathanslenders/python-prompt-toolkit/pull/165
-    def __init__(self, fileno):
-        self.fileno = fileno
-        try:
-            self.attrs_before = termios.tcgetattr(fileno)
-        except termios.error:
-            # Ignore attribute errors.
-            self.attrs_before = None
-
-    def __enter__(self):
-        # NOTE: On os X systems, using pty.setraw() fails. Therefor we are using this:
-        try:
-            newattr = termios.tcgetattr(self.fileno)
-        except termios.error:
-            pass
-        else:
-            newattr[tty.LFLAG] = self._patch_lflag(newattr[tty.LFLAG])
-            newattr[tty.IFLAG] = self._patch_iflag(newattr[tty.IFLAG])
-            termios.tcsetattr(self.fileno, termios.TCSANOW, newattr)
-
-            # Put the terminal in cursor mode. (Instead of application mode.)
-            os.write(self.fileno, b'\x1b[?1l')
-
-    @classmethod
-    def _patch_lflag(cls, attrs):
-        return attrs & ~(termios.ECHO | termios.ICANON | termios.IEXTEN | termios.ISIG)
-
-    @classmethod
-    def _patch_iflag(cls, attrs):
-        return attrs & ~(
-            # Disable XON/XOFF flow control on output and input.
-            # (Don't capture Ctrl-S and Ctrl-Q.)
-            # Like executing: "stty -ixon."
-            termios.IXON | termios.IXOFF |
-
-            # Don't translate carriage return into newline on input.
-            termios.ICRNL | termios.INLCR | termios.IGNCR
-        )
-
-    def __exit__(self, *a, **kw):
-        if self.attrs_before is not None:
-            try:
-                termios.tcsetattr(self.fileno, termios.TCSANOW, self.attrs_before)
-            except termios.error:
-                pass
-
-            # # Put the terminal in application mode.
-            # self._stdout.write('\x1b[?1h')
-
-
-class cooked_mode(raw_mode):
-    """
-    The opposide of ``raw_mode``, used when we need cooked mode inside a
-    `raw_mode` block.  Used in `CommandLineInterface.run_in_terminal`.::
-
-        with cooked_mode(stdin):
-            ''' the pseudo-terminal stdin is now used in cooked mode. '''
-    """
-    @classmethod
-    def _patch_lflag(cls, attrs):
-        return attrs | (termios.ECHO | termios.ICANON | termios.IEXTEN | termios.ISIG)
-
-    @classmethod
-    def _patch_iflag(cls, attrs):
-        # Turn the ICRNL flag back on. (Without this, calling `input()` in
-        # run_in_terminal doesn't work and displays ^M instead. Ptpython
-        # evaluates commands using `run_in_terminal`, so it's important that
-        # they translate ^M back into ^J.)
-        return attrs | termios.ICRNL
