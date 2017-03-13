@@ -49,11 +49,18 @@ class PosixStdinReader(object):
         #: True when there is nothing anymore to read.
         self.closed = False
 
-    def read(self, count=1024):
+    def read(self, count=1):
             # By default we choose a rather small chunk size, because reading
             # big amounts of input at once, causes the event loop to process
             # all these key bindings also at once without going back to the
             # loop. This will make the application feel unresponsive.
+            #
+            # Update: if count > 1 and you read from a file (e.g. a script) 
+            # you are going to skip newlines and mix two successive commands;
+            # usually a prompt input is not a huge stream, so reading it 1-by-1
+            # is not too bad, but perhaps there's a better way to fix the above
+            # problem -FS 
+    
         """
         Read the input and return it as a string.
 

@@ -148,6 +148,109 @@ class Output(with_metaclass(ABCMeta, object)):
     def disable_bracketed_paste(self):
         " For vt100 only. "
 
+class StandardOutput(Output):
+
+    def __init__(self, stdout, write_binary=True):
+
+        assert all(hasattr(stdout, a) for a in ('write', 'flush'))
+
+        if write_binary:
+            assert hasattr(stdout, 'encoding')
+
+        self._buffer = []
+        self.stdout = stdout
+        self.write_binary = write_binary
+
+    def fileno(self):
+        return self.stdout.fileno()
+
+    def encoding(self):
+        return self.stdout.encoding
+
+    def write(self, data):
+        self._buffer.append(data)
+
+    def write_raw(self, data):
+        " Write text. "
+        self._buffer.append(data)
+
+    def flush(self):
+        " Write to output stream and flush. "
+
+        if not self._buffer:
+            return
+
+        data = ''.join(self._buffer)
+
+        try:
+            # (We try to encode ourself, because that way we can replace
+            # characters that don't exist in the character set, avoiding
+            # UnicodeEncodeError crashes. E.g. u'\xb7' does not appear in 'ascii'.)
+            # My Arch Linux installation of july 2015 reported 'ANSI_X3.4-1968'
+            # for sys.stdout.encoding in xterm.
+            if self.write_binary:
+                if hasattr(self.stdout, 'buffer'):
+                    out = self.stdout.buffer  # Py3.
+                else:
+                    out = self.stdout
+
+                out.write(data.encode(self.stdout.encoding or 'utf-8', 'replace'))
+            else:
+                self.stdout.write(data)
+
+            self.stdout.flush()
+        except IOError as e:
+            if e.args and e.args[0] == errno.EINTR:
+                # Interrupted system call. Can happpen in case of a window
+                # resize signal. (Just ignore. The resize handler will render
+                # again anyway.)
+                pass
+            elif e.args and e.args[0] == 0:
+                # This can happen when there is a lot of output and the user
+                # sends a KeyboardInterrupt by pressing Control-C. E.g. in
+                # a Python REPL when we execute "while True: print('test')".
+                # (The `ptpython` REPL uses this `Output` class instead of
+                # `stdout` directly -- in order to be network transparent.)
+                # So, just ignore.
+                pass
+            else:
+                raise
+
+        self._buffer = []
+
+    def set_title(self, title): pass
+    def clear_title(self): pass
+    def erase_screen(self): pass
+    def enter_alternate_screen(self): pass
+    def quit_alternate_screen(self): pass
+    def enable_mouse_support(self): pass
+    def disable_mouse_support(self): pass
+    def erase_end_of_line(self): pass
+    def erase_down(self): pass
+    def reset_attributes(self): pass
+    def set_attributes(self, attrs): pass
+    def disable_autowrap(self): pass
+    def enable_autowrap(self): pass
+    def cursor_goto(self, row=0, column=0): pass
+    def cursor_up(self, amount): pass
+    def cursor_down(self, amount): pass
+    def cursor_forward(self, amount): pass
+    def cursor_backward(self, amount): pass
+    def hide_cursor(self): pass
+    def show_cursor(self): pass
+    def ask_for_cpr(self): pass
+    def bell(self): pass
+    def enable_bracketed_paste(self): pass
+    def disable_bracketed_paste(self): pass
+
+    def get_size(self):
+        """
+        This seems not needed intuitively (must an output file have a size? 
+        can't we avoid it?)
+        """
+
+        return Size(rows=40, columns=80)
+
 
 class DummyOutput(Output):
     """
