@@ -632,7 +632,7 @@ class Document(object):
         column = self.cursor_position_col if preferred_column is None else preferred_column
 
         return self.translate_row_col_to_index(
-            max(0, self.cursor_position_row - count), column) - self.cursor_position
+            self.cursor_position_row - count, column) - self.cursor_position
 
     def get_cursor_down_position(self, count=1, preferred_column=None):
         """
