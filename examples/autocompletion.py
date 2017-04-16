@@ -45,7 +45,7 @@ animal_completer = WordCompleter([
     'snake',
     'spider',
     'turkey',
-    'turtle',
+    'turtle'
 ], ignore_case=True)
 
 
