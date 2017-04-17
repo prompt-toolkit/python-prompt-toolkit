@@ -1,0 +1,20 @@
+package: prompt_toolkit
+
+platform: 
+ - linux-64
+
+engine:
+ - python=3.4
+ - python=3.5
+
+script:
+  - conda build -c xonsh recipe
+
+after_success:
+   - conda convert -p all /opt/miniconda/conda-bld/linux-64/prompt_toolkit*.tar.bz2 -o /opt/miniconda/conda-bld
+
+after_failure:
+   - echo "Build failed!"
+
+build_targets:
+   - /opt/miniconda/conda-bld/*/*.tar.bz2
