@@ -150,7 +150,9 @@ class Registry(BaseRegistry):
         """
         assert callable(function)
 
-        for b in self.key_bindings:
+        # We need to iterate over a copy of key_bindings to ensure correct
+        # deletion behavior.
+        for b in self.key_bindings[:]:
             if b.handler == function:
                 self.key_bindings.remove(b)
                 self._clear_cache()
