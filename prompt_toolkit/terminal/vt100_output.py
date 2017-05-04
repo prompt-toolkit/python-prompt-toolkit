@@ -11,6 +11,7 @@ from __future__ import unicode_literals
 from prompt_toolkit.filters import to_simple_filter, Condition
 from prompt_toolkit.layout.screen import Size
 from prompt_toolkit.renderer import Output
+from prompt_toolkit.output import StandardOutput
 from prompt_toolkit.styles import ANSI_COLOR_NAMES
 
 from six.moves import range
@@ -368,7 +369,8 @@ def _get_size(fileno):
     return buf[0], buf[1]
 
 
-class Vt100_Output(Output):
+#class Vt100_Output(Output):
+class Vt100_Output(StandardOutput):
     """
     :param get_size: A callable which returns the `Size` of the output terminal.
     :param stdout: Any object with has a `write` and `flush` method + an 'encoding' property.
@@ -388,9 +390,11 @@ class Vt100_Output(Output):
         if write_binary:
             assert hasattr(stdout, 'encoding')
 
-        self._buffer = []
-        self.stdout = stdout
-        self.write_binary = write_binary
+        super(Vt100_Output, self).__init__(stdout, write_binary=write_binary)
+
+#        self._buffer = []
+#        self.stdout = stdout
+#        self.write_binary = write_binary
         self.get_size = get_size
         self.true_color = to_simple_filter(true_color)
         self.term = term or 'xterm'
@@ -430,21 +434,23 @@ class Vt100_Output(Output):
 
         return cls(stdout, get_size, true_color=true_color,
                    ansi_colors_only=ansi_colors_only, term=term)
-
-    def fileno(self):
-        " Return file descriptor. "
-        return self.stdout.fileno()
-
-    def encoding(self):
-        " Return encoding used for stdout. "
-        return self.stdout.encoding
-
-    def write_raw(self, data):
-        """
-        Write raw data to output.
-        """
-        self._buffer.append(data)
-
+##
+## now the methods below are inherited from StandardOutput
+##
+##    def fileno(self):
+##        " Return file descriptor. "
+##        return self.stdout.fileno()
+##
+##    def encoding(self):
+##        " Return encoding used for stdout. "
+##        return self.stdout.encoding
+##
+##    def write_raw(self, data):
+##        """
+##        Write raw data to output.
+##        """
+##        self._buffer.append(data)
+##
     def write(self, data):
         """
         Write text to output.
@@ -575,49 +581,52 @@ class Vt100_Output(Output):
     def show_cursor(self):
         self.write_raw('\x1b[?12l\x1b[?25h')  # Stop blinking cursor and show.
 
-    def flush(self):
-        """
-        Write to output stream and flush.
-        """
-        if not self._buffer:
-            return
-
-        data = ''.join(self._buffer)
-
-        try:
-            # (We try to encode ourself, because that way we can replace
-            # characters that don't exist in the character set, avoiding
-            # UnicodeEncodeError crashes. E.g. u'\xb7' does not appear in 'ascii'.)
-            # My Arch Linux installation of july 2015 reported 'ANSI_X3.4-1968'
-            # for sys.stdout.encoding in xterm.
-            if self.write_binary:
-                if hasattr(self.stdout, 'buffer'):
-                    out = self.stdout.buffer  # Py3.
-                else:
-                    out = self.stdout
-                out.write(data.encode(self.stdout.encoding or 'utf-8', 'replace'))
-            else:
-                self.stdout.write(data)
-
-            self.stdout.flush()
-        except IOError as e:
-            if e.args and e.args[0] == errno.EINTR:
-                # Interrupted system call. Can happpen in case of a window
-                # resize signal. (Just ignore. The resize handler will render
-                # again anyway.)
-                pass
-            elif e.args and e.args[0] == 0:
-                # This can happen when there is a lot of output and the user
-                # sends a KeyboardInterrupt by pressing Control-C. E.g. in
-                # a Python REPL when we execute "while True: print('test')".
-                # (The `ptpython` REPL uses this `Output` class instead of
-                # `stdout` directly -- in order to be network transparent.)
-                # So, just ignore.
-                pass
-            else:
-                raise
-
-        self._buffer = []
+##
+## the flush() method is inherited from StandardOutput
+##
+##    def flush(self):
+##        """
+##        Write to output stream and flush.
+##        """
+##        if not self._buffer:
+##            return
+##
+##        data = ''.join(self._buffer)
+##
+##        try:
+##            # (We try to encode ourself, because that way we can replace
+##            # characters that don't exist in the character set, avoiding
+##            # UnicodeEncodeError crashes. E.g. u'\xb7' does not appear in 'ascii'.)
+##            # My Arch Linux installation of july 2015 reported 'ANSI_X3.4-1968'
+##            # for sys.stdout.encoding in xterm.
+##            if self.write_binary:
+##                if hasattr(self.stdout, 'buffer'):
+##                    out = self.stdout.buffer  # Py3.
+##                else:
+##                    out = self.stdout
+##                out.write(data.encode(self.stdout.encoding or 'utf-8', 'replace'))
+##            else:
+##                self.stdout.write(data)
+##
+##            self.stdout.flush()
+##        except IOError as e:
+##            if e.args and e.args[0] == errno.EINTR:
+##                # Interrupted system call. Can happpen in case of a window
+##                # resize signal. (Just ignore. The resize handler will render
+##                # again anyway.)
+##                pass
+##            elif e.args and e.args[0] == 0:
+##                # This can happen when there is a lot of output and the user
+##                # sends a KeyboardInterrupt by pressing Control-C. E.g. in
+##                # a Python REPL when we execute "while True: print('test')".
+##                # (The `ptpython` REPL uses this `Output` class instead of
+##                # `stdout` directly -- in order to be network transparent.)
+##                # So, just ignore.
+##                pass
+##            else:
+##                raise
+##
+##        self._buffer = []
 
     def ask_for_cpr(self):
         """
