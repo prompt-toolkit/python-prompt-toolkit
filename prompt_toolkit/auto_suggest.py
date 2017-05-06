@@ -86,3 +86,39 @@ class ConditionalAutoSuggest(AutoSuggest):
     def get_suggestion(self, cli, buffer, document):
         if self.filter(cli):
             return self.auto_suggest.get_suggestion(cli, buffer, document)
+
+
+class SimpleAutoSuggestCache(AutoSuggest):
+    """
+    Simple caching strategy for Auto-Suggestions.
+
+    Will cache the previous auto suggestion and returns it immediately 
+    if it's still valid for the current document. 
+
+    This will ensure most of the time that the auto completion does not
+    flicker while the user is typing.
+    """
+
+
+    def __init__(self, auto_suggest):
+        self.auto_suggest = auto_suggest
+        self._full_suggestion = ''
+
+
+    def get_suggestion(self, cli, buffer, document):
+
+        if self._full_suggestion.startswith(document.text):
+            return Suggestion(self._full_suggestion[len(document.text):])
+
+        suggestion =  self.auto_suggest.get_suggestion(cli, buffer, document) 
+       
+        if suggestion:
+            self._full_suggestion = document.text + suggestion.text
+        else:
+            self._full_suggestion = ''
+
+        return suggestion 
+
+
+
+

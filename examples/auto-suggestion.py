@@ -11,7 +11,19 @@ from __future__ import unicode_literals, print_function
 from prompt_toolkit import prompt
 from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.interface import AbortAction
-from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory, SimpleAutoSuggestCache 
+
+import time
+
+class ThrottleAutoSuggest(AutoSuggestFromHistory):
+    """
+    Mock an asynchronous suggestion engine that have a small delay.
+    """
+
+    def get_suggestion(self, cli, buffer, document):
+        time.sleep(0.2)
+        return super(ThrottleAutoSuggest, self).get_suggestion(cli, buffer, document)
+
 
 
 def main():
@@ -30,10 +42,18 @@ def main():
     print()
 
     text = prompt('Say something: ', history=history,
-                  auto_suggest=AutoSuggestFromHistory(),
+                  auto_suggest=ThrottleAutoSuggest(),
                   enable_history_search=True,
                   on_abort=AbortAction.RETRY)
     print('You said: %s' % text)
+
+    # below, we use use a simple caching strategy to make the auto suggestion
+    # feel snappier. By wrapping a slow AutoSuggest in a
+    # SinpleAutosuggestCache, the suggestion will not be recomputed every time
+    text = prompt('Say something else: ', history=history,
+                  auto_suggest=SimpleAutoSuggestCache(ThrottleAutoSuggest()),
+                  enable_history_search=True,
+                  on_abort=AbortAction.RETRY)
 
 
 if __name__ == '__main__':
