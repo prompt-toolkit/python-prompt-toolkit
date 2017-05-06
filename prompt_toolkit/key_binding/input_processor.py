@@ -227,6 +227,7 @@ class InputProcessor(object):
             cli.invalidate()
 
     def _call_handler(self, handler, key_sequence=None):
+        key_sequence = key_sequence[:]
         was_recording = self.record_macro
         arg = self.arg
         self.arg = None
