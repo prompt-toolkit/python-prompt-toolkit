@@ -768,6 +768,9 @@ class Buffer(object):
 
         # Set `complete_state`.
         if completions:
+            if len(completions) == 1:
+                self.apply_completion(completions[0])
+                return
             self.complete_state = CompletionState(
                 original_document=self.document,
                 current_completions=completions)
