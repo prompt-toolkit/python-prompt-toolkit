@@ -9,10 +9,7 @@ from prompt_toolkit.key_binding.defaults import load_key_bindings_for_prompt
 from prompt_toolkit import prompt
 
 # Database of words to be replaced by typing.
-corrections = {
-    'impotr': 'import',
-    'wolrd': 'world',
-}
+corrections = ['import', 'world']
 
 
 def main():
@@ -28,11 +25,12 @@ def main():
         """
         b = event.cli.current_buffer
         w = b.document.get_word_before_cursor()
-
-        if w is not None:
-            if w in corrections:
-                b.delete_before_cursor(count=len(w))
-                b.insert_text(corrections[w])
+        if w != '':
+            for word in corrections:
+                length = len(w)
+                if w[0:length] == word[0:length]:
+                    b.delete_before_cursor(count=len(w))
+                    b.insert_text(word)
 
         b.insert_text(' ')
 
