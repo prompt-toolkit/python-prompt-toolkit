@@ -25,13 +25,15 @@ class Win32AsyncioEventLoop(EventLoop):
         self.closed = False
         self.loop = loop or asyncio.get_event_loop()
 
+    # The following `run_async` function is compiled at runtime
+    # because it contains syntax which is not supported on older Python
+    # versions (yield from)
+    six.exec_(textwrap.dedent('''
     @asyncio.coroutine
     def run_as_coroutine(self, stdin, callbacks):
         """
         The input 'event loop'.
         """
-        # Note: We cannot use "yield from", because this package also
-        #       installs on Python 2.
         assert isinstance(callbacks, EventLoopCallbacks)
 
         if self.closed:
@@ -45,18 +47,14 @@ class Win32AsyncioEventLoop(EventLoop):
                 timeout.reset()
 
                 # Get keys
-                try:
-                    g = iter(self.loop.run_in_executor(None, self._console_input_reader.read))
-                    while True:
-                        yield next(g)
-                except StopIteration as e:
-                    keys = e.args[0]
+                keys = yield from self.loop.run_in_executor(None, self._console_input_reader.read))
 
                 # Feed keys to input processor.
                 for k in keys:
                     callbacks.feed_key(k)
         finally:
             timeout.stop()
+    '''))
 
     def stop(self):
         self.running = False
