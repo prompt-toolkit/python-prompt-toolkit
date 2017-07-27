@@ -451,28 +451,29 @@ a :class:`~prompt_toolkit.key_binding.registry.Registry` instance which hold
 all of the key bindings.
 
 It would be possible to create such a
-:class:`~prompt_toolkit.key_binding.registry.Registry` class ourself, but
+:class:`~prompt_toolkit.key_binding.registry.Registry` object ourself, but
 usually, for a prompt, we would like to have at least the basic (Emacs/Vi)
 bindings and start from there. That's what the
-:class:`~prompt_toolkit.key_binding.manager.KeyBindingManager` class does.
+:class:`~prompt_toolkit.key_binding.defaults.create_key_bindings_for_prompt`
+function does.
 
 An example of a prompt that prints ``'hello world'`` when :kbd:`Control-T` is pressed.
 
 .. code:: python
 
     from prompt_toolkit import prompt
-    from prompt_toolkit.key_binding.manager import KeyBindingManager
+    from prompt_toolkit.key_binding.defaults import load_key_bindings_for_prompt
     from prompt_toolkit.keys import Keys
 
-    manager = KeyBindingManager.for_prompt()
+    registry = load_key_bindings_for_prompt()
 
-    @manager.registry.add_binding(Keys.ControlT)
+    @registry.add_binding(Keys.ControlT)
     def _(event):
         def print_hello():
             print('hello world')
         event.cli.run_in_terminal(print_hello)
 
-    text = prompt('> ', key_bindings_registry=manager.registry)
+    text = prompt('> ', key_bindings_registry=registry)
     print('You said: %s' % text)
 
 
@@ -498,21 +499,21 @@ filters <filters>`.)
 
     from prompt_toolkit import prompt
     from prompt_toolkit.filters import Condition
-    from prompt_toolkit.key_binding.manager import KeyBindingManager
+    from prompt_toolkit.key_binding.defaults import load_key_bindings_for_prompt
     from prompt_toolkit.keys import Keys
 
-    manager = KeyBindingManager.for_prompt()
+    registry = load_key_bindings_for_prompt()
 
     def is_active(cli):
         " Only activate key binding on the second half of each minute. "
         return datetime.datetime.now().second > 30
 
-    @manager.registry.add_binding(Keys.ControlT, filter=Condition(is_active))
+    @registry.add_binding(Keys.ControlT, filter=Condition(is_active))
     def _(event):
         # ...
         pass
 
-    prompt('> ', key_bindings_registry=manager.registry)
+    prompt('> ', key_bindings_registry=registry)
 
 
 Dynamically switch between Emacs and Vi mode
@@ -526,15 +527,15 @@ attribute from ``EditingMode.VI`` to ``EditingMode.EMACS``.
 
     from prompt_toolkit import prompt
     from prompt_toolkit.filters import Condition
-    from prompt_toolkit.key_binding.manager import KeyBindingManager
+    from prompt_toolkit.key_binding.defaults import load_key_bindings_for_prompt
     from prompt_toolkit.keys import Keys
 
     def run():
         # Create a set of key bindings.
-        manager = KeyBindingManager.for_prompt()
+        registry = load_key_bindings_for_prompt()
 
         # Add an additional key binding for toggling this flag.
-        @manager.registry.add_binding(Keys.F4)
+        @registry.add_binding(Keys.F4)
         def _(event):
             " Toggle between Emacs and Vi mode. "
             cli = event.cli
@@ -552,7 +553,7 @@ attribute from ``EditingMode.VI`` to ``EditingMode.EMACS``.
                 (Token.Toolbar, ' [F4] %s ' % text)
             ]
 
-        prompt('> ', key_bindings_registry=manager.registry,
+        prompt('> ', key_bindings_registry=registry,
                get_bottom_toolbar_tokens=get_bottom_toolbar_tokens)
 
     run()

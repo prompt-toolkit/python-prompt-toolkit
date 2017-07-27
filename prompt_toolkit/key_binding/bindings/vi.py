@@ -1802,10 +1802,10 @@ def load_vi_search_bindings(get_search_state=None,
         """
         # Set the ViState.
         get_search_state(event.cli).direction = IncrementalSearchDirection.BACKWARD
+        event.cli.vi_state.input_mode = InputMode.INSERT
 
         # Focus search buffer.
         event.cli.push_focus(search_buffer_name)
-        event.cli.vi_state.input_mode = InputMode.INSERT
 
     @handle(Keys.ControlJ, filter=has_focus)
     @handle(Keys.Escape, filter=has_focus)
