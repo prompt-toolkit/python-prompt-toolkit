@@ -10,6 +10,7 @@ from six import text_type
 
 from prompt_toolkit.completion import CompleteEvent
 from prompt_toolkit.document import Document
+from prompt_toolkit.contrib.completers.base import WordCompleter
 from prompt_toolkit.contrib.completers.filesystem import PathCompleter
 
 
@@ -251,3 +252,38 @@ def test_pathcompleter_get_paths_constrains_path():
 
     # cleanup
     shutil.rmtree(test_dir)
+
+
+def test_word_completer_can_complete_on_static_word_list():
+    completer = WordCompleter(['abc', 'def'])
+    doc = Document('', 0)
+    event = CompleteEvent()
+    completions = completer.get_completions(doc, event)
+    result = [c.text for c in completions]
+    expected = ['abc', 'def']
+    assert expected == result
+
+
+def test_word_completer_can_complete_on_dynamic_word_list():
+    context = {'counter': 0}
+
+    def word_fetcher():
+        if context['counter'] == 0:
+            context['counter'] += 1
+            return ['alpha', 'beta']
+        else:
+            context['counter'] += 1
+            return ['aaa', 'bbb']
+
+    completer = WordCompleter(word_fetcher)
+    doc = Document('', 0)
+    event = CompleteEvent()
+    completions = completer.get_completions(doc, event)
+    result = [c.text for c in completions]
+    expected = ['alpha', 'beta']
+    assert expected == result
+
+    completions = completer.get_completions(doc, event)
+    result = [c.text for c in completions]
+    expected = ['aaa', 'bbb']
+    assert expected == result
