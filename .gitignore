@@ -40,3 +40,5 @@ docs/_build
 
 # pycharm metadata
 .idea
+
+.cache/

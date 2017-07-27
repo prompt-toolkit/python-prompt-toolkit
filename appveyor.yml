@@ -1,0 +1,28 @@
+environment:
+  matrix:
+    # http://www.appveyor.com/docs/installed-software#python lists available
+    # versions
+    - PYTHON: "C:\\Python27"
+    - PYTHON: "C:\\Python27-x64"
+    - PYTHON: "C:\\Python34"
+    - PYTHON: "C:\\Python34-x64"
+    - PYTHON: "C:\\Python35"
+    - PYTHON: "C:\\Python35-x64"
+
+init:
+  - "echo %PYTHON%"
+
+install:
+  - "set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - python --version
+  - python -m pip install -U pip
+  - python -m pip install -U setuptools wheel virtualenv
+  - python -m pip install -U tox codecov
+
+build: false
+
+test_script:
+  - tox -e py
+
+after_test:
+  - codecov
