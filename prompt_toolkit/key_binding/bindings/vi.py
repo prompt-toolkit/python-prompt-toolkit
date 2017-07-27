@@ -136,6 +136,55 @@ class TextObject(object):
         new_document, clipboard_data = document.cut_selection()
         return new_document, clipboard_data
 
+def repeatable_change(f):
+    """
+    This decorator supports the repetition of events (specifically, non-textobject
+    keybindings like 'x' and 'dd' and friends) by saving off the handler and event
+    in question.
+    """
+    def _(event):
+        vi_state = event.cli.vi_state
+        vi_state.last_handler_function = f
+        vi_state.last_event = event
+        vi_state.last_text_object_function = None
+        vi_state.last_change_type = 'simple'
+        f(event)
+    return _
+
+def repeatable_operator(f):
+    """
+    This decorator supports the repetition of operators (i.e., 'dw') saving off
+    the operator, event, and text object in question.
+    """
+    def _(event, text_object):
+        vi_state = event.cli.vi_state
+        vi_state.last_handler_function = f
+        vi_state.last_event = event
+        vi_state.last_text_object_function = event.cli.vi_state.potential_text_object_function
+        vi_state.last_change_type = 'operator'
+        f(event, text_object)
+    return _
+
+def repeat_change(event):
+    """
+    This function repeats the last change that had been done.
+    """
+    vi_state = event.cli.vi_state
+    if vi_state.last_change_type == 'simple':
+        vi_state.last_handler_function(vi_state.last_event)
+    elif vi_state.last_change_type == 'operator':
+        vi_state.last_handler_function(vi_state.last_event, vi_state.last_text_object_function(vi_state.last_event))
+
+def repeatable_text_object(f):
+    """
+    This decorator tracks the text objects that are used as input to operators
+    (i.e., 'dw').
+    """
+    def _(event):
+        event.cli.vi_state.potential_text_object_function = f
+        return f(event)
+    return _
+
 
 def create_text_object_decorator(registry):
     """
@@ -169,6 +218,10 @@ def create_text_object_decorator(registry):
 
         def decorator(text_object_func):
             assert callable(text_object_func)
+
+            # all text objects are potentially repeatable if they are used with
+            # a repeatable operation
+            text_object_func = repeatable_text_object(text_object_func)
 
             @registry.add_binding(*keys, filter=operator_given & filter, eager=eager)
             def _(event):
@@ -382,12 +435,22 @@ def load_vi_bindings(get_search_state=None):
         event.current_buffer.cursor_down(count=event.arg)
 
     @handle(Keys.Up, filter=navigation_mode)
+    @repeatable_change
     @handle(Keys.ControlP, filter=navigation_mode)
     def _(event):
         """
         Arrow up and ControlP in navigation mode go up.
         """
         event.current_buffer.auto_up(count=event.arg)
+
+
+    @handle('.', filter=navigation_mode)
+    def _(event):
+        """
+        Repeat the last action.
+        """
+        for _ in range(event.arg):
+            repeat_change(event)
 
     @handle('k', filter=navigation_mode)
     def _(event):
@@ -519,12 +582,14 @@ def load_vi_bindings(get_search_state=None):
         event.cli.vi_state.input_mode = InputMode.INSERT
 
     @handle('D', filter=navigation_mode)
+    @repeatable_change
     def _(event):
         buffer = event.current_buffer
         deleted = buffer.delete(count=buffer.document.get_end_of_line_position())
         event.cli.clipboard.set_text(deleted)
 
     @handle('d', 'd', filter=navigation_mode)
+    @repeatable_change
     def _(event):
         """
         Delete line. (Or the following 'n' lines.)
@@ -607,12 +672,14 @@ def load_vi_bindings(get_search_state=None):
         go_to_block_selection(event, after=True)
 
     @handle('J', filter=navigation_mode & ~IsReadOnly())
+    @repeatable_change
     def _(event):
         " Join lines. "
         for i in range(event.arg):
             event.current_buffer.join_next_line()
 
     @handle('g', 'J', filter=navigation_mode & ~IsReadOnly())
+    @repeatable_change
     def _(event):
         " Join lines without space. "
         for i in range(event.arg):
@@ -629,6 +696,7 @@ def load_vi_bindings(get_search_state=None):
         event.current_buffer.join_selected_lines(separator='')
 
     @handle('p', filter=navigation_mode)
+    @repeatable_change
     def _(event):
         """
         Paste after
@@ -639,6 +707,7 @@ def load_vi_bindings(get_search_state=None):
             paste_mode=PasteMode.VI_AFTER)
 
     @handle('P', filter=navigation_mode)
+    @repeatable_change
     def _(event):
         """
         Paste before
@@ -649,6 +718,7 @@ def load_vi_bindings(get_search_state=None):
             paste_mode=PasteMode.VI_BEFORE)
 
     @handle('"', Keys.Any, 'p', filter=navigation_mode)
+    @repeatable_change
     def _(event):
         " Paste from named register. "
         c = event.key_sequence[1].data
@@ -659,6 +729,7 @@ def load_vi_bindings(get_search_state=None):
                     data, count=event.arg, paste_mode=PasteMode.VI_AFTER)
 
     @handle('"', Keys.Any, 'P', filter=navigation_mode)
+    @repeatable_change
     def _(event):
         " Paste (before) from named register. "
         c = event.key_sequence[1].data
@@ -669,6 +740,7 @@ def load_vi_bindings(get_search_state=None):
                     data, count=event.arg, paste_mode=PasteMode.VI_BEFORE)
 
     @handle('r', Keys.Any, filter=navigation_mode)
+    @repeatable_change
     def _(event):
         """
         Replace single character under cursor
@@ -767,6 +839,7 @@ def load_vi_bindings(get_search_state=None):
             buffer.selection_state.type = SelectionType.CHARACTERS
 
     @handle('x', filter=navigation_mode)
+    @repeatable_change
     def _(event):
         """
         Delete character.
@@ -775,6 +848,7 @@ def load_vi_bindings(get_search_state=None):
         event.cli.clipboard.set_text(text)
 
     @handle('X', filter=navigation_mode)
+    @repeatable_change
     def _(event):
         text = event.current_buffer.delete_before_cursor()
         event.cli.clipboard.set_text(text)
@@ -807,6 +881,7 @@ def load_vi_bindings(get_search_state=None):
         buffer.cursor_position += buffer.document.get_start_of_line_position(after_whitespace=True)
 
     @handle('>', '>', filter=navigation_mode)
+    @repeatable_change
     def _(event):
         """
         Indent lines.
@@ -816,6 +891,7 @@ def load_vi_bindings(get_search_state=None):
         indent(buffer, current_row, current_row + event.arg)
 
     @handle('<', '<', filter=navigation_mode)
+    @repeatable_change
     def _(event):
         """
         Unindent lines.
@@ -842,6 +918,7 @@ def load_vi_bindings(get_search_state=None):
         event.cli.vi_state.input_mode = InputMode.INSERT
 
     @handle('~', filter=navigation_mode)
+    @repeatable_change
     def _(event):
         """
         Reverse case of current character and move cursor forward.
@@ -853,18 +930,21 @@ def load_vi_bindings(get_search_state=None):
             buffer.insert_text(c.swapcase(), overwrite=True)
 
     @handle('g', 'u', 'u', filter=navigation_mode & ~IsReadOnly())
+    @repeatable_change
     def _(event):
         " Lowercase current line. "
         buff = event.current_buffer
         buff.transform_current_line(lambda s: s.lower())
 
     @handle('g', 'U', 'U', filter=navigation_mode & ~IsReadOnly())
+    @repeatable_change
     def _(event):
         " Uppercase current line. "
         buff = event.current_buffer
         buff.transform_current_line(lambda s: s.upper())
 
     @handle('g', '~', '~', filter=navigation_mode & ~IsReadOnly())
+    @repeatable_change
     def _(event):
         " Swap case of the current line. "
         buff = event.current_buffer
@@ -936,7 +1016,6 @@ def load_vi_bindings(get_search_state=None):
         else:
             handler_keys = 'cd'[delete_only]
 
-        @operator(*handler_keys, filter=~IsReadOnly())
         def delete_or_change_operator(event, text_object):
             clipboard_data = None
             buff = event.current_buffer
@@ -957,6 +1036,10 @@ def load_vi_bindings(get_search_state=None):
             # Only go back to insert mode in case of 'change'.
             if not delete_only:
                 event.cli.vi_state.input_mode = InputMode.INSERT
+
+        if delete_only:
+            delete_or_change_operator = repeatable_operator(delete_or_change_operator)
+        operator(*handler_keys, filter=~IsReadOnly())(delete_or_change_operator)
 
     create_delete_and_change_operators(False, False)
     create_delete_and_change_operators(False, True)
@@ -1003,6 +1086,7 @@ def load_vi_bindings(get_search_state=None):
             event.cli.vi_state.named_registers[c] = clipboard_data
 
     @operator('>')
+    @repeatable_operator
     def _(event, text_object):
         """
         Indent.
@@ -1012,6 +1096,7 @@ def load_vi_bindings(get_search_state=None):
         indent(buff, from_, to + 1, count=event.arg)
 
     @operator('<')
+    @repeatable_operator
     def _(event, text_object):
         """
         Unindent.
