@@ -412,7 +412,7 @@ def create_prompt_application(
     :param complete_while_typing: `bool` or
         :class:`~prompt_toolkit.filters.SimpleFilter`. Enable autocompletion
         while typing.
-    :param enable_history_search: `bool` or
+    :param enable_history_search: `bool`, `'endswith'`, `'contains'` or
         :class:`~prompt_toolkit.filters.SimpleFilter`. Enable up-arrow parting
         string matching.
     :param lexer: :class:`~prompt_toolkit.layout.lexers.Lexer` to be used for
@@ -457,6 +457,11 @@ def create_prompt_application(
     if vi_mode:
         editing_mode = EditingMode.VI
 
+    # History Search
+    history_search_param = enable_history_search
+    is_history_search_option = Buffer.is_history_search_option(enable_history_search)
+    if (is_history_search_option):
+        enable_history_search = True
     # Make sure that complete_while_typing is disabled when enable_history_search
     # is enabled. (First convert to SimpleFilter, to avoid doing bitwise operations
     # on bool objects.)
@@ -465,6 +470,8 @@ def create_prompt_application(
     multiline = to_simple_filter(multiline)
 
     complete_while_typing = complete_while_typing & ~enable_history_search
+    if (not is_history_search_option):
+        history_search_param = enable_history_search
 
     # Accept Pygments styles as well for backwards compatibility.
     try:
@@ -489,7 +496,7 @@ def create_prompt_application(
             extra_input_processors=extra_input_processors,
             wrap_lines=wrap_lines),
         buffer=Buffer(
-            enable_history_search=enable_history_search,
+            enable_history_search=history_search_param,
             complete_while_typing=complete_while_typing,
             is_multiline=multiline,
             history=(history or InMemoryHistory()),
