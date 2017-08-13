@@ -209,11 +209,13 @@ class Buffer(object):
     :param complete_while_typing: :class:`~prompt_toolkit.filters.SimpleFilter`
         instance. Decide whether or not to do asynchronous autocompleting while
         typing.
-    :param enable_history_search: :class:`~prompt_toolkit.filters.SimpleFilter`
-        to indicate when up-arrow partial string matching is enabled. It is
-        adviced to not enable this at the same time as `complete_while_typing`,
-        because when there is an autocompletion found, the up arrows usually
-        browse through the completions, rather than through the history.
+    :param enable_history_search:  `bool`, `'endswith'`, `'contains'` or
+        :class:`~prompt_toolkit.filters.SimpleFilter` instance,
+        to indicate when up-arrow partial string matching or full string matching
+        is enabled. It is advised to not enable this at the same time as
+        `complete_while_typing`, because when there is an autocompletion found,
+        the up arrows usually browses through the completions,
+        rather than through the history.
     :param read_only: :class:`~prompt_toolkit.filters.SimpleFilter`. When True,
         changes will not be allowed.
     """
@@ -223,6 +225,19 @@ class Buffer(object):
                  enable_history_search=False, initial_document=None,
                  accept_action=AcceptAction.IGNORE, read_only=False,
                  on_text_changed=None, on_text_insert=None, on_cursor_position_changed=None):
+
+        if enable_history_search == 'contains':
+            def f(history_line, search_text):
+                return search_text in history_line
+            self._history_search_line_fn = f
+            enable_history_search = True
+
+        else:
+            def f(history_line, search_text):
+                return history_line.startswith(search_text)
+            self._history_search_line_fn = f
+            if(self.is_history_search_option(enable_history_search)):
+                enable_history_search = True
 
         # Accept both filters and booleans as input.
         enable_history_search = to_simple_filter(enable_history_search)
@@ -859,7 +874,7 @@ class Buffer(object):
         (when we don't have history search, it's also True.)
         """
         return (self.history_search_text is None or
-                self._working_lines[i].startswith(self.history_search_text))
+                self._history_search_line_fn(self._working_lines[i], self.history_search_text))
 
     def history_forward(self, count=1):
         """
@@ -1114,6 +1129,15 @@ class Buffer(object):
         self.validation_state = ValidationState.VALID
         self.validation_error = None
         return True
+
+    @staticmethod
+    def history_search_options():
+        return ['contains', 'startswith']
+
+    @staticmethod
+    def is_history_search_option(enable_history_search):
+        return any(enable_history_search == x
+                   for x in Buffer.history_search_options())
 
     def append_to_history(self):
         """
