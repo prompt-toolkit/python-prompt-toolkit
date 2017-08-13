@@ -232,11 +232,13 @@ class Buffer(object):
             self._history_search_line_fn = f
             enable_history_search = True
 
-        elif enable_history_search == 'startswith':
+        else:
             def f(history_line, search_text):
                 return history_line.startswith(search_text)
             self._history_search_line_fn = f
-            enable_history_search = True
+            if(self.is_history_search_option(enable_history_search)):
+                enable_history_search = True
+
         # Accept both filters and booleans as input.
         enable_history_search = to_simple_filter(enable_history_search)
         is_multiline = to_simple_filter(is_multiline)
