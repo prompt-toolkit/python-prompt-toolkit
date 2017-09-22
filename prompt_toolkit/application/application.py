@@ -60,10 +60,10 @@ class Application(object):
     :param min_redraw_interval: Number of seconds to wait between redraws. Use
         this for applications where `invalidate` is called a lot. This could cause
         a lot of terminal output, which some terminals are not able to process.
-        
+
         `None` means that every `invalidate` will be scheduled right away
         (which is usually fine).
-        
+
         When one `invalidate` is called, but a scheduled redraw of a previous
         `invalidate` call has not been executed yet, nothing will happen in any
         case.
@@ -91,6 +91,7 @@ class Application(object):
     :param on_reset: Called during reset.
     :param on_render: Called right after rendering.
     :param on_invalidate: Called when the UI has been invalidated.
+    :param on_resize: Called after the terminal size has changed.
 
     I/O:
 
@@ -116,7 +117,7 @@ class Application(object):
                  min_redraw_interval=None,
                  max_render_postpone_time=0,
 
-                 on_reset=None, on_render=None, on_invalidate=None,
+                 on_reset=None, on_render=None, on_invalidate=None, on_resize=None,
 
                  # I/O.
                  input=None, output=None):
@@ -139,6 +140,7 @@ class Application(object):
         assert on_reset is None or callable(on_reset)
         assert on_render is None or callable(on_render)
         assert on_invalidate is None or callable(on_invalidate)
+        assert on_resize is None or callable(on_resize)
 
         assert output is None or isinstance(output, Output)
         assert input is None or isinstance(input, Input)
@@ -170,6 +172,7 @@ class Application(object):
         self.on_invalidate = Event(self, on_invalidate)
         self.on_render = Event(self, on_render)
         self.on_reset = Event(self, on_reset)
+        self.on_resize = Event(self, on_resize)
 
         # I/O.
         self.output = output or get_default_output()
@@ -426,6 +429,7 @@ class Application(object):
         self.renderer.erase(leave_alternate_screen=False)
         self._request_absolute_cursor_position()
         self._redraw()
+        self.on_resize.fire()
 
     def _pre_run(self, pre_run=None):
         " Called during `run`. "
@@ -921,4 +925,3 @@ def _do_wait_for_enter(wait_text):
         message=wait_text,
         extra_key_bindings=key_bindings)
     yield From(prompt.app.run_async())
-
