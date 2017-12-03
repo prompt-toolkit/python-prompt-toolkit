@@ -9,8 +9,9 @@ python:
   - '3.6'
   - 'pypy'
   - 'pypy3'
+
+env: "TOXENV=py"
 install:
   - travis_retry pip install tox
-  - travis_retry pip install tox-travis
 script:
   - tox
