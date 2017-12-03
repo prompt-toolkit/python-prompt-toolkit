@@ -11,5 +11,6 @@ python:
   - 'pypy3'
 install:
   - travis_retry pip install tox
+  - travis_retry pip install tox-travis
 script:
   - tox
