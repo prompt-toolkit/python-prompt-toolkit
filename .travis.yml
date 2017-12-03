@@ -1,13 +1,14 @@
 sudo: false
 language: python
-python: '3.5'
-env:
-  - TOXENV=py26
-  - TOXENV=py27
-  - TOXENV=py33
-  - TOXENV=py34
-  - TOXENV=py35
-  - TOXENV=pypy
+python: 
+  - '2.7'
+  - '3.4'
+  - '3.5'
+  - '3.6'
+  - 'pypy'
+  - 'pypy3'
+
+env: "TOXENV=py"
 install:
   - travis_retry pip install tox
 script:
