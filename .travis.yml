@@ -9,15 +9,6 @@ python:
   - '3.6'
   - 'pypy'
   - 'pypy3'
-env:
-  - TOXENV=py26
-  - TOXENV=py27
-  - TOXENV=py33
-  - TOXENV=py34
-  - TOXENV=py35
-  - TOXENV=py36
-  - TOXENV=pypy
-  - TOXENV=pypy3
 install:
   - travis_retry pip install tox
 script:
