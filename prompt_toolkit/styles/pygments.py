@@ -41,7 +41,7 @@ def style_from_pygments_dict(pygments_dict):
     Create a :class:`.Style` instance from a Pygments style dictionary.
     (One that maps Token objects to style strings.)
     """
-    assert isinstance(pygments_dict, dict)
+    assert getattr(pygments_dict, 'items')
     pygments_style = []
 
     for token, style in pygments_dict.items():
