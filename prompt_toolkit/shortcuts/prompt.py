@@ -295,30 +295,40 @@ class Prompt(object):
                 value = locals()[name]
                 setattr(self, name, value)
 
-        self.app, self.default_buffer, self._default_buffer_control = \
-            self._create_application(editing_mode, erase_when_done)
-
-    def _create_application(self, editing_mode, erase_when_done):
-        def dyncond(attr_name):
-            """
-            Dynamically take this setting from this 'Prompt' class.
-            `attr_name` represents an attribute name of this class. Its value
-            can either be a boolean or a `Filter`.
-
-            This returns something that can be used as either a `Filter`
-            or `Filter`.
-            """
-            @Condition
-            def dynamic():
-                value = getattr(self, attr_name)
-                return to_filter(value)()
-            return dynamic
-
         # Create functions that will dynamically split the prompt. (If we have
         # a multiline prompt.)
-        has_before_fragments, get_prompt_text_1, get_prompt_text_2 = \
+        self.has_before_fragments, self.get_prompt_text_1, self.get_prompt_text_2 = \
             _split_multiline_prompt(self._get_prompt)
 
+
+        self.default_buffer = self._create_default_buffer()
+        self.search_buffer = self._create_search_buffer()
+        self.input_processors = input_processors or self._create_input_processors()
+        self.bottom_toolbar = self._create_bottom_toolbar()
+        self.search_toolbar = self._create_search_toolbar()
+        self.search_buffer_control = self._create_search_buffer_control()
+        self.system_toolbar = self._create_system_toolbar()
+        self.default_buffer_control = self._create_default_buffer_control()
+        self.default_buffer_window = self._create_default_buffer_window()
+        self.layout = self._create_layout()
+        self.app = self._create_application(editing_mode, erase_when_done)
+
+    def _dyncond(self, attr_name):
+        """
+        Dynamically take this setting from this 'Prompt' class.
+        `attr_name` represents an attribute name of this class. Its value
+        can either be a boolean or a `Filter`.
+
+        This returns something that can be used as either a `Filter`
+        or `Filter`.
+        """
+        @Condition
+        def dynamic():
+            value = getattr(self, attr_name)
+            return to_filter(value)()
+        return dynamic
+
+    def _create_default_buffer(self):
         # Create buffers list.
         def accept(buff):
             """ Accept the content of the default buffer. This is called when
@@ -337,8 +347,8 @@ class Prompt(object):
                 _true(self.complete_while_typing) and not
                 _true(self.enable_history_search) and not
                 self.complete_style == CompleteStyle.READLINE_LIKE),
-            validate_while_typing=dyncond('validate_while_typing'),
-            enable_history_search=dyncond('enable_history_search'),
+            validate_while_typing=self._dyncond('validate_while_typing'),
+            enable_history_search=self._dyncond('enable_history_search'),
             validator=DynamicValidator(lambda: self.validator),
             completer=DynamicCompleter(lambda:
                 ThreadedCompleter(self.completer)
@@ -349,14 +359,21 @@ class Prompt(object):
             accept_handler=accept,
             get_tempfile_suffix=lambda: self.tempfile_suffix)
 
+        return default_buffer
+
+    def _create_search_buffer(self):
         search_buffer = Buffer(name=SEARCH_BUFFER)
+        return search_buffer
+
+    def _create_input_processors(self):
+        default_buffer = self.default_buffer
 
         # Create processors list.
         all_input_processors = [
             HighlightIncrementalSearchProcessor(),
             HighlightSelectionProcessor(),
             ConditionalProcessor(AppendAutoSuggestion(), has_focus(default_buffer) & ~is_done),
-            ConditionalProcessor(PasswordProcessor(), dyncond('is_password')),
+            ConditionalProcessor(PasswordProcessor(), self._dyncond('is_password')),
             DisplayMultipleCursors(),
 
             # Users can insert processors here.
@@ -365,12 +382,15 @@ class Prompt(object):
             # For single line mode, show the prompt before the input.
             ConditionalProcessor(
                 merge_processors([
-                    BeforeInput(get_prompt_text_2),
+                    BeforeInput(self.get_prompt_text_2),
                     ShowArg(),
                 ]),
-                ~dyncond('multiline'))
+                ~self._dyncond('multiline'))
         ]
 
+        return all_input_processors
+
+    def _create_bottom_toolbar(self):
         # Create bottom toolbars.
         bottom_toolbar = ConditionalContainer(
             Window(FormattedTextControl(
@@ -382,9 +402,19 @@ class Prompt(object):
             filter=~is_done & renderer_height_is_known &
                     Condition(lambda: self.bottom_toolbar is not None))
 
+        return bottom_toolbar
+
+    def _create_search_toolbar(self):
+        search_buffer = self.search_buffer
+
         search_toolbar = SearchToolbar(
             search_buffer,
-            ignore_case=dyncond('search_ignore_case'))
+            ignore_case=self._dyncond('search_ignore_case'))
+
+        return search_toolbar
+
+    def _create_search_buffer_control(self):
+        search_buffer = self.search_buffer
 
         search_buffer_control = SearchBufferControl(
             buffer=search_buffer,
@@ -392,39 +422,50 @@ class Prompt(object):
                 ReverseSearchProcessor(),
                 ShowArg(),
             ],
-            ignore_case=dyncond('search_ignore_case'))
+            ignore_case=self._dyncond('search_ignore_case'))
 
+        return search_buffer_control
+
+    def _create_system_toolbar(self):
         system_toolbar = SystemToolbar(
-            enable_global_bindings=dyncond('enable_system_prompt'))
+            enable_global_bindings=self._dyncond('enable_system_prompt'))
+        return system_toolbar
 
+    def _create_default_buffer_control(self):
         def get_search_buffer_control():
             " Return the UIControl to be focused when searching start. "
             if _true(self.multiline):
-                return search_toolbar.control
+                return self.search_toolbar.control
             else:
-                return search_buffer_control
+                return self.search_buffer_control
 
         default_buffer_control = BufferControl(
-            buffer=default_buffer,
+            buffer=self.default_buffer,
             search_buffer_control=get_search_buffer_control,
-            input_processors=all_input_processors,
+            input_processors=self.input_processors,
             include_default_input_processors=False,
             lexer=DynamicLexer(lambda: self.lexer),
             preview_search=True)
 
+        return default_buffer_control
+
+    def _create_default_buffer_window(self):
         default_buffer_window = Window(
-            default_buffer_control,
+            self.default_buffer_control,
             height=self._get_default_buffer_control_height,
             left_margins=[
                 # In multiline mode, use the window margin to display
                 # the prompt and continuation fragments.
                 ConditionalMargin(
-                    PromptMargin(get_prompt_text_2, self._get_continuation),
-                    filter=dyncond('multiline'),
+                    PromptMargin(self.get_prompt_text_2, self._get_continuation),
+                    filter=self._dyncond('multiline'),
                 )
             ],
-            wrap_lines=dyncond('wrap_lines'))
+            wrap_lines=self._dyncond('wrap_lines'))
 
+        return default_buffer_window
+
+    def _create_layout(self):
         @Condition
         def multi_column_complete_style():
             return self.complete_style == CompleteStyle.MULTI_COLUMN
@@ -436,19 +477,19 @@ class Prompt(object):
                 HSplit([
                     ConditionalContainer(
                         Window(
-                            FormattedTextControl(get_prompt_text_1),
+                            FormattedTextControl(self.get_prompt_text_1),
                             dont_extend_height=True),
-                        Condition(has_before_fragments)
+                        Condition(self.has_before_fragments)
                     ),
                     ConditionalContainer(
-                        default_buffer_window,
+                        self.default_buffer_window,
                         Condition(lambda:
-                            get_app().layout.current_control != search_buffer_control),
+                            get_app().layout.current_control != self.search_buffer_control),
                     ),
                     ConditionalContainer(
-                        Window(search_buffer_control),
+                        Window(self.search_buffer_control),
                         Condition(lambda:
-                            get_app().layout.current_control == search_buffer_control),
+                            get_app().layout.current_control == self.search_buffer_control),
                     ),
                 ]),
                 [
@@ -458,13 +499,13 @@ class Prompt(object):
                           content=CompletionsMenu(
                               max_height=16,
                               scroll_offset=1,
-                              extra_filter=has_focus(default_buffer) &
+                              extra_filter=has_focus(self.default_buffer) &
                                   ~multi_column_complete_style)),
                     Float(xcursor=True,
                           ycursor=True,
                           content=MultiColumnCompletionsMenu(
                               show_meta=True,
-                              extra_filter=has_focus(default_buffer) &
+                              extra_filter=has_focus(self.default_buffer) &
                                   multi_column_complete_style)),
                     # The right prompt.
                     Float(right=0, top=0, hide_when_covering_content=True,
@@ -475,17 +516,21 @@ class Prompt(object):
                 ValidationToolbar(),
                 filter=~is_done),
             ConditionalContainer(
-                system_toolbar,
-                dyncond('enable_system_prompt') & ~is_done),
+                self.system_toolbar,
+                self._dyncond('enable_system_prompt') & ~is_done),
 
             # In multiline mode, we use two toolbars for 'arg' and 'search'.
             ConditionalContainer(
                 Window(FormattedTextControl(self._get_arg_text), height=1),
-                dyncond('multiline') & has_arg),
-            ConditionalContainer(search_toolbar, dyncond('multiline') & ~is_done),
-            bottom_toolbar,
+                self._dyncond('multiline') & has_arg),
+            ConditionalContainer(self.search_toolbar, self._dyncond('multiline') & ~is_done),
+            self.bottom_toolbar,
         ])
 
+        return layout
+
+
+    def _create_application(self, editing_mode, erase_when_done):
         # Default key bindings.
         auto_suggest_bindings = load_auto_suggest_bindings()
         open_in_editor_bindings = load_open_in_editor_bindings()
@@ -493,21 +538,21 @@ class Prompt(object):
 
         # Create application
         application = Application(
-            layout=Layout(layout, default_buffer_window),
+            layout=Layout(self.layout, self.default_buffer_window),
             style=DynamicStyle(lambda: self.style),
-            include_default_pygments_style=dyncond('include_default_pygments_style'),
+            include_default_pygments_style=self._dyncond('include_default_pygments_style'),
             clipboard=DynamicClipboard(lambda: self.clipboard),
             key_bindings=merge_key_bindings([
                 merge_key_bindings([
                     auto_suggest_bindings,
                     ConditionalKeyBindings(open_in_editor_bindings,
-                        dyncond('enable_open_in_editor') &
+                        self._dyncond('enable_open_in_editor') &
                         has_focus(DEFAULT_BUFFER)),
                     prompt_bindings
                 ]),
                 DynamicKeyBindings(lambda: self.key_bindings),
             ]),
-            mouse_support=dyncond('mouse_support'),
+            mouse_support=self._dyncond('mouse_support'),
             editing_mode=editing_mode,
             erase_when_done=erase_when_done,
             reverse_vi_search_direction=True,
@@ -537,7 +582,7 @@ class Prompt(object):
         app.on_render += on_render
         '''
 
-        return application, default_buffer, default_buffer_control
+        return application
 
     def _create_prompt_bindings(self):
         """
