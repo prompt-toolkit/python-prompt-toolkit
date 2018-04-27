@@ -303,7 +303,7 @@ class Prompt(object):
 
         self.default_buffer = self._create_default_buffer()
         self.search_buffer = self._create_search_buffer()
-        self.input_processors = self._create_input_processors()
+        self.all_input_processors = self._create_input_processors()
         self.bottom_toolbar = self._create_bottom_toolbar()
         self.search_toolbar = self._create_search_toolbar()
         self.search_buffer_control = self._create_search_buffer_control()
@@ -442,7 +442,7 @@ class Prompt(object):
         default_buffer_control = BufferControl(
             buffer=self.default_buffer,
             search_buffer_control=get_search_buffer_control,
-            input_processors=self.input_processors,
+            input_processors=self.all_input_processors,
             include_default_input_processors=False,
             lexer=DynamicLexer(lambda: self.lexer),
             preview_search=True)
