@@ -303,7 +303,7 @@ class Prompt(object):
 
         self.default_buffer = self._create_default_buffer()
         self.search_buffer = self._create_search_buffer()
-        self.input_processors = input_processors or self._create_input_processors()
+        self.input_processors = self._create_input_processors()
         self.bottom_toolbar = self._create_bottom_toolbar()
         self.search_toolbar = self._create_search_toolbar()
         self.search_buffer_control = self._create_search_buffer_control()
