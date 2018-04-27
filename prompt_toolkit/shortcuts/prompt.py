@@ -304,11 +304,11 @@ class Prompt(object):
         self.default_buffer = self._create_default_buffer()
         self.search_buffer = self._create_search_buffer()
         self.all_input_processors = self._create_input_processors()
-        self.bottom_toolbar = self._create_bottom_toolbar()
+        self._bottom_toolbar = self._create_bottom_toolbar()
         self.search_toolbar = self._create_search_toolbar()
         self.search_buffer_control = self._create_search_buffer_control()
         self.system_toolbar = self._create_system_toolbar()
-        self.default_buffer_control = self._create_default_buffer_control()
+        self._default_buffer_control = self._create_default_buffer_control()
         self.default_buffer_window = self._create_default_buffer_window()
         self.layout = self._create_layout()
         self.app = self._create_application(editing_mode, erase_when_done)
@@ -451,7 +451,7 @@ class Prompt(object):
 
     def _create_default_buffer_window(self):
         default_buffer_window = Window(
-            self.default_buffer_control,
+            self._default_buffer_control,
             height=self._get_default_buffer_control_height,
             left_margins=[
                 # In multiline mode, use the window margin to display
@@ -524,7 +524,7 @@ class Prompt(object):
                 Window(FormattedTextControl(self._get_arg_text), height=1),
                 self._dyncond('multiline') & has_arg),
             ConditionalContainer(self.search_toolbar, self._dyncond('multiline') & ~is_done),
-            self.bottom_toolbar,
+            self._bottom_toolbar,
         ])
 
         return layout
