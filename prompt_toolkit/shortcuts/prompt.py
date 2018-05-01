@@ -327,8 +327,8 @@ class Prompt(object):
             return to_filter(value)()
         return dynamic
 
+    # Create buffers list.
     def _create_default_buffer(self):
-        # Create buffers list.
         def accept(buff):
             """ Accept the content of the default buffer. This is called when
             the validation succeeds. """
