@@ -300,7 +300,6 @@ class Prompt(object):
         self.has_before_fragments, self.get_prompt_text_1, self.get_prompt_text_2 = \
             _split_multiline_prompt(self._get_prompt)
 
-
         self.default_buffer = self._create_default_buffer()
         self.search_buffer = self._create_search_buffer()
         self.all_input_processors = self._create_input_processors()
@@ -528,7 +527,6 @@ class Prompt(object):
         ])
 
         return layout
-
 
     def _create_application(self, editing_mode, erase_when_done):
         # Default key bindings.
