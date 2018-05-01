@@ -19,6 +19,9 @@ class PygmentsTokens(object):
         result = []
 
         for token, text in self.token_list:
-            result.append(('class:' + pygments_token_to_classname(token), text))
+            if list(token) == ['ZeroWidthEscape']:
+                result.append(('[ZeroWidthEscape]', text))
+            else:
+                result.append(('class:' + pygments_token_to_classname(token), text))
 
         return result
