@@ -50,6 +50,9 @@ class DummyHistory(History):
     """
     `History` object that doesn't remember anything.
     """
+    def __init__(self):
+        self.strings = []
+
     def append(self, string):
         pass
 
