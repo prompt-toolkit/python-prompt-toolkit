@@ -31,6 +31,7 @@ from prompt_toolkit.layout.margins import ScrollbarMargin, NumberedMargin
 from prompt_toolkit.layout.processors import PasswordProcessor, ConditionalProcessor, BeforeInput
 from prompt_toolkit.mouse_events import MouseEventType
 from prompt_toolkit.utils import get_cwidth
+from prompt_toolkit.keys import Keys
 
 from .toolbars import SearchToolbar
 
@@ -507,6 +508,22 @@ class RadioList(object):
         @kb.add(' ')
         def _(event):
             self.current_value = self.values[self._selected_index][0]
+
+        @kb.add(Keys.Any)
+        def _(event):
+            if six.binary_type(self.values[self._selected_index][1]).startswith(event.data):
+                # In the case we are already on a value starting by the key: seek for the next one
+                try:
+                    self._selected_index = self.values.index(next(x for x in self.values[self._selected_index + 1:]
+                                                                          if six.binary_type(x[1]).startswith(event.data)))
+                    return
+                except StopIteration:
+                    pass
+                # There is no next matching value, get back to the first one
+            try:
+                self._selected_index = self.values.index(next(x for x in self.values if six.binary_type(x[1]).startswith(event.data)))
+            except StopIteration:
+                pass
 
         # Control and window.
         self.control = FormattedTextControl(
