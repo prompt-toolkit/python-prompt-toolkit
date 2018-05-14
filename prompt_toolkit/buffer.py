@@ -307,7 +307,7 @@ class Buffer(object):
         #: Ctrl-C should reset this, and copy the whole history back in here.
         #: Enter should process the current command and append to the real
         #: history.
-        self._working_lines = self.history.strings[:]
+        self._working_lines = self.history[:]
         self._working_lines.append(document.text)
         self.__working_index = len(self._working_lines) - 1
 
