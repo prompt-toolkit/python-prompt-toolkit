@@ -303,10 +303,6 @@ def load_emacs_search_bindings():
     handle = key_bindings.add
     from . import search
 
-    # NOTE: We don't bind 'Escape' to 'abort_search'. The reason is that we
-    #       want Alt+Enter to accept input directly in incremental search mode.
-    #       Instead, we have double escape.
-
     handle('c-r')(search.start_reverse_incremental_search)
     handle('c-s')(search.start_forward_incremental_search)
 
@@ -318,14 +314,11 @@ def load_emacs_search_bindings():
     handle('down')(search.forward_incremental_search)
     handle('enter')(search.accept_search)
 
-    # Handling of escape.
-    handle('escape', eager=True)(search.accept_search)
-
-    # Like Readline, it's more natural to accept the search when escape has
-    # been pressed, however instead the following two bindings could be used
-    # instead.
-    # #handle('escape', 'escape', eager=True)(search.abort_search)
-    # #handle('escape', 'enter', eager=True)(search.accept_search_and_accept_input)
+    # Handle escape and escape+enter.
+    # We can support both of following bindings, thanks to `Application.timeoutlen` parameter.
+    # (Unlike readline, we abort the search when escape is pressed.)
+    handle('escape')(search.abort_search)
+    handle('escape', 'enter')(search.accept_search_and_accept_input)
 
     # If Read-only: also include the following key bindings:
 
