@@ -504,6 +504,7 @@ class RadioList(object):
         assert len(values) > 0
         assert all(isinstance(i, tuple) and len(i) == 2
                    for i in values)
+        assert isinstance(default, int)
         assert 0 <= default < len(values)
 
         self.values = values
