@@ -111,14 +111,14 @@ def message_dialog(title='', text='', ok_text='Ok', style=None, async_=False):
 
 
 def radiolist_dialog(title='', text='', ok_text='Ok', cancel_text='Cancel',
-                     values=None, style=None, async_=False):
+                     values=None, style=None, async_=False, default=0):
     """
     Display a simple message box and wait until the user presses enter.
     """
     def ok_handler():
         get_app().exit(result=radio_list.current_value)
 
-    radio_list = RadioList(values)
+    radio_list = RadioList(values, default)
 
     dialog = Dialog(
         title=title,
