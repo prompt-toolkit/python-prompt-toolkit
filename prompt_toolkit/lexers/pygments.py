@@ -15,6 +15,9 @@ from prompt_toolkit.formatted_text.utils import split_lines
 from prompt_toolkit.styles.pygments import pygments_token_to_classname
 from .base import Lexer, SimpleLexer
 
+import logging
+logger = logging.getLogger(__name__)
+
 __all__ = [
     'PygmentsLexer',
     'SyntaxSync',
@@ -224,14 +227,20 @@ class PygmentsLexer(Lexer):
             def get_text_fragments():
                 text = '\n'.join(document.lines[start_lineno:])[column:]
 
-                # We call `get_text_fragments_unprocessed`, because `get_tokens` will
+                # We call `get_tokens_unprocessed`, because `get_tokens` will
                 # still replace \r\n and \r by \n.  (We don't want that,
                 # Pygments should return exactly the same amount of text, as we
                 # have given as input.)
+                num_chars = 0
+
                 for _, t, v in self.pygments_lexer.get_tokens_unprocessed(text):
                     # Turn Pygments `Token` object into prompt_toolkit `Token`
                     # objects.
+                    num_chars += len(v)
                     yield _token_cache[t], v
+
+                if num_chars != len(text):
+                    logger.warn("Pygments lexer has swallowed some characters.")
 
             return enumerate(split_lines(get_text_fragments()), start_lineno)
 

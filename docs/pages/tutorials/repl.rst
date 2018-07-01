@@ -98,7 +98,7 @@ wrapped into a :class:`~prompt_toolkit.lexers.PygmentsLexer`.
     from pygments.lexers import SqlLexer
 
     def main():
-        session = PromptSession(lexer=PygmentsLexer(SqlLexer)
+        session = PromptSession(lexer=PygmentsLexer(SqlLexer))
 
         while True:
             try:
