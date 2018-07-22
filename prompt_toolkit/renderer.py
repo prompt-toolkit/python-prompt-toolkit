@@ -379,14 +379,18 @@ class Renderer(object):
         # In full-screen mode, always use the total height as min-available-height.
         if self.full_screen:
             self._min_available_height = self.output.get_size().rows
+
         # For Win32, we have an API call to get the number of rows below the
         # cursor.
         elif is_windows():
             self._min_available_height = self.output.get_rows_below_cursor_position()
+
         else:
             if self.cpr_support == CPR_Support.NOT_SUPPORTED:
                 return
-            else:
+
+            elif (self.cpr_support == CPR_Support.SUPPORTED or
+                    (self.cpr_support == CPR_Support.UNKNOWN and not self.waiting_for_cpr)):
                 # Asks for a cursor position report (CPR).
                 self._waiting_for_cpr_futures.append(Future())
                 self.output.ask_for_cpr()
