@@ -385,32 +385,38 @@ class Renderer(object):
         elif is_windows():
             self._min_available_height = self.output.get_rows_below_cursor_position()
 
+        # Use CPR.
         else:
             if self.cpr_support == CPR_Support.NOT_SUPPORTED:
                 return
 
-            elif (self.cpr_support == CPR_Support.SUPPORTED or
-                    (self.cpr_support == CPR_Support.UNKNOWN and not self.waiting_for_cpr)):
+            def do_cpr():
                 # Asks for a cursor position report (CPR).
                 self._waiting_for_cpr_futures.append(Future())
                 self.output.ask_for_cpr()
 
-                # If we don't know whether CPR is supported, test using timer.
-                if self.cpr_support == CPR_Support.UNKNOWN:
-                    def timer():
-                        time.sleep(self.CPR_TIMEOUT)
+            if self.cpr_support == CPR_Support.SUPPORTED:
+                do_cpr()
 
-                        # Not set in the meantime -> not supported.
-                        if self.cpr_support == CPR_Support.UNKNOWN:
-                            self.cpr_support = CPR_Support.NOT_SUPPORTED
+            # If we don't know whether CPR is supported, only do a request if
+            # none is pending, and test it, using a timer.
+            elif self.cpr_support == CPR_Support.UNKNOWN and not self.waiting_for_cpr:
+                do_cpr()
 
-                            if self.cpr_not_supported_callback:
-                                # Make sure to call this callback in the main thread.
-                                get_event_loop().call_from_executor(self.cpr_not_supported_callback)
+                def timer():
+                    time.sleep(self.CPR_TIMEOUT)
 
-                    t = threading.Thread(target=timer)
-                    t.daemon = True
-                    t.start()
+                    # Not set in the meantime -> not supported.
+                    if self.cpr_support == CPR_Support.UNKNOWN:
+                        self.cpr_support = CPR_Support.NOT_SUPPORTED
+
+                        if self.cpr_not_supported_callback:
+                            # Make sure to call this callback in the main thread.
+                            get_event_loop().call_from_executor(self.cpr_not_supported_callback)
+
+                t = threading.Thread(target=timer)
+                t.daemon = True
+                t.start()
 
     def report_absolute_cursor_row(self, row):
         """
