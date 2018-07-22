@@ -388,11 +388,12 @@ class Renderer(object):
                 return
             else:
                 # Asks for a cursor position report (CPR).
+                start_timer = len(self._waiting_for_cpr_futures) == 0
                 self._waiting_for_cpr_futures.append(Future())
                 self.output.ask_for_cpr()
 
                 # If we don't know whether CPR is supported, test using timer.
-                if self.cpr_support == CPR_Support.UNKNOWN:
+                if self.cpr_support == CPR_Support.UNKNOWN and start_timer:
                     def timer():
                         time.sleep(self.CPR_TIMEOUT)
 
