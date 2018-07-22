@@ -486,7 +486,7 @@ class cooked_mode(raw_mode):
     ::
 
         with cooked_mode(stdin):
-            ''' the pseudo-terminal stdin is now used in raw mode '''
+            ''' The pseudo-terminal stdin is now used in cooked mode. '''
     """
     def _patch(self):
         # Set cooked.
