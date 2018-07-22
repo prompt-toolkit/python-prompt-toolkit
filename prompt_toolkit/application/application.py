@@ -609,6 +609,15 @@ class Application(object):
                             # yield.
                             self._is_running = False
 
+                            # Detach event handlers for invalidate events.
+                            # (Important when a UIControl is embedded in
+                            # multiple applications, like ptterm in pymux. An
+                            # invalidate should not trigger a repaint in
+                            # terminated applications.)
+                            for ev in self._invalidate_events:
+                                ev -= self.invalidate
+                            self._invalidate_events = []
+
                             # Wait for CPR responses.
                             if self.input.responds_to_cpr:
                                 yield From(self.renderer.wait_for_cpr_responses())
