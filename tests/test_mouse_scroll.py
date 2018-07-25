@@ -8,58 +8,6 @@ from prompt_toolkit.buffer import Buffer
 
 import pytest
 
-width = 10
-height = 4
-
-@pytest.fixture
-def dim():
-    return { "base_width":10,
-             "win_width":10,
-             "win_height":4,
-             "buf_height": 40 }
-
-
-@pytest.fixture
-def content(dim):
-    buff = Buffer()
-    line = "*" * dim["base_width"]
-    for i in range(dim["buf_height"] - 1):
-        buff.insert_text(line)
-        buff.newline()
-    buff.insert_text(line)
-
-    buff.cursor_up(dim["buf_height"] + 1)
-    control = BufferControl(buffer=buff)
-    return control
-
-
-@pytest.fixture
-def empty_window(dim):
-    win = Window(content=BufferControl(buffer=Buffer()))
-    win.reset()
-    update(win, dim)
-    assert win.vertical_scroll == 0
-    assert win.render_info.ui_content.cursor_position.y == 0
-    return win
-
-@pytest.fixture
-def window(content, dim):
-    win = Window(content=content)
-    win.reset()
-    update(win, dim)
-    assert win.vertical_scroll == 0
-    assert win.render_info.ui_content.cursor_position.y == 0
-    return win
-
-@pytest.fixture
-def window_allow_scroll(content, dim):
-    win = Window(content=content, allow_scroll_beyond_bottom=True)
-    win.reset()
-    update(win, dim)
-    assert win.vertical_scroll == 0
-    assert win.render_info.ui_content.cursor_position.y == 0
-    return win
-
 def scroll(window, dim, direction, count, delay_update=False):
     for i in range(count):
         if direction == "up":
@@ -88,9 +36,27 @@ def update(window, dim):
                            z_index=None)
 
 
-def check_scroll(window, vertical_scroll, cursor_y):
-    assert window.vertical_scroll == vertical_scroll
-    assert window.render_info.ui_content.cursor_position.y == cursor_y
+def check_scroll(window, expected_vertical_scroll, expected_cursor_y):
+    assert window.vertical_scroll == expected_vertical_scroll
+    assert window.render_info.ui_content.cursor_position.y == expected_cursor_y
+
+
+@pytest.fixture
+def dim():
+    return { "base_width":10,
+             "win_width":10,
+             "win_height":4,
+             "buf_height": 40 }
+
+
+@pytest.fixture
+def empty_window(dim):
+    win = Window(content=BufferControl(buffer=Buffer()))
+    win.reset()
+    update(win, dim)
+    assert win.vertical_scroll == 0
+    assert win.render_info.ui_content.cursor_position.y == 0
+    return win
 
 
 def test_empty_window(empty_window, dim):
@@ -98,6 +64,31 @@ def test_empty_window(empty_window, dim):
     check_scroll(empty_window, 0, 0)
     scroll(empty_window, dim, "up", 1)
     check_scroll(empty_window, 0, 0)
+
+
+@pytest.fixture
+def content(dim):
+    buff = Buffer()
+    line = "*" * dim["base_width"]
+    for i in range(dim["buf_height"] - 1):
+        buff.insert_text(line)
+        buff.newline()
+    buff.insert_text(line)
+
+    buff.cursor_position = 0
+    control = BufferControl(buffer=buff)
+    return control
+
+
+@pytest.fixture
+def window(content, dim):
+    win = Window(content=content)
+    win.reset()
+    update(win, dim)
+    assert win.vertical_scroll == 0
+    assert win.render_info.ui_content.cursor_position.y == 0
+    return win
+
 
 def test_scroll_down(window, dim):
     scroll(window, dim, "down", 1)
@@ -144,6 +135,16 @@ def test_scroll_past_end_before_render(window, dim):
     scroll(window, dim, "down", dim["buf_height"]*2, delay_update=True)
     check_scroll(window, last_line, last_line)
 
+@pytest.fixture
+def window_allow_scroll(content, dim):
+    win = Window(content=content, allow_scroll_beyond_bottom=True)
+    win.reset()
+    update(win, dim)
+    assert win.vertical_scroll == 0
+    assert win.render_info.ui_content.cursor_position.y == 0
+    return win
+
+
 def test_scroll_beyond_end(window_allow_scroll, dim):
     last_line = dim["buf_height"] - dim["win_height"]
     scroll(window_allow_scroll, dim, "down", last_line)
@@ -154,3 +155,66 @@ def test_scroll_beyond_end(window_allow_scroll, dim):
     scroll(window_allow_scroll, dim, "down", dim["buf_height"])
     check_scroll(window_allow_scroll, dim["buf_height"] - 1, dim["buf_height"] - 1)
 
+
+@pytest.fixture
+def content_line_wrap(dim):
+    buff = Buffer()
+    line = "*" * dim["base_width"]
+    for i in range(dim["buf_height"]//2):
+        buff.insert_text(line)
+        buff.newline()
+
+    for i in range(dim["buf_height"]//2 - 1):
+        buff.insert_text(line * 2)
+        buff.newline()
+    buff.insert_text(line * 2)
+
+    buff.cursor_position = 0
+    control = BufferControl(buffer=buff)
+    return control
+
+
+@pytest.fixture
+def window_line_wrap(content_line_wrap, dim):
+    win = Window(content=content_line_wrap, wrap_lines=True)
+    win.reset()
+    update(win, dim)
+    assert win.vertical_scroll == 0
+    assert win.render_info.ui_content.cursor_position.y == 0
+    return win
+
+
+def test_scroll_down_with_line_wrap(window_line_wrap, dim):
+    scroll(window_line_wrap, dim, "down", 1)
+    check_scroll(window_line_wrap, 1, 1)
+
+    scroll(window_line_wrap, dim, "down", 2)
+    check_scroll(window_line_wrap, 3, 3)
+
+    scroll(window_line_wrap, dim, "down", 2)
+    check_scroll(window_line_wrap, 5, 5)
+
+    mid = dim["buf_height"]//2
+    # Scroll to just before change in line length
+    scroll(window_line_wrap, dim, "down", mid - 5 - dim["win_height"])
+    check_scroll(window_line_wrap,
+                 mid - dim["win_height"],
+                 mid - dim["win_height"])
+
+    scroll(window_line_wrap, dim, "down", 1)
+    check_scroll(window_line_wrap,
+                 mid - dim["win_height"] + 1,
+                 mid - dim["win_height"] + 1)
+
+    scroll(window_line_wrap, dim, "down", dim["win_height"] - 1)
+    check_scroll(window_line_wrap, mid, mid)
+
+    scroll(window_line_wrap, dim, "down", 1)
+    check_scroll(window_line_wrap, mid + 1, mid + 1)
+
+def test_scroll_to_end_with_line_wrap(window_line_wrap, dim):
+    # Later lines take two lines in the window
+    last_line = dim["buf_height"] - dim["win_height"]//2
+
+    scroll(window_line_wrap, dim, "down", dim["buf_height"] * 2)
+    check_scroll(window_line_wrap, last_line, last_line)
