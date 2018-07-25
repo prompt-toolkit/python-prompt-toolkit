@@ -34,6 +34,15 @@ def content(dim):
 
 
 @pytest.fixture
+def empty_window(dim):
+    win = Window(content=BufferControl(buffer=Buffer()))
+    win.reset()
+    update(win, dim)
+    assert win.vertical_scroll == 0
+    assert win.render_info.ui_content.cursor_position.y == 0
+    return win
+
+@pytest.fixture
 def window(content, dim):
     win = Window(content=content)
     win.reset()
@@ -84,6 +93,12 @@ def check_scroll(window, vertical_scroll, cursor_y):
     assert window.render_info.ui_content.cursor_position.y == cursor_y
 
 
+def test_empty_window(empty_window, dim):
+    scroll(empty_window, dim, "down", 1)
+    check_scroll(empty_window, 0, 0)
+    scroll(empty_window, dim, "up", 1)
+    check_scroll(empty_window, 0, 0)
+
 def test_scroll_down(window, dim):
     scroll(window, dim, "down", 1)
     check_scroll(window, 1, 1)
@@ -102,6 +117,8 @@ def test_scroll_up(window, dim):
     check_scroll(window, 4, 7)
     scroll(window, dim, "up", 1)
     check_scroll(window, 3, 6)
+    scroll(window, dim, "up", dim["buf_height"] * 2)
+    check_scroll(window, 0, dim["win_height"] - 1)
 
 def test_multiple_scroll_before_render(window, dim):
     scroll(window, dim, "down", 10, delay_update=True)
@@ -116,7 +133,7 @@ def test_scroll_to_end(window, dim):
     # last line of the window the last line of the buffer
     last_line = dim["buf_height"] - dim["win_height"]
 
-    scroll(window, dim, "down", dim["buf_height"]*2)
+    scroll(window, dim, "down", dim["buf_height"] * 2)
     check_scroll(window, last_line, last_line)
 
 def test_scroll_past_end_before_render(window, dim):
@@ -136,3 +153,4 @@ def test_scroll_beyond_end(window_allow_scroll, dim):
     # Max out scrolling
     scroll(window_allow_scroll, dim, "down", dim["buf_height"])
     check_scroll(window_allow_scroll, dim["buf_height"] - 1, dim["buf_height"] - 1)
+
