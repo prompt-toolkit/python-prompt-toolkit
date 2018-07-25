@@ -9,7 +9,7 @@ otherwise the completions won't be visible.
 from __future__ import unicode_literals
 from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer
-from prompt_toolkit.contrib.completers import WordCompleter
+from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout.containers import HSplit, Window, FloatContainer, Float
 from prompt_toolkit.layout.controls import FormattedTextControl, BufferControl
