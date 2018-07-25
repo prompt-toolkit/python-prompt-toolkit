@@ -2014,10 +2014,17 @@ class Window(Container):
         info = self.render_info
 
         if self.vertical_scroll < info.content_height - info.window_height:
+            should_scroll = True
+        elif self.allow_scroll_beyond_bottom() and self.vertical_scroll < info.content_height:
+            should_scroll = True
+        else:
+            should_scroll = False
+
+        if should_scroll:
+            self.vertical_scroll += 1
             if info.cursor_position.y <= info.configured_scroll_offsets.top:
                 self.content.move_cursor_down()
 
-            self.vertical_scroll += 1
 
     def _scroll_up(self):
         " Scroll window up. "
