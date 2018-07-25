@@ -2035,7 +2035,6 @@ class Window(Container):
             if info.cursor_position.y <= info.configured_scroll_offsets.top:
                 self.content.move_cursor_down()
 
-
     def _scroll_up(self):
         " Scroll window up. "
         info = self.render_info
