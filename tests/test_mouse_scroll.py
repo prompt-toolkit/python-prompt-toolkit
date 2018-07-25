@@ -23,9 +23,11 @@ def dim():
 def content(dim):
     buff = Buffer()
     line = "*" * dim["base_width"]
-    for i in range(dim["buf_height"]):
+    for i in range(dim["buf_height"] - 1):
         buff.insert_text(line)
         buff.newline()
+    buff.insert_text(line)
+
     buff.cursor_up(dim["buf_height"] + 1)
     control = BufferControl(buffer=buff)
     return control
@@ -112,15 +114,25 @@ def test_multiple_scroll_before_render(window, dim):
 def test_scroll_to_end(window, dim):
     # Regardless of how much we scroll, we should stop with the
     # last line of the window the last line of the buffer
-    last_line = dim["buf_height"] - dim["win_height"] + 1
+    last_line = dim["buf_height"] - dim["win_height"]
 
     scroll(window, dim, "down", dim["buf_height"]*2)
     check_scroll(window, last_line, last_line)
 
-def test_scroll_beyond_end(window_allow_scroll, dim):
+def test_scroll_past_end_before_render(window, dim):
+    # Regardless of how much we scroll, we should stop with the
+    # last line of the window the last line of the buffer
+    last_line = dim["buf_height"] - dim["win_height"]
 
-    last_line = dim["buf_height"] - dim["win_height"] + 1
+    scroll(window, dim, "down", dim["buf_height"]*2, delay_update=True)
+    check_scroll(window, last_line, last_line)
+
+def test_scroll_beyond_end(window_allow_scroll, dim):
+    last_line = dim["buf_height"] - dim["win_height"]
     scroll(window_allow_scroll, dim, "down", last_line)
     check_scroll(window_allow_scroll, last_line, last_line)
     scroll(window_allow_scroll, dim, "down", 1)
     check_scroll(window_allow_scroll, last_line + 1, last_line + 1)
+    # Max out scrolling
+    scroll(window_allow_scroll, dim, "down", dim["buf_height"])
+    check_scroll(window_allow_scroll, dim["buf_height"] - 1, dim["buf_height"] - 1)
