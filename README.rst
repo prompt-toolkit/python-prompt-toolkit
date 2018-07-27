@@ -146,6 +146,7 @@ Shells:
 - `EdgeDB <https://edgedb.com/>`_: The next generation object-relational database.
 - `pywit <https://github.com/wit-ai/pywit>`_: Python library for Wit.ai.
 - `objection <https://github.com/sensepost/objection>`_: Runtime Mobile Exploration.
+- `habu <https://github.com/portantier/habu>`_: Python Network Hacking Toolkit.
 
 Full screen applications:
 
