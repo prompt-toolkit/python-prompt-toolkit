@@ -186,7 +186,7 @@ class HSplit(_Split):
         there is not enough space for all the children. By default, this is a
         "Window too small" message.
     :param width: When given, use this width instead of looking at the children.
-    :param height: When given, use this width instead of looking at the children.
+    :param height: When given, use this height instead of looking at the children.
     :param z_index: (int or None) When specified, this can be used to bring
         element in front of floating elements.  `None` means: inherit from parent.
     :param style: A style string.
@@ -371,7 +371,7 @@ class VSplit(_Split):
         there is not enough space for all the children. By default, this is a
         "Window too small" message.
     :param width: When given, use this width instead of looking at the children.
-    :param height: When given, use this width instead of looking at the children.
+    :param height: When given, use this height instead of looking at the children.
     :param z_index: (int or None) When specified, this can be used to bring
         element in front of floating elements.  `None` means: inherit from parent.
     :param style: A style string.
