@@ -868,6 +868,42 @@ def test_vi_character_paste():
     assert result.cursor_position == 2
 
 
+def test_vi_temp_navigation_mode():
+    """
+    Test c-o binding: go for one action into navigation mode.
+    """
+    feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI)
+
+    result, cli = feed(
+        'abcde'
+        '\x0f'  # c-o
+        '3h'  # 3 times to the left.
+        'x\r')
+    assert result.text == 'axbcde'
+    assert result.cursor_position == 2
+
+    result, cli = feed(
+        'abcde'
+        '\x0f'  # c-o
+        'b'  # One word backwards.
+        'x\r')
+    assert result.text == 'xabcde'
+    assert result.cursor_position == 1
+
+    # In replace mode
+    result, cli = feed(
+        'abcdef'
+        '\x1b'  # Navigation mode.
+        '0l'  # Start of line, one character to the right.
+        'R'  # Replace mode
+        '78'
+        '\x0f'  # c-o
+        'l'  # One character forwards.
+        '9\r')
+    assert result.text == 'a78d9f'
+    assert result.cursor_position == 5
+
+
 def test_vi_macros():
     feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI)
 

@@ -10,7 +10,7 @@ __all__ = [
 class InputMode(object):
     INSERT = 'vi-insert'
     INSERT_MULTIPLE = 'vi-insert-multiple'
-    NAVIGATION = 'vi-navigation'
+    NAVIGATION = 'vi-navigation'  # Normal mode.
     REPLACE = 'vi-replace'
 
 
@@ -52,10 +52,16 @@ class ViState(object):
         #: Register in which we are recording a macro.
         #: `None` when not recording anything.
         # Note that the recording is only stored in the register after the
-        # recording is stopped. So we record in a seperate `current_recording`
+        # recording is stopped. So we record in a separate `current_recording`
         # variable.
         self.recording_register = None
         self.current_recording = ''
+
+        # Temporary navigation (normal) mode.
+        # This happens when control-o has been pressed in insert or replace
+        # mode. The user can now do one navigation action and we'll return back
+        # to insert/replace.
+        self.temporary_navigation_mode = False
 
     @property
     def input_mode(self):

@@ -1749,6 +1749,11 @@ def load_vi_bindings():
             event.app.vi_state.waiting_for_digraph = False
             event.app.vi_state.digraph_symbol1 = None
 
+    @handle('c-o', filter=vi_insert_mode | vi_replace_mode)
+    def _(event):
+        " Go into normal mode for one single action. "
+        event.app.vi_state.temporary_navigation_mode = True
+
     @handle('q', Keys.Any, filter=vi_navigation_mode & ~vi_recording_macro)
     def _(event):
         " Start recording macro. "
