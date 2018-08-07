@@ -260,7 +260,7 @@ a completer that implements that interface.
     text = prompt('Enter HTML: ', completer=html_completer)
     print('You said: %s' % text)
 
-:class:`~prompt_toolkit.completion.WordCompleter`` is a simple completer that
+:class:`~prompt_toolkit.completion.WordCompleter` is a simple completer that
 completes the last word before the cursor with any of the given words.
 
 .. image:: ../images/html-completion.png
