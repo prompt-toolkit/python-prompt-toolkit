@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-from prompt_toolkit.styles import Attrs, Style
+from prompt_toolkit.styles import Attrs, Style, SwapLightAndDarkStyleTransformation
 
 
 def test_style_from_dict():
@@ -101,3 +101,23 @@ def test_substyles():
                      italic=True, blink=False, reverse=False, hidden=False)
     assert style.get_attrs_for_style_str('class:b.c') == expected
     assert style.get_attrs_for_style_str('class:b.c.d') == expected
+
+
+def test_swap_light_and_dark_style_transformation():
+    transformation = SwapLightAndDarkStyleTransformation()
+
+    # Test with 6 digit hex colors.
+    before = Attrs(color='440000', bgcolor='888844', bold=True, underline=True,
+                   italic=True, blink=False, reverse=False, hidden=False)
+    after = Attrs(color='ffbbbb', bgcolor='bbbb76', bold=True, underline=True,
+                   italic=True, blink=False, reverse=False, hidden=False)
+
+    assert transformation.transform_attrs(before) == after
+
+    # Test with ANSI colors.
+    before = Attrs(color='ansired', bgcolor='ansiblack', bold=True, underline=True,
+                   italic=True, blink=False, reverse=False, hidden=False)
+    after = Attrs(color='ansibrightred', bgcolor='ansiwhite', bold=True, underline=True,
+                   italic=True, blink=False, reverse=False, hidden=False)
+
+    assert transformation.transform_attrs(before) == after

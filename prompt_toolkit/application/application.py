@@ -24,7 +24,7 @@ from prompt_toolkit.output import Output, ColorDepth
 from prompt_toolkit.output.defaults import get_default_output
 from prompt_toolkit.renderer import Renderer, print_formatted_text
 from prompt_toolkit.search import SearchState
-from prompt_toolkit.styles import BaseStyle, default_ui_style, default_pygments_style, merge_styles, DynamicStyle, DummyStyle
+from prompt_toolkit.styles import BaseStyle, default_ui_style, default_pygments_style, merge_styles, DynamicStyle, DummyStyle, StyleTransformation, DummyStyleTransformation
 from prompt_toolkit.utils import Event, in_main_thread
 from .current import set_app
 from .run_in_terminal import run_in_terminal, run_coroutine_in_terminal
@@ -111,7 +111,9 @@ class Application(object):
         app.run()
     """
     def __init__(self, layout=None,
-                 style=None, include_default_pygments_style=True,
+                 style=None,
+                 include_default_pygments_style=True,
+                 style_transformation=None,
                  key_bindings=None, clipboard=None,
                  full_screen=False, color_depth=None,
                  mouse_support=False,
@@ -150,6 +152,7 @@ class Application(object):
                 color_depth in ColorDepth._ALL), 'Got color_depth: %r' % (color_depth, )
         assert isinstance(editing_mode, six.string_types)
         assert style is None or isinstance(style, BaseStyle)
+        assert style_transformation is None or isinstance(style_transformation, StyleTransformation)
         assert isinstance(erase_when_done, bool)
         assert min_redraw_interval is None or isinstance(min_redraw_interval, (float, int))
         assert max_render_postpone_time is None or isinstance(max_render_postpone_time, (float, int))
@@ -162,10 +165,14 @@ class Application(object):
         assert output is None or isinstance(output, Output)
         assert input is None or isinstance(input, Input)
 
-        self.style = style
-
         if layout is None:
             layout = create_dummy_layout()
+
+        if style_transformation is None:
+            style_transformation = DummyStyleTransformation()
+
+        self.style = style
+        self.style_transformation = style_transformation
 
         # Key bindings.
         self.key_bindings = key_bindings

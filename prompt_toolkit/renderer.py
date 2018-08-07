@@ -10,7 +10,7 @@ from prompt_toolkit.formatted_text import to_formatted_text
 from prompt_toolkit.layout.mouse_handlers import MouseHandlers
 from prompt_toolkit.layout.screen import Point, Screen, WritePosition
 from prompt_toolkit.output import Output, ColorDepth
-from prompt_toolkit.styles import BaseStyle
+from prompt_toolkit.styles import BaseStyle, DummyStyleTransformation, StyleTransformation
 from prompt_toolkit.utils import is_windows
 
 from collections import deque
@@ -229,17 +229,19 @@ class _StyleStringToAttrsCache(dict):
     A cache structure that maps style strings to :class:`.Attr`.
     (This is an important speed up.)
     """
-    def __init__(self, get_attrs_for_style_str):
+    def __init__(self, get_attrs_for_style_str, style_transformation):
+        assert callable(get_attrs_for_style_str)
+        assert isinstance(style_transformation, StyleTransformation)
+
         self.get_attrs_for_style_str = get_attrs_for_style_str
+        self.style_transformation = style_transformation
 
     def __missing__(self, style_str):
-        try:
-            result = self.get_attrs_for_style_str(style_str)
-        except KeyError:
-            result = None
+        attrs = self.get_attrs_for_style_str(style_str)
+        attrs = self.style_transformation.transform_attrs(attrs)
 
-        self[style_str] = result
-        return result
+        self[style_str] = attrs
+        return attrs
 
 
 class CPR_Support(object):
@@ -283,6 +285,7 @@ class Renderer(object):
         # Cache for the style.
         self._attrs_for_style = None
         self._last_style_hash = None
+        self._last_transformation_hash = None
         self._last_color_depth = None
 
         self.reset(_scroll=True)
@@ -543,14 +546,18 @@ class Renderer(object):
         # repaint. (Forget about the previous rendered screen.)
         # (But note that we still use _last_screen to calculate the height.)
         if (self.style.invalidation_hash() != self._last_style_hash or
+                app.style_transformation.invalidation_hash() != self._last_transformation_hash or
                 app.color_depth != self._last_color_depth):
             self._last_screen = None
             self._attrs_for_style = None
 
         if self._attrs_for_style is None:
-            self._attrs_for_style = _StyleStringToAttrsCache(self.style.get_attrs_for_style_str)
+            self._attrs_for_style = _StyleStringToAttrsCache(
+                self.style.get_attrs_for_style_str,
+                app.style_transformation)
 
         self._last_style_hash = self.style.invalidation_hash()
+        self._last_transformation_hash = app.style_transformation.invalidation_hash()
         self._last_color_depth = app.color_depth
 
         layout.container.write_to_screen(screen, mouse_handlers, WritePosition(
@@ -621,15 +628,17 @@ class Renderer(object):
         self.request_absolute_cursor_position()
 
 
-def print_formatted_text(output, formatted_text, style, color_depth=None):
+def print_formatted_text(output, formatted_text, style, style_transformation=None, color_depth=None):
     """
     Print a list of (style_str, text) tuples in the given style to the output.
     """
     assert isinstance(output, Output)
     assert isinstance(style, BaseStyle)
+    assert style_transformation is None or isinstance(style_transformation, StyleTransformation)
     assert color_depth is None or color_depth in ColorDepth._ALL
 
     fragments = to_formatted_text(formatted_text)
+    style_transformation = style_transformation or DummyStyleTransformation()
     color_depth = color_depth or ColorDepth.default()
 
     # Reset first.
@@ -637,7 +646,9 @@ def print_formatted_text(output, formatted_text, style, color_depth=None):
     output.enable_autowrap()
 
     # Print all (style_str, text) tuples.
-    attrs_for_style_string = _StyleStringToAttrsCache(style.get_attrs_for_style_str)
+    attrs_for_style_string = _StyleStringToAttrsCache(
+        style.get_attrs_for_style_str,
+        style_transformation)
 
     for style_str, text in fragments:
         attrs = attrs_for_style_string[style_str]
