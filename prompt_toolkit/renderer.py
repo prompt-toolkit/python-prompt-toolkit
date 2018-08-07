@@ -112,8 +112,10 @@ def _output_screen_diff(app, output, screen, current_pos, color_depth,
         else:
             # Look up `Attr` for this style string. Only set attributes if different.
             # (Two style strings can still have the same formatting.)
+            # Note that an empty style string can have formatting that needs to
+            # be applied, because of style transformations.
             new_attrs = attrs_for_style_string[char.style]
-            if new_attrs != attrs_for_style_string[the_last_style or '']:
+            if not the_last_style or new_attrs != attrs_for_style_string[the_last_style]:
                 _output_set_attributes(new_attrs, color_depth)
 
             write(char.char)
