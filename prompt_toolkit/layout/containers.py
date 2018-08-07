@@ -1174,7 +1174,7 @@ class Window(Container):
     :param align: :class:`.WindowAlign` value or callable that returns an
         :class:`.WindowAlign` value. alignment of content.
     :param style: A style string. Style to be applied to all the cells in this
-        window.
+        window. (This can be a callable that returns a string.)
     :param char: (string) Character to be used for filling the background. This can also
         be a callable that returns a character.
     """
