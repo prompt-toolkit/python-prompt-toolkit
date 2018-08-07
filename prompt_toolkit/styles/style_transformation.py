@@ -12,15 +12,19 @@ from six import with_metaclass
 from colorsys import rgb_to_hls, hls_to_rgb
 
 from .base import ANSI_COLOR_NAMES
+from .style import parse_color
 from prompt_toolkit.cache import memoized
 from prompt_toolkit.filters import to_filter
+from prompt_toolkit.utils import to_str
 
 __all__ = [
     'StyleTransformation',
     'SwapLightAndDarkStyleTransformation',
     'ReverseStyleTransformation',
+    'SetDefaultColorStyleTransformation',
     'DummyStyleTransformation',
     'ConditionalStyleTransformation',
+    'merge_style_transformations',
 ]
 
 
@@ -65,6 +69,35 @@ class ReverseStyleTransformation(StyleTransformation):
         return attrs._replace(reverse=not attrs.reverse)
 
 
+class SetDefaultColorStyleTransformation(StyleTransformation):
+    """
+    Set default foreground/background color.
+
+    :param fg: Color string or callable that returns a color string for the
+        foreground.
+    :param bg: Like `fg`, but for the background.
+    """
+    def __init__(self, fg, bg):
+        self.fg = fg
+        self.bg = bg
+
+    def transform_attrs(self, attrs):
+        if attrs.bgcolor in ('', 'default'):
+            attrs = attrs._replace(bgcolor=parse_color(to_str(self.bg)))
+
+        if attrs.color in ('', 'default'):
+            attrs = attrs._replace(color=parse_color(to_str(self.fg)))
+
+        return attrs
+
+    def invalidation_hash(self):
+        return (
+            'set-defalut-color',
+            to_str(self.fg),
+            to_str(self.bg),
+        )
+
+
 class DummyStyleTransformation(StyleTransformation):
     """
     Don't transform anything at all.
@@ -93,6 +126,26 @@ class ConditionalStyleTransformation(StyleTransformation):
             self.filter(),
             self.style_transformation.invalidation_hash()
         )
+
+
+class _MergedStyleTransformation(StyleTransformation):
+    def __init__(self, style_transformations):
+        self.style_transformations = style_transformations
+
+    def transform_attrs(self, attrs):
+        for transformation in self.style_transformations:
+            attrs = transformation.transform_attrs(attrs)
+        return attrs
+
+    def invalidation_hash(self):
+        return tuple(t.invalidation_hash() for t in self.style_transformations)
+
+
+def merge_style_transformations(style_transformations):
+    """
+    Merge multiple transformations together.
+    """
+    return _MergedStyleTransformation(style_transformations)
 
 
 # Dictionary that maps ANSI color names to their opposite. This is useful for

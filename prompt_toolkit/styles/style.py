@@ -11,6 +11,7 @@ from prompt_toolkit.cache import SimpleCache
 
 __all__ = [
     'Style',
+    'parse_color',
     'Priority',
     'merge_styles',
 ]
@@ -19,7 +20,7 @@ _named_colors_lowercase = dict(
     (k.lower(), v.lstrip('#')) for k, v in NAMED_COLORS.items())
 
 
-def _colorformat(text):
+def parse_color(text):
     """
     Parse/validate color format.
 
@@ -141,11 +142,11 @@ def _parse_style_str(style_str):
 
         # Colors.
         elif part.startswith('bg:'):
-            attrs = attrs._replace(bgcolor=_colorformat(part[3:]))
+            attrs = attrs._replace(bgcolor=parse_color(part[3:]))
         elif part.startswith('fg:'):  # The 'fg:' prefix is optional.
-            attrs = attrs._replace(color=_colorformat(part[3:]))
+            attrs = attrs._replace(color=parse_color(part[3:]))
         else:
-            attrs = attrs._replace(color=_colorformat(part))
+            attrs = attrs._replace(color=parse_color(part))
 
     return attrs
 
