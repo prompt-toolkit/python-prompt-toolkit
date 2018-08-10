@@ -55,7 +55,7 @@ from prompt_toolkit.layout.processors import DynamicProcessor, PasswordProcessor
 from prompt_toolkit.layout.utils import explode_text_fragments
 from prompt_toolkit.lexers import DynamicLexer
 from prompt_toolkit.output.defaults import get_default_output
-from prompt_toolkit.styles import BaseStyle, DynamicStyle
+from prompt_toolkit.styles import BaseStyle, DynamicStyle, StyleTransformation, DynamicStyleTransformation, ConditionalStyleTransformation, SwapLightAndDarkStyleTransformation, merge_style_transformations
 from prompt_toolkit.utils import suspend_to_background_supported
 from prompt_toolkit.validation import DynamicValidator
 from prompt_toolkit.widgets.toolbars import ValidationToolbar, SystemToolbar, SearchToolbar
@@ -191,6 +191,13 @@ class PromptSession(object):
         true, but it is recommended to be disabled if another Pygments style is
         passed as the `style` argument, otherwise, two Pygments styles will be
         merged.
+    :param style_transformation:
+        :class:`~prompt_toolkit.style.StyleTransformation` instance.
+    :param swap_light_and_dark_colors: `bool` or 
+        :class:`~prompt_toolkit.filters.Filter`. When enabled, apply
+        :class:`~prompt_toolkit.style.SwapLightAndDarkStyleTransformation`.
+        This is useful for switching between dark and light terminal
+        backgrounds.
     :param enable_system_prompt: `bool` or
         :class:`~prompt_toolkit.filters.Filter`. Pressing Meta+'!' will show
         a system prompt.
@@ -224,7 +231,8 @@ class PromptSession(object):
     _fields = (
         'message', 'lexer', 'completer', 'complete_in_thread', 'is_password',
         'editing_mode', 'key_bindings', 'is_password', 'bottom_toolbar',
-        'style', 'color_depth', 'include_default_pygments_style', 'rprompt',
+        'style', 'style_transformation', 'swap_light_and_dark_colors',
+        'color_depth', 'include_default_pygments_style', 'rprompt',
         'multiline', 'prompt_continuation', 'wrap_lines',
         'enable_history_search', 'search_ignore_case', 'complete_while_typing',
         'validate_while_typing', 'complete_style', 'mouse_support',
@@ -257,6 +265,8 @@ class PromptSession(object):
             complete_style=None,
             auto_suggest=None,
             style=None,
+            style_transformation=None,
+            swap_light_and_dark_colors=False,
             color_depth=None,
             include_default_pygments_style=True,
             history=None,
@@ -275,6 +285,7 @@ class PromptSession(object):
             input=None,
             output=None):
         assert style is None or isinstance(style, BaseStyle)
+        assert style_transformation is None or isinstance(style, StyleTransformation)
         assert input_processors is None or isinstance(input_processors, list)
         assert key_bindings is None or isinstance(key_bindings, KeyBindingsBase)
 
@@ -524,6 +535,13 @@ class PromptSession(object):
         application = Application(
             layout=self.layout,
             style=DynamicStyle(lambda: self.style),
+            style_transformation=merge_style_transformations([
+                DynamicStyleTransformation(lambda: self.style_transformation),
+                ConditionalStyleTransformation(
+                    SwapLightAndDarkStyleTransformation(),
+                    dyncond('swap_light_and_dark_colors'),
+                ),
+            ]),
             include_default_pygments_style=dyncond('include_default_pygments_style'),
             clipboard=DynamicClipboard(lambda: self.clipboard),
             key_bindings=merge_key_bindings([
@@ -659,7 +677,8 @@ class PromptSession(object):
             refresh_interval=None, vi_mode=None, lexer=None, completer=None,
             complete_in_thread=None, is_password=None, key_bindings=None,
             bottom_toolbar=None, style=None, color_depth=None,
-            include_default_pygments_style=None, rprompt=None, multiline=None,
+            include_default_pygments_style=None, style_transformation=None,
+            swap_light_and_dark_colors=None, rprompt=None, multiline=None,
             prompt_continuation=None, wrap_lines=None,
             enable_history_search=None, search_ignore_case=None,
             complete_while_typing=None, validate_while_typing=None,
