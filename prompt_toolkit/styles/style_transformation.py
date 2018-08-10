@@ -1,7 +1,10 @@
 """
 Collection of style transformations.
 
-Think of it as a kind of style post processing after the rendering is done.
+Think of it as a kind of color post processing after the rendering is done.
+This could be used for instance to change the contrast/saturation; swap light
+and dark colors or even change certain colors for other colors.
+
 When the UI is rendered, these transformations can be applied right after the
 style strings are turned into `Attrs` objects that represent the actual
 formatting.
@@ -24,16 +27,22 @@ __all__ = [
     'SetDefaultColorStyleTransformation',
     'DummyStyleTransformation',
     'ConditionalStyleTransformation',
+    'DynamicStyleTransformation',
     'merge_style_transformations',
 ]
 
 
 class StyleTransformation(with_metaclass(ABCMeta, object)):
+    """
+    Base class for any style transformation.
+    """
     @abstractmethod
     def transform_attrs(self, attrs):
         """
-        Take a color in either the "ansi..." format or a 6 digit lowercase
-        hexadecimal color.
+        Take an `Attrs` object and return a new `Attrs` object.
+
+        Remember that the color formats can be either "ansi..." or a 6 digit
+        lowercase hexadecimal color (without '#' prefix).
         """
 
     def invalidation_hash(self):
@@ -49,6 +58,16 @@ class SwapLightAndDarkStyleTransformation(StyleTransformation):
 
     This is meant to make color schemes that work on a dark background usable
     on a light background (and the other way around).
+
+    Notice that this doesn't swap foreground and background like "reverse"
+    does. It turns light green into dark green and the other way around.
+    Foreground and background colors are considered individually.
+
+    Also notice that when <reverse> is used somewhere and no colors are given
+    in particular (like what is the default for the bottom toolbar), then this
+    doesn't change anything. This is what makes sense, because when the
+    'default' color is chosen, it's what works best for the terminal, and
+    reverse works good with that.
     """
     def transform_attrs(self, attrs):
         """
@@ -64,6 +83,8 @@ class SwapLightAndDarkStyleTransformation(StyleTransformation):
 class ReverseStyleTransformation(StyleTransformation):
     """
     Swap the 'reverse' attribute.
+
+    (This is still experimental.)
     """
     def transform_attrs(self, attrs):
         return attrs._replace(reverse=not attrs.reverse)
@@ -71,7 +92,8 @@ class ReverseStyleTransformation(StyleTransformation):
 
 class SetDefaultColorStyleTransformation(StyleTransformation):
     """
-    Set default foreground/background color.
+    Set default foreground/background color for output that doesn't specify
+    anything. This is useful for overriding the terminal default colors.
 
     :param fg: Color string or callable that returns a color string for the
         foreground.
@@ -92,7 +114,7 @@ class SetDefaultColorStyleTransformation(StyleTransformation):
 
     def invalidation_hash(self):
         return (
-            'set-defalut-color',
+            'set-default-color',
             to_str(self.fg),
             to_str(self.bg),
         )
@@ -104,6 +126,31 @@ class DummyStyleTransformation(StyleTransformation):
     """
     def transform_attrs(self, attrs):
         return attrs
+
+    def invalidation_hash(self):
+        # Always return the same hash for these dummy instances.
+        return 'dummy-style-transformation'
+
+
+class DynamicStyleTransformation(StyleTransformation):
+    """
+    StyleTransformation class that can dynamically returns any
+    `StyleTransformation`.
+
+    :param get_style_transformation: Callable that returns a
+        :class:`.StyleTransformation` instance.
+    """
+    def __init__(self, get_style_transformation):
+        assert callable(get_style_transformation)
+        self.get_style_transformation = get_style_transformation
+
+    def transform_attrs(self, attrs):
+        style_transformation = self.get_style_transformation() or DummyStyleTransformation()
+        return style_transformation.transform_attrs(attrs)
+
+    def invalidation_hash(self):
+        style_transformation = self.get_style_transformation() or DummyStyleTransformation()
+        return style_transformation.invalidation_hash()
 
 
 class ConditionalStyleTransformation(StyleTransformation):
