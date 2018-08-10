@@ -193,7 +193,7 @@ class PromptSession(object):
         merged.
     :param style_transformation:
         :class:`~prompt_toolkit.style.StyleTransformation` instance.
-    :param swap_light_and_dark_colors: `bool` or 
+    :param swap_light_and_dark_colors: `bool` or
         :class:`~prompt_toolkit.filters.Filter`. When enabled, apply
         :class:`~prompt_toolkit.style.SwapLightAndDarkStyleTransformation`.
         This is useful for switching between dark and light terminal
