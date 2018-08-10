@@ -2112,13 +2112,19 @@ class DynamicContainer(Container):
         self._get_container().write_to_screen(*a, **kw)
 
     def is_modal(self):
-        return self._get_container().is_modal()
+        return False
 
     def get_key_bindings(self):
-        self._get_container().get_key_bindings()
+        # Key bindings will be collected when `layout.walk()` finds the child
+        # container.
+        return None
 
     def get_children(self):
-        return self._get_container().get_children()
+        # Here we have to return the current active container itself, not its
+        # children. Otherwise, we run into issues where `layout.walk()` will
+        # never see an object of type `Window` if this contains a window. We
+        # can't/shouldn't proxy the "isinstance" check.
+        return [self._get_container()]
 
 
 def to_container(container):
