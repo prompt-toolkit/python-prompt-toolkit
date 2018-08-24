@@ -129,8 +129,10 @@ class Bar(Formatter):
         self.sym_c = sym_c
         self.unknown = unknown
 
+        self._reserved_width = len(start) + len(sym_b) + len(end)
+
     def format(self, progress_bar, progress, width):
-        width -= 3  # Subtract left '|', bar_b and right '|'
+        width -= self._reserved_width  # Subtract left, bar_b and right
 
         if progress.total:
             pb_a = int(progress.percentage * width / 100)
