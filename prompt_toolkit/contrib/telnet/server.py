@@ -15,7 +15,7 @@ from prompt_toolkit.eventloop import get_event_loop, ensure_future, Future, From
 from prompt_toolkit.eventloop.context import context
 from prompt_toolkit.formatted_text import to_formatted_text
 from prompt_toolkit.input.defaults import set_default_input
-from prompt_toolkit.input.vt100 import PipeInput
+from prompt_toolkit.input.posix_pipe import PosixPipeInput
 from prompt_toolkit.layout.screen import Size
 from prompt_toolkit.output.defaults import set_default_output
 from prompt_toolkit.output.vt100 import Vt100_Output
@@ -109,7 +109,7 @@ class TelnetConnection(object):
         _initialize_telnet(conn)
 
         # Create input.
-        self.vt100_input = PipeInput()
+        self.vt100_input = PosixPipeInput()
 
         # Create output.
         def get_size():

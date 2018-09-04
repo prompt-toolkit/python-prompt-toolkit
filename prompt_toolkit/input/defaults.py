@@ -64,7 +64,7 @@ def get_default_input():
 
 def set_default_input(input):
     """
-    Set the default `Output` class.
+    Set the default `Input` class.
 
     (Used for instance, for the telnet submodule.)
     """
