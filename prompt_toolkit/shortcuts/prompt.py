@@ -36,7 +36,7 @@ from prompt_toolkit.document import Document
 from prompt_toolkit.enums import DEFAULT_BUFFER, SEARCH_BUFFER, EditingMode
 from prompt_toolkit.eventloop import ensure_future, Return, From, get_event_loop
 from prompt_toolkit.filters import is_done, has_focus, renderer_height_is_known, to_filter, Condition, has_arg
-from prompt_toolkit.formatted_text import to_formatted_text, merge_formatted_text
+from prompt_toolkit.formatted_text import to_formatted_text, merge_formatted_text, fragment_list_to_text
 from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.input.defaults import get_default_input
 from prompt_toolkit.key_binding.bindings.auto_suggest import load_auto_suggest_bindings
@@ -49,17 +49,17 @@ from prompt_toolkit.layout.containers import ConditionalContainer, WindowAlign
 from prompt_toolkit.layout.controls import BufferControl, SearchBufferControl, FormattedTextControl
 from prompt_toolkit.layout.dimension import Dimension
 from prompt_toolkit.layout.layout import Layout
-from prompt_toolkit.layout.margins import PromptMargin, ConditionalMargin
 from prompt_toolkit.layout.menus import CompletionsMenu, MultiColumnCompletionsMenu
-from prompt_toolkit.layout.processors import DynamicProcessor, PasswordProcessor, ConditionalProcessor, AppendAutoSuggestion, HighlightIncrementalSearchProcessor, HighlightSelectionProcessor, DisplayMultipleCursors, BeforeInput, ReverseSearchProcessor, ShowArg, merge_processors
+from prompt_toolkit.layout.processors import DynamicProcessor, PasswordProcessor, ConditionalProcessor, AppendAutoSuggestion, HighlightIncrementalSearchProcessor, HighlightSelectionProcessor, DisplayMultipleCursors, ReverseSearchProcessor, merge_processors
 from prompt_toolkit.layout.utils import explode_text_fragments
 from prompt_toolkit.lexers import DynamicLexer
 from prompt_toolkit.output.defaults import get_default_output
 from prompt_toolkit.styles import BaseStyle, DynamicStyle, StyleTransformation, DynamicStyleTransformation, ConditionalStyleTransformation, SwapLightAndDarkStyleTransformation, merge_style_transformations
-from prompt_toolkit.utils import suspend_to_background_supported
+from prompt_toolkit.utils import suspend_to_background_supported, get_cwidth
 from prompt_toolkit.validation import DynamicValidator
 from prompt_toolkit.widgets.toolbars import ValidationToolbar, SystemToolbar, SearchToolbar
 from six import text_type
+from functools import partial
 
 import contextlib
 import threading
@@ -215,8 +215,8 @@ class PromptSession(object):
         return formatted text.
     :param prompt_continuation: Text that needs to be displayed for a multiline
         prompt continuation. This can either be formatted text or a callable
-        that takes a `width`, `line_number` and `is_soft_wrap` as input and
-        returns formatted text.
+        that takes a `prompt_width`, `line_number` and `wrap_count` as input
+        and returns formatted text.
     :param complete_style: ``CompleteStyle.COLUMN``,
         ``CompleteStyle.MULTI_COLUMN`` or ``CompleteStyle.READLINE_LIKE``.
     :param mouse_support: `bool` or :class:`~prompt_toolkit.filters.Filter`
@@ -393,14 +393,6 @@ class PromptSession(object):
 
             # Users can insert processors here.
             DynamicProcessor(lambda: merge_processors(self.input_processors or [])),
-
-            # For single line mode, show the prompt before the input.
-            ConditionalProcessor(
-                merge_processors([
-                    BeforeInput(get_prompt_text_2),
-                    ShowArg(),
-                ]),
-                ~dyncond('multiline'))
         ]
 
         # Create bottom toolbars.
@@ -422,7 +414,6 @@ class PromptSession(object):
             buffer=search_buffer,
             input_processors=[
                 ReverseSearchProcessor(),
-                ShowArg(),
             ],
             ignore_case=dyncond('search_ignore_case'))
 
@@ -447,14 +438,8 @@ class PromptSession(object):
         default_buffer_window = Window(
             default_buffer_control,
             height=self._get_default_buffer_control_height,
-            left_margins=[
-                # In multiline mode, use the window margin to display
-                # the prompt and continuation fragments.
-                ConditionalMargin(
-                    PromptMargin(get_prompt_text_2, self._get_continuation),
-                    filter=dyncond('multiline'),
-                )
-            ],
+            get_line_prefix=partial(
+                self._get_line_prefix, get_prompt_text_2=get_prompt_text_2),
             wrap_lines=dyncond('wrap_lines'))
 
         @Condition
@@ -776,25 +761,46 @@ class PromptSession(object):
     def _get_prompt(self):
         return to_formatted_text(self.message, style='class:prompt')
 
-    def _get_continuation(self, width, line_number, is_soft_wrap):
+    def _get_continuation(self, width, line_number, wrap_count):
         """
         Insert the prompt continuation.
 
-        :param width: The width that's available for the continuation (don't
-            exceed this).
+        :param width: The width that was used for the prompt. (more or less can
+            be used.)
         :param line_number:
-        :param is_soft_wrap: True when we got a soft wrap here instead of a
-            hard line ending.
+        :param wrap_count: Amount of times that the line has been wrapped.
         """
         prompt_continuation = self.prompt_continuation
 
         if callable(prompt_continuation):
-            prompt_continuation = prompt_continuation(width, line_number, is_soft_wrap)
+            prompt_continuation = prompt_continuation(width, line_number, wrap_count)
+
+        # When the continuation prompt is not given, choose the same width as
+        # the actual prompt.
+        if not prompt_continuation and _true(self.multiline):
+            prompt_continuation = ' ' * width
 
         return to_formatted_text(
             prompt_continuation, style='class:prompt-continuation')
 
+    def _get_line_prefix(self, line_number, wrap_count, get_prompt_text_2):
+        """
+        Return whatever needs to be inserted before every line.
+        (the prompt, or a line continuation.)
+        """
+        # First line: display the "arg" or the prompt.
+        if line_number == 0 and wrap_count == 0:
+            if not _true(self.multiline) and get_app().key_processor.arg is not None:
+                return self._inline_arg()
+            else:
+                return get_prompt_text_2()
+
+        # For the next lines, display the appropriate continuation.
+        prompt_width = get_cwidth(fragment_list_to_text(get_prompt_text_2()))
+        return self._get_continuation(prompt_width, line_number, wrap_count)
+
     def _get_arg_text(self):
+        " 'arg' toolbar, for in multiline mode. "
         arg = self.app.key_processor.arg
         if arg == '-':
             arg = '-1'
@@ -803,6 +809,20 @@ class PromptSession(object):
             ('class:arg-toolbar', 'Repeat: '),
             ('class:arg-toolbar.text', arg)
         ]
+
+    def _inline_arg(self):
+        " 'arg' prefix, for in single line mode. "
+        app = get_app()
+        if app.key_processor.arg is None:
+            return []
+        else:
+            arg = app.key_processor.arg
+
+            return [
+                ('class:prompt.arg', '(arg: '),
+                ('class:prompt.arg.text', str(arg)),
+                ('class:prompt.arg', ') '),
+            ]
 
 
 def prompt(*a, **kw):

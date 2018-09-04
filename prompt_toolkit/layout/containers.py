@@ -15,10 +15,11 @@ from .margins import Margin
 from .screen import Point, WritePosition, _CHAR_CACHE
 from .utils import explode_text_fragments
 
-from prompt_toolkit.formatted_text.utils import fragment_list_to_text, fragment_list_width
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.cache import SimpleCache
 from prompt_toolkit.filters import to_filter, vi_insert_mode, emacs_insert_mode
+from prompt_toolkit.formatted_text import to_formatted_text
+from prompt_toolkit.formatted_text.utils import fragment_list_to_text, fragment_list_width
 from prompt_toolkit.mouse_events import MouseEvent, MouseEventType
 from prompt_toolkit.utils import take_using_weights, get_cwidth, to_int, to_str
 
@@ -884,11 +885,12 @@ class WindowRenderInfo(object):
         coordinates of the :class:`UIContent` to (y, x) absolute coordinates at
         the rendered screen.
     """
-    def __init__(self, ui_content, horizontal_scroll, vertical_scroll,
+    def __init__(self, window, ui_content, horizontal_scroll, vertical_scroll,
                  window_width, window_height,
                  configured_scroll_offsets,
                  visible_line_to_row_col, rowcol_to_yx,
                  x_offset, y_offset, wrap_lines):
+        assert isinstance(window, Window)
         assert isinstance(ui_content, UIContent)
         assert isinstance(horizontal_scroll, int)
         assert isinstance(vertical_scroll, int)
@@ -901,6 +903,7 @@ class WindowRenderInfo(object):
         assert isinstance(y_offset, int)
         assert isinstance(wrap_lines, bool)
 
+        self.window = window
         self.ui_content = ui_content
         self.vertical_scroll = vertical_scroll
         self.window_width = window_width  # Width without margins.
@@ -1058,7 +1061,8 @@ class WindowRenderInfo(object):
         (The height that it would take, if this line became visible.)
         """
         if self.wrap_lines:
-            return self.ui_content.get_height_for_line(lineno, self.window_width)
+            return self.ui_content.get_height_for_line(
+                lineno, self.window_width, self.window.get_line_prefix)
         else:
             return 1
 
@@ -1175,8 +1179,13 @@ class Window(Container):
         :class:`.WindowAlign` value. alignment of content.
     :param style: A style string. Style to be applied to all the cells in this
         window. (This can be a callable that returns a string.)
-    :param char: (string) Character to be used for filling the background. This can also
-        be a callable that returns a character.
+    :param char: (string) Character to be used for filling the background. This
+        can also be a callable that returns a character.
+    :param get_line_prefix: None or a callable that returns formatted text to
+        be inserted before a line. It takes a line number (int) and a
+        wrap_count and returns formatted text. This can be used for
+        implementation of line continuations, things like Vim "breakindent" and
+        so on.
     """
     def __init__(self, content=None, width=None, height=None, z_index=None,
                  dont_extend_width=False, dont_extend_height=False,
@@ -1185,7 +1194,7 @@ class Window(Container):
                  allow_scroll_beyond_bottom=False, wrap_lines=False,
                  get_vertical_scroll=None, get_horizontal_scroll=None, always_hide_cursor=False,
                  cursorline=False, cursorcolumn=False, colorcolumns=None,
-                 align=WindowAlign.LEFT, style='', char=None):
+                 align=WindowAlign.LEFT, style='', char=None, get_line_prefix=None):
         assert content is None or isinstance(content, UIControl)
         assert is_dimension(width)
         assert is_dimension(height)
@@ -1199,6 +1208,7 @@ class Window(Container):
         assert callable(style) or isinstance(style, text_type)
         assert char is None or callable(char) or isinstance(char, text_type)
         assert z_index is None or isinstance(z_index, int)
+        assert get_line_prefix is None or callable(get_line_prefix)
 
         self.allow_scroll_beyond_bottom = to_filter(allow_scroll_beyond_bottom)
         self.always_hide_cursor = to_filter(always_hide_cursor)
@@ -1220,6 +1230,7 @@ class Window(Container):
         self.align = align
         self.style = style
         self.char = char
+        self.get_line_prefix = get_line_prefix
 
         self.width = width
         self.height = height
@@ -1309,7 +1320,8 @@ class Window(Container):
             wrap_lines = self.wrap_lines()
 
             return self.content.preferred_height(
-                width - total_margin_width, max_available_height, wrap_lines)
+                width - total_margin_width, max_available_height, wrap_lines,
+                self.get_line_prefix)
 
         return self._merge_dimensions(
             dimension=to_dimension(self.height),
@@ -1431,13 +1443,14 @@ class Window(Container):
             vertical_scroll_2=self.vertical_scroll_2,
             always_hide_cursor=self.always_hide_cursor(),
             has_focus=get_app().layout.current_control == self.content,
-            align=align)
+            align=align, get_line_prefix=self.get_line_prefix)
 
         # Remember render info. (Set before generating the margins. They need this.)
         x_offset = write_position.xpos + sum(left_margin_widths)
         y_offset = write_position.ypos
 
         self.render_info = WindowRenderInfo(
+            window=self,
             ui_content=ui_content,
             horizontal_scroll=self.horizontal_scroll,
             vertical_scroll=self.vertical_scroll,
@@ -1546,9 +1559,12 @@ class Window(Container):
                    width, vertical_scroll=0, horizontal_scroll=0,
                    wrap_lines=False, highlight_lines=False,
                    vertical_scroll_2=0, always_hide_cursor=False,
-                   has_focus=False, align=WindowAlign.LEFT):
+                   has_focus=False, align=WindowAlign.LEFT, get_line_prefix=None):
         """
         Copy the UIContent into the output screen.
+
+        :param get_line_prefix: None or a callable that takes a line number
+            (int) and a wrap_count (int) and returns formatted text.
         """
         xpos = write_position.xpos + move_x
         ypos = write_position.ypos
@@ -1561,6 +1577,113 @@ class Window(Container):
         visible_line_to_row_col = {}
         rowcol_to_yx = {}  # Maps (row, col) from the input to (y, x) screen coordinates.
 
+        def copy_line(line, lineno, x, y, is_input=False):
+            """
+            Copy over a single line to the output screen. This can wrap over
+            multiple lines in the output. It will call the prefix (prompt)
+            function before every line.
+            """
+            if is_input:
+                current_rowcol_to_yx = rowcol_to_yx
+            else:
+                current_rowcol_to_yx = {}  # Throwaway dictionary.
+
+            # Draw line prefix.
+            if is_input and get_line_prefix:
+                prompt = to_formatted_text(get_line_prefix(lineno, 0))
+                x, y = copy_line(prompt, lineno, x, y, is_input=False)
+
+            # Scroll horizontally.
+            skipped = 0  # Characters skipped because of horizontal scrolling.
+            if horizontal_scroll and is_input:
+                h_scroll = horizontal_scroll
+                line = explode_text_fragments(line)
+                while h_scroll > 0 and line:
+                    h_scroll -= get_cwidth(line[0][1])
+                    skipped += 1
+                    del line[:1]  # Remove first character.
+
+                x -= h_scroll  # When scrolling over double width character,
+                               # this can end up being negative.
+
+            # Align this line. (Note that this doesn't work well when we use
+            # get_line_prefix and that function returns variable width prefixes.)
+            if align == WindowAlign.CENTER:
+                line_width = fragment_list_width(line)
+                if line_width < width:
+                    x += (width - line_width) // 2
+            elif align == WindowAlign.RIGHT:
+                line_width = fragment_list_width(line)
+                if line_width < width:
+                    x += width - line_width
+
+            col = 0
+            wrap_count = 0
+            for style, text in line:
+                new_buffer_row = new_buffer[y + ypos]
+
+                # Remember raw VT escape sequences. (E.g. FinalTerm's
+                # escape sequences.)
+                if '[ZeroWidthEscape]' in style:
+                    new_screen.zero_width_escapes[y + ypos][x + xpos] += text
+                    continue
+
+                for c in text:
+                    char = _CHAR_CACHE[c, style]
+                    char_width = char.width
+
+                    # Wrap when the line width is exceeded.
+                    if wrap_lines and x + char_width > width:
+                        visible_line_to_row_col[y + 1] = (
+                            lineno, visible_line_to_row_col[y][1] + x)
+                        y += 1
+                        wrap_count += 1
+                        x = 0
+
+                        # Insert line prefix (continuation prompt).
+                        if is_input and get_line_prefix:
+                            prompt = to_formatted_text(
+                                get_line_prefix(lineno, wrap_count))
+                            x, y = copy_line(prompt, lineno, x, y, is_input=False)
+
+                        new_buffer_row = new_buffer[y + ypos]
+
+                        if y >= write_position.height:
+                            return x, y  # Break out of all for loops.
+
+                    # Set character in screen and shift 'x'.
+                    if x >= 0 and y >= 0 and x < write_position.width:
+                        new_buffer_row[x + xpos] = char
+
+                        # When we print a multi width character, make sure
+                        # to erase the neighbours positions in the screen.
+                        # (The empty string if different from everything,
+                        # so next redraw this cell will repaint anyway.)
+                        if char_width > 1:
+                            for i in range(1, char_width):
+                                new_buffer_row[x + xpos + i] = empty_char
+
+                        # If this is a zero width characters, then it's
+                        # probably part of a decomposed unicode character.
+                        # See: https://en.wikipedia.org/wiki/Unicode_equivalence
+                        # Merge it in the previous cell.
+                        elif char_width == 0:
+                            # Handle all character widths. If the previous
+                            # character is a multiwidth character, then
+                            # merge it two positions back.
+                            for pw in [2, 1]:  # Previous character width.
+                                if x - pw >= 0 and new_buffer_row[x + xpos - pw].width == pw:
+                                    prev_char = new_buffer_row[x + xpos - pw]
+                                    char2 = _CHAR_CACHE[prev_char.char + c, prev_char.style]
+                                    new_buffer_row[x + xpos - pw] = char2
+
+                        # Keep track of write position for each character.
+                        current_rowcol_to_yx[lineno, col + skipped] = (y + ypos, x + xpos)
+
+                    col += 1
+                    x += char_width
+            return x, y
+
         # Copy content.
         def copy():
             y = - vertical_scroll_2
@@ -1570,77 +1693,11 @@ class Window(Container):
                 # Take the next line and copy it in the real screen.
                 line = ui_content.get_line(lineno)
 
-                col = 0
-                x = -horizontal_scroll
-
                 visible_line_to_row_col[y] = (lineno, horizontal_scroll)
-                new_buffer_row = new_buffer[y + ypos]
 
-                # Align this line.
-                if align == WindowAlign.CENTER:
-                    line_width = fragment_list_width(line)
-                    if line_width < width:
-                        x += (width - line_width) // 2
-                elif align == WindowAlign.RIGHT:
-                    line_width = fragment_list_width(line)
-                    if line_width < width:
-                        x += width - line_width
-
-                # Copy line.
-                for style, text in line:
-                    # Remember raw VT escape sequences. (E.g. FinalTerm's
-                    # escape sequences.)
-                    if '[ZeroWidthEscape]' in style:
-                        new_screen.zero_width_escapes[y + ypos][x + xpos] += text
-                        continue
-
-                    for c in text:
-                        char = _CHAR_CACHE[c, style]
-                        char_width = char.width
-
-                        # Wrap when the line width is exceeded.
-                        if wrap_lines and x + char_width > width:
-                            visible_line_to_row_col[y + 1] = (
-                                lineno, visible_line_to_row_col[y][1] + x)
-                            y += 1
-                            x = -horizontal_scroll  # This would be equal to zero.
-                                                    # (horizontal_scroll=0 when wrap_lines.)
-                            new_buffer_row = new_buffer[y + ypos]
-
-                            if y >= write_position.height:
-                                return y  # Break out of all for loops.
-
-                        # Set character in screen and shift 'x'.
-                        if x >= 0 and y >= 0 and x < write_position.width:
-                            new_buffer_row[x + xpos] = char
-
-                            # When we print a multi width character, make sure
-                            # to erase the neighbours positions in the screen.
-                            # (The empty string if different from everything,
-                            # so next redraw this cell will repaint anyway.)
-                            if char_width > 1:
-                                for i in range(1, char_width):
-                                    new_buffer_row[x + xpos + i] = empty_char
-
-                            # If this is a zero width characters, then it's
-                            # probably part of a decomposed unicode character.
-                            # See: https://en.wikipedia.org/wiki/Unicode_equivalence
-                            # Merge it in the previous cell.
-                            elif char_width == 0:
-                                # Handle all character widths. If the previous
-                                # character is a multiwidth character, then
-                                # merge it two positions back.
-                                for pw in [2, 1]:  # Previous character width.
-                                    if x - pw >= 0 and new_buffer_row[x + xpos - pw].width == pw:
-                                        prev_char = new_buffer_row[x + xpos - pw]
-                                        char2 = _CHAR_CACHE[prev_char.char + c, prev_char.style]
-                                        new_buffer_row[x + xpos - pw] = char2
-
-                            # Keep track of write position for each character.
-                            rowcol_to_yx[lineno, col] = (y + ypos, x + xpos)
-
-                        col += 1
-                        x += char_width
+                # Copy margin and actual line.
+                x = 0
+                x, y = copy_line(line, lineno, x, y, is_input=True)
 
                 lineno += 1
                 y += 1
@@ -1839,22 +1896,38 @@ class Window(Container):
         # We don't have horizontal scrolling.
         self.horizontal_scroll = 0
 
+        def get_line_height(lineno):
+            return ui_content.get_height_for_line(lineno, width, self.get_line_prefix)
+
+        # When there is no space, reset `vertical_scroll_2` to zero and abort.
+        # This can happen if the margin is bigger than the window width.
+        # Otherwise the text height will become "infinite" (a big number) and
+        # the copy_line will spend a huge amount of iterations trying to render
+        # nothing.
+        if width <= 0:
+            self.vertical_scroll = ui_content.cursor_position.y
+            self.vertical_scroll_2 = 0
+            return
+
         # If the current line consumes more than the whole window height,
         # then we have to scroll vertically inside this line. (We don't take
         # the scroll offsets into account for this.)
         # Also, ignore the scroll offsets in this case. Just set the vertical
         # scroll to this line.
-        if ui_content.get_height_for_line(ui_content.cursor_position.y, width) > height - scroll_offsets_top:
-            # Calculate the height of the text before the cursor, with the line
-            # containing the cursor included, and the character below the
-            # cursor included as well.
-            line = explode_text_fragments(ui_content.get_line(ui_content.cursor_position.y))
-            text_before_cursor = fragment_list_to_text(line[:ui_content.cursor_position.x + 1])
-            text_before_height = UIContent.get_height_for_text(text_before_cursor, width)
+        line_height = get_line_height(ui_content.cursor_position.y)
+        if line_height > height - scroll_offsets_top:
+            # Calculate the height of the text before the cursor (including
+            # line prefixes).
+            text_before_height = ui_content.wrap_line(
+                ui_content.cursor_position.y, width, self.get_line_prefix,
+                slice_stop=ui_content.cursor_position.x)[0]
 
             # Adjust scroll offset.
             self.vertical_scroll = ui_content.cursor_position.y
-            self.vertical_scroll_2 = min(text_before_height - 1, self.vertical_scroll_2)
+            self.vertical_scroll_2 = min(
+                text_before_height - 1,  # Keep the cursor visible.
+                line_height - height,  # Avoid blank lines at the bottom when scolling up again.
+                self.vertical_scroll_2)
             self.vertical_scroll_2 = max(0, text_before_height - height, self.vertical_scroll_2)
             return
         else:
@@ -1868,7 +1941,7 @@ class Window(Container):
             prev_lineno = ui_content.cursor_position.y
 
             for lineno in range(ui_content.cursor_position.y, -1, -1):
-                used_height += ui_content.get_height_for_line(lineno, width)
+                used_height += get_line_height(lineno)
 
                 if used_height > height - scroll_offsets_bottom:
                     return prev_lineno
@@ -1882,7 +1955,7 @@ class Window(Container):
             used_height = 0
 
             for lineno in range(ui_content.cursor_position.y - 1, -1, -1):
-                used_height += ui_content.get_height_for_line(lineno, width)
+                used_height += get_line_height(lineno)
 
                 if used_height > scroll_offsets_top:
                     return prev_lineno
@@ -1899,7 +1972,7 @@ class Window(Container):
             prev_lineno = ui_content.line_count - 1
             used_height = 0
             for lineno in range(ui_content.line_count - 1, -1, -1):
-                used_height += ui_content.get_height_for_line(lineno, width)
+                used_height += get_line_height(lineno)
                 if used_height > height:
                     return prev_lineno
                 else:
@@ -1989,12 +2062,18 @@ class Window(Container):
             window_size=height,
             content_size=ui_content.line_count)
 
+        if self.get_line_prefix:
+            current_line_prefix_width = fragment_list_width(to_formatted_text(
+                self.get_line_prefix(ui_content.cursor_position.y, 0)))
+        else:
+            current_line_prefix_width = 0
+
         self.horizontal_scroll = do_scroll(
             current_scroll=self.horizontal_scroll,
             scroll_offset_start=offsets.left,
             scroll_offset_end=offsets.right,
             cursor_pos=get_cwidth(current_line_text[:ui_content.cursor_position.x]),
-            window_size=width,
+            window_size=width - current_line_prefix_width,
             # We can only analyse the current line. Calculating the width off
             # all the lines is too expensive.
             content_size=max(get_cwidth(current_line_text), self.horizontal_scroll + width))

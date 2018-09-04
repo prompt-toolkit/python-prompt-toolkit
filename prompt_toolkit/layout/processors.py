@@ -393,6 +393,12 @@ class BeforeInput(Processor):
 
 
 class ShowArg(BeforeInput):
+    """
+    Display the 'arg' in front of the input.
+
+    This was used by the `PromptSession`, but now it uses the
+    `Window.get_line_prefix` function instead.
+    """
     def __init__(self):
         super(ShowArg, self).__init__(self._get_text_fragments)
 
