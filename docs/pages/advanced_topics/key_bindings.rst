@@ -1,6 +1,6 @@
 .. _key_bindings:
 
-Move about key bindings
+More about key bindings
 =======================
 
 This page contains a few additional notes about key bindings.
