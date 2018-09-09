@@ -270,6 +270,7 @@ class Button(object):
 
         return [
             ('class:button.arrow', '<', handler),
+            ('[SetCursorPosition]', ''),
             ('class:button.text', text, handler),
             ('class:button.arrow', '>', handler),
         ]
