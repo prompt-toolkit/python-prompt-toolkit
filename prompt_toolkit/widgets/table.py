@@ -1,10 +1,13 @@
+#!/usr/bin/env python3
+
 from prompt_toolkit import Application
 from prompt_toolkit.layout.layout import Layout
-from prompt_toolkit.widgets import Box, TextArea
+from prompt_toolkit.layout.dimension import Dimension as D, sum_layout_dimensions, max_layout_dimensions, to_dimension
+from prompt_toolkit.widgets import Box, TextArea, Label, Button
 # from prompt_toolkit.widgets.base import Border
 from prompt_toolkit.layout.containers import Window, VSplit, HSplit, HorizontalAlign, VerticalAlign
-from prompt_toolkit.layout.dimension import Dimension
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
+from prompt_toolkit.utils import take_using_weights
 
 
 class SpaceBorder:
@@ -110,162 +113,421 @@ class Merge:
         self.cell = cell
         self.merge = merge
 
+    def __iter__(self):
+        yield self.cell
+        yield self.merge
+
 
 class Table(HSplit):
-    def __init__(self, table, column_width="fit", column_widths=[],
-                 borders=ThinBorder,
-                 window_too_small=None,
+    def __init__(self, table,
+                 borders=ThinBorder, column_width=None, column_widths=[],
+                 window_too_small=None, align=VerticalAlign.JUSTIFY,
+                 padding=0, padding_char=None, padding_style='',
                  width=None, height=None, z_index=None,
                  modal=False, key_bindings=None, style=''):
+        self.borders = borders
         self.column_width = column_width
         self.column_widths = column_widths
 
         # ensure the table is iterable (has rows)
         if not isinstance(table, list):
             table = [table]
-
-        # detect the maximum number of columns
-        columns = []
-        for i, row in enumerate(table):
-            columns.append(0)
-
-            # ensure the row is iterable (has cells)
-            if not isinstance(row, list):
-                table[i] = row = [row]
-
-            for j, cell in enumerate(row):
-                if isinstance(cell, Merge):
-                    pass
-                elif isinstance(cell, dict):
-                    row[j] = cell = Merge(**cell)
-                else:
-                    row[j] = cell = Merge(cell)
-                columns[-1] += cell.merge
-        columns = max(columns)
-
-        children = []
-        previous = None
-        for row in table:
-            children.append(_Border(previous, row, columns, borders))
-            children.append(_Row(row, self, columns, borders))
-            previous = row
-        children.append(_Border(previous, None, columns, borders))
+        children = [_Row(row=row, table=self, borders=borders)
+                    for row in table]
 
         super().__init__(
-            children=children, window_too_small=window_too_small,
-            width=width, height=height, z_index=z_index,
-            modal=modal, key_bindings=key_bindings, style=style)
+            children=children,
+            window_too_small=window_too_small,
+            align=align,
+            padding=padding,
+            padding_char=padding_char,
+            padding_style=padding_style,
+            width=width,
+            height=height,
+            z_index=z_index,
+            modal=modal,
+            key_bindings=key_bindings,
+            style=style)
+
+    @property
+    def columns(self):
+        return max(row.raw_columns for row in self.children)
+
+    @property
+    def _all_children(self):
+        """
+        List of child objects, including padding & borders.
+        """
+        def get():
+            result = []
+
+            # Padding top.
+            if self.align in (VerticalAlign.CENTER, VerticalAlign.BOTTOM):
+                result.append(Window(width=D(preferred=0)))
+
+            # Border top is first inserted in children loop.
+
+            # The children with padding.
+            prev = None
+            for child in self.children:
+                result.append(_Border(
+                    prev=prev,
+                    next=child,
+                    table=self,
+                    borders=self.borders))
+                result.append(child)
+                prev = child
+
+            # Border bottom.
+            result.append(_Border(prev=prev, next=None, table=self, borders=self.borders))
+
+            # Padding bottom.
+            if self.align in (VerticalAlign.CENTER, VerticalAlign.TOP):
+                result.append(Window(width=D(preferred=0)))
+
+            return result
+
+        return self._children_cache.get(tuple(self.children), get)
+
+    def preferred_dimensions(self, width):
+        dimensions = [[]] * self.columns
+        for row in self.children:
+            assert isinstance(row, _Row)
+            j = 0
+            for cell in row.children:
+                assert isinstance(cell, _Cell)
+
+                if cell.merge != 1:
+                    dimensions[j].append(cell.preferred_width(width))
+
+                j += cell.merge
+
+        for i, c in enumerate(dimensions):
+            yield D.exact(1)
+
+            try:
+                w = self.column_widths[i]
+            except IndexError:
+                w = self.column_width
+            if w is None:  # fitted
+                yield max_layout_dimensions(c)
+            else:  # fixed or weighted
+                yield to_dimension(w)
+        yield D.exact(1)
 
 
-class _Row(VSplit):
-    def __init__(self, row, table, columns, borders,
+class _VerticalBorder(Window):
+    def __init__(self, borders):
+        super().__init__(width=1, char=borders.VERTICAL)
+
+
+class _HorizontalBorder(Window):
+    def __init__(self, borders):
+        super().__init__(height=1, char=borders.HORIZONTAL)
+
+
+class _UnitBorder(Window):
+    def __init__(self, char):
+        super().__init__(width=1, height=1, char=char)
+
+
+class _BaseRow(VSplit):
+    @property
+    def columns(self):
+        return self.table.columns
+
+    def _divide_widths(self, width):
+        """
+        Return the widths for all columns.
+        Or None when there is not enough space.
+        """
+        children = self._all_children
+
+        if not children:
+            return []
+
+        # Calculate widths.
+        dimensions = list(self.table.preferred_dimensions(width))
+        preferred_dimensions = [d.preferred for d in dimensions]
+
+        # Sum dimensions
+        sum_dimensions = sum_layout_dimensions(dimensions)
+
+        # If there is not enough space for both.
+        # Don't do anything.
+        if sum_dimensions.min > width:
+            return
+
+        # Find optimal sizes. (Start with minimal size, increase until we cover
+        # the whole width.)
+        sizes = [d.min for d in dimensions]
+
+        child_generator = take_using_weights(
+            items=list(range(len(dimensions))),
+            weights=[d.weight for d in dimensions])
+
+        i = next(child_generator)
+
+        # Increase until we meet at least the 'preferred' size.
+        preferred_stop = min(width, sum_dimensions.preferred)
+
+        while sum(sizes) < preferred_stop:
+            if sizes[i] < preferred_dimensions[i]:
+                sizes[i] += 1
+            i = next(child_generator)
+
+        # Increase until we use all the available space.
+        max_dimensions = [d.max for d in dimensions]
+        max_stop = min(width, sum_dimensions.max)
+
+        while sum(sizes) < max_stop:
+            if sizes[i] < max_dimensions[i]:
+                sizes[i] += 1
+            i = next(child_generator)
+
+        # perform merges if necessary
+        if len(children) != len(sizes):
+            tmp = []
+            i = 0
+            for c in children:
+                if isinstance(c, _Cell):
+                    inc = (c.merge * 2) - 1
+                    tmp.append(sum(sizes[i:i + inc]))
+                else:
+                    inc = 1
+                    tmp.append(sizes[i])
+                i += inc
+            sizes = tmp
+
+        return sizes
+
+
+class _Row(_BaseRow):
+    def __init__(self, row, table, borders,
                  window_too_small=None, align=HorizontalAlign.JUSTIFY,
-                 padding=Dimension.exact(0), padding_char=None,
-                 padding_style='', width=None, height=None, z_index=None,
+                 padding=D.exact(0), padding_char=None, padding_style='',
+                 width=None, height=None, z_index=None,
                  modal=False, key_bindings=None, style=''):
         self.table = table
+        self.borders = borders
 
+        # ensure the row is iterable (has cells)
+        if not isinstance(row, list):
+            row = [row]
         children = []
-        c = 0
-        for cell in row:
-            children.append(Window(width=1, char=borders.VERTICAL))
-            children.append(_Cell(cell.cell, table, self))
-            c += cell.merge
-        for c in range(columns - c):
-            children.append(Window(width=1, char=borders.VERTICAL))
-            children.append(_Cell(TextArea(), table, self))
-        children.append(Window(width=1, char=borders.VERTICAL))
+        for c in row:
+            m = 1
+            if isinstance(c, Merge):
+                c, m = c
+            elif isinstance(c, dict):
+                c, m = Merge(**c)
+            children.append(_Cell(cell=c, table=table, row=self, merge=m))
 
         super().__init__(
-            children=children, window_too_small=window_too_small, align=align,
-            padding=padding, padding_char=padding_char,
-            padding_style=padding_style, width=width, height=height,
-            z_index=z_index, modal=modal, key_bindings=key_bindings,
+            children=children,
+            window_too_small=window_too_small,
+            align=align,
+            padding=padding,
+            padding_char=padding_char,
+            padding_style=padding_style,
+            width=width,
+            height=height,
+            z_index=z_index,
+            modal=modal,
+            key_bindings=key_bindings,
             style=style)
 
+    @property
+    def raw_columns(self):
+        return sum(cell.merge for cell in self.children)
 
-class _Border(VSplit):
-    def __init__(self, previous, next, columns, borders,
+    @property
+    def _all_children(self):
+        """
+        List of child objects, including padding & borders.
+        """
+        def get():
+            result = []
+
+            # Padding left.
+            if self.align in (HorizontalAlign.CENTER, HorizontalAlign.RIGHT):
+                result.append(Window(width=D(preferred=0)))
+
+            # Border left is first inserted in children loop.
+
+            # The children with padding.
+            c = 0
+            for child in self.children:
+                result.append(_VerticalBorder(borders=self.borders))
+                result.append(child)
+                c += child.merge
+            # Fill in any missing columns
+            for _ in range(self.columns - c):
+                result.append(_VerticalBorder(borders=self.borders))
+                result.append(_Cell(cell=None, table=self.table, row=self))
+
+            # Border right.
+            result.append(_VerticalBorder(borders=self.borders))
+
+            # Padding right.
+            if self.align in (HorizontalAlign.CENTER, HorizontalAlign.LEFT):
+                result.append(Window(width=D(preferred=0)))
+
+            return result
+
+        return self._children_cache.get(tuple(self.children), get)
+
+
+class _Border(_BaseRow):
+    def __init__(self, prev, next, table, borders,
                  window_too_small=None, align=HorizontalAlign.JUSTIFY,
-                 padding=Dimension.exact(0), padding_char=None,
-                 padding_style='', width=None, height=None, z_index=None,
+                 padding=D.exact(0), padding_char=None, padding_style='',
+                 width=None, height=None, z_index=None,
                  modal=False, key_bindings=None, style=''):
-        self.previous = previous
+        assert prev or next
+        self.prev = prev
         self.next = next
+        self.table = table
+        self.borders = borders
 
-        if previous:
-            tmp = []
-            for child in previous:
-                tmp.extend([False] * (child.merge - 1))
-                tmp.append(True)
-            previous_columns = tmp + ([True] * (columns - len(tmp)))
-        else:
-            previous_columns = [False] * columns
-
-        if next:
-            tmp = []
-            for child in next:
-                tmp.extend([False] * (child.merge - 1))
-                tmp.append(True)
-            next_columns = tmp + ([True] * (columns - len(tmp)))
-        else:
-            next_columns = [False] * columns
-
-        children = []
-        if previous and next:
-            children.append(Window(height=1, width=1, char=borders.LEFT_T))
-        elif previous:
-            children.append(Window(height=1, width=1, char=borders.BOTTOM_LEFT))
-        elif next:
-            children.append(Window(height=1, width=1, char=borders.TOP_LEFT))
-        for c in range(columns):
-            children.append(Window(height=1, char=borders.HORIZONTAL))
-
-            if previous_columns[c] and next_columns[c]:
-                char = borders.INTERSECT
-            elif previous_columns[c]:
-                char = borders.BOTTOM_T
-            elif next_columns[c]:
-                char = borders.TOP_T
-            else:
-                char = borders.HORIZONTAL
-            children.append(Window(height=1, width=1, char=char))
-        children.pop()
-        if previous and next:
-            children.append(Window(height=1, width=1, char=borders.RIGHT_T))
-        elif previous:
-            children.append(Window(height=1, width=1, char=borders.BOTTOM_RIGHT))
-        elif next:
-            children.append(Window(height=1, width=1, char=borders.TOP_RIGHT))
-
-        height = 1
+        children = [_HorizontalBorder(borders=borders)] * self.columns
 
         super().__init__(
-            children=children, window_too_small=window_too_small, align=align,
-            padding=padding, padding_char=padding_char,
-            padding_style=padding_style, width=width, height=height,
-            z_index=z_index, modal=modal, key_bindings=key_bindings,
+            children=children,
+            window_too_small=window_too_small,
+            align=align,
+            padding=padding,
+            padding_char=padding_char,
+            padding_style=padding_style,
+            width=width,
+            height=height or 1,
+            z_index=z_index,
+            modal=modal,
+            key_bindings=key_bindings,
             style=style)
 
+    def has_borders(self, row):
+        yield None  # first (outer) border
 
-class _Cell(Box):
-    def __init__(self, cell, table, row,
-                 padding=0,
+        if not row:
+            # this row is undefined, none of the borders need to be marked
+            yield from [False] * (self.columns - 1)
+        else:
+            c = 0
+            for child in row.children:
+                yield from [False] * (child.merge - 1)
+                yield True
+                c += child.merge
+
+            yield from [True] * (self.columns - c)
+
+        yield None  # last (outer) border
+
+    @property
+    def _all_children(self):
+        """
+        List of child objects, including padding & borders.
+        """
+        def get():
+            result = []
+
+            # Padding left.
+            if self.align in (HorizontalAlign.CENTER, HorizontalAlign.RIGHT):
+                result.append(Window(width=D(preferred=0)))
+
+            def char(i, pc=False, nc=False):
+                if i == 0:
+                    if self.prev and self.next:
+                        return self.borders.LEFT_T
+                    elif self.prev:
+                        return self.borders.BOTTOM_LEFT
+                    else:
+                        return self.borders.TOP_LEFT
+
+                if i == self.columns:
+                    if self.prev and self.next:
+                        return self.borders.RIGHT_T
+                    elif self.prev:
+                        return self.borders.BOTTOM_RIGHT
+                    else:
+                        return self.borders.TOP_RIGHT
+
+                if pc and nc:
+                    return self.borders.INTERSECT
+                elif pc:
+                    return self.borders.BOTTOM_T
+                elif nc:
+                    return self.borders.TOP_T
+                else:
+                    return self.borders.HORIZONTAL
+
+            # Border left is first inserted in children loop.
+
+            # The children with padding.
+            pcs = self.has_borders(self.prev)
+            ncs = self.has_borders(self.next)
+            for i, (child, pc, nc) in enumerate(zip(self.children, pcs, ncs)):
+                result.append(_UnitBorder(char=char(i, pc, nc)))
+                result.append(child)
+
+            # Border right.
+            result.append(_UnitBorder(char=char(self.columns)))
+
+            # Padding right.
+            if self.align in (HorizontalAlign.CENTER, HorizontalAlign.LEFT):
+                result.append(Window(width=D(preferred=0)))
+
+            return result
+
+        return self._children_cache.get(tuple(self.children), get)
+
+
+class _Cell(HSplit):
+    def __init__(self, cell, table, row, merge=1,
+                 padding=0, char=None,
                  padding_left=None, padding_right=None,
                  padding_top=None, padding_bottom=None,
-                 width=None, height=None,
-                 style='', char=None, modal=False, key_bindings=None):
+                 window_too_small=None,
+                 width=None, height=None, z_index=None,
+                 modal=False, key_bindings=None, style=''):
         self.table = table
         self.row = row
+        self.merge = merge
 
-        body = cell
+        if padding is None:
+            padding = D(preferred=0)
+
+        def get(value):
+            if value is None:
+                value = padding
+            return to_dimension(value)
+
+        self.padding_left = get(padding_left)
+        self.padding_right = get(padding_right)
+        self.padding_top = get(padding_top)
+        self.padding_bottom = get(padding_bottom)
+
+        children = []
+        children.append(Window(width=self.padding_left, char=char))
+        if cell:
+            children.append(cell)
+        children.append(Window(width=self.padding_right, char=char))
+
+        children = [
+            Window(height=self.padding_top, char=char),
+            VSplit(children),
+            Window(height=self.padding_bottom, char=char),
+        ]
 
         super().__init__(
-            body=body, padding=padding,
-            padding_left=padding_left, padding_right=padding_right,
-            padding_top=padding_top, padding_bottom=padding_bottom,
-            width=width, height=height,
-            style=style, char=char, modal=modal, key_bindings=key_bindings)
+            children=children,
+            window_too_small=window_too_small,
+            width=width,
+            height=height,
+            z_index=z_index,
+            modal=modal,
+            key_bindings=key_bindings,
+            style=style)
 
 
 def demo():
@@ -284,27 +546,34 @@ def demo():
     sht2 = "Buzz"
     sht3 = "The quick brown fox jumps over the lazy dog."
 
-    table = [
-        [TextArea(sht1), TextArea(txt2), TextArea(txt1)],
-        [Merge(TextArea(sht2), 2), TextArea(txt4)],
-        [TextArea(sht3), Merge(TextArea(txt6), 3)],
-        [TextArea(sht1), TextArea(txt8)],
-        [TextArea(sht2), TextArea(txt10)],
-    ]
-
-    # table = TextArea(sht1)
-
     kb = KeyBindings()
     @kb.add('c-c')
     def _(event):
         " Abort when Control-C has been pressed. "
         event.app.exit(exception=KeyboardInterrupt, style='class:aborting')
 
+    table = [
+        [TextArea(sht1), Label(txt2), TextArea(txt1)],
+        [Merge(TextArea(sht2), 2), TextArea(txt4)],
+        [Button(sht3), Merge(TextArea(txt6), 3)],
+        [Button(sht1), TextArea(txt8)],
+        [TextArea(sht2), TextArea(txt10)],
+    ]
+
+    # table = TextArea(txt2)
+
     layout = Layout(
         Box(
-            Table(table),
+            Table(
+                table=table,
+                column_width=D.exact(15),
+                column_widths=[None],
+                borders=DoubleBorder),
             padding=1,
         ),
     )
-    app = Application(layout, key_bindings=kb)
-    app.run()
+    return Application(layout, key_bindings=kb)
+
+
+if __name__ == '__main__':
+    demo().run()
