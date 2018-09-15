@@ -7,5 +7,5 @@ from prompt_toolkit import prompt
 
 
 if __name__ == '__main__':
-    answer = prompt('Give me some input:\n > ', multiline=True)
+    answer = prompt('Give me some input: (ESCAPE followed by ENTER to accept)\n > ', multiline=True)
     print('You said: %s' % answer)
