@@ -701,12 +701,14 @@ class PromptSession(object):
         :param accept_default: When `True`, automatically accept the default
             value without allowing the user to edit the input.
         """
+        arguments = locals()
+
         # Backup original settings.
         backup = dict((name, getattr(self, name)) for name in self._fields)
 
         # Take settings from 'prompt'-arguments.
         for name in self._fields:
-            value = locals()[name]
+            value = arguments[name]
             if value is not None:
                 setattr(self, name, value)
 
@@ -716,7 +718,12 @@ class PromptSession(object):
         def restore():
             " Restore original settings. "
             for name in self._fields:
-                setattr(self, name, backup[name])
+                # Only restore attributes that were given to this prompt()
+                # method. This way, we still allow library users to change the
+                # `Application` object at runtime by other means.
+                value = arguments[name]
+                if value is not None:
+                    setattr(self, name, backup[name])
 
         def pre_run():
             if accept_default:
