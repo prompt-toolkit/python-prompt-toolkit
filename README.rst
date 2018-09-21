@@ -154,6 +154,12 @@ Full screen applications:
 - `pyvim <http://github.com/jonathanslenders/pyvim/>`_: A Vim clone in pure Python.
 - `freud <http://github.com/stloma/freud/>`_: REST client backed by SQLite for storing servers
 
+Libraries:
+
+- `PyInquirer <https://github.com/CITGuru/PyInquirer/>`_: A Python library that
+    wants to make it easy for existing Inquirer.js users to write immersive
+    command line applications in Python.
+
 (Want your own project to be listed here? Please create a GitHub issue.)
 
 
