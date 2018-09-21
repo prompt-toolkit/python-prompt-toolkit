@@ -153,6 +153,7 @@ Full screen applications:
 - `pymux <http://github.com/jonathanslenders/pymux/>`_: A terminal multiplexer (like tmux) in pure Python.
 - `pyvim <http://github.com/jonathanslenders/pyvim/>`_: A Vim clone in pure Python.
 - `freud <http://github.com/stloma/freud/>`_: REST client backed by SQLite for storing servers
+- `pypager <https://github.com/jonathanslenders/pypager>`_: A $PAGER in pure Python (like "less").
 
 Libraries:
 
