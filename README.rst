@@ -157,10 +157,10 @@ Full screen applications:
 Libraries:
 
 - `ptterm <https://github.com/jonathanslenders/ptterm>`_: A terminal emulator
-    widget for prompt_toolkit.
+  widget for prompt_toolkit.
 - `PyInquirer <https://github.com/CITGuru/PyInquirer/>`_: A Python library that
-    wants to make it easy for existing Inquirer.js users to write immersive
-    command line applications in Python.
+  wants to make it easy for existing Inquirer.js users to write immersive
+  command line applications in Python.
 
 (Want your own project to be listed here? Please create a GitHub issue.)
 
