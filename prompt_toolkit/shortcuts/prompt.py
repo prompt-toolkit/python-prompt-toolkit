@@ -716,6 +716,7 @@ class PromptSession(object):
         def restore():
             " Restore original settings. "
             for name in self._fields:
+                if name == "editing_mode": continue
                 setattr(self, name, backup[name])
 
         def pre_run():
