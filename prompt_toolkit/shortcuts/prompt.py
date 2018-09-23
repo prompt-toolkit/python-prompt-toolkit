@@ -701,8 +701,11 @@ class PromptSession(object):
         :param accept_default: When `True`, automatically accept the default
             value without allowing the user to edit the input.
         """
-        # Backup original settings.
-        backup = dict((name, getattr(self, name)) for name in self._fields)
+        # NOTE: We used to create a backup of the PromptSession attributes and
+        #       restore them after exiting the prompt. This code has been
+        #       removed, because it was confusing and didn't really serve a use
+        #       case. (People were changing `Application.editing_mode`
+        #       dynamically and surprised that it was reset after every call.)
 
         # Take settings from 'prompt'-arguments.
         for name in self._fields:
@@ -712,11 +715,6 @@ class PromptSession(object):
 
         if vi_mode:
             self.editing_mode = EditingMode.VI
-
-        def restore():
-            " Restore original settings. "
-            for name in self._fields:
-                setattr(self, name, backup[name])
 
         def pre_run():
             if accept_default:
@@ -729,20 +727,14 @@ class PromptSession(object):
 
         def run_sync():
             with self._auto_refresh_context():
-                try:
-                    self.default_buffer.reset(Document(self.default))
-                    return self.app.run(inputhook=self.inputhook, pre_run=pre_run)
-                finally:
-                    restore()
+                self.default_buffer.reset(Document(self.default))
+                return self.app.run(inputhook=self.inputhook, pre_run=pre_run)
 
         def run_async():
             with self._auto_refresh_context():
-                try:
-                    self.default_buffer.reset(Document(self.default))
-                    result = yield From(self.app.run_async(pre_run=pre_run))
-                    raise Return(result)
-                finally:
-                    restore()
+                self.default_buffer.reset(Document(self.default))
+                result = yield From(self.app.run_async(pre_run=pre_run))
+                raise Return(result)
 
         if async_:
             return ensure_future(run_async())
