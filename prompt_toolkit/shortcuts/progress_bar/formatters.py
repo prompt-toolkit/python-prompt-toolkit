@@ -11,6 +11,7 @@ from prompt_toolkit.formatted_text import HTML, to_formatted_text
 from prompt_toolkit.layout.dimension import D
 from prompt_toolkit.layout.utils import explode_text_fragments
 from prompt_toolkit.formatted_text.utils import fragment_list_width
+from prompt_toolkit.utils import get_cwidth
 
 __all__ = [
     'Formatter',
@@ -129,8 +130,13 @@ class Bar(Formatter):
         self.sym_c = sym_c
         self.unknown = unknown
 
+        self._reserved_width = (
+            get_cwidth(start) +
+            get_cwidth(sym_b) +
+            get_cwidth(end))
+
     def format(self, progress_bar, progress, width):
-        width -= 3  # Subtract left '|', bar_b and right '|'
+        width -= self._reserved_width  # Subtract left, bar_b and right
 
         if progress.total:
             pb_a = int(progress.percentage * width / 100)
