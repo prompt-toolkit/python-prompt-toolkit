@@ -687,7 +687,7 @@ class PromptSession(object):
             reserve_space_for_menu=None, enable_system_prompt=None,
             enable_suspend=None, enable_open_in_editor=None,
             tempfile_suffix=None, inputhook=None,
-            async_=False, accept_default=False):
+            async_=False, accept_default=False, pre_run=None):
         """
         Display the prompt. All the arguments are a subset of the
         :class:`~.PromptSession` class itself.
@@ -700,6 +700,7 @@ class PromptSession(object):
             prompt to finish.
         :param accept_default: When `True`, automatically accept the default
             value without allowing the user to edit the input.
+        :param pre_run: Callable, called at the start of `Application.run`.
         """
         # NOTE: We used to create a backup of the PromptSession attributes and
         #       restore them after exiting the prompt. This code has been
@@ -716,7 +717,10 @@ class PromptSession(object):
         if vi_mode:
             self.editing_mode = EditingMode.VI
 
-        def pre_run():
+        def pre_run2():
+            if pre_run:
+                pre_run()
+
             if accept_default:
                 # Validate and handle input. We use `call_from_executor` in
                 # order to run it "soon" (during the next iteration of the
@@ -728,12 +732,12 @@ class PromptSession(object):
         def run_sync():
             with self._auto_refresh_context():
                 self.default_buffer.reset(Document(self.default))
-                return self.app.run(inputhook=self.inputhook, pre_run=pre_run)
+                return self.app.run(inputhook=self.inputhook, pre_run=pre_run2)
 
         def run_async():
             with self._auto_refresh_context():
                 self.default_buffer.reset(Document(self.default))
-                result = yield From(self.app.run_async(pre_run=pre_run))
+                result = yield From(self.app.run_async(pre_run=pre_run2))
                 raise Return(result)
 
         if async_:
