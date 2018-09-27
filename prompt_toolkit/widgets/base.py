@@ -105,7 +105,7 @@ class TextArea(object):
                  dont_extend_height=False, dont_extend_width=False,
                  line_numbers=False, scrollbar=False, style='',
                  search_field=None, preview_search=True,
-                 prompt=''):
+                 prompt='', input_processors=[]):
         assert isinstance(text, six.text_type)
         assert search_field is None or isinstance(search_field, SearchToolbar)
 
@@ -131,7 +131,7 @@ class TextArea(object):
                     filter=to_filter(password)
                 ),
                 BeforeInput(prompt, style='class:text-area.prompt'),
-            ],
+            ] + input_processors,
             search_buffer_control=search_control,
             preview_search=preview_search,
             focusable=focusable)
