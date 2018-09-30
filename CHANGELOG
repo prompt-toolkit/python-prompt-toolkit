@@ -1,6 +1,36 @@
 CHANGELOG
 =========
 
+2.0.5: 2018-09-30
+-----------------
+
+Bug fixes:
+- Fix in `DynamicContainer`. Return correct result for `get_children`. This
+  fixes a bug related to focusing.
+- Properly compute length of `start`, `end` and `sym_b` characters of
+  progress bar.
+- CPR (cursor position request) fix.
+
+Backwards incompatible changes:
+- Stop restoring `PromptSession` attributes when exiting prompt.
+
+New features:
+- Added `get_line_prefix` attribute to window. This opens many
+  possibilities:
+  * Line wrapping (soft and hard) can insert whitespace in front
+    of the line, or insert some symbols in front. Like the Vim "breakindent"
+    option.
+  * Single line prompts also support line continuations now.
+  * Line continuations can have a variable width.
+- For VI mode: implemented temporary normal mode (control-O in insert mode).
+- Added style transformations API. Useful for swapping between light and
+  dark color schemes. Added `swap_light_and_dark_colors` parameter to
+  `prompt()` function.
+- Added `format()` method to ANSI formatted text.
+- Set cursor position for Button widgets.
+- Added `pre_run` argument to `PromptSession.prompt()` method.
+
+
 2.0.4: 2018-07-22
 -----------------
 
