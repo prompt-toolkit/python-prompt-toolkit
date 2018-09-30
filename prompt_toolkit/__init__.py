@@ -22,6 +22,9 @@ from .formatted_text import HTML, ANSI
 # Don't forget to update in `docs/conf.py`!
 __version__ = '2.0.4'
 
+# Version tuple.
+VERSION = tuple(__version__.split('.'))
+
 
 __all__ = [
     # Application.
