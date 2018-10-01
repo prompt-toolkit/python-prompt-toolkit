@@ -6,6 +6,7 @@ import sys
 import threading
 import weakref
 
+from collections import deque
 from functools import partial
 from six import PY2, text_type
 from six.moves import range
@@ -170,6 +171,14 @@ class _CharSizesCache(dict):
     """
     Cache for wcwidth sizes.
     """
+    LONG_STRING_MIN_LEN = 64 # Minimum string length for considering it long.
+    MAX_LONG_STRINGS = 16  # Maximum number of long strings to remember.
+
+    def __init__(self):
+        super(_CharSizesCache, self).__init__()
+        # Keep track of the "long" strings in this cache.
+        self._long_strings = deque()
+
     def __missing__(self, string):
         # Note: We use the `max(0, ...` because some non printable control
         #       characters, like e.g. Ctrl-underscore get a -1 wcwidth value.
@@ -178,12 +187,21 @@ class _CharSizesCache(dict):
         if len(string) == 1:
             result = max(0, wcwidth(string))
         else:
-            result = sum(max(0, wcwidth(c)) for c in string)
+            result = sum(self[c] for c in string)
 
-        # Cache for short strings.
+        # Store in cache.
+        self[string] = result
+
+        # Rotate long strings.
         # (It's hard to tell what we can consider short...)
-        if len(string) < 256:
-            self[string] = result
+        if len(string) > self.LONG_STRING_MIN_LEN:
+            long_strings = self._long_strings
+            long_strings.append(string)
+
+            if len(long_strings) > self.MAX_LONG_STRINGS:
+                key_to_remove = long_strings.popleft()
+                if key_to_remove in self:
+                    del self[key_to_remove]
 
         return result
 
