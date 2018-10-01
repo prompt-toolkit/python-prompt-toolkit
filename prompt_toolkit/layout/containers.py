@@ -1918,9 +1918,9 @@ class Window(Container):
         if line_height > height - scroll_offsets_top:
             # Calculate the height of the text before the cursor (including
             # line prefixes).
-            text_before_height = ui_content.wrap_line(
+            text_before_height = ui_content.get_height_for_line(
                 ui_content.cursor_position.y, width, self.get_line_prefix,
-                slice_stop=ui_content.cursor_position.x)[0]
+                slice_stop=ui_content.cursor_position.x)
 
             # Adjust scroll offset.
             self.vertical_scroll = ui_content.cursor_position.y

@@ -13,7 +13,7 @@ from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.cache import SimpleCache
 from prompt_toolkit.filters import to_filter
 from prompt_toolkit.formatted_text import to_formatted_text
-from prompt_toolkit.formatted_text.utils import split_lines, fragment_list_to_text
+from prompt_toolkit.formatted_text.utils import split_lines, fragment_list_to_text, fragment_list_width
 from prompt_toolkit.lexers import Lexer, SimpleLexer
 from prompt_toolkit.mouse_events import MouseEventType
 from prompt_toolkit.search import SearchState
@@ -141,28 +141,18 @@ class UIContent(object):
         else:
             raise IndexError
 
-    def get_height_for_line(self, lineno, width, get_line_prefix):
+    def get_height_for_line(self, lineno, width, get_line_prefix, slice_stop=None):
         """
         Return the height that a given line would need if it is rendered in a
         space with the given width (using line wrapping).
 
         :param get_line_prefix: None or a `Window.get_line_prefix` callable
             that returns the prefix to be inserted before this line.
-        """
-        return self.wrap_line(lineno, width, get_line_prefix)[0]
-
-    def wrap_line(self, lineno, width, get_line_prefix, slice_stop=None):
-        """
         :param slice_stop: Wrap only "line[:slice_stop]" and return that
             partial result. This is needed for scrolling the window correctly
             when line wrapping.
-        :returns: A tuple `(height, computed_fragment_list)`.
+        :returns: The computed height.
         """
-            # TODO: If no prefix is given, use the fast path
-            #       that we had before.
-        if get_line_prefix is None:
-            get_line_prefix = lambda *a: []
-
         # Instead of using `get_line_prefix` as key, we use render_counter
         # instead. This is more reliable, because this function could still be
         # the same, while the content would change over time.
@@ -174,38 +164,47 @@ class UIContent(object):
             if width == 0:
                 height = 10 ** 8
             else:
-                # Get line.
+                # Calculate line width first.
                 line = fragment_list_to_text(self.get_line(lineno))[:slice_stop]
+                text_width = get_cwidth(line)
 
-                # Start with this line + first prefix.
-                fragments = [('', line)]
-                fragments.extend(to_formatted_text(get_line_prefix(lineno, 0)))
+                if get_line_prefix:
+                    # Add prefix width.
+                    text_width += fragment_list_width(
+                        to_formatted_text(get_line_prefix(lineno, 0)))
 
-                # Calculate text width first.
-                text_width = get_cwidth(fragment_list_to_text(fragments))
+                    # Slower path: compute path when there's a line prefix.
+                    height = 1
 
-                # Keep wrapping as long as the line doesn't fit.
-                # Keep adding new prefixes for every wrapped line.
-                height = 1
+                    # Keep wrapping as long as the line doesn't fit.
+                    # Keep adding new prefixes for every wrapped line.
+                    while text_width > width:
+                        height += 1
+                        text_width -= width
 
-                while text_width > width:
-                    height += 1
-                    text_width -= width
+                        fragments2 = to_formatted_text(
+                            get_line_prefix(lineno, height - 1))
+                        prefix_width = get_cwidth(fragment_list_to_text(fragments2))
 
-                    fragments2 = to_formatted_text(
-                        get_line_prefix(lineno, height - 1))
-                    fragments.extend(fragments2)
-                    prefix_width = get_cwidth(fragment_list_to_text(fragments2))
+                        if prefix_width > width:  # Prefix doesn't fit.
+                            height = 10 ** 8
+                            break
 
-                    if prefix_width > width:  # Prefix doesn't fit.
+                            text_width += prefix_width
+                else:
+                    # Fast path: compute height when there's no line prefix.
+                    try:
+                        quotient, remainder = divmod(text_width, width)
+                    except ZeroDivisionError:
                         height = 10 ** 8
-                        break
-
-                    text_width += prefix_width
+                    else:
+                        if remainder:
+                            quotient += 1  # Like math.ceil.
+                        height = max(1, quotient)
 
             # Cache and return
-            self._line_heights_and_fragments[key] = height, fragments
-            return height, fragments
+            self._line_heights_and_fragments[key] = height
+            return height
 
 
 class FormattedTextControl(UIControl):
