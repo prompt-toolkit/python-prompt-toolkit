@@ -87,6 +87,7 @@ class TextArea(object):
     :param lexer: :class:`~prompt_toolkit.lexers.Lexer` instance for syntax highlighting.
     :param completer: :class:`~prompt_toolkit.completion.Completer` instance for auto completion.
     :param focusable: When `True`, allow this widget to receive the focus.
+    :param focus_on_click: When `True`, focus after mouse click.
     :param wrap_lines: When `True`, don't scroll horizontally, but wrap lines.
     :param width: Window width. (:class:`~prompt_toolkit.layout.Dimension` object.)
     :param height: Window height. (:class:`~prompt_toolkit.layout.Dimension` object.)
@@ -100,12 +101,11 @@ class TextArea(object):
     """
     def __init__(self, text='', multiline=True, password=False,
                  lexer=None, completer=None, accept_handler=None,
-                 focusable=True, wrap_lines=True, read_only=False,
-                 width=None, height=None,
+                 focusable=True, focus_on_click=False, wrap_lines=True,
+                 read_only=False, width=None, height=None,
                  dont_extend_height=False, dont_extend_width=False,
                  line_numbers=False, scrollbar=False, style='',
-                 search_field=None, preview_search=True,
-                 prompt=''):
+                 search_field=None, preview_search=True, prompt=''):
         assert isinstance(text, six.text_type)
         assert search_field is None or isinstance(search_field, SearchToolbar)
 
@@ -134,7 +134,8 @@ class TextArea(object):
             ],
             search_buffer_control=search_control,
             preview_search=preview_search,
-            focusable=focusable)
+            focusable=focusable,
+            focus_on_click=focus_on_click)
 
         if multiline:
             if scrollbar:
