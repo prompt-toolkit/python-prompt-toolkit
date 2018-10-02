@@ -35,7 +35,7 @@ from prompt_toolkit.completion import DynamicCompleter, ThreadedCompleter
 from prompt_toolkit.document import Document
 from prompt_toolkit.enums import DEFAULT_BUFFER, SEARCH_BUFFER, EditingMode
 from prompt_toolkit.eventloop import ensure_future, Return, From, get_event_loop
-from prompt_toolkit.filters import is_done, has_focus, renderer_height_is_known, to_filter, Condition, has_arg
+from prompt_toolkit.filters import is_done, has_focus, renderer_height_is_known, to_filter, is_true, Condition, has_arg
 from prompt_toolkit.formatted_text import to_formatted_text, merge_formatted_text, fragment_list_to_text
 from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.input.defaults import get_default_input
@@ -116,11 +116,6 @@ class _RPrompt(Window):
             FormattedTextControl(get_formatted_text),
             align=WindowAlign.RIGHT,
             style='class:rprompt')
-
-
-def _true(value):
-    " Test whether `value` is True. In case of a Filter, call it. "
-    return to_filter(value)()
 
 
 class CompleteStyle:
@@ -350,8 +345,8 @@ class PromptSession(object):
                 # enable_history_search is enabled. (First convert to Filter,
                 # to avoid doing bitwise operations on bool objects.)
             complete_while_typing=Condition(lambda:
-                _true(self.complete_while_typing) and not
-                _true(self.enable_history_search) and not
+                is_true(self.complete_while_typing) and not
+                is_true(self.enable_history_search) and not
                 self.complete_style == CompleteStyle.READLINE_LIKE),
             validate_while_typing=dyncond('validate_while_typing'),
             enable_history_search=dyncond('enable_history_search'),
@@ -422,7 +417,7 @@ class PromptSession(object):
 
         def get_search_buffer_control():
             " Return the UIControl to be focused when searching start. "
-            if _true(self.multiline):
+            if is_true(self.multiline):
                 return search_toolbar.control
             else:
                 return search_buffer_control
@@ -554,7 +549,7 @@ class PromptSession(object):
         # 'multiline' property dynamic.
         '''
         def on_render(app):
-            multiline = _true(self.multiline)
+            multiline = is_true(self.multiline)
             current_control = app.layout.current_control
 
             if multiline:
@@ -581,7 +576,7 @@ class PromptSession(object):
 
         @Condition
         def do_accept():
-            return (not _true(self.multiline) and
+            return (not is_true(self.multiline) and
                     self.app.layout.has_focus(DEFAULT_BUFFER))
 
         @handle('enter', filter=do_accept & default_focused)
@@ -777,7 +772,7 @@ class PromptSession(object):
 
         # When the continuation prompt is not given, choose the same width as
         # the actual prompt.
-        if not prompt_continuation and _true(self.multiline):
+        if not prompt_continuation and is_true(self.multiline):
             prompt_continuation = ' ' * width
 
         return to_formatted_text(
@@ -790,7 +785,7 @@ class PromptSession(object):
         """
         # First line: display the "arg" or the prompt.
         if line_number == 0 and wrap_count == 0:
-            if not _true(self.multiline) and get_app().key_processor.arg is not None:
+            if not is_true(self.multiline) and get_app().key_processor.arg is not None:
                 return self._inline_arg()
             else:
                 return get_prompt_text_2()

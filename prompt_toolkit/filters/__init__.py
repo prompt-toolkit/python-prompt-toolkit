@@ -20,7 +20,7 @@ from __future__ import unicode_literals
 
 from .base import Filter, Never, Always, Condition
 from .app import *
-from .utils import to_filter
+from .utils import to_filter, is_true
 
 # For backwards-compatibility. Keep this import.
 from .cli import *
