@@ -186,11 +186,11 @@ class UIContent(object):
                             get_line_prefix(lineno, height - 1))
                         prefix_width = get_cwidth(fragment_list_to_text(fragments2))
 
-                        if prefix_width > width:  # Prefix doesn't fit.
+                        if prefix_width >= width:  # Prefix doesn't fit.
                             height = 10 ** 8
                             break
 
-                            text_width += prefix_width
+                        text_width += prefix_width
                 else:
                     # Fast path: compute height when there's no line prefix.
                     try:

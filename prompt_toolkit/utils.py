@@ -171,7 +171,7 @@ class _CharSizesCache(dict):
     """
     Cache for wcwidth sizes.
     """
-    LONG_STRING_MIN_LEN = 64 # Minimum string length for considering it long.
+    LONG_STRING_MIN_LEN = 64  # Minimum string length for considering it long.
     MAX_LONG_STRINGS = 16  # Maximum number of long strings to remember.
 
     def __init__(self):
