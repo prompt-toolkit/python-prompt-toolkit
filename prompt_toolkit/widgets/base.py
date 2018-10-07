@@ -17,9 +17,11 @@ from functools import partial
 import six
 
 from prompt_toolkit.application.current import get_app
+from prompt_toolkit.auto_suggest import DynamicAutoSuggest
 from prompt_toolkit.buffer import Buffer
+from prompt_toolkit.completion import DynamicCompleter
 from prompt_toolkit.document import Document
-from prompt_toolkit.filters import to_filter, Condition
+from prompt_toolkit.filters import to_filter, Condition, is_true, has_focus, is_done
 from prompt_toolkit.formatted_text import to_formatted_text, Template, is_formatted_text
 from prompt_toolkit.formatted_text.utils import fragment_list_to_text
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
@@ -28,7 +30,8 @@ from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
 from prompt_toolkit.layout.dimension import Dimension as D
 from prompt_toolkit.layout.dimension import is_dimension, to_dimension
 from prompt_toolkit.layout.margins import ScrollbarMargin, NumberedMargin
-from prompt_toolkit.layout.processors import PasswordProcessor, ConditionalProcessor, BeforeInput
+from prompt_toolkit.layout.processors import PasswordProcessor, ConditionalProcessor, BeforeInput, AppendAutoSuggestion
+from prompt_toolkit.lexers import DynamicLexer
 from prompt_toolkit.mouse_events import MouseEventType
 from prompt_toolkit.utils import get_cwidth
 from prompt_toolkit.keys import Keys
@@ -66,46 +69,66 @@ class TextArea(object):
     """
     A simple input field.
 
-    This contains a ``prompt_toolkit`` :class:`~prompt_toolkit.buffer.Buffer`
-    object that hold the text data structure for the edited buffer, the
-    :class:`~prompt_toolkit.layout.BufferControl`, which applies a
-    :class:`~prompt_toolkit.lexers.Lexer` to the text and turns it into a
-    :class:`~prompt_toolkit.layout.UIControl`, and finally, this
-    :class:`~prompt_toolkit.layout.UIControl` is wrapped in a
-    :class:`~prompt_toolkit.layout.Window` object (just like any
-    :class:`~prompt_toolkit.layout.UIControl`), which is responsible for the
-    scrolling.
+    This is a higher level abstraction on top of several other classes with
+    sane defaults.
 
-    This widget does have some options, but it does not intend to cover every
-    single use case. For more configurations options, you can always build a
-    text area manually, using a :class:`~prompt_toolkit.buffer.Buffer`,
+    This widget does have the most common options, but it does not intend to
+    cover every single use case. For more configurations options, you can
+    always build a text area manually, using a
+    :class:`~prompt_toolkit.buffer.Buffer`,
     :class:`~prompt_toolkit.layout.BufferControl` and
     :class:`~prompt_toolkit.layout.Window`.
 
+    Buffer attributes:
+
     :param text: The initial text.
     :param multiline: If True, allow multiline input.
-    :param lexer: :class:`~prompt_toolkit.lexers.Lexer` instance for syntax highlighting.
-    :param completer: :class:`~prompt_toolkit.completion.Completer` instance for auto completion.
+    :param completer: :class:`~prompt_toolkit.completion.Completer` instance
+        for auto completion.
+    :param complete_while_typing: Boolean.
+    :param accept_handler: Called when `Enter` is pressed (This should be a
+        callable that takes a buffer as input).
+    :param history: :class:`~prompt_toolkit.history.History` instance.
+    :param auto_suggest: :class:`~prompt_toolkit.auto_suggest.AutoSuggest`
+        instance for input suggestions.
+
+    BufferControl attributes:
+
+    :param password: When `True`, display using asterisks.
     :param focusable: When `True`, allow this widget to receive the focus.
     :param focus_on_click: When `True`, focus after mouse click.
+
+    Window attributes:
+
+    :param lexer: :class:`~prompt_toolkit.lexers.Lexer` instance for syntax
+        highlighting.
     :param wrap_lines: When `True`, don't scroll horizontally, but wrap lines.
     :param width: Window width. (:class:`~prompt_toolkit.layout.Dimension` object.)
     :param height: Window height. (:class:`~prompt_toolkit.layout.Dimension` object.)
-    :param password: When `True`, display using asterisks.
-    :param accept_handler: Called when `Enter` is pressed.
     :param scrollbar: When `True`, display a scroll bar.
-    :param search_field: An optional `SearchToolbar` object.
     :param style: A style string.
-    :param dont_extend_height:
-    :param dont_extend_width:
+    :param dont_extend_width: When `True`, don't take up more width then the
+                              preferred width reported by the control.
+    :param dont_extend_height: When `True`, don't take up more width then the
+                               preferred height reported by the control.
+    :param get_line_prefix: None or a callable that returns formatted text to
+        be inserted before a line. It takes a line number (int) and a
+        wrap_count and returns formatted text. This can be used for
+        implementation of line continuations, things like Vim "breakindent" and
+        so on.
+
+    Other attributes:
+
+    :param search_field: An optional `SearchToolbar` object.
     """
     def __init__(self, text='', multiline=True, password=False,
-                 lexer=None, completer=None, accept_handler=None,
+                 lexer=None, auto_suggest=None, completer=None,
+                 complete_while_typing=True, accept_handler=None, history=None,
                  focusable=True, focus_on_click=False, wrap_lines=True,
                  read_only=False, width=None, height=None,
                  dont_extend_height=False, dont_extend_width=False,
-                 line_numbers=False, scrollbar=False, style='',
-                 search_field=None, preview_search=True, prompt=''):
+                 line_numbers=False, get_line_prefix=None, scrollbar=False,
+                 style='', search_field=None, preview_search=True, prompt=''):
         assert isinstance(text, six.text_type)
         assert search_field is None or isinstance(search_field, SearchToolbar)
 
@@ -114,18 +137,32 @@ class TextArea(object):
         elif isinstance(search_field, SearchToolbar):
             search_control = search_field.control
 
+        # Writeable attributes.
+        self.completer = completer
+        self.complete_while_typing = complete_while_typing
+        self.lexer = lexer
+        self.auto_suggest = auto_suggest
+        self.read_only = read_only
+        self.wrap_lines = wrap_lines
+
         self.buffer = Buffer(
             document=Document(text, 0),
             multiline=multiline,
-            read_only=read_only,
-            completer=completer,
-            complete_while_typing=True,
-            accept_handler=(lambda buff: accept_handler(buff)) if accept_handler else None)
+            read_only=Condition(lambda: is_true(self.read_only)),
+            completer=DynamicCompleter(lambda: self.completer),
+            complete_while_typing=Condition(
+                lambda: is_true(self.complete_while_typing)),
+            auto_suggest=DynamicAutoSuggest(lambda: self.auto_suggest),
+            accept_handler=accept_handler,
+            history=history)
 
         self.control = BufferControl(
             buffer=self.buffer,
-            lexer=lexer,
+            lexer=DynamicLexer(lambda: self.lexer),
             input_processors=[
+                ConditionalProcessor(
+                    AppendAutoSuggestion(),
+                    has_focus(self.buffer) & ~is_done),
                 ConditionalProcessor(
                     processor=PasswordProcessor(),
                     filter=to_filter(password)
@@ -147,7 +184,6 @@ class TextArea(object):
             else:
                 left_margins = []
         else:
-            wrap_lines = False  # Never wrap for single line input.
             height = D.exact(1)
             left_margins = []
             right_margins = []
@@ -161,12 +197,16 @@ class TextArea(object):
             dont_extend_width=dont_extend_width,
             content=self.control,
             style=style,
-            wrap_lines=wrap_lines,
+            wrap_lines=Condition(lambda: is_true(self.wrap_lines)),
             left_margins=left_margins,
-            right_margins=right_margins)
+            right_margins=right_margins,
+            get_line_prefix=get_line_prefix)
 
     @property
     def text(self):
+        """
+        The `Buffer` text.
+        """
         return self.buffer.text
 
     @text.setter
@@ -175,11 +215,25 @@ class TextArea(object):
 
     @property
     def document(self):
+        """
+        The `Buffer` document (text + cursor position).
+        """
         return self.buffer.document
 
     @document.setter
     def document(self, value):
         self.buffer.document = value
+
+    @property
+    def accept_handler(self):
+        """
+        The accept handler. Called when the user accepts the input.
+        """
+        return self.buffer.accept_handler
+
+    @accept_handler.setter
+    def accept_handler(self, value):
+        self.buffer.accept_handler = value
 
     def __pt_container__(self):
         return self.window
