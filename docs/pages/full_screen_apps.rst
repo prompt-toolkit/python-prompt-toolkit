@@ -59,7 +59,7 @@ An application consists of several components. The most important are:
   everywhere.
 - A set of key bindings.
 
-We will discuss all of these in more detail them below.
+We will discuss all of these in more detail below.
 
 
 I/O objects
