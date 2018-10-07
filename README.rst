@@ -148,6 +148,7 @@ Shells:
 - `objection <https://github.com/sensepost/objection>`_: Runtime Mobile Exploration.
 - `habu <https://github.com/portantier/habu>`_: Python Network Hacking Toolkit.
 - `nawano <https://github.com/rbw/nawano>`_: Nano cryptocurrency wallet
+- `athenacli <https://github.com/dbcli/athenacli>`_: A CLI for AWS Athena.
 
 Full screen applications:
 
