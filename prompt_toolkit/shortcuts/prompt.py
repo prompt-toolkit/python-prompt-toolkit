@@ -338,6 +338,7 @@ class PromptSession(object):
             """ Accept the content of the default buffer. This is called when
             the validation succeeds. """
             self.app.exit(result=buff.document.text)
+            return True  # Keep text, we call 'reset' later on.
 
         return Buffer(
             name=DEFAULT_BUFFER,

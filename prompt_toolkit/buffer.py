@@ -134,7 +134,6 @@ class Buffer(object):
     current input line and implements all text manipulations on top of it. It
     also implements the history, undo stack and the completion state.
 
-    :param eventloop: :class:`~prompt_toolkit.eventloop.EventLoop` instance.
     :param completer: :class:`~prompt_toolkit.completion.Completer` instance.
     :param history: :class:`~prompt_toolkit.history.History` instance.
     :param tempfile_suffix: The tempfile suffix (extension) to be used for the
@@ -144,8 +143,14 @@ class Buffer(object):
     :param name: Name for this buffer. E.g. DEFAULT_BUFFER. This is mostly
         useful for key bindings where we sometimes prefer to refer to a buffer
         by their name instead of by reference.
-    :param accept_handler: Callback that takes this buffer as input. Called when
-        the buffer input is accepted. (Usually when the user presses `enter`.)
+    :param accept_handler: Called when the buffer input is accepted. (Usually
+        when the user presses `enter`.) The accept handler receives this
+        `Buffer` as input and should return True when the buffer text should be
+        kept instead of calling reset.
+
+        In case of a `PromptSession` for instance, we want to keep the text,
+        because we will exit the application, and only reset it during the next
+        run.
 
     Events:
 
@@ -1608,9 +1613,15 @@ class Buffer(object):
 
         # When the validation succeeded, accept the input.
         if valid:
-            if self.accept_handler:
-                self.accept_handler(self)
             self.append_to_history()
+
+            if self.accept_handler:
+                keep_text = self.accept_handler(self)
+            else:
+                keep_text = False
+
+            if not keep_text:
+                self.reset()
 
 
 def _only_one_at_a_time(coroutine):
