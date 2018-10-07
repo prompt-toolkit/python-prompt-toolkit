@@ -68,7 +68,7 @@ There are several ways to display colors:
 - By creating a list of ``(pygments.Token, text)`` tuples, and wrapping it in
   :class:`~prompt_toolkit.formatted_text.PygmentsTokens`.
 
-An instance of any of these three kinds of objects is called "formatted text".
+An instance of any of these four kinds of objects is called "formatted text".
 There are various places in prompt toolkit, where we accept not just plain text
 (as a strings), but also formatted text.
 
