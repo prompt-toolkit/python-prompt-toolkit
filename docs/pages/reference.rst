@@ -83,6 +83,12 @@ Style
         Style, Priority, merge_styles, style_from_pygments_cls,
         style_from_pygments_dict, pygments_token_to_classname, NAMED_COLORS
 
+.. automodule:: prompt_toolkit.styles
+    :members: StyleTransformation, SwapLightAndDarkStyleTransformation,
+        AdjustBrightnessStyleTransformation, merge_style_transformations,
+        DummyStyleTransformation, ConditionalStyleTransformation,
+        DynamicStyleTransformation
+
 
 Shortcuts
 ---------

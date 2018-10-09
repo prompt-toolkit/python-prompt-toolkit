@@ -292,3 +292,29 @@ An application can also decide to set the color depth manually by passing a
         color_depth=ColorDepth.ANSI_COLORS_ONLY,
         # ...
     )
+
+
+Style transformations
+---------------------
+
+Prompt_toolkit supports a way to apply certain transformations to the styles
+near the end of the rendering pipeline. This can be used for instance to change
+certain colors to improve the rendering in some terminals.
+
+One useful example is the
+:class:`~prompt_toolkit.styles.AdjustBrightnessStyleTransformation` class,
+which takes `min_brightness` and `max_brightness` as arguments which by default
+have 0.0 and 1.0 as values. In the following code snippet, we increase the
+minimum brightness to improve rendering on terminals with a dark background.
+
+.. code:: python
+
+    from prompt_toolkit.style import AdjustBrightnessStyleTransformation
+
+    app = Application(
+        style_transformation=AdjustBrightnessStyleTransformation(
+            min_brightness=0.5,  # Increase the minimum brightness.
+            max_brightness=1.0,
+        )
+        # ...
+    )

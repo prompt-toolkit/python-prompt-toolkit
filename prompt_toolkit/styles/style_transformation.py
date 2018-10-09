@@ -18,13 +18,14 @@ from .base import ANSI_COLOR_NAMES
 from .style import parse_color
 from prompt_toolkit.cache import memoized
 from prompt_toolkit.filters import to_filter
-from prompt_toolkit.utils import to_str
+from prompt_toolkit.utils import to_str, to_float
 
 __all__ = [
     'StyleTransformation',
     'SwapLightAndDarkStyleTransformation',
     'ReverseStyleTransformation',
     'SetDefaultColorStyleTransformation',
+    'AdjustBrightnessStyleTransformation',
     'DummyStyleTransformation',
     'ConditionalStyleTransformation',
     'DynamicStyleTransformation',
@@ -117,6 +118,102 @@ class SetDefaultColorStyleTransformation(StyleTransformation):
             'set-default-color',
             to_str(self.fg),
             to_str(self.bg),
+        )
+
+
+class AdjustBrightnessStyleTransformation(StyleTransformation):
+    """
+    Adjust the brightness to improve the rendering on either dark or light
+    backgrounds.
+
+    For dark backgrounds, it's best to increase `min_brightness`. For light
+    backgrounds it's best to decrease `max_brightness`. Usually, only one
+    setting is adjusted.
+
+    This will only change the brightness for text that has a foreground color
+    defined, but no background color. It works best for 256 or true color
+    output.
+
+    .. note:: Notice that there is no universal way to detect whether the
+              application is running in a light or dark terminal. As a
+              developer of an command line application, you'll have to make
+              this configurable for the user.
+
+    :param min_brightness: Float between 0.0 and 1.0 or a callable that returns
+        a float.
+    :param max_brightness: Float between 0.0 and 1.0 or a callable that returns
+        a float.
+    """
+    def __init__(self, min_brightness=0.0, max_brightness=1.0):
+        self.min_brightness = min_brightness
+        self.max_brightness = max_brightness
+
+    def transform_attrs(self, attrs):
+        min_brightness = to_float(self.min_brightness)
+        max_brightness = to_float(self.max_brightness)
+        assert 0 <= min_brightness <= 1
+        assert 0 <= max_brightness <= 1
+
+        # Don't do anything if the whole brightness range is acceptable.
+        # This also avoids turning ansi colors into RGB sequences.
+        if min_brightness == 0.0 and max_brightness == 1.0:
+            return attrs
+
+        # If a foreground color is given without a background color.
+        no_background = not attrs.bgcolor or attrs.bgcolor == 'default'
+        has_fgcolor = attrs.color and attrs.color != 'ansidefault'
+
+        if has_fgcolor and no_background:
+            # Calculate new RGB values.
+            r, g, b = self._color_to_rgb(attrs.color)
+            hue, brightness, saturation = rgb_to_hls(r, g, b)
+            brightness = self._interpolate_brightness(
+                brightness, min_brightness, max_brightness)
+            r, g, b = hls_to_rgb(hue, brightness, saturation)
+            new_color = '%02x%02x%02x' % (
+                int(r * 255),
+                int(g * 255),
+                int(b * 255))
+
+            attrs = attrs._replace(color=new_color)
+
+        return attrs
+
+    def _color_to_rgb(self, color):
+        """
+        Parse `style.Attrs` color into RGB tuple.
+        """
+        # Do RGB lookup for ANSI colors.
+        try:
+            from prompt_toolkit.output.vt100 import ANSI_COLORS_TO_RGB
+            r, g, b = ANSI_COLORS_TO_RGB[color]
+            return r / 255.0, g / 255.0, b / 255.0
+        except KeyError:
+            pass
+
+        # Parse RRGGBB format.
+        r = int(color[0:2], 16) / 255.0
+        g = int(color[2:4], 16) / 255.0
+        b = int(color[4:6], 16) / 255.0
+        return r, g, b
+
+        # NOTE: we don't have to support named colors here. They are already
+        #       transformed into RGB values in `style.parse_color`.
+
+    def _interpolate_brightness(self, value, min_brightness, max_brightness):
+        """
+        Map the brightness to the (min_brightness..max_brightness) range.
+        """
+        return (
+            min_brightness +
+            (max_brightness - min_brightness) * value
+        )
+
+    def invalidation_hash(self):
+        return (
+            'adjust-brightness',
+            to_float(self.min_brightness),
+            to_float(self.max_brightness)
         )
 
 

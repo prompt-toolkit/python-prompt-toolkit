@@ -8,7 +8,7 @@ from .defaults import default_ui_style, default_pygments_style
 from .style import Style, Priority, merge_styles, parse_color
 from .pygments import style_from_pygments_cls, style_from_pygments_dict, pygments_token_to_classname
 from .named_colors import NAMED_COLORS
-from .style_transformation import StyleTransformation, SwapLightAndDarkStyleTransformation, ReverseStyleTransformation, DummyStyleTransformation, ConditionalStyleTransformation, SetDefaultColorStyleTransformation, merge_style_transformations, DynamicStyleTransformation
+from .style_transformation import StyleTransformation, SwapLightAndDarkStyleTransformation, ReverseStyleTransformation, DummyStyleTransformation, ConditionalStyleTransformation, SetDefaultColorStyleTransformation, AdjustBrightnessStyleTransformation, merge_style_transformations, DynamicStyleTransformation
 
 
 __all__ = [
@@ -35,6 +35,7 @@ __all__ = [
     'SwapLightAndDarkStyleTransformation',
     'ReverseStyleTransformation',
     'SetDefaultColorStyleTransformation',
+    'AdjustBrightnessStyleTransformation',
     'DummyStyleTransformation',
     'ConditionalStyleTransformation',
     'DynamicStyleTransformation',

@@ -630,7 +630,9 @@ class Renderer(object):
         self.request_absolute_cursor_position()
 
 
-def print_formatted_text(output, formatted_text, style, style_transformation=None, color_depth=None):
+def print_formatted_text(
+        output, formatted_text, style, style_transformation=None,
+        color_depth=None):
     """
     Print a list of (style_str, text) tuples in the given style to the output.
     """

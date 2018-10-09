@@ -69,6 +69,7 @@ def print_formatted_text(*values, **kwargs):
     style = kwargs.pop('style', None)
     output = kwargs.pop('output', None)
     color_depth = kwargs.pop('color_depth', None)
+    style_transformation = kwargs.pop('style_transformation', None)
     include_default_pygments_style = kwargs.pop('include_default_pygments_style', True)
     assert not kwargs
     assert not (output and file)
@@ -112,7 +113,8 @@ def print_formatted_text(*values, **kwargs):
 
     # Print output.
     renderer_print_formatted_text(
-        output, fragments, merged_style, color_depth=color_depth)
+        output, fragments, merged_style, color_depth=color_depth,
+        style_transformation=style_transformation)
 
     # Flush the output stream.
     if flush:

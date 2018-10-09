@@ -25,6 +25,7 @@ __all__ = [
     'test_callable_args',
     'to_str',
     'to_int',
+    'to_float',
 ]
 
 
@@ -331,3 +332,11 @@ def to_int(value):
         return to_int(value())
     else:
         return int(value)
+
+
+def to_float(value):
+    " Turn callable or float into float. "
+    if callable(value):
+        return to_float(value())
+    else:
+        return float(value)
