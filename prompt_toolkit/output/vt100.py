@@ -222,11 +222,14 @@ class _256ColorCache(dict):
         match = 0
 
         for i, (r2, g2, b2) in enumerate(self.colors):
-            d = (r - r2) ** 2 + (g - g2) ** 2 + (b - b2) ** 2
+            if i >= 16:  # XXX: We ignore the 16 ANSI colors when mapping RGB
+                         # to the 256 colors, because these highly depend on
+                         # the color scheme of the terminal.
+                d = (r - r2) ** 2 + (g - g2) ** 2 + (b - b2) ** 2
 
-            if d < distance:
-                match = i
-                distance = d
+                if d < distance:
+                    match = i
+                    distance = d
 
         # Turn color name into code.
         self[value] = match
