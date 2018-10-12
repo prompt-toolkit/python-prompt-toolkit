@@ -62,6 +62,7 @@ class TextInputDialog(object):
         def accept_text(buf):
             get_app().layout.focus(ok_button)
             buf.complete_state = None
+            return True
 
         def accept():
             self.future.set_result(self.text_area.text)
