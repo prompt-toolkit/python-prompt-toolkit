@@ -822,7 +822,12 @@ class Application(object):
         :param text: List of ``(style_str, text)`` tuples.
         :param style: Style class to use. Defaults to the active style in the CLI.
         """
-        print_formatted_text(self.output, text, style or self._merged_style, self.color_depth)
+        print_formatted_text(
+            output=self.output,
+            formatted_text=text,
+            style=style or self._merged_style,
+            color_depth=self.color_depth,
+            style_transformation=self.style_transformation)
 
     @property
     def is_running(self):
