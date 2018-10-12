@@ -97,6 +97,8 @@ class TextArea(object):
     :param password: When `True`, display using asterisks.
     :param focusable: When `True`, allow this widget to receive the focus.
     :param focus_on_click: When `True`, focus after mouse click.
+    :param input_processors: `None` or a list of
+        :class:`~prompt_toolkit.layout.Processor` objects.
 
     Window attributes:
 
@@ -128,7 +130,8 @@ class TextArea(object):
                  read_only=False, width=None, height=None,
                  dont_extend_height=False, dont_extend_width=False,
                  line_numbers=False, get_line_prefix=None, scrollbar=False,
-                 style='', search_field=None, preview_search=True, prompt=''):
+                 style='', search_field=None, preview_search=True, prompt='',
+                 input_processors=None):
         assert isinstance(text, six.text_type)
         assert search_field is None or isinstance(search_field, SearchToolbar)
 
@@ -136,6 +139,9 @@ class TextArea(object):
             search_control = None
         elif isinstance(search_field, SearchToolbar):
             search_control = search_field.control
+
+        if input_processors is None:
+            input_processors = []
 
         # Writeable attributes.
         self.completer = completer
@@ -168,7 +174,7 @@ class TextArea(object):
                     filter=to_filter(password)
                 ),
                 BeforeInput(prompt, style='class:text-area.prompt'),
-            ],
+            ] + input_processors,
             search_buffer_control=search_control,
             preview_search=preview_search,
             focusable=focusable,
