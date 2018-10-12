@@ -1,6 +1,32 @@
 CHANGELOG
 =========
 
+2.0.6: 2018-10-12
+-----------------
+
+Bug fixes:
+- Don't use the predefined ANSI colors for colors that are defined as RGB.
+  (Terminals can assign different color schemes for ansi colors, and we don't
+  want use any of those for colors that are defined like #aabbcc for instance.)
+- Fix in handling of CPRs when patch_stdout is used.
+
+Backwards incompatible changes:
+- Change to the `Buffer` class. Reset the buffer unless the `accept_handler`
+  returns `True` (which means: "keep_text"). This doesn't affect applications
+  that use `PromptSession`.
+
+New features:
+- Added `AdjustBrightnessStyleTransformation`. This is a simple style
+  transformation that improves the rendering on terminals with light or dark
+  background.
+- Improved performance (string width caching and line height calculation).
+- Improved `TextArea`:
+  * Exposed `focus_on_click`.
+  * Added attributes: `auto_suggest`, `complete_while_typing`, `history`,
+    `get_line_prefix`, `input_processors`.
+  * Made attributes writable: `lexer`, `completer`, `complete_while_typing`,
+    `accept_handler`, `read_only`, `wrap_lines`.
+
 2.0.5: 2018-09-30
 -----------------
 
