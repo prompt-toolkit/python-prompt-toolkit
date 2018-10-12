@@ -73,6 +73,12 @@ def run_coroutine_in_terminal(async_func, render_cli_done=False):
         if previous_run_in_terminal_f is not None:
             yield previous_run_in_terminal_f
 
+        # Wait for all CPRs to arrive. We don't want to detach the input until
+        # all cursor position responses have been arrived. Otherwise, the tty
+        # will echo its input and can show stuff like ^[[39;1R.
+        if app.input.responds_to_cpr:
+            yield From(app.renderer.wait_for_cpr_responses())
+
         # Draw interface in 'done' state, or erase.
         if render_cli_done:
             app._redraw(render_as_done=True)

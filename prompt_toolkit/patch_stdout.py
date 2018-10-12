@@ -87,6 +87,11 @@ class StdoutProxy(object):
         Write the given text to stdout and flush.
         If an application is running, use `run_in_terminal`.
         """
+        if not text:
+            # Don't bother calling `run_in_terminal` when there is nothing to
+            # display.
+            return
+
         def write_and_flush():
             self.original_stdout.write(text)
             self.original_stdout.flush()
