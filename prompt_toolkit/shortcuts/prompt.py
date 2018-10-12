@@ -280,7 +280,7 @@ class PromptSession(object):
             input=None,
             output=None):
         assert style is None or isinstance(style, BaseStyle)
-        assert style_transformation is None or isinstance(style, StyleTransformation)
+        assert style_transformation is None or isinstance(style_transformation, StyleTransformation)
         assert input_processors is None or isinstance(input_processors, list)
         assert key_bindings is None or isinstance(key_bindings, KeyBindingsBase)
 
