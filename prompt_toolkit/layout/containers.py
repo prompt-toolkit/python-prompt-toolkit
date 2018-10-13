@@ -23,6 +23,11 @@ from prompt_toolkit.formatted_text.utils import fragment_list_to_text, fragment_
 from prompt_toolkit.mouse_events import MouseEvent, MouseEventType
 from prompt_toolkit.utils import take_using_weights, get_cwidth, to_int, to_str
 
+try:
+    from collections.abc import Sequence
+except ImportError:
+    from collections import Sequence
+
 __all__ = [
     'Container',
     'HorizontalAlign',
@@ -138,7 +143,7 @@ class _Split(Container):
                  padding_style='', width=None, height=None, z_index=None,
                  modal=False, key_bindings=None, style=''):
         assert window_too_small is None or isinstance(window_too_small, Container)
-        assert isinstance(children, list)
+        assert isinstance(children, Sequence)
         assert isinstance(modal, bool)
         assert callable(style) or isinstance(style, text_type)
         assert is_dimension(width)
