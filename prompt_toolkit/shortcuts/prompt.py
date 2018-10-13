@@ -216,8 +216,6 @@ class PromptSession(object):
         ``CompleteStyle.MULTI_COLUMN`` or ``CompleteStyle.READLINE_LIKE``.
     :param mouse_support: `bool` or :class:`~prompt_toolkit.filters.Filter`
         to enable mouse support.
-    :param default: The default input text to be shown. (This can be edited by
-        the user).
     :param refresh_interval: (number; in seconds) When given, refresh the UI
         every so many seconds.
     :param inputhook: None or an Inputhook callable that takes an
@@ -232,14 +230,13 @@ class PromptSession(object):
         'enable_history_search', 'search_ignore_case', 'complete_while_typing',
         'validate_while_typing', 'complete_style', 'mouse_support',
         'auto_suggest', 'clipboard', 'validator', 'refresh_interval',
-        'input_processors', 'default', 'enable_system_prompt',
-        'enable_suspend', 'enable_open_in_editor', 'reserve_space_for_menu',
-        'tempfile_suffix', 'inputhook')
+        'input_processors', 'enable_system_prompt', 'enable_suspend',
+        'enable_open_in_editor', 'reserve_space_for_menu', 'tempfile_suffix',
+        'inputhook')
 
     def __init__(
             self,
             message='',
-            default='',
             multiline=False,
             wrap_lines=True,
             is_password=False,
@@ -651,24 +648,27 @@ class PromptSession(object):
             done[0] = True
 
     def prompt(
-            self, message=None,
+            self,
             # When any of these arguments are passed, this value is overwritten
-            # for the current prompt.
-            default='', editing_mode=None,
-            refresh_interval=None, vi_mode=None, lexer=None, completer=None,
-            complete_in_thread=None, is_password=None, key_bindings=None,
-            bottom_toolbar=None, style=None, color_depth=None,
-            include_default_pygments_style=None, style_transformation=None,
-            swap_light_and_dark_colors=None, rprompt=None, multiline=None,
-            prompt_continuation=None, wrap_lines=None,
-            enable_history_search=None, search_ignore_case=None,
-            complete_while_typing=None, validate_while_typing=None,
-            complete_style=None, auto_suggest=None, validator=None,
-            clipboard=None, mouse_support=None, input_processors=None,
-            reserve_space_for_menu=None, enable_system_prompt=None,
-            enable_suspend=None, enable_open_in_editor=None,
-            tempfile_suffix=None, inputhook=None,
-            async_=False, accept_default=False, pre_run=None):
+            # in this PromptSession.
+            message=None,  # `message` should go first, because people call it
+                           # as positional argument.
+            editing_mode=None, refresh_interval=None, vi_mode=None, lexer=None,
+            completer=None, complete_in_thread=None, is_password=None,
+            key_bindings=None, bottom_toolbar=None, style=None,
+            color_depth=None, include_default_pygments_style=None,
+            style_transformation=None, swap_light_and_dark_colors=None,
+            rprompt=None, multiline=None, prompt_continuation=None,
+            wrap_lines=None, enable_history_search=None,
+            search_ignore_case=None, complete_while_typing=None,
+            validate_while_typing=None, complete_style=None, auto_suggest=None,
+            validator=None, clipboard=None, mouse_support=None,
+            input_processors=None, reserve_space_for_menu=None,
+            enable_system_prompt=None, enable_suspend=None,
+            enable_open_in_editor=None, tempfile_suffix=None, inputhook=None,
+
+            # Following arguments are specific to the current `prompt()` call.
+            async_=False, default='', accept_default=False, pre_run=None):
         """
         Display the prompt. All the arguments are a subset of the
         :class:`~.PromptSession` class itself.
@@ -677,12 +677,18 @@ class PromptSession(object):
         (for abort) and ``EOFError`` when control-d has been pressed (for
         exit).
 
+        Additional arguments, specific for this prompt:
+
         :param async_: When `True` return a `Future` instead of waiting for the
             prompt to finish.
+        :param default: The default input text to be shown. (This can be edited
+            by the user).
         :param accept_default: When `True`, automatically accept the default
             value without allowing the user to edit the input.
         :param pre_run: Callable, called at the start of `Application.run`.
         """
+        assert isinstance(default, text_type)
+
         # NOTE: We used to create a backup of the PromptSession attributes and
         #       restore them after exiting the prompt. This code has been
         #       removed, because it was confusing and didn't really serve a use
@@ -712,12 +718,12 @@ class PromptSession(object):
 
         def run_sync():
             with self._auto_refresh_context():
-                self.default_buffer.reset(Document(self.default))
+                self.default_buffer.reset(Document(default))
                 return self.app.run(inputhook=self.inputhook, pre_run=pre_run2)
 
         def run_async():
             with self._auto_refresh_context():
-                self.default_buffer.reset(Document(self.default))
+                self.default_buffer.reset(Document(default))
                 result = yield From(self.app.run_async(pre_run=pre_run2))
                 raise Return(result)
 
