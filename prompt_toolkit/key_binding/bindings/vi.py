@@ -472,6 +472,11 @@ def load_vi_bindings():
         " Pressing the Insert key. "
         event.app.vi_state.input_mode = InputMode.INSERT
 
+    @handle('insert', filter=vi_insert_mode)
+    def _(event):
+        " Pressing the Insert key. "
+        event.app.vi_state.input_mode = InputMode.NAVIGATION
+
     @handle('a', filter=vi_navigation_mode & ~is_read_only)
             # ~IsReadOnly, because we want to stay in navigation mode for
             # read-only buffers.
