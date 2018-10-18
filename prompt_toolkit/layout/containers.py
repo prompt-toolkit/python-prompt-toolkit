@@ -187,10 +187,17 @@ class HSplit(_Split):
         |                    |
         +--------------------+
 
+    By default, this doesn't display a horizontal line between the children,
+    but if this is something you need, then create a HSplit as follows::
+
+        HSplit(children=[ ... ], padding_char='-',
+               padding=1, padding_style='#ffff00')
+
     :param children: List of child :class:`.Container` objects.
     :param window_too_small: A :class:`.Container` object that is displayed if
         there is not enough space for all the children. By default, this is a
         "Window too small" message.
+    :param align: `VerticalAlign` value.
     :param width: When given, use this width instead of looking at the children.
     :param height: When given, use this height instead of looking at the children.
     :param z_index: (int or None) When specified, this can be used to bring
@@ -198,6 +205,10 @@ class HSplit(_Split):
     :param style: A style string.
     :param modal: ``True`` or ``False``.
     :param key_bindings: ``None`` or a :class:`.KeyBindings` object.
+
+    :param padding: (`Dimension` or int), size to be used for the padding.
+    :param padding_char: Character to be used for filling in the padding.
+    :param padding_style: Style to applied to the padding.
     """
     def __init__(self, children, window_too_small=None,
                  align=VerticalAlign.JUSTIFY, padding=0, padding_char=None,
@@ -372,10 +383,17 @@ class VSplit(_Split):
         |         |          |
         +---------+----------+
 
+    By default, this doesn't display a vertical line between the children, but
+    if this is something you need, then create a HSplit as follows::
+
+        VSplit(children=[ ... ], padding_char='|',
+               padding=1, padding_style='#ffff00')
+
     :param children: List of child :class:`.Container` objects.
     :param window_too_small: A :class:`.Container` object that is displayed if
         there is not enough space for all the children. By default, this is a
         "Window too small" message.
+    :param align: `HorizontalAlign` value.
     :param width: When given, use this width instead of looking at the children.
     :param height: When given, use this height instead of looking at the children.
     :param z_index: (int or None) When specified, this can be used to bring
@@ -383,6 +401,10 @@ class VSplit(_Split):
     :param style: A style string.
     :param modal: ``True`` or ``False``.
     :param key_bindings: ``None`` or a :class:`.KeyBindings` object.
+
+    :param padding: (`Dimension` or int), size to be used for the padding.
+    :param padding_char: Character to be used for filling in the padding.
+    :param padding_style: Style to applied to the padding.
     """
     def __init__(self, children, window_too_small=None, align=HorizontalAlign.JUSTIFY,
                  padding=Dimension.exact(0), padding_char=None,
