@@ -1146,7 +1146,13 @@ _in_insert_mode = vi_insert_mode | emacs_insert_mode
 
 
 class WindowAlign:
-    " Alignment of Window content. "
+    """
+    Alignment of the Window content.
+
+    Note that this is different from `HorizontalAlign` and `VerticalAlign`,
+    which are used for the alignment of the child containers in respectively
+    `VSplit` and `HSplit`.
+    """
     LEFT = 'LEFT'
     RIGHT = 'RIGHT'
     CENTER = 'CENTER'
