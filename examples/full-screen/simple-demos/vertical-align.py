@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 from prompt_toolkit.application import Application
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout.containers import HSplit, VSplit, Window, VerticalAlign
+from prompt_toolkit.layout.containers import HSplit, VSplit, Window, VerticalAlign, WindowAlign
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.layout.dimension import D
@@ -27,10 +27,14 @@ body = HSplit([
     Frame(
         Window(FormattedTextControl(TITLE), height=2), style='bg:#88ff88 #000000'),
     VSplit([
-        Window(FormattedTextControl(HTML('  <u>VerticalAlign.TOP</u>')), height=4, ignore_content_width=True, style='bg:#ff3333 #000000 bold'),
-        Window(FormattedTextControl(HTML('  <u>VerticalAlign.CENTER</u>')), height=4, ignore_content_width=True, style='bg:#ff3333 #000000 bold'),
-        Window(FormattedTextControl(HTML('  <u>VerticalAlign.BOTTOM</u>')), height=4, ignore_content_width=True, style='bg:#ff3333 #000000 bold'),
-        Window(FormattedTextControl(HTML('  <u>VerticalAlign.JUSTIFY</u>')), height=4, ignore_content_width=True, style='bg:#ff3333 #000000 bold'),
+        Window(FormattedTextControl(HTML('  <u>VerticalAlign.TOP</u>')), height=4,
+               ignore_content_width=True, style='bg:#ff3333 #000000 bold', align=WindowAlign.CENTER),
+        Window(FormattedTextControl(HTML('  <u>VerticalAlign.CENTER</u>')), height=4,
+               ignore_content_width=True, style='bg:#ff3333 #000000 bold', align=WindowAlign.CENTER),
+        Window(FormattedTextControl(HTML('  <u>VerticalAlign.BOTTOM</u>')), height=4,
+               ignore_content_width=True, style='bg:#ff3333 #000000 bold', align=WindowAlign.CENTER),
+        Window(FormattedTextControl(HTML('  <u>VerticalAlign.JUSTIFY</u>')), height=4,
+               ignore_content_width=True, style='bg:#ff3333 #000000 bold', align=WindowAlign.CENTER),
     ], height=1, padding=1, padding_style='bg:#ff3333'),
     VSplit([
         # Top alignment.
@@ -38,25 +42,25 @@ body = HSplit([
             Window(FormattedTextControl(LIPSUM), height=4, style='bg:#444488'),
             Window(FormattedTextControl(LIPSUM), height=4, style='bg:#444488'),
             Window(FormattedTextControl(LIPSUM), height=4, style='bg:#444488'),
-        ], padding=1, padding_style='bg:#888888', align=VerticalAlign.TOP),
+        ], padding=1, padding_style='bg:#888888', align=VerticalAlign.TOP, padding_char='~'),
         # Center alignment.
         HSplit([
             Window(FormattedTextControl(LIPSUM), height=4, style='bg:#444488'),
             Window(FormattedTextControl(LIPSUM), height=4, style='bg:#444488'),
             Window(FormattedTextControl(LIPSUM), height=4, style='bg:#444488'),
-        ], padding=1, padding_style='bg:#888888', align=VerticalAlign.CENTER),
+        ], padding=1, padding_style='bg:#888888', align=VerticalAlign.CENTER, padding_char='~'),
         # Bottom alignment.
         HSplit([
             Window(FormattedTextControl(LIPSUM), height=4, style='bg:#444488'),
             Window(FormattedTextControl(LIPSUM), height=4, style='bg:#444488'),
             Window(FormattedTextControl(LIPSUM), height=4, style='bg:#444488'),
-        ], padding=1, padding_style='bg:#888888', align=VerticalAlign.BOTTOM),
+        ], padding=1, padding_style='bg:#888888', align=VerticalAlign.BOTTOM, padding_char='~'),
         # Justify
         HSplit([
             Window(FormattedTextControl(LIPSUM), style='bg:#444488'),
             Window(FormattedTextControl(LIPSUM), style='bg:#444488'),
             Window(FormattedTextControl(LIPSUM), style='bg:#444488'),
-        ], padding=1, padding_style='bg:#888888', align=VerticalAlign.JUSTIFY),
+        ], padding=1, padding_style='bg:#888888', align=VerticalAlign.JUSTIFY, padding_char='~'),
     ], padding=1, padding_style="bg:#ff3333 #ffffff", padding_char='.')
 ])
 

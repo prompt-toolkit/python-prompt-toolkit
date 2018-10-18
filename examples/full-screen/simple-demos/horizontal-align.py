@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 from prompt_toolkit.application import Application
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout.containers import HSplit, VSplit, Window, HorizontalAlign, VerticalAlign
+from prompt_toolkit.layout.containers import HSplit, VSplit, Window, HorizontalAlign, VerticalAlign, WindowAlign
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.dimension import D
 from prompt_toolkit.layout.layout import Layout
@@ -21,11 +21,8 @@ Lorem ipsum dolor
 sit amet, consectetur
 adipiscing elit.
 Maecenas quis
-interdum enim. Nam
-viverra, mauris et
-blandit malesuada,
-ante est bibendum
-dignissim placerat."""
+interdum enim."""
+
 
 # 1. The layout
 body = HSplit([
@@ -34,39 +31,43 @@ body = HSplit([
     HSplit([
         # Left alignment.
         VSplit([
-            Window(FormattedTextControl(HTML('<u>LEFT</u>')), width=10, ignore_content_width=True, style='bg:#ff3333 ansiblack'),
+            Window(FormattedTextControl(HTML('<u>LEFT</u>')), width=10,
+                   ignore_content_width=True, style='bg:#ff3333 ansiblack', align=WindowAlign.CENTER),
             VSplit([
                 Window(FormattedTextControl(LIPSUM), height=4, style='bg:#444488'),
                 Window(FormattedTextControl(LIPSUM), height=4, style='bg:#444488'),
                 Window(FormattedTextControl(LIPSUM), height=4, style='bg:#444488'),
-            ], padding=1, padding_style='bg:#888888', align=HorizontalAlign.LEFT, height=9),
+            ], padding=1, padding_style='bg:#888888', align=HorizontalAlign.LEFT, height=5, padding_char='|'),
         ]),
         # Center alignment.
         VSplit([
-            Window(FormattedTextControl(HTML('<u>CENTER</u>')), width=10, ignore_content_width=True, style='bg:#ff3333 ansiblack'),
+            Window(FormattedTextControl(HTML('<u>CENTER</u>')), width=10,
+                   ignore_content_width=True, style='bg:#ff3333 ansiblack', align=WindowAlign.CENTER),
             VSplit([
                 Window(FormattedTextControl(LIPSUM), height=4, style='bg:#444488'),
                 Window(FormattedTextControl(LIPSUM), height=4, style='bg:#444488'),
                 Window(FormattedTextControl(LIPSUM), height=4, style='bg:#444488'),
-            ], padding=1, padding_style='bg:#888888', align=HorizontalAlign.CENTER, height=9),
+            ], padding=1, padding_style='bg:#888888', align=HorizontalAlign.CENTER, height=5, padding_char='|'),
         ]),
         # Right alignment.
         VSplit([
-            Window(FormattedTextControl(HTML('<u>RIGHT</u>')), width=10, ignore_content_width=True, style='bg:#ff3333 ansiblack'),
+            Window(FormattedTextControl(HTML('<u>RIGHT</u>')), width=10,
+                   ignore_content_width=True, style='bg:#ff3333 ansiblack', align=WindowAlign.CENTER),
             VSplit([
                 Window(FormattedTextControl(LIPSUM), height=4, style='bg:#444488'),
                 Window(FormattedTextControl(LIPSUM), height=4, style='bg:#444488'),
                 Window(FormattedTextControl(LIPSUM), height=4, style='bg:#444488'),
-            ], padding=1, padding_style='bg:#888888', align=HorizontalAlign.RIGHT, height=9),
+            ], padding=1, padding_style='bg:#888888', align=HorizontalAlign.RIGHT, height=5, padding_char='|'),
         ]),
         # Justify
         VSplit([
-            Window(FormattedTextControl(HTML('<u>JUSTIFY</u>')), width=10, ignore_content_width=True, style='bg:#ff3333 ansiblack'),
+            Window(FormattedTextControl(HTML('<u>JUSTIFY</u>')), width=10,
+                   ignore_content_width=True, style='bg:#ff3333 ansiblack', align=WindowAlign.CENTER),
             VSplit([
                 Window(FormattedTextControl(LIPSUM), style='bg:#444488'),
                 Window(FormattedTextControl(LIPSUM), style='bg:#444488'),
                 Window(FormattedTextControl(LIPSUM), style='bg:#444488'),
-            ], padding=1, padding_style='bg:#888888', align=HorizontalAlign.JUSTIFY, height=9),
+            ], padding=1, padding_style='bg:#888888', align=HorizontalAlign.JUSTIFY, height=5, padding_char='|'),
         ]),
     ], padding=1, padding_style="bg:#ff3333 #ffffff", padding_char='.', align=VerticalAlign.TOP)
 ])
