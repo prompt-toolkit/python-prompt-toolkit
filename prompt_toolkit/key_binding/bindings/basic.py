@@ -134,10 +134,9 @@ def load_basic_bindings():
     handle('c-i', filter=insert_mode)(get_by_name('menu-complete'))
     handle('s-tab', filter=insert_mode)(get_by_name('menu-complete-backward'))
 
-        # Control-W is bind to "unix-word-rubout" in readline by default, but
-        # we bind it to backward-kill-word, because this uses word instead of
-        # WORD characters as separators.
-    handle('c-w', filter=insert_mode)(get_by_name('backward-kill-word'))
+    # Control-W should delete, using whitespace as separator, while M-Del
+    # should delete using [^a-zA-Z0-9] as a boundary.
+    handle('c-w', filter=insert_mode)(get_by_name('unix-word-rubout'))
 
     handle('pageup', filter= ~has_selection)(get_by_name('previous-history'))
     handle('pagedown', filter= ~has_selection)(get_by_name('next-history'))
