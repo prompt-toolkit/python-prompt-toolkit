@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 from prompt_toolkit.eventloop import Future, From, ensure_future, get_event_loop
 from prompt_toolkit.filters import to_filter
 from prompt_toolkit.formatted_text import to_formatted_text
+from prompt_toolkit.input.base import Input
 from prompt_toolkit.layout.mouse_handlers import MouseHandlers
 from prompt_toolkit.layout.screen import Point, Screen, WritePosition
 from prompt_toolkit.output import Output, ColorDepth
@@ -265,13 +266,17 @@ class Renderer(object):
     """
     CPR_TIMEOUT = 2  # Time to wait until we consider CPR to be not supported.
 
-    def __init__(self, style, output, full_screen=False, mouse_support=False, cpr_not_supported_callback=None):
+    def __init__(self, style, output, input, full_screen=False,
+                 mouse_support=False, cpr_not_supported_callback=None):
+
         assert isinstance(style, BaseStyle)
         assert isinstance(output, Output)
+        assert isinstance(input, Input)
         assert callable(cpr_not_supported_callback) or cpr_not_supported_callback is None
 
         self.style = style
         self.output = output
+        self.input = input
         self.full_screen = full_screen
         self.mouse_support = to_filter(mouse_support)
         self.cpr_not_supported_callback = cpr_not_supported_callback
@@ -283,6 +288,8 @@ class Renderer(object):
         # Future set when we are waiting for a CPR flag.
         self._waiting_for_cpr_futures = deque()
         self.cpr_support = CPR_Support.UNKNOWN
+        if not input.responds_to_cpr:
+            self.cpr_support = CPR_Support.NOT_SUPPORTED
 
         # Cache for the style.
         self._attrs_for_style = None

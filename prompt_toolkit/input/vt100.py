@@ -23,10 +23,10 @@ class Vt100Input(Input):
     Vt100 input for Posix systems.
     (This uses a posix file descriptor that can be registered in the event loop.)
     """
-    def __init__(self, stdin):
-        # The input object should be a TTY.
-        assert stdin.isatty()
+    _fds_not_a_terminal = set()  # For the error messages. Only display "Input
+                                 # is not a terminal" once per file descriptor.
 
+    def __init__(self, stdin):
         # Test whether the given input object has a file descriptor.
         # (Idle reports stdin to be a TTY, but fileno() is not implemented.)
         try:
@@ -39,6 +39,20 @@ class Vt100Input(Input):
             else:
                 raise io.UnsupportedOperation('Stdin is not a terminal.')
 
+        # Even when we have a file descriptor, it doesn't mean it's a TTY.
+        # Normally, this requires a real TTY device, but people instantiate
+        # this class often during unit tests as well. They use for instance
+        # pexpect to pipe data into an application. For convenience, we print
+        # an error message and go on.
+        isatty = stdin.isatty()
+        fd = stdin.fileno()
+
+        if not isatty and fd not in Vt100Input._fds_not_a_terminal:
+            msg = 'Warning: Input is not to a terminal (fd=%r).\n'
+            sys.stderr.write(msg % fd)
+            Vt100Input._fds_not_a_terminal.add(fd)
+
+        #
         self.stdin = stdin
 
         # Create a backup of the fileno(). We want this to work even if the
@@ -52,7 +66,9 @@ class Vt100Input(Input):
 
     @property
     def responds_to_cpr(self):
-        return True
+        # When the input is a tty, we assume that CPR is supported.
+        # It's not when the input is piped from Pexpect.
+        return self.stdin.isatty()
 
     def attach(self, input_ready_callback):
         """
