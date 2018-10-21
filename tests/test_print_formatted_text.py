@@ -29,6 +29,11 @@ class _Capture:
     def isatty(self):
         return True
 
+    def fileno(self):
+        # File descriptor is not used for printing formatted text.
+        # (It is only needed for getting the terminal size.)
+        return -1
+
 
 @pytest.mark.skipif(
     is_windows(), reason="Doesn't run on Windows yet.")

@@ -8,4 +8,7 @@ from prompt_toolkit.widgets import Frame, TextArea
 
 
 print_container(
-    Frame(TextArea(text='Hello world!')))
+    Frame(
+        TextArea(text='Hello world!\n')
+        title='Stage: parse',
+    ))
