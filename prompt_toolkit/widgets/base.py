@@ -566,9 +566,11 @@ class RadioList(object):
         assert all(isinstance(i, tuple) and len(i) == 2
                    for i in values)
 
+        self.all_values = values
         self.values = values
         self.current_value = values[0][0]
         self._selected_index = 0
+        self.search = ""
 
         # Key bindings.
         kb = KeyBindings()
@@ -601,15 +603,24 @@ class RadioList(object):
         @kb.add('enter')
         @kb.add(' ')
         def _(event):
-            self.current_value = self.values[self._selected_index][0]
+            if self.values:
+                self.current_value = self.values[self._selected_index][0]
 
         @kb.add(Keys.Any)
         def _(event):
-            # We first check values after the selected value, then all values.
-            for value in self.values[self._selected_index + 1:] + self.values:
-                if value[1].startswith(event.data):
-                    self._selected_index = self.values.index(value)
-                    return
+            # Let's check for Delete first
+            if event.key_sequence[-1].key == 'c-h':
+                self.search = self.search[:-1]
+            else:
+                self.search += event.data
+            self.values = []
+            index = None
+            for value in self.all_values:
+                if self.search in value[1]:
+                    self.values.append(value)
+                    if index is None:
+                        index = self.values.index(value)
+            self._selected_index = index or 0
 
         # Control and window.
         self.control = FormattedTextControl(
@@ -649,7 +660,18 @@ class RadioList(object):
 
             result.append((style, ')'))
             result.append(('class:radio', ' '))
-            result.extend(to_formatted_text(value[1], style='class:radio'))
+            display_value = value[1]
+            if self.search and self.search in display_value:
+                _parts = display_value.partition(self.search)
+                result.extend(to_formatted_text(_parts[0], style='class:radio'))
+                result.append(('bg:red', _parts[1]))
+                result.extend(to_formatted_text(_parts[2], style='class:radio'))
+            else:
+                result.extend(to_formatted_text(display_value, style='class:radio'))
+            result.append(('', '\n'))
+
+        if not result:
+            result.append(('', " > No item found for '%s'" % self.search))
             result.append(('', '\n'))
 
         result.pop()  # Remove last newline.
