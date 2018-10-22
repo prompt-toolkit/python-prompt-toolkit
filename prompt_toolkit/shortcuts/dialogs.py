@@ -201,6 +201,7 @@ def _create_app(dialog, style):
     bindings = KeyBindings()
     bindings.add('tab')(focus_next)
     bindings.add('s-tab')(focus_previous)
+    bindings.add('escape')(lambda x: _return_none())
 
     return Application(
         layout=Layout(dialog),
