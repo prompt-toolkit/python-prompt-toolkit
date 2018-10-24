@@ -4,7 +4,7 @@ Test the `print` function.
 from __future__ import unicode_literals, print_function
 import pytest
 from prompt_toolkit import print_formatted_text as pt_print
-from prompt_toolkit.formatted_text import FormattedText
+from prompt_toolkit.formatted_text import FormattedText, HTML, to_formatted_text
 from prompt_toolkit.styles import Style
 from prompt_toolkit.utils import is_windows
 
@@ -59,3 +59,19 @@ def test_with_style():
     pt_print(tokens, style=style, file=f)
     assert b'\x1b[0;38;5;197mHello' in f.data
     assert b'\x1b[0;38;5;83;3mworld' in f.data
+
+
+@pytest.mark.skipif(
+    is_windows(), reason="Doesn't run on Windows yet.")
+def test_with_style():
+    """
+    Text `print_formatted_text` with `HTML` wrapped in `to_formatted_text`.
+    """
+    f = _Capture()
+
+    html = HTML('<ansigreen>hello</ansigreen> <b>world</b>')
+    formatted_text = to_formatted_text(html, style='class:myhtml')
+    pt_print(formatted_text, file=f)
+
+    assert f.data == \
+        b'\x1b[0m\x1b[?7h\x1b[0;32mhello\x1b[0m \x1b[0;1mworld\x1b[0m\r\n\x1b[0m'
