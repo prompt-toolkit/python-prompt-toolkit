@@ -90,7 +90,7 @@ def _run_coroutine(coroutine):
                     new_f = coroutine.throw(exc)
                 else:
                     new_f = coroutine.send(f.result())
-        except StopIteration as e:
+        except StopIteration:
             # Stop coroutine. Make sure that a result has been set in the future,
             # this will call the callbacks. (Also, don't take any result from
             # StopIteration, it has already been set using `raise Return()`.
