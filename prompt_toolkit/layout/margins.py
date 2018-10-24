@@ -144,8 +144,10 @@ class ScrollbarMargin(Margin):
 
     :param display_arrows: Display scroll up/down arrows.
     """
-    def __init__(self, display_arrows=False):
+    def __init__(self, display_arrows=False, up_arrow_symbol='^', down_arrow_symbol='v'):
         self.display_arrows = to_filter(display_arrows)
+        self.up_arrow_symbol = up_arrow_symbol
+        self.down_arrow_symbol = down_arrow_symbol
 
     def get_width(self, ui_content):
         return 1
@@ -175,7 +177,7 @@ class ScrollbarMargin(Margin):
             result = []
             if display_arrows:
                 result.extend([
-                    ('class:scrollbar.arrow', '^'),
+                    ('class:scrollbar.arrow', self.up_arrow_symbol),
                     ('class:scrollbar', '\n')
                 ])
 
@@ -202,7 +204,7 @@ class ScrollbarMargin(Margin):
 
             # Down arrow
             if display_arrows:
-                result.append(('class:scrollbar.arrow', 'v'))
+                result.append(('class:scrollbar.arrow', self.down_arrow_symbol))
 
             return result
 
