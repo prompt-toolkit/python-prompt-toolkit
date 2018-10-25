@@ -14,3 +14,4 @@ Advanced topics
     asyncio
     input_hooks
     architecture
+    rendering_pipeline
