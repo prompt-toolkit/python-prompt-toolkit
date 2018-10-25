@@ -19,7 +19,7 @@ install:
 
 script:
   - echo "$TRAVIS_PYTHON_VERSION"
-  - if [ "$TRAVIS_PYTHON_VERSION" != "2.6" ]; then flake8 prompt_toolkit; fi
+  - if [ "$TRAVIS_PYTHON_VERSION" != "2.6" && "$TRAVIS_PYTHON_VERSION" != "3.3" ]; then flake8 prompt_toolkit; fi
   - coverage run -m pytest
 
 after_success:
