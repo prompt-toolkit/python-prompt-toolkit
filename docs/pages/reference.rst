@@ -217,6 +217,9 @@ Key binding
 .. automodule:: prompt_toolkit.key_binding.vi_state
     :members:
 
+.. automodule:: prompt_toolkit.key_binding.key_processor
+    :members:
+
 
 Eventloop
 ---------
@@ -248,6 +251,12 @@ Input
     :members: Input, DummyInput, create_input, get_default_input, set_default_input
 
 .. automodule:: prompt_toolkit.input.vt100
+    :members:
+
+.. automodule:: prompt_toolkit.input.vt100_parser
+    :members:
+
+.. automodule:: prompt_toolkit.input.ansi_escape_sequences
     :members:
 
 .. automodule:: prompt_toolkit.input.win32

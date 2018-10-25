@@ -64,7 +64,7 @@ Processing the key presses
 --------------------------
 
 The ``Key`` objects that we receive are then passed to the
-:class:`prompt_toolkit.key_binding.key_processor.KeyProcessor` for matching
+:class:`~prompt_toolkit.key_binding.key_processor.KeyProcessor` for matching
 against the currently registered and active key bindings.
 
 This is another state machine, because key bindings are linked to a sequence of
@@ -104,7 +104,7 @@ Rendering the user interface
 The rendering is pretty complex for several reasons:
 - We have to compute the dimensions of all user interface elements. Sometimes
   they are given, but sometimes this requires calculating the size of
-  :class:`~prompt_toolkit.layout.UIControl`` objects.
+  :class:`~prompt_toolkit.layout.UIControl` objects.
 - It needs to be very efficient, because it's something that happens on every
   single key stroke.
 - We should output as little as possible on stdout in order to reduce latency
@@ -151,5 +151,5 @@ Finally, when we have painted the screen, this needs to be rendered to stdout.
 This is done by taking the difference of the previously rendered screen and the
 new one. The algorithm that we have is heavily optimized to compute this
 difference as quickly as possible, and call the appropriate output functions of
-the `Output` back-end. At the end, it will position the cursor in the right
-place.
+the :class:`~prompt_toolkit.output.Output` back-end. At the end, it will
+position the cursor in the right place.
