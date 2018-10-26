@@ -5,8 +5,8 @@ Python Prompt Toolkit
 
 .. image :: https://github.com/prompt-toolkit/python-prompt-toolkit/raw/master/docs/images/logo_400px.png
 
-``prompt_toolkit`` is a library for building powerful interactive command lines
-and terminal applications in Python.
+*``prompt_toolkit`` is a library for building powerful interactive command line
+applications in Python.*
 
 Read the `documentation on readthedocs
 <http://python-prompt-toolkit.readthedocs.io/en/stable/>`_.
