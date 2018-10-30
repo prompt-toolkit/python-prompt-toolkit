@@ -1,6 +1,28 @@
 CHANGELOG
 =========
 
+2.0.7: 2018-10-30
+-----------------
+
+Bug fixes:
+- Fixed assertion in PromptSession: the style_transformation check was wrong.
+- Removed 'default' attribute in PromptSession. Only ask for it in the
+  `prompt()` method. This fixes the issue that passing `default` once, will
+  store it for all consequent calls in the `PromptSession`.
+- Ensure that `__pt_formatted_text__` always returns a `FormattedText`
+  instance. This fixes an issue with `print_formatted_text`.
+
+New features:
+- Improved handling of situations where stdin or stdout are not a terminal.
+  (Print warning instead of failing with an assertion.)
+- Added `print_container` utility.
+- Sound bell when attempting to edit read-only buffer.
+- Handle page-down and page-up keys in RadioList.
+- Accept any `collections.abc.Sequence` for HSplit/VSplit children (instead of
+  lists only).
+- Improved Vi key bindings: return to navigation mode when Insert is pressed.
+
+
 2.0.6: 2018-10-12
 -----------------
 
