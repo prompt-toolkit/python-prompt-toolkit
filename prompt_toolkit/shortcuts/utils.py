@@ -127,7 +127,7 @@ def print_formatted_text(*values, **kwargs):
         output.flush()
 
 
-def print_container(container):
+def print_container(container, file=None):
     """
     Print any layout to the output in a non-interactive way.
 
@@ -137,6 +137,11 @@ def print_container(container):
         print_container(
             Frame(TextArea(text='Hello world!')))
     """
+    if file:
+        output = create_output(stdout=file)
+    else:
+        output = get_default_output()
+
     def exit_immediately():
         # Use `call_from_executor` to exit "soon", so that we still render one
         # initial time, before exiting the application.
@@ -144,7 +149,8 @@ def print_container(container):
              lambda: app.exit())
 
     app = Application(
-        layout=Layout(container=container))
+        layout=Layout(container=container),
+        output=output)
     app.run(pre_run=exit_immediately)
 
 
