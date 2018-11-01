@@ -472,7 +472,7 @@ default. The following example has a history out of the box:
        session.prompt()
 
 To persist a history to disk, use a :class:`~prompt_toolkit.history.FileHistory`
-instead instead of the default
+instead of the default
 :class:`~prompt_toolkit.history.InMemoryHistory`. This history object can be
 passed either to a :class:`~prompt_toolkit.shortcuts.PromptSession` or to the
 :meth:`~prompt_toolkit.shortcuts.prompt` function. For instance:
