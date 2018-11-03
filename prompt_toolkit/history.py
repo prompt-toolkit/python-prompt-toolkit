@@ -243,7 +243,7 @@ class LazyHistory(FileHistory):
     #     super(LazyHistory, self).__init__(filename=filename)
 
     def __enter__(self):
-        """:return self
+        """:return: self
         """
         return self
 
@@ -265,11 +265,11 @@ class LazyHistory(FileHistory):
             # Save the file in once write.
             f.write(''.join(lines).encode('utf-8'))
 
-    def load_history_strings(self):
-        return super(LazyHistory, self).load_history_strings()
+    # def load_history_strings(self):
+    #     return super(LazyHistory, self).load_history_strings()
 
     def store_string(self, string):
-        pass
+        pass  # Ignored
 
     @property
     def history_strings(self):
