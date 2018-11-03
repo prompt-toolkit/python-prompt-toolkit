@@ -252,7 +252,7 @@ class LazyHistory(FileHistory):
             return  # Skip empty
 
         with open(self.filename, 'wb') as f:
-            lines = ['\n# {0}\n'.format(datetime.now())]
+            lines = ['\n# {0}\n'.format(datetime.datetime.now())]
 
             for line in self.history_strings:
                 if line.count('\n') > 0:
