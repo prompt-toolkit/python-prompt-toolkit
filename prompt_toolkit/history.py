@@ -223,3 +223,54 @@ class FileHistory(History):
             write('\n# %s\n' % datetime.datetime.now())
             for line in string.split('\n'):
                 write('+%s\n' % line)
+
+
+class LazyHistory(FileHistory):
+    """
+    :class:`.History` `LazyHistory` based on `FileHistory`.
+    It's only saving the history when exiting, not each line.
+
+    NOTE: The `LazyHistory` will lost the time information!
+          Because the `LazyHistory` it's too lazy...
+
+    Example:
+        with LazyHistory('history.txt') as history:
+            session = PromptSession(history=history)
+            session.prompt()
+            ...
+    """
+    # def __init__(self, filename):
+    #     super(LazyHistory, self).__init__(filename=filename)
+
+    def __enter__(self):
+        """:return self
+        """
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if len(self.history_strings) < 1:
+            return  # Skip empty
+
+        with open(self.filename, 'wb') as f:
+            lines = ['\n# {0}\n'.format(datetime.now())]
+
+            for line in self.history_strings:
+                if line.count('\n') > 0:
+                    # multi-line
+                    for _line in line.split('\n'):
+                        lines.append('+%s\n' % _line)
+                else:
+                    # single-line
+                    lines.append('\n+%s\n' % line)
+            # Save the file in once write.
+            f.write(''.join(lines).encode('utf-8'))
+
+    def load_history_strings(self):
+        return super(LazyHistory, self).load_history_strings()
+
+    def store_string(self, string):
+        pass
+
+    @property
+    def history_strings(self):
+        return super(LazyHistory, self).get_strings()
