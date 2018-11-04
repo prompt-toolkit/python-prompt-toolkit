@@ -257,6 +257,7 @@ class LazyHistory(FileHistory):
             for line in self.history_strings:
                 if line.count('\n') > 0:
                     # multi-line
+                    lines.append('\n')
                     for _line in line.split('\n'):
                         lines.append('+%s\n' % _line)
                 else:
