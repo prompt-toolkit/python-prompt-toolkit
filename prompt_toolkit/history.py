@@ -239,8 +239,9 @@ class LazyHistory(FileHistory):
             session.prompt()
             ...
     """
-    # def __init__(self, filename):
-    #     super(LazyHistory, self).__init__(filename=filename)
+    def __init__(self, filename):
+        self._old_history_len = 0
+        super(LazyHistory, self).__init__(filename=filename)
 
     def __enter__(self):
         """:return: self
@@ -251,10 +252,10 @@ class LazyHistory(FileHistory):
         if len(self.history_strings) < 1:
             return  # Skip empty
 
-        with open(self.filename, 'wb') as f:
+        with open(self.filename, 'ab') as f:
             lines = ['\n# {0}\n'.format(datetime.datetime.now())]
 
-            for line in self.history_strings:
+            for line in self.history_strings[self._old_history_len:]:
                 if line.count('\n') > 0:
                     # multi-line
                     lines.append('\n')
@@ -266,8 +267,12 @@ class LazyHistory(FileHistory):
             # Save the file in once write.
             f.write(''.join(lines).encode('utf-8'))
 
-    # def load_history_strings(self):
-    #     return super(LazyHistory, self).load_history_strings()
+    def load_history_strings(self):
+        history_strings = list(
+            super(LazyHistory, self).load_history_strings()
+        )
+        self._old_history_len = len(history_strings)
+        return history_strings
 
     def store_string(self, string):
         pass  # Ignored
