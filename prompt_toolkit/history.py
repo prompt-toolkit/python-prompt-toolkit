@@ -236,11 +236,11 @@ class LazyHistory(FileHistory):
     Example:
         with LazyHistory('history.txt') as history:
             session = PromptSession(history=history)
-            session.prompt()
+            result =  session.prompt()
             ...
     """
     def __init__(self, filename):
-        self._old_history_len = 0
+        self._history_next_index = 0
         super(LazyHistory, self).__init__(filename=filename)
 
     def __enter__(self):
@@ -255,7 +255,7 @@ class LazyHistory(FileHistory):
         with open(self.filename, 'ab') as f:
             lines = ['\n# {0}\n'.format(datetime.datetime.now())]
 
-            for line in self.history_strings[self._old_history_len:]:
+            for line in self.history_strings[self._history_next_index:]:
                 if line.count('\n') > 0:
                     # multi-line
                     lines.append('\n')
@@ -271,7 +271,7 @@ class LazyHistory(FileHistory):
         history_strings = list(
             super(LazyHistory, self).load_history_strings()
         )
-        self._old_history_len = len(history_strings)
+        self._history_next_index = len(history_strings)
         return history_strings
 
     def store_string(self, string):
