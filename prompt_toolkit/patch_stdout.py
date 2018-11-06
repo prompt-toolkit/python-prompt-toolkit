@@ -50,8 +50,8 @@ def patch_stdout(raw=False):
     original_stderr = sys.stderr
 
     # Enter.
-    sys.stdout = proxy
-    sys.stderr = proxy
+    # sys.stdout = proxy
+    # sys.stderr = proxy
 
     try:
         yield

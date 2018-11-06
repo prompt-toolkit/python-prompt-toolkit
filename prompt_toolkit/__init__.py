@@ -20,7 +20,8 @@ from .formatted_text import HTML, ANSI
 
 
 # Don't forget to update in `docs/conf.py`!
-__version__ = '2.0.7'
+# something ridiculous to easily identify
+__version__ = '2.0.1000000'
 
 # Version tuple.
 VERSION = tuple(__version__.split('.'))
