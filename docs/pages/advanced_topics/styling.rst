@@ -103,9 +103,9 @@ sheet that refers to these class names. The
     ])
 
     style = Style([
-         ('left': 'bg:ansired'),
-         ('top': 'fg:#00aaaa'),
-         ('bottom': 'underline bold'),
+         ('left', 'bg:ansired'),
+         ('top', 'fg:#00aaaa'),
+         ('bottom', 'underline bold'),
      ])
 
 It is possible to add multiple class names to an element. That way we'll
@@ -149,7 +149,7 @@ matter).
 .. code:: python
 
     style = Style([
-         ('header left': 'underline'),
+         ('header left', 'underline'),
      ])
 
 
@@ -160,7 +160,7 @@ style sheet (just typing ``c`` or ``b.c`` doesn't work if the class is
 .. code:: python
 
     style = Style([
-         ('a.b.c': 'underline'),
+         ('a.b.c', 'underline'),
      ])
 
 It is possible to combine this:
@@ -168,7 +168,7 @@ It is possible to combine this:
 .. code:: python
 
     style = Style([
-         ('header body left.text': 'underline'),
+         ('header body left.text', 'underline'),
      ])
 
 
