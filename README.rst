@@ -3,8 +3,10 @@ Python Prompt Toolkit
 
 |Build Status|  |AppVeyor|  |PyPI|  |RTD|  |License|
 
-``prompt_toolkit`` is a library for building powerful interactive command lines
-and terminal applications in Python.
+.. image :: https://github.com/prompt-toolkit/python-prompt-toolkit/raw/master/docs/images/logo_400px.png
+
+*``prompt_toolkit`` is a library for building powerful interactive command line
+applications in Python.*
 
 Read the `documentation on readthedocs
 <http://python-prompt-toolkit.readthedocs.io/en/stable/>`_.
@@ -21,10 +23,10 @@ new issue if you don't manage to upgrade to prompt_toolkit 2.0.
 Ptpython
 ********
 
-`ptpython <http://github.com/jonathanslenders/ptpython/>`_ is an interactive
+`ptpython <http://github.com/prompt-toolkit/ptpython/>`_ is an interactive
 Python Shell, build on top of prompt_toolkit.
 
-.. image :: https://github.com/jonathanslenders/python-prompt-toolkit/raw/master/docs/images/ptpython.png
+.. image :: https://github.com/prompt-toolkit/python-prompt-toolkit/raw/master/docs/images/ptpython.png
 
 
 prompt_toolkit features
@@ -118,7 +120,7 @@ Projects using prompt_toolkit
 
 Shells:
 
-- `ptpython <http://github.com/jonathanslenders/ptpython/>`_: Python REPL
+- `ptpython <http://github.com/prompt-toolkit/ptpython/>`_: Python REPL
 - `ptpdb <http://github.com/jonathanslenders/ptpdb/>`_: Python debugger (pdb replacement)
 - `pgcli <http://pgcli.com/>`_: Postgres client.
 - `mycli <http://mycli.net>`_: MySql client.
@@ -152,14 +154,14 @@ Shells:
 
 Full screen applications:
 
-- `pymux <http://github.com/jonathanslenders/pymux/>`_: A terminal multiplexer (like tmux) in pure Python.
-- `pyvim <http://github.com/jonathanslenders/pyvim/>`_: A Vim clone in pure Python.
+- `pymux <http://github.com/prompt-toolkit/pymux/>`_: A terminal multiplexer (like tmux) in pure Python.
+- `pyvim <http://github.com/prompt-toolkit/pyvim/>`_: A Vim clone in pure Python.
 - `freud <http://github.com/stloma/freud/>`_: REST client backed by SQLite for storing servers
-- `pypager <https://github.com/jonathanslenders/pypager>`_: A $PAGER in pure Python (like "less").
+- `pypager <https://github.com/prompt-toolkit/pypager>`_: A $PAGER in pure Python (like "less").
 
 Libraries:
 
-- `ptterm <https://github.com/jonathanslenders/ptterm>`_: A terminal emulator
+- `ptterm <https://github.com/prompt-toolkit/ptterm>`_: A terminal emulator
   widget for prompt_toolkit.
 - `PyInquirer <https://github.com/CITGuru/PyInquirer/>`_: A Python library that
   wants to make it easy for existing Inquirer.js users to write immersive
@@ -192,21 +194,21 @@ Special thanks to
 - `Pygments <http://pygments.org/>`_: Syntax highlighter.
 - `wcwidth <https://github.com/jquast/wcwidth>`_: Determine columns needed for a wide characters.
 
-.. |Build Status| image:: https://api.travis-ci.org/jonathanslenders/python-prompt-toolkit.svg?branch=master
-    :target: https://travis-ci.org/jonathanslenders/python-prompt-toolkit#
+.. |Build Status| image:: https://api.travis-ci.org/prompt-toolkit/python-prompt-toolkit.svg?branch=master
+    :target: https://travis-ci.org/prompt-toolkit/python-prompt-toolkit#
 
 .. |PyPI| image:: https://img.shields.io/pypi/v/prompt_toolkit.svg
     :target: https://pypi.python.org/pypi/prompt-toolkit/
     :alt: Latest Version
 
 .. |AppVeyor| image:: https://ci.appveyor.com/api/projects/status/32r7s2skrgm9ubva?svg=true
-    :target: https://ci.appveyor.com/project/jonathanslenders/python-prompt-toolkit/
+    :target: https://ci.appveyor.com/project/prompt-toolkit/python-prompt-toolkit/
 
 .. |RTD| image:: https://readthedocs.org/projects/python-prompt-toolkit/badge/
     :target: https://python-prompt-toolkit.readthedocs.io/en/master/
 
-.. |License| image:: https://img.shields.io/github/license/jonathanslenders/python-prompt-toolkit.svg
-    :target: https://github.com/jonathanslenders/python-prompt-toolkit/blob/master/LICENSE
+.. |License| image:: https://img.shields.io/github/license/prompt-toolkit/python-prompt-toolkit.svg
+    :target: https://github.com/prompt-toolkit/python-prompt-toolkit/blob/master/LICENSE
 
 Other libraries and implementations in other languages
 ******************************************************

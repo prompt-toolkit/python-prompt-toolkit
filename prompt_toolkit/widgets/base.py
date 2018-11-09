@@ -582,6 +582,22 @@ class RadioList(object):
             self._selected_index = min(
                 len(self.values) - 1, self._selected_index + 1)
 
+        @kb.add('pageup')
+        def _(event):
+            w = event.app.layout.current_window
+            self._selected_index = max(
+                0,
+                self._selected_index - len(w.render_info.displayed_lines)
+            )
+
+        @kb.add('pagedown')
+        def _(event):
+            w = event.app.layout.current_window
+            self._selected_index = min(
+                len(self.values) - 1,
+                self._selected_index + len(w.render_info.displayed_lines)
+            )
+
         @kb.add('enter')
         @kb.add(' ')
         def _(event):

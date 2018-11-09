@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-from prompt_toolkit.formatted_text import HTML, ANSI, to_formatted_text, Template, merge_formatted_text, PygmentsTokens
+from prompt_toolkit.formatted_text import HTML, ANSI, to_formatted_text, Template, merge_formatted_text, PygmentsTokens, FormattedText
 from prompt_toolkit.formatted_text.utils import split_lines
 
 
@@ -17,6 +17,12 @@ def test_basic_html():
         ('class:i,strong', 'test'),
         ('', 'after'),
     ]
+
+    # It's important that `to_formatted_text` returns a `FormattedText`
+    # instance. Otherwise, `print_formatted_text` won't recognise it and will
+    # print a list literal instead.
+    assert isinstance(to_formatted_text(html), FormattedText)
+
 
 def test_html_with_fg_bg():
     html = HTML('<style bg="ansired">hello</style>')
@@ -68,6 +74,8 @@ def test_ansi_formatting():
         ('', 'e'),
         ('', 'f'),
     ]
+
+    assert isinstance(to_formatted_text(value), FormattedText)
 
 
 def test_interpolation():

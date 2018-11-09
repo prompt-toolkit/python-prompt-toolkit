@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from prompt_toolkit.output.vt100 import FG_ANSI_COLORS, BG_ANSI_COLORS
 from prompt_toolkit.output.vt100 import _256_colors as _256_colors_table
+from .base import FormattedText
 
 __all__ = [
     'ANSI',
@@ -24,7 +25,7 @@ class ANSI(object):
     """
     def __init__(self, value):
         self.value = value
-        self._formatted_text = []
+        self._formatted_text = FormattedText()
 
         # Default style attributes.
         self._color = None

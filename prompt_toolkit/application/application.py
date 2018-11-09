@@ -240,6 +240,7 @@ class Application(object):
         self.renderer = Renderer(
             self._merged_style,
             self.output,
+            self.input,
             full_screen=full_screen,
             mouse_support=mouse_support,
             cpr_not_supported_callback=self.cpr_not_supported_callback)

@@ -18,6 +18,7 @@ from six.moves import range
 import array
 import errno
 import six
+import sys
 
 __all__ = [
     'Vt100_Output',
@@ -380,6 +381,9 @@ class Vt100_Output(Output):
     :param write_binary: Encode the output before writing it. If `True` (the
         default), the `stdout` object is supposed to expose an `encoding` attribute.
     """
+    _fds_not_a_terminal = set()  # For the error messages. Only display "Output
+                                 # is not a terminal" once per file descriptor.
+
     def __init__(self, stdout, get_size, term=None, write_binary=True):
         assert callable(get_size)
         assert term is None or isinstance(term, six.text_type)
@@ -409,11 +413,23 @@ class Vt100_Output(Output):
         (This will take the dimensions by reading the pseudo
         terminal attributes.)
         """
-        assert stdout.isatty()
+        # Normally, this requires a real TTY device, but people instantiate
+        # this class often during unit tests as well. For convenience, we print
+        # an error message, use standard dimensions, and go on.
+        isatty = stdout.isatty()
+        fd = stdout.fileno()
+
+        if not isatty and fd not in cls._fds_not_a_terminal:
+            msg = 'Warning: Output is not to a terminal (fd=%r).\n'
+            sys.stderr.write(msg % fd)
+            cls._fds_not_a_terminal.add(fd)
 
         def get_size():
-            rows, columns = _get_size(stdout.fileno())
-            return Size(rows=rows, columns=columns)
+            if isatty:
+                rows, columns = _get_size(stdout.fileno())
+                return Size(rows=rows, columns=columns)
+            else:
+                return Size(rows=24, columns=80)
 
         return cls(stdout, get_size, term=term)
 

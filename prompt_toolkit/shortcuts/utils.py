@@ -1,5 +1,8 @@
 from __future__ import unicode_literals, print_function
-from prompt_toolkit.formatted_text import to_formatted_text
+from prompt_toolkit.application import Application
+from prompt_toolkit.eventloop import get_event_loop
+from prompt_toolkit.formatted_text import to_formatted_text, FormattedText
+from prompt_toolkit.layout import Layout
 from prompt_toolkit.output import Output, ColorDepth
 from prompt_toolkit.output.defaults import create_output, get_default_output
 from prompt_toolkit.renderer import print_formatted_text as renderer_print_formatted_text
@@ -8,6 +11,7 @@ import six
 
 __all__ = [
     'print_formatted_text',
+    'print_container',
     'clear',
     'set_title',
     'clear_title',
@@ -98,7 +102,9 @@ def print_formatted_text(*values, **kwargs):
 
     # Merges values.
     def to_text(val):
-        if isinstance(val, list):
+        # Normal lists which are not instances of `FormattedText` are
+        # considered plain text.
+        if isinstance(val, list) and not isinstance(val, FormattedText):
             return to_formatted_text('{0}'.format(val))
         return to_formatted_text(val, auto_convert=True)
 
@@ -119,6 +125,33 @@ def print_formatted_text(*values, **kwargs):
     # Flush the output stream.
     if flush:
         output.flush()
+
+
+def print_container(container, file=None):
+    """
+    Print any layout to the output in a non-interactive way.
+
+    Example usage::
+
+        from prompt_toolkit.widgets import Frame, TextArea
+        print_container(
+            Frame(TextArea(text='Hello world!')))
+    """
+    if file:
+        output = create_output(stdout=file)
+    else:
+        output = get_default_output()
+
+    def exit_immediately():
+        # Use `call_from_executor` to exit "soon", so that we still render one
+        # initial time, before exiting the application.
+        get_event_loop().call_from_executor(
+             lambda: app.exit())
+
+    app = Application(
+        layout=Layout(container=container),
+        output=output)
+    app.run(pre_run=exit_immediately)
 
 
 def clear():

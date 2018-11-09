@@ -15,7 +15,7 @@ def to_formatted_text(value, style='', auto_convert=False):
     """
     Convert the given value (which can be formatted text) into a list of text
     fragments. (Which is the canonical form of formatted text.) The outcome is
-    supposed to be a list of (style, text) tuples.
+    always a `FormattedText` instance, which is a list of (style, text) tuples.
 
     It can take an `HTML` object, a plain text string, or anything that
     implements `__pt_formatted_text__`.
@@ -55,12 +55,19 @@ def to_formatted_text(value, style='', auto_convert=False):
             result = [(style + ' ' + k, v) for k, v in result]
         except ValueError:
             # Too many values to unpack:
-            #     If the above failed, try the slower version (amost twice as
+            #     If the above failed, try the slower version (almost twice as
             #     slow) which supports multiple items. This is used in the
             #     `to_formatted_text` call in `FormattedTextControl` which also
             #     accepts (style, text, mouse_handler) tuples.
             result = [(style + ' ' + item[0], ) + item[1:] for item in result]
-    return result
+
+    # Make sure the result is wrapped in a `FormattedText`. Among other
+    # reasons, this is important for `print_formatted_text` to work correctly
+    # and distinguish between lists and formatted text.
+    if isinstance(result, FormattedText):
+        return result
+    else:
+        return FormattedText(result)
 
 
 def is_formatted_text(value):
@@ -78,23 +85,19 @@ def is_formatted_text(value):
     return False
 
 
-class FormattedText(object):
+class FormattedText(list):
     """
     A list of ``(style, text)`` tuples.
+
+    (In some situations, this can also be ``(style, text, mouse_handler)``
+    tuples.)
     """
-    def __init__(self, data):
-        self.data = data
-
-        # Validate the first tuple only.
-        if len(self.data):
-            assert isinstance(self.data[0][0], six.text_type)
-            assert isinstance(self.data[0][1], six.text_type)
-
     def __pt_formatted_text__(self):
-        return self.data
+        return self
 
     def __repr__(self):
-        return 'FormattedText(%r)' % (self.data, )
+        return 'FormattedText(%s)' % (
+            super(FormattedText, self).__repr__())
 
 
 class Template(object):
@@ -120,7 +123,7 @@ class Template(object):
             parts = self.text.split('{}')
             assert len(parts) - 1 == len(values)
 
-            result = []
+            result = FormattedText()
             for part, val in zip(parts, values):
                 result.append(('', part))
                 result.extend(to_formatted_text(val))
@@ -136,7 +139,7 @@ def merge_formatted_text(items):
     assert all(is_formatted_text(v) for v in items)
 
     def _merge_formatted_text():
-        result = []
+        result = FormattedText()
         for i in items:
             result.extend(to_formatted_text(i))
         return result

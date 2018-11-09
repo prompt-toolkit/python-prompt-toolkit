@@ -325,8 +325,8 @@ class KeyProcessor(object):
 
         except EditReadOnlyBuffer:
             # When a key binding does an attempt to change a buffer which is
-            # read-only, we can just silently ignore that.
-            pass
+            # read-only, we can ignore that. We sound a bell and go on.
+            app.output.bell()
 
         if was_temporary_navigation_mode:
             self._leave_vi_temp_navigation_mode(event)
