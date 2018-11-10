@@ -17,6 +17,8 @@ class FuzzyCompleter(Completer):
     :param meta_dict: Optional dict mapping words to their meta-information.
     :param WORD: When True, use WORD characters.
     :param sort_results: Boolean to determine whether to sort the results (default: True).
+
+    Fuzzy algorithm is based on this post: https://blog.amjith.com/fuzzyfinder-in-10-lines-of-python
     """
     def __init__(self, words, meta_dict=None, WORD=False, sort_results=True):
         assert callable(words) or all(isinstance(w, string_types) for w in words)
