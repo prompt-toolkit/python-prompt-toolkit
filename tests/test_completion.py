@@ -7,7 +7,7 @@ import tempfile
 from contextlib import contextmanager
 from six import text_type
 
-from prompt_toolkit.completion import CompleteEvent, PathCompleter, WordCompleter
+from prompt_toolkit.completion import CompleteEvent, PathCompleter, WordCompleter, FuzzyWordCompleter
 from prompt_toolkit.document import Document
 
 
@@ -314,3 +314,34 @@ def test_word_completer_dynamic_word_list():
     completions = completer.get_completions(Document('a'), CompleteEvent())
     assert [c.text for c in completions] == ['abc', 'aaa']
     assert called[0] == 2
+
+def test_fuzzy_completer():
+    collection = [
+            'migrations.py',
+            'django_migrations.py',
+            'django_admin_log.py',
+            'api_user.doc',
+            'user_group.doc',
+            'users.txt',
+            'accounts.txt',
+            '123.py',
+            'test123test.py'
+            ]
+    completer = FuzzyWordCompleter(collection)
+    completions = completer.get_completions(Document('txt'), CompleteEvent())
+    assert [c.text for c in completions] == ['users.txt', 'accounts.txt']
+
+    completions = completer.get_completions(Document('djmi'), CompleteEvent())
+    assert [c.text for c in completions] == ['django_migrations.py', 'django_admin_log.py']
+
+    completions = completer.get_completions(Document('mi'), CompleteEvent())
+    assert [c.text for c in completions] == ['migrations.py', 'django_migrations.py', 'django_admin_log.py']
+
+    completions = completer.get_completions(Document('user'), CompleteEvent())
+    assert [c.text for c in completions] == ['user_group.doc', 'users.txt', 'api_user.doc']
+
+    completions = completer.get_completions(Document('123'), CompleteEvent())
+    assert [c.text for c in completions] == ['123.py', 'test123test.py']
+
+    completions = completer.get_completions(Document('miGr'), CompleteEvent())
+    assert [c.text for c in completions] == ['migrations.py', 'django_migrations.py',]
