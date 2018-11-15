@@ -106,6 +106,9 @@ PROMPT_TOOLKIT_STYLE = [
     # Control characters, like ^C, ^X.
     ('control-character',                       'ansiblue'),
 
+    # Non-breaking space.
+    ('nbsp',                                    'underline ansiyellow'),
+
     # Default styling of HTML elements.
     ('i',                                       'italic'),
     ('u',                                       'underline'),

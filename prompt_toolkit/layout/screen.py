@@ -100,14 +100,21 @@ class Char(object):
         '\x9e': '<9e>',
         '\x9f': '<9f>',
 
-        '\xa0': '&',  # Non breaking space.
+        # For the non-breaking space: visualize like Emacs does by default.
+        # (Print a space, but attach the 'nbsp' class that applies the
+        # underline style.)
+        '\xa0': ' ',
     }
 
     def __init__(self, char=' ', style=''):
         # If this character has to be displayed otherwise, take that one.
         if char in self.display_mappings:
+            if char == '\xa0':
+                style += ' class:nbsp '  # Will be underlined.
+            else:
+                style += ' class:control-character '
+
             char = self.display_mappings[char]
-            style += 'class:control-character'
 
         self.char = char
         self.style = style
