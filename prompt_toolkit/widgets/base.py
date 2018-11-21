@@ -615,9 +615,7 @@ class RadioList(object):
         self.control = FormattedTextControl(
             self._get_text_fragments,
             key_bindings=kb,
-            focusable=True,
-
-        )
+            focusable=True)
 
         self.window = Window(
             content=self.control,
@@ -628,8 +626,14 @@ class RadioList(object):
             dont_extend_height=True)
 
     def _get_text_fragments(self):
-
         def mouse_handler(mouse_event: MouseEvent):
+            """
+            Sets the _selected_index and current_value based on the user mouse
+            click. The function uses the moused position y to get the position
+            of the current list item clicked.
+            :param mouse_event:
+                Mouse event containing position clicked
+            """
             if mouse_event.event_type == MouseEventType.MOUSE_UP:
                 self._selected_index = mouse_event.position.y
                 self.current_value = self.values[self._selected_index][0]
