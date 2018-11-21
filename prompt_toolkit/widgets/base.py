@@ -32,7 +32,7 @@ from prompt_toolkit.layout.dimension import is_dimension, to_dimension
 from prompt_toolkit.layout.margins import ScrollbarMargin, NumberedMargin
 from prompt_toolkit.layout.processors import PasswordProcessor, ConditionalProcessor, BeforeInput, AppendAutoSuggestion
 from prompt_toolkit.lexers import DynamicLexer
-from prompt_toolkit.mouse_events import MouseEventType
+from prompt_toolkit.mouse_events import MouseEventType, MouseEvent
 from prompt_toolkit.utils import get_cwidth
 from prompt_toolkit.keys import Keys
 
@@ -615,7 +615,9 @@ class RadioList(object):
         self.control = FormattedTextControl(
             self._get_text_fragments,
             key_bindings=kb,
-            focusable=True)
+            focusable=True,
+
+        )
 
         self.window = Window(
             content=self.control,
@@ -626,6 +628,12 @@ class RadioList(object):
             dont_extend_height=True)
 
     def _get_text_fragments(self):
+
+        def mouse_handler(mouse_event: MouseEvent):
+            if mouse_event.event_type == MouseEventType.MOUSE_UP:
+                self._selected_index = mouse_event.position.y
+                self.current_value = self.values[self._selected_index][0]
+
         result = []
         for i, value in enumerate(self.values):
             checked = (value[0] == self.current_value)
@@ -643,14 +651,14 @@ class RadioList(object):
                 result.append(('[SetCursorPosition]', ''))
 
             if checked:
-                result.append((style, '*'))
+                result.append((style, '*', mouse_handler))
             else:
-                result.append((style, ' '))
+                result.append((style, ' ', mouse_handler))
 
-            result.append((style, ')'))
-            result.append(('class:radio', ' '))
+            result.append((style, ')', mouse_handler))
+            result.append(('class:radio', ' ', mouse_handler))
             result.extend(to_formatted_text(value[1], style='class:radio'))
-            result.append(('', '\n'))
+            result.append(('', '\n', mouse_handler))
 
         result.pop()  # Remove last newline.
         return result
