@@ -105,7 +105,7 @@ def _(event):
     Pressing Ctrl-Q or Ctrl-C will exit the user interface.
 
     Setting a return value means: quit the event loop that drives the user
-    interface and return this value from the `CommandLineInterface.run()` call.
+    interface and return this value from the `Application.run()` call.
 
     Note that Ctrl-Q does not work on all terminals. Sometimes it requires
     executing `stty -ixon`.
