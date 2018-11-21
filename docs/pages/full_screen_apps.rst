@@ -307,7 +307,7 @@ the key handler:
         Pressing Ctrl-Q will exit the user interface.
 
         Setting a return value means: quit the event loop that drives the user
-        interface and return this value from the `CommandLineInterface.run()` call.
+        interface and return this value from the `Application.run()` call. 
         """
         event.app.exit()
 

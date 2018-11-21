@@ -53,7 +53,7 @@ def interact(connection):
 
     _connections.append(connection)
     try:
-        # Set CommandLineInterface.
+        # Set Application.
         while True:
             try:
                 result = yield From(prompt(message=prompt_msg, async_=True))

@@ -68,8 +68,7 @@ TODO: this is a little outdated.
         |
         |  Normally after every key press, the output will be
         |  rendered again. This happens in the event loop of
-        |  the `CommandLineInterface` where `Renderer.render` is
-        |  called.
+        |  the `Application` where `Renderer.render` is called.
         v
     +---------------------------------------------------------------+
     |     Layout                                                    |
