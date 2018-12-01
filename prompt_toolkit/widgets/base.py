@@ -628,11 +628,8 @@ class RadioList(object):
     def _get_text_fragments(self):
         def mouse_handler(mouse_event: MouseEvent):
             """
-            Sets the _selected_index and current_value based on the user mouse
-            click. The function uses the moused position y to get the position
-            of the current list item clicked.
-            :param mouse_event:
-                Mouse event containing position clicked
+            Set `_selected_index` and `current_value` according to the y
+            position of the mouse click event.
             """
             if mouse_event.event_type == MouseEventType.MOUSE_UP:
                 self._selected_index = mouse_event.position.y
@@ -655,14 +652,18 @@ class RadioList(object):
                 result.append(('[SetCursorPosition]', ''))
 
             if checked:
-                result.append((style, '*', mouse_handler))
+                result.append((style, '*'))
             else:
-                result.append((style, ' ', mouse_handler))
+                result.append((style, ' '))
 
-            result.append((style, ')', mouse_handler))
-            result.append(('class:radio', ' ', mouse_handler))
+            result.append((style, ')'))
+            result.append(('class:radio', ' '))
             result.extend(to_formatted_text(value[1], style='class:radio'))
-            result.append(('', '\n', mouse_handler))
+            result.append(('', '\n'))
+
+        # Add mouse handler to all fragments.
+        for i in range(len(result)):
+            result[i] = (result[i][0], result[i][1], mouse_handler)
 
         result.pop()  # Remove last newline.
         return result
