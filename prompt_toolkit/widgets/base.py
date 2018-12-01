@@ -626,7 +626,7 @@ class RadioList(object):
             dont_extend_height=True)
 
     def _get_text_fragments(self):
-        def mouse_handler(mouse_event: MouseEvent):
+        def mouse_handler(mouse_event):
             """
             Set `_selected_index` and `current_value` according to the y
             position of the mouse click event.
