@@ -32,7 +32,7 @@ from prompt_toolkit.layout.dimension import is_dimension, to_dimension
 from prompt_toolkit.layout.margins import ScrollbarMargin, NumberedMargin
 from prompt_toolkit.layout.processors import PasswordProcessor, ConditionalProcessor, BeforeInput, AppendAutoSuggestion
 from prompt_toolkit.lexers import DynamicLexer
-from prompt_toolkit.mouse_events import MouseEventType, MouseEvent
+from prompt_toolkit.mouse_events import MouseEventType
 from prompt_toolkit.utils import get_cwidth
 from prompt_toolkit.keys import Keys
 
