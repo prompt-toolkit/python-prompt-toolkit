@@ -1613,12 +1613,12 @@ class Buffer(object):
 
         # When the validation succeeded, accept the input.
         if valid:
-            self.append_to_history()
-
             if self.accept_handler:
                 keep_text = self.accept_handler(self)
             else:
                 keep_text = False
+
+            self.append_to_history()
 
             if not keep_text:
                 self.reset()
