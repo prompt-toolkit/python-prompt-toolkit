@@ -85,7 +85,7 @@ def _display_completions_like_readline(app, completions):
     # completions. (Keep in mind that completions are displayed
     # alphabetically column-wise.)
     max_compl_width = min(term_width,
-        max(get_cwidth(c.text) for c in completions) + 1)
+        max(get_cwidth(c.display_text) for c in completions) + 1)
     column_count = max(1, term_width // max_compl_width)
     completions_per_page = column_count * (term_height - 1)
     page_count = int(math.ceil(len(completions) / float(completions_per_page)))
@@ -107,9 +107,11 @@ def _display_completions_like_readline(app, completions):
                 try:
                     completion = page_columns[c][r]
 
-                    result.extend(to_formatted_text(
-                        completion.text.ljust(max_compl_width),
-                        style=completion.style))
+                    result.extend(to_formatted_text(completion.display, style=completion.style))
+
+                    # Add padding.
+                    padding = max_compl_width - get_cwidth(completion.display_text)
+                    result.append((completion.style, ' ' * padding,))
                 except IndexError:
                     pass
             result.append(('', '\n'))

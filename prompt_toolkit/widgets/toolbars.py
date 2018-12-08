@@ -4,7 +4,7 @@ from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.enums import SYSTEM_BUFFER
 from prompt_toolkit.filters import Condition, has_focus, has_completions, has_validation_error, emacs_mode, vi_mode, vi_navigation_mode, has_arg, to_filter
-from prompt_toolkit.formatted_text.utils import fragment_list_len
+from prompt_toolkit.formatted_text import fragment_list_len, to_formatted_text
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, merge_key_bindings, ConditionalKeyBindings
 from prompt_toolkit.key_binding.vi_state import InputMode
 from prompt_toolkit.keys import Keys
@@ -236,7 +236,7 @@ class _CompletionsToolbarControl(UIControl):
 
             for i, c in enumerate(completions):
                 # When there is no more place for the next completion
-                if fragment_list_len(fragments) + len(c.display) >= content_width:
+                if fragment_list_len(fragments) + len(c.display_text) >= content_width:
                     # If the current one was not yet displayed, page to the next sequence.
                     if i <= (index or 0):
                         fragments = []
@@ -246,8 +246,11 @@ class _CompletionsToolbarControl(UIControl):
                         cut_right = True
                         break
 
-                fragments.append(('class:completion-toolbar.completion.current' if i == index
-                               else 'class:completion-toolbar.completion', c.display))
+                fragments.extend(to_formatted_text(
+                    c.display_text,
+                    style=('class:completion-toolbar.completion.current'
+                           if i == index else 'class:completion-toolbar.completion')
+                ))
                 fragments.append(('', ' '))
 
             # Extend/strip until the content width.
