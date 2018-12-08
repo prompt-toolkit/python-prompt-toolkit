@@ -23,10 +23,10 @@ class Completion(object):
     :param start_position: Position relative to the cursor_position where the
         new text will start. The text will be inserted between the
         start_position and the original cursor position.
-    :param display: (optional string) If the completion has to be displayed
-        differently in the completion menu.
-    :param display_meta: (Optional string) Meta information about the
-        completion, e.g. the path or source where it's coming from.
+    :param display: (optional string or formatted text) If the completion has
+        to be displayed differently in the completion menu.
+    :param display_meta: (Optional string or formatted text) Meta information
+        about the completion, e.g. the path or source where it's coming from.
         This can also be a callable that returns a string.
     :param style: Style string.
     :param selected_style: Style string, used for a selected completion.
@@ -36,19 +36,18 @@ class Completion(object):
                  style='', selected_style=''):
         assert isinstance(text, text_type)
         assert isinstance(start_position, int)
-        assert display is None or isinstance(display, text_type)
-        assert display_meta is None or isinstance(display_meta, text_type)
         assert isinstance(style, text_type)
         assert isinstance(selected_style, text_type)
 
+        from prompt_toolkit.formatted_text import to_formatted_text
         self.text = text
         self.start_position = start_position
         self._display_meta = display_meta
 
         if display is None:
-            self.display = text
-        else:
-            self.display = display
+            display = text
+
+        self.display = to_formatted_text(display)
 
         self.style = style
         self.selected_style = selected_style
@@ -75,17 +74,22 @@ class Completion(object):
         return hash((self.text, self.start_position, self.display, self._display_meta))
 
     @property
+    def display_text(self):
+        " The 'display' field as plain text. "
+        from prompt_toolkit.formatted_text import fragment_list_to_text
+        return fragment_list_to_text(self.display)
+
+    @property
     def display_meta(self):
         " Return meta-text. (This is lazy when using a callable). "
-        meta = self._display_meta
+        from prompt_toolkit.formatted_text import to_formatted_text
+        return to_formatted_text(self._display_meta)
 
-        if meta is None:
-            return ''
-
-        if callable(meta):
-            return meta()
-
-        return meta
+    @property
+    def display_meta_text(self):
+        " The 'meta' field as plain text. "
+        from prompt_toolkit.formatted_text import fragment_list_to_text
+        return fragment_list_to_text(self.display_meta)
 
     def new_completion_from_position(self, position):
         """

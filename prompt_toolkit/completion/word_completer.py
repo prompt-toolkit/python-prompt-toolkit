@@ -14,7 +14,8 @@ class WordCompleter(Completer):
 
     :param words: List of words or callable that returns a list of words.
     :param ignore_case: If True, case-insensitive completion.
-    :param meta_dict: Optional dict mapping words to their meta-information.
+    :param meta_dict: Optional dict mapping words to their meta-text. (This
+        should map strings to strings or formatted text.)
     :param WORD: When True, use WORD characters.
     :param sentence: When True, don't complete by comparing the word before the
         cursor, but by comparing all the text before the cursor. In this case,

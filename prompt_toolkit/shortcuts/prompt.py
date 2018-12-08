@@ -463,8 +463,12 @@ class PromptSession(object):
                 ]),
                 [
                     # Completion menus.
+                    # NOTE: Especially the multi-column menu needs to be
+                    #       transparent, because the shape is not always
+                    #       rectangular due to the meta-text below the menu.
                     Float(xcursor=True,
                           ycursor=True,
+                          transparent=True,
                           content=CompletionsMenu(
                               max_height=16,
                               scroll_offset=1,
@@ -472,6 +476,7 @@ class PromptSession(object):
                                   ~multi_column_complete_style)),
                     Float(xcursor=True,
                           ycursor=True,
+                          transparent=True,
                           content=MultiColumnCompletionsMenu(
                               show_meta=True,
                               extra_filter=has_focus(default_buffer) &
