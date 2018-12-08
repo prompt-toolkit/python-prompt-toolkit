@@ -34,6 +34,10 @@ def main():
     prompt('Type a color: ', completer=ColorCompleter(),
            complete_style=CompleteStyle.MULTI_COLUMN)
 
+    # Readline-like
+    prompt('Type a color: ', completer=ColorCompleter(),
+           complete_style=CompleteStyle.READLINE_LIKE)
+
     # Prompt with true color output.
     message = [('#cc2244', 'T'), ('#bb4444', 'r'), ('#996644', 'u'), ('#cc8844', 'e '),
                ('#ccaa44', 'C'), ('#bbaa44', 'o'), ('#99aa44', 'l'),
