@@ -1,11 +1,11 @@
-dist: xenial
-sudo: required
 cache: pip
 language: python
 
 matrix:
   include:
     - python: 3.7
+      dist: xenial
+      sudo: required
     - python: 3.6
     - python: 3.5
     - python: 3.4
@@ -16,7 +16,7 @@ matrix:
     - python: pypy3
 
 install:
-  - pip install . pytest coverage codecov flake8
+  - pip install . pytest coverage codecov flake8 pytest-xdist
   - pip list
 
 script:
