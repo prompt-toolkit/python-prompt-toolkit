@@ -32,6 +32,11 @@ class Completion(object):
     :param selected_style: Style string, used for a selected completion.
         This can override the `style` parameter.
     """
+    __slots__ = (
+        'text', 'start_position', '_display_meta', 'display', 'style',
+        'selected_style'
+    )
+    
     def __init__(self, text, start_position=0, display=None, display_meta=None,
                  style='', selected_style=''):
         assert isinstance(text, text_type)
