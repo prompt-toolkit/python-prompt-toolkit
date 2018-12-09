@@ -17,7 +17,7 @@ matrix:
     - python: pypy3
 
 install:
-  - pip install . pytest coverage codecov flake8 pytest-xdist
+  - pip install . pytest coverage codecov flake8
   - pip list
 
 script:
