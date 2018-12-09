@@ -458,7 +458,7 @@ class Application(object):
         # Remove all the original event handlers. (Components can be removed
         # from the UI.)
         for ev in self._invalidate_events:
-            ev -= self.invalidate
+            ev -= self._invalidate_handler
 
         # Gather all new events.
         # (All controls are able to invalidate themselves.)
@@ -469,12 +469,14 @@ class Application(object):
 
         self._invalidate_events = list(gather_events())
 
-        # Attach invalidate event handler.
-        def invalidate(sender):
-            self.invalidate()
-
         for ev in self._invalidate_events:
-            ev += invalidate
+            ev += self._invalidate_handler
+
+    def _invalidate_handler(self, sender):
+        """
+        Handler to allow invalidate to be called with the correct signature.
+        """
+        self.invalidate()
 
     def _on_resize(self):
         """
@@ -623,7 +625,7 @@ class Application(object):
                             # invalidate should not trigger a repaint in
                             # terminated applications.)
                             for ev in self._invalidate_events:
-                                ev -= self.invalidate
+                                ev -= self._invalidate_handler
                             self._invalidate_events = []
 
                             # Wait for CPR responses.
