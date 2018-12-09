@@ -36,7 +36,7 @@ class Completion(object):
         'text', 'start_position', '_display_meta', 'display', 'style',
         'selected_style'
     )
-    
+
     def __init__(self, text, start_position=0, display=None, display_meta=None,
                  style='', selected_style=''):
         assert isinstance(text, text_type)
