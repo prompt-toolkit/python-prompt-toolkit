@@ -35,6 +35,8 @@ class Suggestion(object):
 
     :param text: The suggestion text.
     """
+    __slots__ = ('text',)
+    
     def __init__(self, text):
         self.text = text
 
