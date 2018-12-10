@@ -415,7 +415,7 @@ class Frame(object):
                 DynamicContainer(lambda: self.body),
                 fill(width=1, char=Border.VERTICAL),
                     # Padding is required to make sure that if the content is
-                    # too small, that the right frame border is still aligned.
+                    # too small, the right frame border is still aligned.
             ], padding=0),
             VSplit([
                 fill(width=1, height=1, char=Border.BOTTOM_LEFT),
@@ -708,9 +708,9 @@ class ProgressBar(object):
         self.container = FloatContainer(
             content=Window(height=1),
             floats=[
-                # We first draw the label, than the actual progress bar.  Right
+                # We first draw the label, then the actual progress bar.  Right
                 # now, this is the only way to have the colors of the progress
-                # bar appear on to of the label. The problem is that our label
+                # bar appear on top of the label. The problem is that our label
                 # can't be part of any `Window` below.
                 Float(content=self.label, top=0, bottom=0),
 
