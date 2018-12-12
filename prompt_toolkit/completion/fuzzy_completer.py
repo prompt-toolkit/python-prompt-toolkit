@@ -20,9 +20,7 @@ class FuzzyWordCompleter(Completer):
     the others, because they match the regular expression 'o.*a.*r'.
 
     The results are sorted by relevance, which is defined as the start position
-    of the match and then the proportion of the word span that is covered. As a
-    user, if you want to get leopard, it's better to type 'ld' (first + last
-    letter) because this covers 100% of the word.
+    and the length of the match.
 
     See: https://blog.amjith.com/fuzzyfinder-in-10-lines-of-python
 
@@ -61,12 +59,8 @@ class FuzzyWordCompleter(Completer):
                 fuzzy_matches.append(_FuzzyMatch(len(best.group(1)), best.start(), word))
 
         def sort_key(fuzzy_match):
-            """ Sort by start position, then by proportion of word that is
-            covered. (More coverage is better.) """
-            return (
-                fuzzy_match.start_pos,
-                - float(fuzzy_match.match_length) / len(fuzzy_match.word)
-            )
+            " Sort by start position, then by the length of the match. "
+            return fuzzy_match.start_pos, fuzzy_match.match_length
 
         fuzzy_matches = sorted(fuzzy_matches, key=sort_key)
 
