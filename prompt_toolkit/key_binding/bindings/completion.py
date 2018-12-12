@@ -106,8 +106,9 @@ def _display_completions_like_readline(app, completions):
             for c in range(column_count):
                 try:
                     completion = page_columns[c][r]
+                    style = 'class:readline-like-completions.completion ' + (completion.style or '')
 
-                    result.extend(to_formatted_text(completion.display, style=completion.style))
+                    result.extend(to_formatted_text(completion.display, style=style))
 
                     # Add padding.
                     padding = max_compl_width - get_cwidth(completion.display_text)
@@ -116,7 +117,7 @@ def _display_completions_like_readline(app, completions):
                     pass
             result.append(('', '\n'))
 
-        app.print_text(result)
+        app.print_text(to_formatted_text(result, 'class:readline-like-completions'))
 
     # User interaction through an application generator function.
     def run_compl():

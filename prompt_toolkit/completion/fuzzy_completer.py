@@ -74,7 +74,40 @@ class FuzzyWordCompleter(Completer):
             yield Completion(
                 match.word,
                 -len(word_before_cursor),
-                display_meta=display_meta)
+                display_meta=display_meta,
+                display=self._get_display(match, word_before_cursor))
+
+    def _get_display(self, fuzzy_match, word_before_cursor):
+        """
+        Generate formatted text for the display label.
+        """
+        m = fuzzy_match
+
+        if m.match_length == 0:
+            # No highlighting when we have zero length matches (no input text).
+            return m.word
+
+        result = []
+
+        # Text before match.
+        result.append(('class:fuzzymatch.outside', m.word[:m.start_pos]))
+
+        # The match itself.
+        characters = list(word_before_cursor)
+
+        for c in m.word[m.start_pos:m.start_pos + m.match_length]:
+            classname = 'class:fuzzymatch.inside'
+            if characters and c == characters[0]:
+                classname += '.character'
+                del characters[0]
+
+            result.append((classname, c))
+
+        # Text after match.
+        result.append(
+            ('class:fuzzymatch.outside', m.word[m.start_pos + m.match_length:]))
+
+        return result
 
 
 _FuzzyMatch = namedtuple('_FuzzyMatch', 'match_length start_pos word')

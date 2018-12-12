@@ -79,6 +79,20 @@ PROMPT_TOOLKIT_STYLE = [
     ('completion-menu.meta.completion.current', 'bg:#aaaaaa #000000'),
     ('completion-menu.multi-column-meta',       'bg:#aaaaaa #000000'),
 
+    # Fuzzy matches in completion menu (for FuzzyCompleter).
+    ('completion-menu.completion fuzzymatch.outside',          'fg:#444444'),
+    ('completion-menu.completion fuzzymatch.inside',           'bold'),
+    ('completion-menu.completion fuzzymatch.inside.character', 'underline'),
+    ('completion-menu.completion.current fuzzymatch.outside',  'fg:default'),
+    ('completion-menu.completion.current fuzzymatch.inside',   'nobold'),
+
+    # Styling of readline-like completions.
+    ('readline-like-completions',                                        ''),
+    ('readline-like-completions.completion',                             ''),
+    ('readline-like-completions.completion fuzzymatch.outside',          '#888888'),
+    ('readline-like-completions.completion fuzzymatch.inside',           ''),
+    ('readline-like-completions.completion fuzzymatch.inside.character', 'underline'),
+
     # Scrollbars.
     ('scrollbar.background',                     'bg:#aaaaaa'),
     ('scrollbar.button',                         'bg:#444444'),
