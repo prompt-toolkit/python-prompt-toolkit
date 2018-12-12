@@ -56,14 +56,16 @@ class FuzzyWordCompleter(Completer):
         for word in words:
             matches = list(regex.finditer(word))
             if matches:
-                best = min(matches, key=lambda x: len(x.group(1)))   # find shortest match
+                # Prefer the match, closest to the left, then shortest.
+                best = min(matches, key=lambda m: (m.start(), len(m.group(1))))
                 fuzzy_matches.append(_FuzzyMatch(len(best.group(1)), best.start(), word))
 
         def sort_key(fuzzy_match):
-            " Sort by start position, then by proportion of word that is covered. "
+            """ Sort by start position, then by proportion of word that is
+            covered. (More coverage is better.) """
             return (
                 fuzzy_match.start_pos,
-                float(fuzzy_match.match_length) / len(fuzzy_match.word)
+                - float(fuzzy_match.match_length) / len(fuzzy_match.word)
             )
 
         fuzzy_matches = sorted(fuzzy_matches, key=sort_key)
