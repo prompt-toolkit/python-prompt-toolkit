@@ -2,6 +2,7 @@ from __future__ import unicode_literals, print_function
 from prompt_toolkit.application import Application
 from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.formatted_text import to_formatted_text, FormattedText
+from prompt_toolkit.input import DummyInput
 from prompt_toolkit.layout import Layout
 from prompt_toolkit.output import Output, ColorDepth
 from prompt_toolkit.output.defaults import create_output, get_default_output
@@ -150,7 +151,8 @@ def print_container(container, file=None):
 
     app = Application(
         layout=Layout(container=container),
-        output=output)
+        output=output,
+        input=DummyInput())
     app.run(pre_run=exit_immediately)
 
 

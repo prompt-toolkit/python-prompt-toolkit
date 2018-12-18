@@ -4,6 +4,7 @@ Abstraction of CLI Input.
 from __future__ import unicode_literals
 
 from abc import ABCMeta, abstractmethod, abstractproperty
+from contextlib import contextmanager
 from six import with_metaclass
 
 __all__ = [
@@ -111,13 +112,18 @@ class DummyInput(Input):
         return True
 
     def raw_mode(self):
-        raise NotImplementedError
+        return _dummy_context_manager()
 
     def cooked_mode(self):
-        raise NotImplementedError
+        return _dummy_context_manager()
 
     def attach(self, input_ready_callback):
-        raise NotImplementedError
+        return _dummy_context_manager()
 
     def detach(self):
-        raise NotImplementedError
+        return _dummy_context_manager()
+
+
+@contextmanager
+def _dummy_context_manager():
+    yield
