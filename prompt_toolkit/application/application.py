@@ -474,7 +474,11 @@ class Application(object):
 
     def _invalidate_handler(self, sender):
         """
-        Handler to allow invalidate to be called with the correct signature.
+        Handler for invalidate events coming from UIControls.
+
+        (This handles the difference in signature between event handler and
+        `self.invalidate`. It also needs to be a method -not a nested
+        function-, so that we can remove it again .)
         """
         self.invalidate()
 
