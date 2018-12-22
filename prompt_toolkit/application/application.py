@@ -524,7 +524,7 @@ class Application(object):
                 application.run_async().to_asyncio_future())
 
         """
-        assert not self._is_running
+        assert not self._is_running, 'Application is already running.'
 
         def _run_async():
             " Coroutine. "
@@ -657,7 +657,11 @@ class Application(object):
                     f = From(_run_async())
                     result = yield f
                 finally:
-                    assert not self._is_running
+                    # Set the `_is_running` flag to `False`. Normally this
+                    # happened already in the finally block in `run_async`
+                    # above, but in case of exceptions, that's not always the
+                    # case.
+                    self._is_running = False
                 raise Return(result)
 
         return ensure_future(_run_async2())
