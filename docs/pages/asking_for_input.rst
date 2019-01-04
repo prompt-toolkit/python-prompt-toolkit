@@ -139,7 +139,7 @@ function:
     from prompt_toolkit.styles import Style
     from prompt_toolkit.lexers import PygmentsLexer
 
-    our_style = style.from_dict({
+    our_style = Style.from_dict({
         'pygments.comment':   '#888888 bold',
         'pygments.keyword':   '#ff88ff bold',
     })
