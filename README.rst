@@ -122,8 +122,9 @@ Shells:
 
 - `ptpython <http://github.com/prompt-toolkit/ptpython/>`_: Python REPL
 - `ptpdb <http://github.com/jonathanslenders/ptpdb/>`_: Python debugger (pdb replacement)
-- `pgcli <http://pgcli.com/>`_: Postgres client.
-- `mycli <http://mycli.net>`_: MySql client.
+- `pgcli <https://www.pgcli.com/>`_: Postgres client.
+- `mycli <https://www.mycli.net/>`_: MySql client.
+- `litecli <https://litecli.com/>`_: SQLite client.
 - `wharfee <http://wharfee.com/>`_: A Docker command line.
 - `xonsh <http://xon.sh/>`_: A Python-ish, BASHwards-compatible shell.
 - `saws <https://github.com/donnemartin/saws>`_: A Supercharged AWS Command Line Interface.
