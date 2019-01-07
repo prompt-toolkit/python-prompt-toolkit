@@ -4,12 +4,8 @@ import re
 from setuptools import setup, find_packages
 
 
-long_description = open(
-    os.path.join(
-        os.path.dirname(__file__),
-        'README.rst'
-    )
-).read()
+with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as f:
+    long_description = f.read()
 
 
 def get_version(package):
