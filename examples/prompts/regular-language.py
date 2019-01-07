@@ -30,7 +30,7 @@ operators2 = ['sqrt', 'log', 'sin', 'ln']
 
 
 def create_grammar():
-    return compile("""
+    return compile(r"""
         (\s*  (?P<operator1>[a-z]+)   \s+   (?P<var1>[0-9.]+)   \s+   (?P<var2>[0-9.]+)   \s*) |
         (\s*  (?P<operator2>[a-z]+)   \s+   (?P<var1>[0-9.]+)   \s*)
     """)
