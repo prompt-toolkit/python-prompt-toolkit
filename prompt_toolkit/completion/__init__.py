@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 from .base import Completion, Completer, ThreadedCompleter, DummyCompleter, DynamicCompleter, CompleteEvent, merge_completers, get_common_complete_suffix
 from .filesystem import PathCompleter, ExecutableCompleter
 from .word_completer import WordCompleter
-from .fuzzy_completer import FuzzyWordCompleter
+from .fuzzy_completer import FuzzyCompleter, FuzzyWordCompleter
 
 __all__ = [
     # Base.
@@ -21,5 +21,6 @@ __all__ = [
 
     # Word completer.
     'WordCompleter',
+    'FuzzyCompleter',
     'FuzzyWordCompleter',
 ]

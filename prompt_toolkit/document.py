@@ -407,32 +407,50 @@ class Document(object):
         except StopIteration:
             pass
 
-    def get_word_before_cursor(self, WORD=False):
+    def get_word_before_cursor(self, WORD=False, pattern=None):
         """
         Give the word before the cursor.
         If we have whitespace before the cursor this returns an empty string.
-        """
-        if self.text_before_cursor[-1:].isspace():
-            return ''
-        else:
-            return self.text_before_cursor[self.find_start_of_previous_word(WORD=WORD):]
 
-    def find_start_of_previous_word(self, count=1, WORD=False):
+        :param pattern: (None or compiled regex). When given, use this regex
+            pattern.
+        """
+        text_before_cursor = self.text_before_cursor
+        start = self.find_start_of_previous_word(WORD=WORD, pattern=pattern)
+
+        if start is None:
+            # Space before the cursor or no text before cursor.
+            return ''
+
+        return text_before_cursor[len(text_before_cursor) + start:]
+
+    def find_start_of_previous_word(self, count=1, WORD=False, pattern=None):
         """
         Return an index relative to the cursor position pointing to the start
         of the previous word. Return `None` if nothing was found.
+
+        :param pattern: (None or compiled regex). When given, use this regex
+            pattern.
         """
+        assert not (WORD and pattern)
+
         # Reverse the text before the cursor, in order to do an efficient
         # backwards search.
         text_before_cursor = self.text_before_cursor[::-1]
 
-        regex = _FIND_BIG_WORD_RE if WORD else _FIND_WORD_RE
+        if pattern:
+            regex = pattern
+        elif WORD:
+            regex = _FIND_BIG_WORD_RE
+        else:
+            regex = _FIND_WORD_RE
+
         iterator = regex.finditer(text_before_cursor)
 
         try:
             for i, match in enumerate(iterator):
                 if i + 1 == count:
-                    return - match.end(1)
+                    return - match.end(0)
         except StopIteration:
             pass
 
