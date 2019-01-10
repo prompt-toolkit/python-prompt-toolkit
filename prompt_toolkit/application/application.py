@@ -738,8 +738,13 @@ class Application(object):
         """
         assert result is None or exception is None
 
+        if self.future is None:
+            raise Exception(
+                'Application is not running. Application.exit() failed.')
+
         if self.future.done():
-            raise Exception('Return value already set.')
+            raise Exception(
+                'Return value already set. Application.exit() failed.')
 
         self.exit_style = style
 
