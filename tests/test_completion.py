@@ -315,6 +315,7 @@ def test_word_completer_dynamic_word_list():
     assert [c.text for c in completions] == ['abc', 'aaa']
     assert called[0] == 2
 
+
 def test_fuzzy_completer():
     collection = [
             'migrations.py',
