@@ -42,6 +42,7 @@ are two difficulties:
   a key press, and we have to wait for the rest to arrive.
 
 Both problems are implemented using state machines.
+
 - The UTF-8 problem is solved using `codecs.getincrementaldecoder`, which is an
   object in which we can feed the incoming bytes, and it will only return the
   complete UTF-8 characters that we have so far. The rest is buffered for the
@@ -102,6 +103,7 @@ Rendering the user interface
 ----------------------------
 
 The rendering is pretty complex for several reasons:
+
 - We have to compute the dimensions of all user interface elements. Sometimes
   they are given, but sometimes this requires calculating the size of
   :class:`~prompt_toolkit.layout.UIControl` objects.
