@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Eample of using the control-space key binding for auto completion.
+Example of using the control-space key binding for auto completion.
 """
 from __future__ import unicode_literals
 
