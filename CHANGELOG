@@ -1,6 +1,27 @@
 CHANGELOG
 =========
 
+2.0.8: 2019-01-27
+-----------------
+
+Bug fixes:
+- Fixes the issue where changes made to the buffer in the accept handler were
+  not reflected in the history.
+- Fix in the application invalidate handler. This prevents a significat slow
+  down in some applications after some time (especially if there is a refresh
+  interval).
+- Make `print_container` utility work if the input is not a pty.
+
+New features:
+- Underline non breaking spaces instead of rendering as '&'.
+- Added mouse support for radio list.
+- Support completion styles for `READLINE_LIKE` display method.
+- Accept formatted text in the display text of completions.
+- Added a `FuzzyCompleter` and `FuzzyWordCompleter`.
+- Improved error handling in Application (avoid displaying a meaningless
+  AssertionError in many cases).
+
+
 2.0.7: 2018-10-30
 -----------------
 
