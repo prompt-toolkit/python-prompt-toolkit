@@ -335,6 +335,39 @@ The "colorful-prompts.py" example uses completion styling:
 
 .. image:: ../images/colorful-completions.png
 
+Finally, it is possible to pass :ref:`formatted text <formatted_text>` for the
+``display`` attribute of a :class:`~prompt_toolkit.completion.Completion`. This
+provides all the freedom you need to display the text in any possible way. It
+can also be combined with the ``style`` attribute. For instance:
+
+.. code:: python
+
+
+    from prompt_toolkit.completion import Completer, Completion
+    from prompt_toolkit.formatted_text import HTML
+
+    class MyCustomCompleter(Completer):
+        def get_completions(self, document, complete_event):
+            yield Completion(
+                'completion1', start_position=0,
+                display=HTML('<b>completion</b><ansired>1</ansired>'),
+                style='bg:ansiyellow')
+
+
+Fuzzy completion
+^^^^^^^^^^^^^^^^
+
+If one possible completions is "django_migrations", a fuzzy completer would
+allow you to get this by typing "djm" only, a subset of characters for this
+string.
+
+Prompt_toolkit ships with a :class:`~prompt_toolkit.completion.FuzzyCompleter`
+and :class:`~prompt_toolkit.completion.FuzzyWordCompleter` class. These provide
+the means for doing this kind of "fuzzy completion". The first one can take any
+completer instance and wrap it so that it becomes a fuzzy completer. The second
+one behaves like a :class:`~prompt_toolkit.completion.WordCompleter` wrapped
+into a :class:`~prompt_toolkit.completion.FuzzyCompleter`.
+
 
 Complete while typing
 ^^^^^^^^^^^^^^^^^^^^^
