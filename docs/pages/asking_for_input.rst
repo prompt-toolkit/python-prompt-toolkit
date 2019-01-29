@@ -196,7 +196,7 @@ Coloring the prompt itself
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It is possible to add some colors to the prompt itself. For this, we need to
-build some :ref:`formatted text <formatted_text>`. One way of doing is is by
+build some :ref:`formatted text <formatted_text>`. One way of doing this is by
 creating a list of style/text tuples. In the following example, we use class
 names to refer to the style.
 
