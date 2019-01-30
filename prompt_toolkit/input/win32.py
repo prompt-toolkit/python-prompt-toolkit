@@ -67,10 +67,11 @@ class Win32Input(Input):
         return cooked_mode()
 
     def fileno(self):
-        """
-        The windows console doesn't depend on the file handle.
-        """
-        raise NotImplementedError
+        # The windows console doesn't depend on the file handle, so
+        # this is not used for the event loop (which uses the
+        # handle instead). But it's used in `Application.run_system_command`
+        # which opens a subprocess with a given stdin/stdout.
+        return sys.stdin.fileno()
 
     def typeahead_hash(self):
         return 'win32-input'
