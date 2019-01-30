@@ -115,7 +115,7 @@ class CompleteEvent(object):
     :param completion_requested: When True, it means that the user explicitly
         pressed the `Tab` key in order to view the completions.
 
-    These two flags can be used for instance to implemented a completer that
+    These two flags can be used for instance to implement a completer that
     shows some completions when ``Tab`` has been pressed, but not
     automatically when the user presses a space. (Because of
     `complete_while_typing`.)
