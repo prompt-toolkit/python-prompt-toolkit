@@ -415,14 +415,20 @@ class Document(object):
         :param pattern: (None or compiled regex). When given, use this regex
             pattern.
         """
-        text_before_cursor = self.text_before_cursor
-        start = self.find_start_of_previous_word(WORD=WORD, pattern=pattern)
-
-        if start is None:
+        if self._is_word_before_cursor_complete(WORD=WORD, pattern=pattern):
             # Space before the cursor or no text before cursor.
             return ''
 
+        text_before_cursor = self.text_before_cursor
+        start = self.find_start_of_previous_word(WORD=WORD, pattern=pattern)
+
         return text_before_cursor[len(text_before_cursor) + start:]
+
+    def _is_word_before_cursor_complete(self, WORD=False, pattern=None):
+        if pattern:
+            return self.find_start_of_previous_word(pattern=pattern) is None
+        else:
+            return self.text_before_cursor == '' or self.text_before_cursor[-1:].isspace()
 
     def find_start_of_previous_word(self, count=1, WORD=False, pattern=None):
         """
