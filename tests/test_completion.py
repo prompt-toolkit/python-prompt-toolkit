@@ -265,6 +265,10 @@ def test_word_completer_static_word_list():
     completions = completer.get_completions(Document('A'), CompleteEvent())
     assert [c.text for c in completions] == []
 
+    # Multiple words ending with space. (Accept all options)
+    completions = completer.get_completions(Document('test '), CompleteEvent())
+    assert [c.text for c in completions] == ['abc', 'def', 'aaa']
+
     # Multiple words. (Check last only.)
     completions = completer.get_completions(Document('test a'), CompleteEvent())
     assert [c.text for c in completions] == ['abc', 'aaa']
@@ -346,3 +350,11 @@ def test_fuzzy_completer():
 
     completions = completer.get_completions(Document('miGr'), CompleteEvent())
     assert [c.text for c in completions] == ['migrations.py', 'django_migrations.py',]
+
+    # Multiple words ending with space. (Accept all options)
+    completions = completer.get_completions(Document('test '), CompleteEvent())
+    assert [c.text for c in completions] == collection
+
+    # Multiple words. (Check last only.)
+    completions = completer.get_completions(Document('test txt'), CompleteEvent())
+    assert [c.text for c in completions] == ['users.txt', 'accounts.txt']
