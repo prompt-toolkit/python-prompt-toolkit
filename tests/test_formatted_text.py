@@ -78,6 +78,12 @@ def test_ansi_formatting():
     assert isinstance(to_formatted_text(value), FormattedText)
 
 
+def test_ansi_256_color():
+    assert to_formatted_text(ANSI('\x1b[38;5;124mtest')) == [
+        ('#af0000', 't'), ('#af0000', 'e'), ('#af0000', 's'), ('#af0000', 't')
+    ]
+
+
 def test_interpolation():
     value = Template(' {} ').format(HTML('<b>hello</b>'))
 

@@ -159,7 +159,7 @@ class ANSI(object):
                 n = attrs.pop()
 
                 # 256 colors.
-                if n == 5 and len(attrs) > 1:
+                if n == 5 and len(attrs) >= 1:
                     if attr == 38:
                         m = attrs.pop()
                         self._color = _256_colors.get(m)
@@ -168,7 +168,7 @@ class ANSI(object):
                         self._bgcolor = _256_colors.get(m)
 
                 # True colors.
-                if n == 2 and len(attrs) > 3:
+                if n == 2 and len(attrs) >= 3:
                     try:
                         color_str = '%02x%02x%02x' % (
                             attrs.pop(), attrs.pop(), attrs.pop())
