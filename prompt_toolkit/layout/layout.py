@@ -49,7 +49,7 @@ class Layout(object):
             self.focus(focused_element)
 
         # List of visible windows.
-        self.visible_windows = []  # type: List[Window]
+        self.visible_windows = []  # List of `Window` objects.
 
     def __repr__(self):
         return 'Layout(%r, current_window=%r)' % (
