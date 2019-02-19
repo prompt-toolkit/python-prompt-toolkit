@@ -152,6 +152,7 @@ Shells:
 - `habu <https://github.com/portantier/habu>`_: Python Network Hacking Toolkit.
 - `nawano <https://github.com/rbw/nawano>`_: Nano cryptocurrency wallet
 - `athenacli <https://github.com/dbcli/athenacli>`_: A CLI for AWS Athena.
+- `vulcano <https://github.com/dgarana/vulcano>`_: A framework for creating command-line applications that also runs in REPL mode.
 
 Full screen applications:
 
