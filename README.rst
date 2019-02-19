@@ -160,6 +160,7 @@ Full screen applications:
 - `pyvim <http://github.com/prompt-toolkit/pyvim/>`_: A Vim clone in pure Python.
 - `freud <http://github.com/stloma/freud/>`_: REST client backed by SQLite for storing servers
 - `pypager <https://github.com/prompt-toolkit/pypager>`_: A $PAGER in pure Python (like "less").
+- `kubeterminal <https://github.com/samisalkosuo/kubeterminal>`_: Kubectl helper tool.
 
 Libraries:
 
