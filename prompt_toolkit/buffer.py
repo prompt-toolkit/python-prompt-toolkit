@@ -6,6 +6,7 @@ import asyncio
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import tempfile
 from asyncio import Task, ensure_future
@@ -167,6 +168,10 @@ class Buffer:
         "open in editor" function. For a Python REPL, this would be ".py", so
         that the editor knows the syntax highlighting to use. This can also be
         a callable that returns a string.
+    :param tempfile: For more advanced tempfile situations where you need
+        control over the subdirectories and filename. For a Git Commit Message,
+        this would be ".git/COMMIT_EDITMSG", so that the editor knows the syntax
+        highlighting to use. This can also be a callable that returns a string.
     :param name: Name for this buffer. E.g. DEFAULT_BUFFER. This is mostly
         useful for key bindings where we sometimes prefer to refer to a buffer
         by their name instead of by reference.
@@ -213,6 +218,7 @@ class Buffer:
                  history: Optional[History] = None,
                  validator: Optional[Validator] = None,
                  tempfile_suffix: Union[str, Callable[[], str]] = '',
+                 tempfile: Union[str, Callable[[], str]] = '',
                  name: str = '',
                  complete_while_typing: FilterOrBool = False,
                  validate_while_typing: FilterOrBool = False,
@@ -238,6 +244,7 @@ class Buffer:
         self.auto_suggest = auto_suggest
         self.validator = validator
         self.tempfile_suffix = tempfile_suffix
+        self.tempfile = tempfile
         self.name = name
         self.accept_handler = accept_handler
 
@@ -1398,7 +1405,30 @@ class Buffer:
             raise EditReadOnlyBuffer()
 
         # Write to temporary file
-        descriptor, filename = tempfile.mkstemp(to_str(self.tempfile_suffix))
+        if self.tempfile:
+            # Try to make according to tempfile logic.
+            head, tail = os.path.split(to_str(self.tempfile))
+            if os.path.isabs(head):
+                head = head[1:]
+
+            dirpath = tempfile.mkdtemp()
+            remove = dirpath
+            if head:
+                dirpath = os.path.join(dirpath, head)
+            # Assume there is no issue creating dirs in this temp dir.
+            os.makedirs(dirpath)
+
+            # Open the filename of interest.
+            filename = os.path.join(dirpath, tail)
+            descriptor = os.open(filename, os.O_WRONLY|os.O_CREAT)
+        else:
+            # Fallback to tempfile_suffix logic.
+            suffix = None
+            if self.tempfile_suffix:
+                suffix = to_str(self.tempfile_suffix)
+            descriptor, filename = tempfile.mkstemp(suffix)
+            remove = filename
+
         os.write(descriptor, self.text.encode('utf-8'))
         os.close(descriptor)
 
@@ -1430,8 +1460,8 @@ class Buffer:
                         self.validate_and_handle()
 
             finally:
-                # Clean up temp file.
-                os.remove(filename)
+                # Clean up temp dir/file.
+                shutil.rmtree(remove)
 
         return get_app().create_background_task(run())
 
