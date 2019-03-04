@@ -334,7 +334,8 @@ class PromptSession(Generic[_T]):
         'validate_while_typing', 'complete_style', 'mouse_support',
         'auto_suggest', 'clipboard', 'validator', 'refresh_interval',
         'input_processors', 'enable_system_prompt', 'enable_suspend',
-        'enable_open_in_editor', 'reserve_space_for_menu', 'tempfile_suffix')
+        'enable_open_in_editor', 'reserve_space_for_menu', 'tempfile_suffix',
+        'tempfile')
 
     def __init__(
             self,
@@ -373,7 +374,8 @@ class PromptSession(Generic[_T]):
             input_processors: Optional[List[Processor]] = None,
             key_bindings: Optional[KeyBindingsBase] = None,
             erase_when_done: bool = False,
-            tempfile_suffix: str = '.txt',
+            tempfile_suffix: Optional[Union[str, Callable[[], str]]] = '.txt',
+            tempfile: Optional[Union[str, Callable[[], str]]] = None,
 
             refresh_interval: float = 0,
 
@@ -425,6 +427,7 @@ class PromptSession(Generic[_T]):
         self.enable_open_in_editor = enable_open_in_editor
         self.reserve_space_for_menu = reserve_space_for_menu
         self.tempfile_suffix = tempfile_suffix
+        self.tempfile = tempfile
 
         # Create buffers, layout and Application.
         self.history = history
@@ -480,7 +483,8 @@ class PromptSession(Generic[_T]):
             history=self.history,
             auto_suggest=DynamicAutoSuggest(lambda: self.auto_suggest),
             accept_handler=accept,
-            tempfile_suffix=lambda: self.tempfile_suffix)
+            tempfile_suffix=lambda: self.tempfile_suffix,
+            tempfile=lambda: self.tempfile)
 
     def _create_search_buffer(self) -> Buffer:
         return Buffer(name=SEARCH_BUFFER)
@@ -795,7 +799,8 @@ class PromptSession(Generic[_T]):
             enable_system_prompt: Optional[FilterOrBool] = None,
             enable_suspend: Optional[FilterOrBool] = None,
             enable_open_in_editor: Optional[FilterOrBool] = None,
-            tempfile_suffix: Optional[str] = None,
+            tempfile_suffix: Optional[Union[str, Callable[[], str]]] = None,
+            tempfile: Optional[Union[str, Callable[[], str]]] = None,
 
             # Following arguments are specific to the current `prompt()` call.
             default: Union[str, Document] = '',
@@ -910,6 +915,8 @@ class PromptSession(Generic[_T]):
             self.enable_open_in_editor = enable_open_in_editor
         if tempfile_suffix is not None:
             self.tempfile_suffix = tempfile_suffix
+        if tempfile is not None:
+            self.tempfile = tempfile
 
         self._add_pre_run_callables(pre_run, accept_default)
         self.default_buffer.reset(default if isinstance(default, Document) else Document(default))
@@ -958,7 +965,8 @@ class PromptSession(Generic[_T]):
             enable_system_prompt: Optional[FilterOrBool] = None,
             enable_suspend: Optional[FilterOrBool] = None,
             enable_open_in_editor: Optional[FilterOrBool] = None,
-            tempfile_suffix: Optional[str] = None,
+            tempfile_suffix: Optional[Union[str, Callable[[], str]]] = None,
+            tempfile: Optional[Union[str, Callable[[], str]]] = None,
 
             # Following arguments are specific to the current `prompt()` call.
             default: Union[str, Document] = '',
@@ -1033,6 +1041,8 @@ class PromptSession(Generic[_T]):
             self.enable_open_in_editor = enable_open_in_editor
         if tempfile_suffix is not None:
             self.tempfile_suffix = tempfile_suffix
+        if tempfile is not None:
+            self.tempfile = tempfile
 
         self._add_pre_run_callables(pre_run, accept_default)
         self.default_buffer.reset(default if isinstance(default, Document) else Document(default))
@@ -1207,7 +1217,8 @@ def prompt(
         enable_system_prompt: Optional[FilterOrBool] = None,
         enable_suspend: Optional[FilterOrBool] = None,
         enable_open_in_editor: Optional[FilterOrBool] = None,
-        tempfile_suffix: Optional[str] = None,
+        tempfile_suffix: Optional[Union[str, Callable[[], str]]] = None,
+        tempfile: Optional[Union[str, Callable[[], str]]] = None,
 
         # Following arguments are specific to the current `prompt()` call.
         default: str = '',
@@ -1255,6 +1266,7 @@ def prompt(
         enable_suspend=enable_suspend,
         enable_open_in_editor=enable_open_in_editor,
         tempfile_suffix=tempfile_suffix,
+        tempfile=tempfile,
         default=default,
         accept_default=accept_default,
         pre_run=pre_run)
