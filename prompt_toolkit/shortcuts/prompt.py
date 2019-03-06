@@ -863,7 +863,6 @@ def create_confirm_session(message, suffix=' (y/n) '):
 
     @bindings.add('n')
     @bindings.add('N')
-    @bindings.add('c-c')
     def no(event):
         session.default_buffer.text = 'n'
         event.app.exit(result=False)
