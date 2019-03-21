@@ -113,7 +113,7 @@ features.
   :class:`~prompt_toolkit.auto_suggest.ThreadedAutoSuggest`, they will become
   asynchronous by running in a background thread.
 
-  Furter, if the autocompletion code runs in a background thread, we will show
+  Further, if the autocompletion code runs in a background thread, we will show
   the completions as soon as they arrive. This means that the autocompletion
   algorithm could for instance first yield the most trivial completions and then
   take time to produce the completions that take more time.
