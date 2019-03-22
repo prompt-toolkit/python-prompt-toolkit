@@ -153,6 +153,7 @@ Shells:
 - `nawano <https://github.com/rbw/nawano>`_: Nano cryptocurrency wallet
 - `athenacli <https://github.com/dbcli/athenacli>`_: A CLI for AWS Athena.
 - `vulcano <https://github.com/dgarana/vulcano>`_: A framework for creating command-line applications that also runs in REPL mode.
+- `kafka-shell <https://github.com/devshawn/kafka-shell>`_: A supercharged shell for Apache Kafka.
 
 Full screen applications:
 
