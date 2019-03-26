@@ -86,13 +86,13 @@ Class names
 Like we do for web design, it is not a good habit to specify all styling
 inline. Instead, we can attach class names to UI controls and have a style
 sheet that refers to these class names. The
-:class:`~prompt_toolkit.style.Style` can be passed as an argument to the
+:class:`~prompt_toolkit.styles.Style` can be passed as an argument to the
 :class:`~prompt_toolkit.application.Application`.
 
 .. code:: python
 
     from prompt_toolkit.layout import VSplit, Window
-    from prompt_toolkit.style import Style
+    from prompt_toolkit.styles import Style
 
     layout = VSplit([
         Window(BufferControl(...), style='class:left'),
@@ -209,7 +209,7 @@ their ordering. An ``OrderedDict`` works as well.
 
 .. code:: python
 
-    from prompt_toolkit.style import Style
+    from prompt_toolkit.styles import Style
 
     style = Style.from_dict({
          'header body left.text': 'underline',
@@ -234,7 +234,7 @@ style can however be loaded and used as follows:
 Merging styles together
 -----------------------
 
-Multiple :class:`~prompt_toolkit.style.Style` objects can be merged together as
+Multiple :class:`~prompt_toolkit.styles.Style` objects can be merged together as
 follows:
 
 .. code:: python
@@ -309,7 +309,7 @@ minimum brightness to improve rendering on terminals with a dark background.
 
 .. code:: python
 
-    from prompt_toolkit.style import AdjustBrightnessStyleTransformation
+    from prompt_toolkit.styles import AdjustBrightnessStyleTransformation
 
     app = Application(
         style_transformation=AdjustBrightnessStyleTransformation(
