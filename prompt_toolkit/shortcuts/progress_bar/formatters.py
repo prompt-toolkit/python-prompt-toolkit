@@ -168,7 +168,7 @@ class Progress(Formatter):
             total=progress.total or '?')
 
     def get_width(self, progress_bar):
-        all_lengths = [len('{0}'.format(c.total)) for c in progress_bar.counters]
+        all_lengths = [len('{0:>3}'.format(c.total)) for c in progress_bar.counters]
         all_lengths.append(1)
         return D.exact(max(all_lengths) * 2 + 1)
 
