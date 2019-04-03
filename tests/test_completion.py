@@ -1,6 +1,7 @@
 from __future__ import unicode_literals, absolute_import, print_function
 
 import os
+import re
 import shutil
 import tempfile
 
@@ -318,6 +319,19 @@ def test_word_completer_dynamic_word_list():
     completions = completer.get_completions(Document('a'), CompleteEvent())
     assert [c.text for c in completions] == ['abc', 'aaa']
     assert called[0] == 2
+
+
+def test_word_completer_pattern():
+    # With a pattern which support '.'
+    completer = WordCompleter(['abc', 'a.b.c', 'a.b', 'xyz'],
+                              pattern=re.compile(r'^([a-zA-Z0-9_.]+|[^a-zA-Z0-9_.\s]+)'))
+    completions = completer.get_completions(Document('a.'), CompleteEvent())
+    assert [c.text for c in completions] == ['a.b.c', 'a.b']
+
+    # Without pattern
+    completer = WordCompleter(['abc', 'a.b.c', 'a.b', 'xyz'])
+    completions = completer.get_completions(Document('a.'), CompleteEvent())
+    assert [c.text for c in completions] == []
 
 
 def test_fuzzy_completer():
