@@ -23,9 +23,11 @@ class WordCompleter(Completer):
         contain spaces. (Can not be used together with the WORD option.)
     :param match_middle: When True, match not only the start, but also in the
                          middle of the word.
+    :param pattern: Optional regex. When given, use this regex
+        pattern instead of default one.
     """
     def __init__(self, words, ignore_case=False, meta_dict=None, WORD=False,
-                 sentence=False, match_middle=False):
+                 sentence=False, match_middle=False, pattern=None):
         assert not (WORD and sentence)
         assert callable(words) or all(isinstance(w, string_types) for w in words)
 
@@ -35,6 +37,7 @@ class WordCompleter(Completer):
         self.WORD = WORD
         self.sentence = sentence
         self.match_middle = match_middle
+        self.pattern = pattern
 
     def get_completions(self, document, complete_event):
         # Get list of words.
@@ -46,7 +49,7 @@ class WordCompleter(Completer):
         if self.sentence:
             word_before_cursor = document.text_before_cursor
         else:
-            word_before_cursor = document.get_word_before_cursor(WORD=self.WORD)
+            word_before_cursor = document.get_word_before_cursor(WORD=self.WORD, pattern=self.pattern)
 
         if self.ignore_case:
             word_before_cursor = word_before_cursor.lower()
