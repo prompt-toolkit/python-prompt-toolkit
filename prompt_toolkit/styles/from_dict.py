@@ -6,7 +6,10 @@ This is very similar to the Pygments style dictionary, with some additions:
 - Support for ANSI color names. (These will map directly to the 16 terminal
   colors.)
 """
-from collections import Mapping
+try:
+    from collections.abc import Mapping
+except ImportError:
+    from collections import Mapping
 
 from .base import Style, DEFAULT_ATTRS, ANSI_COLOR_NAMES
 from .defaults import DEFAULT_STYLE_EXTENSIONS
