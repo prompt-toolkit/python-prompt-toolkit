@@ -143,3 +143,10 @@ class StdoutProxy(object):
         """
         with self._lock:
             self._flush()
+
+    def fileno(self):
+        """
+        Return file descriptor.
+        """
+        # This is important for code that expects sys.stdout.fileno() to work.
+        return self.original_stdout.fileno()
