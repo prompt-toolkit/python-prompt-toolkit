@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+1.0.16: 2019-04-12
+------------------
+
+Fixes:
+- Fixes DeprecationWarning when trying to import collections.Mapping.
+
+
 1.0.15: 2017-07-27
 ------------------
 
