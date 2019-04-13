@@ -425,11 +425,14 @@ class Vt100_Output(Output):
             cls._fds_not_a_terminal.add(fd)
 
         def get_size():
+            # If terminal (incorrectly) reports its size as 0, pick a
+            # reasonable default.  See
+            # https://github.com/ipython/ipython/issues/10071
+            rows, columns = (None, None)
+
             if isatty:
                 rows, columns = _get_size(stdout.fileno())
-                return Size(rows=rows, columns=columns)
-            else:
-                return Size(rows=24, columns=80)
+            return Size(rows=rows or 24, columns=columns or 80)
 
         return cls(stdout, get_size, term=term)
 
