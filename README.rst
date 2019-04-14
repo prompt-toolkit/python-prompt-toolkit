@@ -139,7 +139,7 @@ Shells:
 - `gitsome <https://github.com/donnemartin/gitsome>`_: A Git/Shell Autocompleter with GitHub Integration.
 - `http-prompt <https://github.com/eliangcs/http-prompt>`_: An interactive command-line HTTP client.
 - `coconut <http://coconut-lang.org/>`_: Functional programming in Python.
-- `Ergonomica <https://ergonomica.github.io/>`_: A Bash alternative written in Python.
+- `Ergonomica <https://github.com/ergonomica/ergonomica>`_: A Bash alternative written in Python.
 - `Kube-shell <https://github.com/cloudnativelabs/kube-shell>`_: Kubernetes shell: An integrated shell for working with the Kubernetes CLI
 - `mssql-cli <https://github.com/dbcli/mssql-cli>`_: A command-line client for Microsoft SQL Server.
 - `robotframework-debuglibrary <https://github.com/xyb/robotframework-debuglibrary>`_: A debug library and REPL for RobotFramework.
