@@ -5,8 +5,7 @@ Autocompletion example that shows meta-information alongside the completions.
 from __future__ import unicode_literals
 
 from prompt_toolkit.completion import WordCompleter
-from prompt_toolkit.shortcuts import prompt, CompleteStyle
-
+from prompt_toolkit.shortcuts import CompleteStyle, prompt
 
 animal_completer = WordCompleter([
     'alligator', 'ant', 'ape', 'bat',

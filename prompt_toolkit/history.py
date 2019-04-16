@@ -8,14 +8,20 @@ NOTE: Notice that there is no `DynamicHistory`. This doesn't work well, because
 """
 from __future__ import unicode_literals
 
-from .utils import Event
-from .eventloop import AsyncGeneratorItem, From, ensure_future, consume_async_generator, generator_to_async_generator
-
-from abc import ABCMeta, abstractmethod
-from six import with_metaclass, text_type
-
 import datetime
 import os
+from abc import ABCMeta, abstractmethod
+
+from six import text_type, with_metaclass
+
+from .eventloop import (
+    AsyncGeneratorItem,
+    From,
+    consume_async_generator,
+    ensure_future,
+    generator_to_async_generator,
+)
+from .utils import Event
 
 __all__ = [
     'History',

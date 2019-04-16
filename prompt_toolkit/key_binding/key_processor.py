@@ -7,21 +7,23 @@ The `KeyProcessor` will according to the implemented keybindings call the
 correct callbacks when new key presses are feed through `feed`.
 """
 from __future__ import unicode_literals
+
+import time
+import weakref
+from collections import deque
+
+import six
+from six.moves import range
+
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import EditReadOnlyBuffer
 from prompt_toolkit.enums import EditingMode
-from prompt_toolkit.eventloop import run_in_executor, call_from_executor
+from prompt_toolkit.eventloop import call_from_executor, run_in_executor
 from prompt_toolkit.filters.app import vi_navigation_mode
-from prompt_toolkit.keys import Keys, ALL_KEYS
+from prompt_toolkit.keys import ALL_KEYS, Keys
 from prompt_toolkit.utils import Event
 
 from .key_bindings import KeyBindingsBase
-
-from collections import deque
-from six.moves import range
-import six
-import time
-import weakref
 
 __all__ = [
     'KeyProcessor',

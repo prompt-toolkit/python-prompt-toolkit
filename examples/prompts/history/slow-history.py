@@ -6,9 +6,11 @@ By wrapping it in `ThreadedHistory`, the history will load in the background
 without blocking any user interaction.
 """
 from __future__ import unicode_literals
+
+import time
+
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import History, ThreadedHistory
-import time
 
 
 class SlowHistory(History):

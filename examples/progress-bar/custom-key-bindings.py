@@ -4,14 +4,15 @@ A very simple progress bar which keep track of the progress as we consume an
 iterator.
 """
 from __future__ import unicode_literals
+
+import os
+import signal
+import time
+
 from prompt_toolkit import HTML
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.patch_stdout import patch_stdout
 from prompt_toolkit.shortcuts import ProgressBar
-
-import time
-import os
-import signal
 
 
 def main():

@@ -1,6 +1,14 @@
 from __future__ import unicode_literals
-from prompt_toolkit.eventloop import consume_async_generator
-from prompt_toolkit.eventloop import get_event_loop, ensure_future, From, AsyncGeneratorItem, Future, generator_to_async_generator
+
+from prompt_toolkit.eventloop import (
+    AsyncGeneratorItem,
+    From,
+    Future,
+    consume_async_generator,
+    ensure_future,
+    generator_to_async_generator,
+    get_event_loop,
+)
 
 
 def _async_generator():

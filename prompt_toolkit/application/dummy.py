@@ -1,7 +1,9 @@
 from __future__ import unicode_literals
-from .application import Application
+
 from prompt_toolkit.input import DummyInput
 from prompt_toolkit.output import DummyOutput
+
+from .application import Application
 
 __all__ = [
     'DummyApplication',

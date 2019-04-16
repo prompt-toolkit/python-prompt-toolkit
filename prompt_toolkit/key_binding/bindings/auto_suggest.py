@@ -2,10 +2,12 @@
 Key bindings for auto suggestion (for fish-style auto suggestion).
 """
 from __future__ import unicode_literals
+
 import re
+
 from prompt_toolkit.application.current import get_app
-from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.filters import Condition, emacs_mode
+from prompt_toolkit.key_binding.key_bindings import KeyBindings
 
 __all__ = [
     'load_auto_suggest_bindings',

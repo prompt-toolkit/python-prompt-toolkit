@@ -1,13 +1,23 @@
 # pylint: disable=function-redefined
 from __future__ import unicode_literals
+
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import SelectionType, indent, unindent
 from prompt_toolkit.completion import CompleteEvent
-from prompt_toolkit.filters import Condition, emacs_mode, has_selection, emacs_insert_mode, has_arg, is_multiline, is_read_only, vi_search_direction_reversed
+from prompt_toolkit.filters import (
+    Condition,
+    emacs_insert_mode,
+    emacs_mode,
+    has_arg,
+    has_selection,
+    is_multiline,
+    is_read_only,
+    vi_search_direction_reversed,
+)
 from prompt_toolkit.keys import Keys
 
+from ..key_bindings import ConditionalKeyBindings, KeyBindings
 from .named_commands import get_by_name
-from ..key_bindings import KeyBindings, ConditionalKeyBindings
 
 __all__ = [
     'load_emacs_bindings',

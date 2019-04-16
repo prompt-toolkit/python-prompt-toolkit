@@ -5,9 +5,8 @@ Example of a colored prompt.
 from __future__ import unicode_literals
 
 from prompt_toolkit import prompt
+from prompt_toolkit.formatted_text import ANSI, HTML
 from prompt_toolkit.styles import Style
-from prompt_toolkit.formatted_text import HTML, ANSI
-
 
 style = Style.from_dict({
     # Default style.

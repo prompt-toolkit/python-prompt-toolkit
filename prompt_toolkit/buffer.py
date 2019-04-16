@@ -4,30 +4,36 @@ It holds the text, cursor position, history, etc...
 """
 from __future__ import unicode_literals
 
+import os
+import re
+import shlex
+import subprocess
+import tempfile
+from functools import wraps
+
+import six
+from six.moves import range
+
 from .application.current import get_app
 from .application.run_in_terminal import run_in_terminal
 from .auto_suggest import AutoSuggest
 from .cache import FastDictCache
 from .clipboard import ClipboardData
-from .completion import CompleteEvent, get_common_complete_suffix, Completer, Completion, DummyCompleter
+from .completion import (
+    CompleteEvent,
+    Completer,
+    Completion,
+    DummyCompleter,
+    get_common_complete_suffix,
+)
 from .document import Document
-from .eventloop import ensure_future, Return, From, consume_async_generator
+from .eventloop import From, Return, consume_async_generator, ensure_future
 from .filters import to_filter
 from .history import History, InMemoryHistory
 from .search import SearchDirection, SearchState
-from .selection import SelectionType, SelectionState, PasteMode
+from .selection import PasteMode, SelectionState, SelectionType
 from .utils import Event, test_callable_args, to_str
 from .validation import ValidationError, Validator
-
-from functools import wraps
-from six.moves import range
-
-import os
-import re
-import shlex
-import six
-import subprocess
-import tempfile
 
 __all__ = [
     'EditReadOnlyBuffer',

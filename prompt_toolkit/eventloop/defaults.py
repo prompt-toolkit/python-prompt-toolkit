@@ -1,7 +1,10 @@
 from __future__ import unicode_literals
-from prompt_toolkit.utils import is_windows
-from .base import EventLoop
+
 import threading
+
+from prompt_toolkit.utils import is_windows
+
+from .base import EventLoop
 
 __all__ = [
     'create_event_loop',

@@ -5,7 +5,8 @@ Simple example of a CLI that demonstrates up-arrow partial string matching.
 When you type some input, it's possible to use the up arrow to filter the
 history on the items starting with the given input text.
 """
-from __future__ import unicode_literals, print_function
+from __future__ import print_function, unicode_literals
+
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import InMemoryHistory
 

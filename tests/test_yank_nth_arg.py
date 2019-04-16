@@ -1,8 +1,8 @@
 from __future__ import unicode_literals
-from prompt_toolkit.buffer import Buffer
-from prompt_toolkit.history import InMemoryHistory
 
 import pytest
+from prompt_toolkit.buffer import Buffer
+from prompt_toolkit.history import InMemoryHistory
 
 
 @pytest.fixture

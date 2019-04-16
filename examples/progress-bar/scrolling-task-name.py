@@ -4,8 +4,10 @@ A very simple progress bar where the name of the task scrolls, because it's too 
 iterator.
 """
 from __future__ import unicode_literals
-from prompt_toolkit.shortcuts import ProgressBar
+
 import time
+
+from prompt_toolkit.shortcuts import ProgressBar
 
 
 def main():

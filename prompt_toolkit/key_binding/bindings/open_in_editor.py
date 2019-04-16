@@ -2,8 +2,14 @@
 Open in editor key bindings.
 """
 from __future__ import unicode_literals
+
+from prompt_toolkit.filters import (
+    emacs_mode,
+    has_selection,
+    vi_navigation_mode,
+)
+
 from ..key_bindings import KeyBindings, merge_key_bindings
-from prompt_toolkit.filters import emacs_mode, vi_navigation_mode, has_selection
 from .named_commands import get_by_name
 
 __all__ = [

@@ -4,17 +4,19 @@ Key bindings which are also known by GNU Readline by the given names.
 See: http://www.delorie.com/gnu/docs/readline/rlman_13.html
 """
 from __future__ import unicode_literals
-from six.moves import range
-import six
 
-from .completion import generate_completions, display_completions_like_readline
+import six
+from six.moves import range
+
 from prompt_toolkit.document import Document
 from prompt_toolkit.enums import EditingMode
-from prompt_toolkit.key_binding.key_processor import KeyPress
 from prompt_toolkit.key_binding.key_bindings import key_binding
+from prompt_toolkit.key_binding.key_processor import KeyPress
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.search import SearchDirection
 from prompt_toolkit.selection import PasteMode
+
+from .completion import display_completions_like_readline, generate_completions
 
 __all__ = [
     'get_by_name',

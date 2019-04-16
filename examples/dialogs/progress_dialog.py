@@ -3,9 +3,11 @@
 Example of a progress bar dialog.
 """
 from __future__ import unicode_literals
-from prompt_toolkit.shortcuts import progress_dialog
-import time
+
 import os
+import time
+
+from prompt_toolkit.shortcuts import progress_dialog
 
 
 def worker(set_percentage, log_text):

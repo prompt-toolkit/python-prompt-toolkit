@@ -6,13 +6,13 @@ Windows notes:
 """
 from __future__ import unicode_literals
 
+import asyncio
+
 from .base import EventLoop
 from .context import wrap_in_current_context
 from .future import Future
 from .utils import ThreadWithFuture
 from .win32 import wait_for_handles
-
-import asyncio
 
 __all__ = [
     'Win32AsyncioEventLoop',

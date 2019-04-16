@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
-from prompt_toolkit.eventloop.context import TaskLocal, TaskLocalNotSetError
+
 from contextlib import contextmanager
+
+from prompt_toolkit.eventloop.context import TaskLocal, TaskLocalNotSetError
 
 __all__ = [
     'get_app',

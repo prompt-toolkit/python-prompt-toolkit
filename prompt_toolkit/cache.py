@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+
 from collections import deque
 from functools import wraps
 

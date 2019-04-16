@@ -4,20 +4,30 @@ Renders the command line on the console.
 """
 from __future__ import unicode_literals
 
-from prompt_toolkit.eventloop import Future, From, ensure_future, get_event_loop
+import threading
+import time
+from collections import deque
+
+from six.moves import range
+
+from prompt_toolkit.eventloop import (
+    From,
+    Future,
+    ensure_future,
+    get_event_loop,
+)
 from prompt_toolkit.filters import to_filter
 from prompt_toolkit.formatted_text import to_formatted_text
 from prompt_toolkit.input.base import Input
 from prompt_toolkit.layout.mouse_handlers import MouseHandlers
 from prompt_toolkit.layout.screen import Point, Screen, WritePosition
-from prompt_toolkit.output import Output, ColorDepth
-from prompt_toolkit.styles import BaseStyle, DummyStyleTransformation, StyleTransformation
+from prompt_toolkit.output import ColorDepth, Output
+from prompt_toolkit.styles import (
+    BaseStyle,
+    DummyStyleTransformation,
+    StyleTransformation,
+)
 from prompt_toolkit.utils import is_windows
-
-from collections import deque
-from six.moves import range
-import time
-import threading
 
 __all__ = [
     'Renderer',

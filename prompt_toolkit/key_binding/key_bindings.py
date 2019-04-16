@@ -35,13 +35,14 @@ been assigned, through the `key_binding` decorator.::
     kb.add(Keys.A, my_key_binding)
 """
 from __future__ import unicode_literals
+
 from abc import ABCMeta, abstractmethod, abstractproperty
 
-from prompt_toolkit.cache import SimpleCache
-from prompt_toolkit.filters import to_filter, Never
-from prompt_toolkit.keys import Keys, ALL_KEYS, KEY_ALIASES
-
 from six import text_type, with_metaclass
+
+from prompt_toolkit.cache import SimpleCache
+from prompt_toolkit.filters import Never, to_filter
+from prompt_toolkit.keys import ALL_KEYS, KEY_ALIASES, Keys
 
 __all__ = [
     'KeyBindingsBase',

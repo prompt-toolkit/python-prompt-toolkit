@@ -4,8 +4,8 @@ Simple example of input validation.
 """
 from __future__ import unicode_literals
 
-from prompt_toolkit.validation import Validator
 from prompt_toolkit import prompt
+from prompt_toolkit.validation import Validator
 
 
 def is_valid_email(text):

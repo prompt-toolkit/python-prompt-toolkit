@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
 
+from collections import defaultdict, namedtuple
+
 from prompt_toolkit.cache import FastDictCache
 from prompt_toolkit.utils import get_cwidth
-
-from collections import defaultdict, namedtuple
 
 __all__ = [
     'Point',

@@ -1,20 +1,29 @@
 from __future__ import unicode_literals
 
-from six.moves import zip_longest, range
+import math
+
+from six.moves import range, zip_longest
+
 from prompt_toolkit.application.current import get_app
-from prompt_toolkit.filters import has_completions, is_done, Condition, to_filter
-from prompt_toolkit.formatted_text import to_formatted_text, fragment_list_width
+from prompt_toolkit.filters import (
+    Condition,
+    has_completions,
+    is_done,
+    to_filter,
+)
+from prompt_toolkit.formatted_text import (
+    fragment_list_width,
+    to_formatted_text,
+)
 from prompt_toolkit.layout.utils import explode_text_fragments
 from prompt_toolkit.mouse_events import MouseEventType
 from prompt_toolkit.utils import get_cwidth
 
-from .containers import Window, HSplit, ConditionalContainer, ScrollOffsets
-from .controls import UIControl, UIContent
+from .containers import ConditionalContainer, HSplit, ScrollOffsets, Window
+from .controls import UIContent, UIControl
 from .dimension import Dimension
 from .margins import ScrollbarMargin
 from .screen import Point
-
-import math
 
 __all__ = [
     'CompletionsMenu',

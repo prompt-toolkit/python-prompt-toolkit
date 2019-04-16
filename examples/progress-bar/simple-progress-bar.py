@@ -4,8 +4,10 @@ A very simple progress bar which keep track of the progress as we consume an
 iterator.
 """
 from __future__ import unicode_literals
-from prompt_toolkit.shortcuts import ProgressBar
+
 import time
+
+from prompt_toolkit.shortcuts import ProgressBar
 
 
 def main():

@@ -13,7 +13,9 @@ container object.
     `prompt_toolkit.shortcuts.dialogs` on the other hand is considered stable.
 """
 from __future__ import unicode_literals
+
 from functools import partial
+
 import six
 
 from prompt_toolkit.application.current import get_app
@@ -21,23 +23,47 @@ from prompt_toolkit.auto_suggest import DynamicAutoSuggest
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.completion import DynamicCompleter
 from prompt_toolkit.document import Document
-from prompt_toolkit.filters import to_filter, Condition, is_true, has_focus, is_done
-from prompt_toolkit.formatted_text import to_formatted_text, Template, is_formatted_text
+from prompt_toolkit.filters import (
+    Condition,
+    has_focus,
+    is_done,
+    is_true,
+    to_filter,
+)
+from prompt_toolkit.formatted_text import (
+    Template,
+    is_formatted_text,
+    to_formatted_text,
+)
 from prompt_toolkit.formatted_text.utils import fragment_list_to_text
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
-from prompt_toolkit.layout.containers import Window, VSplit, HSplit, FloatContainer, Float, WindowAlign, is_container, ConditionalContainer, DynamicContainer
+from prompt_toolkit.keys import Keys
+from prompt_toolkit.layout.containers import (
+    ConditionalContainer,
+    DynamicContainer,
+    Float,
+    FloatContainer,
+    HSplit,
+    VSplit,
+    Window,
+    WindowAlign,
+    is_container,
+)
 from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
 from prompt_toolkit.layout.dimension import Dimension as D
 from prompt_toolkit.layout.dimension import is_dimension, to_dimension
-from prompt_toolkit.layout.margins import ScrollbarMargin, NumberedMargin
-from prompt_toolkit.layout.processors import PasswordProcessor, ConditionalProcessor, BeforeInput, AppendAutoSuggestion
+from prompt_toolkit.layout.margins import NumberedMargin, ScrollbarMargin
+from prompt_toolkit.layout.processors import (
+    AppendAutoSuggestion,
+    BeforeInput,
+    ConditionalProcessor,
+    PasswordProcessor,
+)
 from prompt_toolkit.lexers import DynamicLexer
 from prompt_toolkit.mouse_events import MouseEventType
 from prompt_toolkit.utils import get_cwidth
-from prompt_toolkit.keys import Keys
 
 from .toolbars import SearchToolbar
-
 
 __all__ = [
     'TextArea',

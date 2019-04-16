@@ -2,10 +2,16 @@
 Search related key bindings.
 """
 from __future__ import unicode_literals
-from ..key_bindings import key_binding
-from prompt_toolkit.application.current import get_app
-from prompt_toolkit.filters import is_searching, control_is_searchable, Condition
+
 from prompt_toolkit import search
+from prompt_toolkit.application.current import get_app
+from prompt_toolkit.filters import (
+    Condition,
+    control_is_searchable,
+    is_searching,
+)
+
+from ..key_bindings import key_binding
 
 __all__ = [
     'abort_search',

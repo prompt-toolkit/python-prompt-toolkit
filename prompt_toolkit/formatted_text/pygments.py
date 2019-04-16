@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
+
 from prompt_toolkit.styles.pygments import pygments_token_to_classname
+
 from .base import FormattedText
 
 __all__ = [

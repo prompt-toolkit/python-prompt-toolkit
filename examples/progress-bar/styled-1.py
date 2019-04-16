@@ -4,9 +4,11 @@ A very simple progress bar which keep track of the progress as we consume an
 iterator.
 """
 from __future__ import unicode_literals
+
+import time
+
 from prompt_toolkit.shortcuts import ProgressBar
 from prompt_toolkit.styles import Style
-import time
 
 style = Style.from_dict({
     'title': '#4444ff underline',

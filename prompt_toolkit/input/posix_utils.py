@@ -1,9 +1,10 @@
 from __future__ import unicode_literals
 
-from codecs import getincrementaldecoder
 import os
-import six
 import select
+from codecs import getincrementaldecoder
+
+import six
 
 __all__ = [
     'PosixStdinReader',

@@ -1,9 +1,13 @@
 from __future__ import unicode_literals
 
-from prompt_toolkit.contrib.regular_languages.completion import GrammarCompleter
+from prompt_toolkit.completion.filesystem import (
+    ExecutableCompleter,
+    PathCompleter,
+)
 from prompt_toolkit.contrib.regular_languages.compiler import compile
-
-from prompt_toolkit.completion.filesystem import PathCompleter, ExecutableCompleter
+from prompt_toolkit.contrib.regular_languages.completion import (
+    GrammarCompleter,
+)
 
 __all__ = [
     'SystemCompleter',

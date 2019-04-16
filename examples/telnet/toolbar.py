@@ -5,12 +5,12 @@ in the prompt.
 """
 from __future__ import unicode_literals
 
+import logging
+
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.contrib.telnet.server import TelnetServer
 from prompt_toolkit.eventloop import From, get_event_loop
 from prompt_toolkit.shortcuts import prompt
-
-import logging
 
 # Set up logging
 logging.basicConfig()

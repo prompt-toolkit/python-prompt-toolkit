@@ -3,14 +3,16 @@ Formatter classes for the progress bar.
 Each progress bar consists of a list of these formatters.
 """
 from __future__ import unicode_literals
-from abc import ABCMeta, abstractmethod
-from six import with_metaclass, text_type
+
 import time
+from abc import ABCMeta, abstractmethod
+
+from six import text_type, with_metaclass
 
 from prompt_toolkit.formatted_text import HTML, to_formatted_text
+from prompt_toolkit.formatted_text.utils import fragment_list_width
 from prompt_toolkit.layout.dimension import D
 from prompt_toolkit.layout.utils import explode_text_fragments
-from prompt_toolkit.formatted_text.utils import fragment_list_width
 from prompt_toolkit.utils import get_cwidth
 
 __all__ = [

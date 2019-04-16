@@ -1,16 +1,18 @@
 from __future__ import unicode_literals
+
 import inspect
 import os
 import signal
 import sys
 import threading
 import weakref
-
 from collections import deque
 from functools import partial
+
 from six import PY2, text_type
 from six.moves import range
 from wcwidth import wcwidth
+
 from .cache import memoized
 
 __all__ = [

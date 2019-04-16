@@ -7,10 +7,11 @@ the prompt, but instead is printed nicely above the prompt.
 """
 from __future__ import unicode_literals
 
-from prompt_toolkit import prompt
-from prompt_toolkit.patch_stdout import patch_stdout
 import threading
 import time
+
+from prompt_toolkit import prompt
+from prompt_toolkit.patch_stdout import patch_stdout
 
 
 def main():

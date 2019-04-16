@@ -9,9 +9,8 @@ Press [Tab] to complete the current word.
 """
 from __future__ import unicode_literals
 
-from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit import prompt
-
+from prompt_toolkit.completion import WordCompleter
 
 animal_completer = WordCompleter([
     'alligator', 'ant', 'ape', 'bat', 'bear', 'beaver', 'bee', 'bison',

@@ -3,8 +3,11 @@ User interface Controls for the layout.
 """
 from __future__ import unicode_literals
 
+import time
 from abc import ABCMeta, abstractmethod
 from collections import namedtuple
+
+import six
 from six import with_metaclass
 from six.moves import range
 
@@ -13,19 +16,26 @@ from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.cache import SimpleCache
 from prompt_toolkit.filters import to_filter
 from prompt_toolkit.formatted_text import to_formatted_text
-from prompt_toolkit.formatted_text.utils import split_lines, fragment_list_to_text, fragment_list_width
+from prompt_toolkit.formatted_text.utils import (
+    fragment_list_to_text,
+    fragment_list_width,
+    split_lines,
+)
 from prompt_toolkit.lexers import Lexer, SimpleLexer
 from prompt_toolkit.mouse_events import MouseEventType
 from prompt_toolkit.search import SearchState
 from prompt_toolkit.selection import SelectionType
 from prompt_toolkit.utils import get_cwidth
 
-from .processors import TransformationInput, HighlightSearchProcessor, HighlightIncrementalSearchProcessor, HighlightSelectionProcessor, DisplayMultipleCursors, merge_processors
+from .processors import (
+    DisplayMultipleCursors,
+    HighlightIncrementalSearchProcessor,
+    HighlightSearchProcessor,
+    HighlightSelectionProcessor,
+    TransformationInput,
+    merge_processors,
+)
 from .screen import Point
-
-import six
-import time
-
 
 __all__ = [
     'BufferControl',

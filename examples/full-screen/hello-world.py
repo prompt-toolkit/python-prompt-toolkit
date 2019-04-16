@@ -3,6 +3,7 @@
 A simple example of a a text area displaying "Hello World!".
 """
 from __future__ import unicode_literals
+
 from prompt_toolkit.application import Application
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout import Layout

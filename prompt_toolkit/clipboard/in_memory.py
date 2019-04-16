@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
-from .base import Clipboard, ClipboardData
+
 from collections import deque
+
+from .base import Clipboard, ClipboardData
 
 __all__ = [
     'InMemoryClipboard',

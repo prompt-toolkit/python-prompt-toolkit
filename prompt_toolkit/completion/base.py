@@ -1,9 +1,15 @@
 """
 """
 from __future__ import unicode_literals
-from prompt_toolkit.eventloop import generator_to_async_generator, AsyncGeneratorItem
+
 from abc import ABCMeta, abstractmethod
-from six import with_metaclass, text_type
+
+from six import text_type, with_metaclass
+
+from prompt_toolkit.eventloop import (
+    AsyncGeneratorItem,
+    generator_to_async_generator,
+)
 
 __all__ = [
     'Completion',

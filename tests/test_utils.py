@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
 
-from prompt_toolkit.utils import take_using_weights
-
 import itertools
+
 import pytest
+from prompt_toolkit.utils import take_using_weights
 
 
 def test_using_weights():

@@ -3,8 +3,8 @@ Validator for a regular language.
 """
 from __future__ import unicode_literals
 
-from prompt_toolkit.validation import Validator, ValidationError
 from prompt_toolkit.document import Document
+from prompt_toolkit.validation import ValidationError, Validator
 
 from .compiler import _CompiledGrammar
 

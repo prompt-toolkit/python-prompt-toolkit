@@ -18,9 +18,7 @@ Filters can be chained using ``&`` and ``|`` operations, and inverted using the
 """
 from __future__ import unicode_literals
 
-from .base import Filter, Never, Always, Condition
 from .app import *
-from .utils import to_filter, is_true
-
-# For backwards-compatibility. Keep this import.
+from .base import Always, Condition, Filter, Never
 from .cli import *
+from .utils import is_true, to_filter

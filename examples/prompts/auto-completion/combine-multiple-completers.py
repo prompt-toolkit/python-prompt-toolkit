@@ -4,9 +4,12 @@ Example of multiple individual completers that are combined into one.
 """
 from __future__ import unicode_literals
 
-from prompt_toolkit.completion import Completer, merge_completers, WordCompleter
 from prompt_toolkit import prompt
-
+from prompt_toolkit.completion import (
+    Completer,
+    WordCompleter,
+    merge_completers,
+)
 
 animal_completer = WordCompleter([
     'alligator', 'ant', 'ape', 'bat', 'bear', 'beaver', 'bee', 'bison',

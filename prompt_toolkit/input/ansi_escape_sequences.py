@@ -3,6 +3,7 @@ Mappings from VT100 (ANSI) escape sequences to the corresponding prompt_toolkit
 keys.
 """
 from __future__ import unicode_literals
+
 from ..keys import Keys
 
 __all__ = [

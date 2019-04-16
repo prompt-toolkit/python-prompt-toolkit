@@ -18,12 +18,17 @@ matrix:
 
 install:
   - pip install . pytest coverage codecov flake8
+  - if [ "$TRAVIS_PYTHON_VERSION" != "2.6" ]; then pip install isort; fi
   - pip list
 
 script:
   - echo "$TRAVIS_PYTHON_VERSION"
   - if [ "$TRAVIS_PYTHON_VERSION" != "2.6" ]; then flake8 prompt_toolkit; fi
   - coverage run -m pytest
+
+  # Check wheather the imports were sorted correctly.
+  # When this fails, please run ./tools/sort-imports.sh
+  - if [ "$TRAVIS_PYTHON_VERSION" != "2.6" ]; then isort -c -m 3 -tc -rc prompt_toolkit; fi
 
 after_success:
   - codecov

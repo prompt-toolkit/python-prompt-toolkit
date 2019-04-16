@@ -1,11 +1,13 @@
 """
 Selectors for the Posix event loop.
 """
-from __future__ import unicode_literals, absolute_import
-import sys
+from __future__ import absolute_import, unicode_literals
+
 import abc
 import errno
 import select
+import sys
+
 import six
 
 __all__ = [

@@ -2,12 +2,19 @@
 from __future__ import unicode_literals
 
 from prompt_toolkit.application.current import get_app
-from prompt_toolkit.filters import has_selection, Condition, emacs_insert_mode, vi_insert_mode, in_paste_mode, is_multiline
+from prompt_toolkit.filters import (
+    Condition,
+    emacs_insert_mode,
+    has_selection,
+    in_paste_mode,
+    is_multiline,
+    vi_insert_mode,
+)
 from prompt_toolkit.key_binding.key_processor import KeyPress
 from prompt_toolkit.keys import Keys
 
-from .named_commands import get_by_name
 from ..key_bindings import KeyBindings
+from .named_commands import get_by_name
 
 __all__ = [
     'load_basic_bindings',

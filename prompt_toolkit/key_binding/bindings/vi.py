@@ -1,25 +1,46 @@
 # pylint: disable=function-redefined
 from __future__ import unicode_literals
+
+import codecs
+import string
+
+import six
+from six.moves import range
+
 from prompt_toolkit.application.current import get_app
-from prompt_toolkit.buffer import indent, unindent, reshape_text
+from prompt_toolkit.buffer import indent, reshape_text, unindent
 from prompt_toolkit.clipboard import ClipboardData
 from prompt_toolkit.document import Document
-from prompt_toolkit.filters import Condition, has_arg, Always, is_read_only, is_searching
-from prompt_toolkit.filters.app import vi_navigation_mode, vi_insert_mode, vi_insert_multiple_mode, vi_replace_mode, vi_selection_mode, vi_waiting_for_text_object_mode, vi_digraph_mode, vi_mode, in_paste_mode, is_multiline, vi_search_direction_reversed, vi_recording_macro
+from prompt_toolkit.filters import (
+    Always,
+    Condition,
+    has_arg,
+    is_read_only,
+    is_searching,
+)
+from prompt_toolkit.filters.app import (
+    in_paste_mode,
+    is_multiline,
+    vi_digraph_mode,
+    vi_insert_mode,
+    vi_insert_multiple_mode,
+    vi_mode,
+    vi_navigation_mode,
+    vi_recording_macro,
+    vi_replace_mode,
+    vi_search_direction_reversed,
+    vi_selection_mode,
+    vi_waiting_for_text_object_mode,
+)
 from prompt_toolkit.input.vt100_parser import Vt100Parser
 from prompt_toolkit.key_binding.digraphs import DIGRAPHS
 from prompt_toolkit.key_binding.vi_state import CharacterFind, InputMode
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.search import SearchDirection
-from prompt_toolkit.selection import SelectionType, SelectionState, PasteMode
+from prompt_toolkit.selection import PasteMode, SelectionState, SelectionType
 
+from ..key_bindings import ConditionalKeyBindings, KeyBindings, KeyBindingsBase
 from .named_commands import get_by_name
-from ..key_bindings import KeyBindings, ConditionalKeyBindings, KeyBindingsBase
-
-from six.moves import range
-import codecs
-import six
-import string
 
 try:
     from itertools import accumulate

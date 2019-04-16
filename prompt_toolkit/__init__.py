@@ -14,10 +14,10 @@ Probably, to get started, you might also want to have a look at
 `prompt_toolkit.shortcuts.prompt`.
 """
 from __future__ import unicode_literals
-from .application import Application
-from .shortcuts import PromptSession, prompt, print_formatted_text
-from .formatted_text import HTML, ANSI
 
+from .application import Application
+from .formatted_text import ANSI, HTML
+from .shortcuts import PromptSession, print_formatted_text, prompt
 
 # Don't forget to update in `docs/conf.py`!
 __version__ = '2.0.9'

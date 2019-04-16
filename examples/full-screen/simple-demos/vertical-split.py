@@ -10,7 +10,6 @@ from prompt_toolkit.layout.containers import VSplit, Window
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.layout import Layout
 
-
 # 1. The layout
 left_text = "\nVertical-split example. Press 'q' to quit.\n\n(left pane.)"
 right_text = "\n(right pane.)"

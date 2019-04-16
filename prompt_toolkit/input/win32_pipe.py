@@ -1,10 +1,11 @@
+from ctypes import windll
+
+from prompt_toolkit.eventloop.win32 import create_win32_event
+
 from ..utils import DummyContext
 from .base import Input
 from .vt100_parser import Vt100Parser
 from .win32 import attach_win32_input, detach_win32_input
-
-from ctypes import windll
-from prompt_toolkit.eventloop.win32 import create_win32_event
 
 __all__ = [
     'Win32PipeInput'

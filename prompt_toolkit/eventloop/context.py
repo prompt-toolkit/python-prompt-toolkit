@@ -22,8 +22,9 @@ Within this scope, a new value can be assigned, which is only visible within
 the scope. The scope as passed along when code is sent to an executor and back.
 """
 from __future__ import unicode_literals
-from threading import local
+
 from functools import wraps
+from threading import local
 
 __all__ = [
     'context',

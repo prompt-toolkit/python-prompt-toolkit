@@ -1,15 +1,16 @@
 from __future__ import unicode_literals
 
-from ..eventloop import get_event_loop
-from .base import Input
-from .posix_utils import PosixStdinReader
-from .vt100_parser import Vt100Parser
+import contextlib
 import io
 import os
 import sys
 import termios
 import tty
-import contextlib
+
+from ..eventloop import get_event_loop
+from .base import Input
+from .posix_utils import PosixStdinReader
+from .vt100_parser import Vt100Parser
 
 __all__ = [
     'Vt100Input',

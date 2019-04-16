@@ -4,15 +4,18 @@ Adaptor classes for using Pygments lexers within prompt_toolkit.
 This includes syntax synchronization code, so that we don't have to start
 lexing at the beginning of a document, when displaying a very large text.
 """
-from __future__ import unicode_literals, absolute_import
-from abc import ABCMeta, abstractmethod
-from six import with_metaclass, text_type
-from six.moves import range
+from __future__ import absolute_import, unicode_literals
+
 import re
+from abc import ABCMeta, abstractmethod
+
+from six import text_type, with_metaclass
+from six.moves import range
 
 from prompt_toolkit.filters import to_filter
 from prompt_toolkit.formatted_text.utils import split_lines
 from prompt_toolkit.styles.pygments import pygments_token_to_classname
+
 from .base import Lexer, SimpleLexer
 
 __all__ = [

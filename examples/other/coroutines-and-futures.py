@@ -9,10 +9,16 @@ considering to use asyncio instead. The reason that prompt_toolkit implements
 its own event loop is because we still need to support Python 2, but it does
 run on top of asyncio as well if needed.
 """
-from prompt_toolkit.eventloop import From, Return, get_event_loop, ensure_future, Future
-from prompt_toolkit.eventloop import run_in_executor
 import time
 
+from prompt_toolkit.eventloop import (
+    From,
+    Future,
+    Return,
+    ensure_future,
+    get_event_loop,
+    run_in_executor,
+)
 
 #
 # The following functions are all asynchronous functions that return a

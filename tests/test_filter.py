@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
-from prompt_toolkit.filters import Condition, Never, Always, Filter, to_filter
+
 import pytest
+from prompt_toolkit.filters import Always, Condition, Filter, Never, to_filter
 
 
 def test_never():
