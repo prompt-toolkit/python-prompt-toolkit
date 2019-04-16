@@ -4,8 +4,8 @@ Parser for VT100 input stream.
 from __future__ import unicode_literals
 
 import re
-import six
 
+import six
 from six.moves import range
 
 from ..key_binding.key_processor import KeyPress

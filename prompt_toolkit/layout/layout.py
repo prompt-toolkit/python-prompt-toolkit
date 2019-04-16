@@ -2,10 +2,13 @@
 Wrapper for the layout.
 """
 from __future__ import unicode_literals
-from .controls import UIControl, BufferControl
-from .containers import Container, Window, to_container, ConditionalContainer
-from prompt_toolkit.buffer import Buffer
+
 import six
+
+from prompt_toolkit.buffer import Buffer
+
+from .containers import ConditionalContainer, Container, Window, to_container
+from .controls import BufferControl, UIControl
 
 __all__ = [
     'Layout',

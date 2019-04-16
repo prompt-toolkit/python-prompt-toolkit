@@ -5,8 +5,7 @@ Similar to the autocompletion example. But display all the completions in multip
 from __future__ import unicode_literals
 
 from prompt_toolkit.completion import WordCompleter
-from prompt_toolkit.shortcuts import prompt, CompleteStyle
-
+from prompt_toolkit.shortcuts import CompleteStyle, prompt
 
 animal_completer = WordCompleter([
     'alligator', 'ant', 'ape', 'bat', 'bear', 'beaver', 'bee', 'bison',

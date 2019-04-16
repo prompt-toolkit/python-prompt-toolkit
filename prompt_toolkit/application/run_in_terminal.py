@@ -2,7 +2,16 @@
 Tools for running functions on the terminal above the current application or prompt.
 """
 from __future__ import unicode_literals
-from prompt_toolkit.eventloop import get_event_loop, ensure_future, Return, run_in_executor, From, Future
+
+from prompt_toolkit.eventloop import (
+    From,
+    Future,
+    Return,
+    ensure_future,
+    get_event_loop,
+    run_in_executor,
+)
+
 from .current import get_app
 
 __all__ = [

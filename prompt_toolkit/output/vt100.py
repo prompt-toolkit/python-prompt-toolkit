@@ -8,17 +8,18 @@ http://pygments.org/
 """
 from __future__ import unicode_literals
 
+import array
+import errno
+import sys
+
+import six
+from six.moves import range
+
 from prompt_toolkit.layout.screen import Size
 from prompt_toolkit.output import Output
 from prompt_toolkit.styles.base import ANSI_COLOR_NAMES
 
 from .color_depth import ColorDepth
-
-from six.moves import range
-import array
-import errno
-import six
-import sys
 
 __all__ = [
     'Vt100_Output',

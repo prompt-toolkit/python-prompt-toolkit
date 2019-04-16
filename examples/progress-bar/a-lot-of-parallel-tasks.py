@@ -3,11 +3,13 @@
 More complex demonstration of what's possible with the progress bar.
 """
 from __future__ import unicode_literals
-from prompt_toolkit.shortcuts import ProgressBar
-from prompt_toolkit import HTML
+
 import random
 import threading
 import time
+
+from prompt_toolkit import HTML
+from prompt_toolkit.shortcuts import ProgressBar
 
 
 def main():

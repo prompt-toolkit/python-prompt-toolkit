@@ -14,11 +14,11 @@ possible. ::
     sys.stdout = app.stdout_proxy()
 """
 
-from prompt_toolkit.shortcuts import PromptSession
+import asyncio
+
 from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
 from prompt_toolkit.patch_stdout import patch_stdout
-
-import asyncio
+from prompt_toolkit.shortcuts import PromptSession
 
 loop = asyncio.get_event_loop()
 

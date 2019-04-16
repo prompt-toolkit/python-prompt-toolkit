@@ -6,6 +6,7 @@ Demo of "operate-and-get-next".
 over and over again. -- For now, this is the only way to get this working.)
 """
 from __future__ import unicode_literals
+
 from prompt_toolkit.shortcuts import PromptSession
 
 

@@ -1,15 +1,16 @@
 from __future__ import unicode_literals
+
 import fcntl
 import os
 import signal
 import time
 
 from .base import EventLoop
+from .context import wrap_in_current_context
 from .future import Future
 from .inputhook import InputHookContext
 from .select import AutoSelector, Selector, fd_to_int
 from .utils import ThreadWithFuture
-from .context import wrap_in_current_context
 
 __all__ = [
     'PosixEventLoop',

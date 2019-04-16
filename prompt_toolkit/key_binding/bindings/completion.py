@@ -2,13 +2,16 @@
 Key binding handlers for displaying completions.
 """
 from __future__ import unicode_literals
-from prompt_toolkit.application.run_in_terminal import run_coroutine_in_terminal
+
+import math
+
+from prompt_toolkit.application.run_in_terminal import (
+    run_coroutine_in_terminal,
+)
 from prompt_toolkit.completion import CompleteEvent, get_common_complete_suffix
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.utils import get_cwidth
-
-import math
 
 __all__ = [
     'generate_completions',

@@ -1,5 +1,6 @@
 # encoding: utf-8
 from __future__ import unicode_literals
+
 """
 Vi Digraphs.
 This is a list of special characters that can be inserted in Vi insert mode by

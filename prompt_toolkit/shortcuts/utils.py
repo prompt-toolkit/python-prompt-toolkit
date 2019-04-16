@@ -1,14 +1,22 @@
-from __future__ import unicode_literals, print_function
+from __future__ import print_function, unicode_literals
+
+import six
+
 from prompt_toolkit.application import Application
 from prompt_toolkit.eventloop import get_event_loop
-from prompt_toolkit.formatted_text import to_formatted_text, FormattedText
+from prompt_toolkit.formatted_text import FormattedText, to_formatted_text
 from prompt_toolkit.input import DummyInput
 from prompt_toolkit.layout import Layout
-from prompt_toolkit.output import Output, ColorDepth
+from prompt_toolkit.output import ColorDepth, Output
 from prompt_toolkit.output.defaults import create_output, get_default_output
-from prompt_toolkit.renderer import print_formatted_text as renderer_print_formatted_text
-from prompt_toolkit.styles import default_ui_style, default_pygments_style, BaseStyle, merge_styles
-import six
+from prompt_toolkit.renderer import \
+    print_formatted_text as renderer_print_formatted_text
+from prompt_toolkit.styles import (
+    BaseStyle,
+    default_pygments_style,
+    default_ui_style,
+    merge_styles,
+)
 
 __all__ = [
     'print_formatted_text',

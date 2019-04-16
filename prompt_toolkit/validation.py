@@ -3,11 +3,13 @@ Input validation for a `Buffer`.
 (Validators will be called before accepting input.)
 """
 from __future__ import unicode_literals
-from .filters import to_filter
-from .eventloop import Future, run_in_executor
 
 from abc import ABCMeta, abstractmethod
-from six import with_metaclass, text_type
+
+from six import text_type, with_metaclass
+
+from .eventloop import Future, run_in_executor
+from .filters import to_filter
 
 __all__ = [
     'ConditionalValidator',

@@ -1,15 +1,31 @@
 from __future__ import unicode_literals
+
 import functools
+
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.eventloop import run_in_executor
-from prompt_toolkit.key_binding.bindings.focus import focus_next, focus_previous
+from prompt_toolkit.key_binding.bindings.focus import (
+    focus_next,
+    focus_previous,
+)
 from prompt_toolkit.key_binding.defaults import load_key_bindings
-from prompt_toolkit.key_binding.key_bindings import KeyBindings, merge_key_bindings
+from prompt_toolkit.key_binding.key_bindings import (
+    KeyBindings,
+    merge_key_bindings,
+)
 from prompt_toolkit.layout import Layout
 from prompt_toolkit.layout.containers import HSplit
 from prompt_toolkit.layout.dimension import Dimension as D
-from prompt_toolkit.widgets import ProgressBar, Dialog, Button, Label, Box, TextArea, RadioList
+from prompt_toolkit.widgets import (
+    Box,
+    Button,
+    Dialog,
+    Label,
+    ProgressBar,
+    RadioList,
+    TextArea,
+)
 
 __all__ = [
     'yes_no_dialog',

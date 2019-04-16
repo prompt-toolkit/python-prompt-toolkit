@@ -1,11 +1,13 @@
 """
 The default styling.
 """
-from __future__ import unicode_literals, absolute_import
-from .style import Style, merge_styles
+from __future__ import absolute_import, unicode_literals
+
+from prompt_toolkit.cache import memoized
+
 from .base import ANSI_COLOR_NAMES
 from .named_colors import NAMED_COLORS
-from prompt_toolkit.cache import memoized
+from .style import Style, merge_styles
 
 __all__ = [
     'default_ui_style',

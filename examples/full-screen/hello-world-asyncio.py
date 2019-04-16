@@ -3,12 +3,14 @@
 A simple example of a a text area displaying "Hello World!".
 """
 from __future__ import unicode_literals
+
+import asyncio
+
 from prompt_toolkit.application import Application
 from prompt_toolkit.eventloop import use_asyncio_event_loop
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout import Layout
 from prompt_toolkit.widgets import Box, Frame, TextArea
-import asyncio
 
 # Layout for displaying hello world.
 # (The frame creates the border, the box takes care of the margin/padding.)

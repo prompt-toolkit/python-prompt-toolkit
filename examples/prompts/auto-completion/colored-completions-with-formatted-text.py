@@ -5,10 +5,10 @@ completions independently by passing formatted text objects to the "display"
 and "display_meta" arguments of "Completion".
 """
 from __future__ import unicode_literals
-from prompt_toolkit.completion import Completion, Completer
-from prompt_toolkit.formatted_text import HTML
-from prompt_toolkit.shortcuts import prompt, CompleteStyle
 
+from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.formatted_text import HTML
+from prompt_toolkit.shortcuts import CompleteStyle, prompt
 
 animals = [
     'alligator', 'ant', 'ape', 'bat', 'bear', 'beaver', 'bee', 'bison',

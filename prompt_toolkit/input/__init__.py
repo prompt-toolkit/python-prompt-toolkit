@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
-from .base import Input, DummyInput
+
+from .base import DummyInput, Input
 from .defaults import create_input, get_default_input, set_default_input
 
 __all__ = [

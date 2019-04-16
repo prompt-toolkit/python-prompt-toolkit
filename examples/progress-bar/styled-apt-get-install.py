@@ -3,10 +3,12 @@
 Styled just like an apt-get installation.
 """
 from __future__ import unicode_literals
-from prompt_toolkit.shortcuts import ProgressBar
-from prompt_toolkit.styles import Style
-from prompt_toolkit.shortcuts.progress_bar import formatters
+
 import time
+
+from prompt_toolkit.shortcuts import ProgressBar
+from prompt_toolkit.shortcuts.progress_bar import formatters
+from prompt_toolkit.styles import Style
 
 style = Style.from_dict({
     'label': 'bg:#ffff00 #000000',

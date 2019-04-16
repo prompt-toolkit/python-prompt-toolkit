@@ -10,12 +10,12 @@ WARNING: This is experimental! Prompt_toolkit TaskLocals don't work together
 """
 from __future__ import unicode_literals
 
+import asyncio
+import logging
+
 from prompt_toolkit.contrib.telnet.server import TelnetServer
 from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
 from prompt_toolkit.shortcuts import PromptSession
-
-import logging
-import asyncio
 
 # Set up logging
 logging.basicConfig()

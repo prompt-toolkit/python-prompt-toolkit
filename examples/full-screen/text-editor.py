@@ -4,13 +4,22 @@ A simple example of a Notepad-like text editor.
 """
 from __future__ import unicode_literals
 
+import datetime
+
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.completion import PathCompleter
-from prompt_toolkit.eventloop import Future, ensure_future, Return, From
+from prompt_toolkit.eventloop import From, Future, Return, ensure_future
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout.containers import Float, HSplit, VSplit, Window, WindowAlign, ConditionalContainer
+from prompt_toolkit.layout.containers import (
+    ConditionalContainer,
+    Float,
+    HSplit,
+    VSplit,
+    Window,
+    WindowAlign,
+)
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.dimension import D
 from prompt_toolkit.layout.layout import Layout
@@ -18,8 +27,15 @@ from prompt_toolkit.layout.menus import CompletionsMenu
 from prompt_toolkit.lexers import DynamicLexer, PygmentsLexer
 from prompt_toolkit.search import start_search
 from prompt_toolkit.styles import Style
-from prompt_toolkit.widgets import Dialog, Label, Button, TextArea, SearchToolbar, MenuContainer, MenuItem
-import datetime
+from prompt_toolkit.widgets import (
+    Button,
+    Dialog,
+    Label,
+    MenuContainer,
+    MenuItem,
+    SearchToolbar,
+    TextArea,
+)
 
 
 class ApplicationState:

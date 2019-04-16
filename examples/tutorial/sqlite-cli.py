@@ -1,13 +1,15 @@
 #!/usr/bin/env python
-from __future__ import unicode_literals, print_function
-import sys
+from __future__ import print_function, unicode_literals
+
 import sqlite3
+import sys
+
+from pygments.lexers.sql import SqlLexer
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.styles import Style
-from pygments.lexers.sql import SqlLexer
 
 sql_completer = WordCompleter([
     'abort', 'action', 'add', 'after', 'all', 'alter', 'analyze', 'and',

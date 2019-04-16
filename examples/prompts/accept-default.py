@@ -7,8 +7,8 @@ This should display the prompt with all the formatting like usual, but not
 allow any editing.
 """
 from __future__ import unicode_literals
-from prompt_toolkit import prompt, HTML
 
+from prompt_toolkit import HTML, prompt
 
 if __name__ == '__main__':
     answer = prompt(

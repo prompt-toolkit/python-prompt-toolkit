@@ -3,17 +3,16 @@ Win32 event loop.
 """
 from __future__ import unicode_literals
 
+import msvcrt
+from ctypes import pointer, windll
+from ctypes.wintypes import BOOL, DWORD, HANDLE
+
 from ..win32_types import SECURITY_ATTRIBUTES
 from .base import EventLoop
 from .context import wrap_in_current_context
 from .future import Future
 from .inputhook import InputHookContext
 from .utils import ThreadWithFuture
-
-from ctypes import windll, pointer
-from ctypes.wintypes import DWORD, BOOL, HANDLE
-
-import msvcrt
 
 __all__ = [
     'Win32EventLoop',

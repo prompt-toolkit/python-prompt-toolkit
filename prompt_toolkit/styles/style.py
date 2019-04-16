@@ -1,13 +1,22 @@
 """
 Tool for creating styles from a dictionary.
 """
-from __future__ import unicode_literals, absolute_import
+from __future__ import absolute_import, unicode_literals
+
 import itertools
 import re
 import sys
-from .base import BaseStyle, DEFAULT_ATTRS, ANSI_COLOR_NAMES, ANSI_COLOR_NAMES_ALIASES, Attrs
-from .named_colors import NAMED_COLORS
+
 from prompt_toolkit.cache import SimpleCache
+
+from .base import (
+    ANSI_COLOR_NAMES,
+    ANSI_COLOR_NAMES_ALIASES,
+    DEFAULT_ATTRS,
+    Attrs,
+    BaseStyle,
+)
+from .named_colors import NAMED_COLORS
 
 __all__ = [
     'Style',

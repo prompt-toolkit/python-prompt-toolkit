@@ -4,11 +4,15 @@ Margin implementations for a :class:`~prompt_toolkit.layout.containers.Window`.
 from __future__ import unicode_literals
 
 from abc import ABCMeta, abstractmethod
+
 from six import with_metaclass
 from six.moves import range
 
 from prompt_toolkit.filters import to_filter
-from prompt_toolkit.formatted_text import fragment_list_to_text, to_formatted_text
+from prompt_toolkit.formatted_text import (
+    fragment_list_to_text,
+    to_formatted_text,
+)
 from prompt_toolkit.utils import get_cwidth
 
 __all__ = [

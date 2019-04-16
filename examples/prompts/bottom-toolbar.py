@@ -11,10 +11,12 @@ inside will get 'bottom-toolbar.text'. These can be used to change the default
 style.
 """
 from __future__ import unicode_literals
-from prompt_toolkit import prompt
-from prompt_toolkit.styles import Style
-from prompt_toolkit.formatted_text import HTML, ANSI
+
 import time
+
+from prompt_toolkit import prompt
+from prompt_toolkit.formatted_text import ANSI, HTML
+from prompt_toolkit.styles import Style
 
 
 def main():

@@ -14,9 +14,10 @@ An example of how to deal with slow auto completion code.
 """
 from __future__ import unicode_literals
 
-from prompt_toolkit.completion import Completer, Completion
-from prompt_toolkit.shortcuts import prompt, CompleteStyle
 import time
+
+from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.shortcuts import CompleteStyle, prompt
 
 WORDS = [
     'alligator', 'ant', 'ape', 'bat', 'bear', 'beaver', 'bee', 'bison',

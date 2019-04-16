@@ -6,22 +6,32 @@ from __future__ import unicode_literals
 
 from abc import ABCMeta, abstractmethod
 from functools import partial
-from six import with_metaclass, text_type
-from six.moves import range
 
-from .controls import UIControl, FormattedTextControl, UIContent, DummyControl
-from .dimension import Dimension, sum_layout_dimensions, max_layout_dimensions, to_dimension, is_dimension
-from .margins import Margin
-from .screen import Point, WritePosition, _CHAR_CACHE
-from .utils import explode_text_fragments
+from six import text_type, with_metaclass
+from six.moves import range
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.cache import SimpleCache
-from prompt_toolkit.filters import to_filter, vi_insert_mode, emacs_insert_mode
+from prompt_toolkit.filters import emacs_insert_mode, to_filter, vi_insert_mode
 from prompt_toolkit.formatted_text import to_formatted_text
-from prompt_toolkit.formatted_text.utils import fragment_list_to_text, fragment_list_width
+from prompt_toolkit.formatted_text.utils import (
+    fragment_list_to_text,
+    fragment_list_width,
+)
 from prompt_toolkit.mouse_events import MouseEvent, MouseEventType
-from prompt_toolkit.utils import take_using_weights, get_cwidth, to_int, to_str
+from prompt_toolkit.utils import get_cwidth, take_using_weights, to_int, to_str
+
+from .controls import DummyControl, FormattedTextControl, UIContent, UIControl
+from .dimension import (
+    Dimension,
+    is_dimension,
+    max_layout_dimensions,
+    sum_layout_dimensions,
+    to_dimension,
+)
+from .margins import Margin
+from .screen import _CHAR_CACHE, Point, WritePosition
+from .utils import explode_text_fragments
 
 try:
     from collections.abc import Sequence

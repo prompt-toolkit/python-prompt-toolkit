@@ -7,7 +7,14 @@ from __future__ import unicode_literals
 from prompt_toolkit.application import Application
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout.containers import HSplit, VSplit, Window, HorizontalAlign, VerticalAlign, WindowAlign
+from prompt_toolkit.layout.containers import (
+    HorizontalAlign,
+    HSplit,
+    VerticalAlign,
+    VSplit,
+    Window,
+    WindowAlign,
+)
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.dimension import D
 from prompt_toolkit.layout.layout import Layout

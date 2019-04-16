@@ -8,10 +8,13 @@ a good example on how to implement event loops. Possible, in the future, we'll
 run entirely on top of asyncio, but right now, we're still supporting Python 2.
 """
 from __future__ import unicode_literals
-from abc import ABCMeta, abstractmethod
-from six import with_metaclass
-from prompt_toolkit.log import logger
+
 import sys
+from abc import ABCMeta, abstractmethod
+
+from six import with_metaclass
+
+from prompt_toolkit.log import logger
 
 __all__ = [
     'EventLoop',

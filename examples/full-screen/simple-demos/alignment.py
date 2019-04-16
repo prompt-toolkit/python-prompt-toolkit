@@ -10,7 +10,6 @@ from prompt_toolkit.layout.containers import HSplit, Window, WindowAlign
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.layout import Layout
 
-
 LIPSUM = """Lorem ipsum dolor sit amet, consectetur adipiscing elit.  Maecenas
 quis interdum enim. Nam viverra, mauris et blandit malesuada, ante est bibendum
 mauris, ac dignissim dui tellus quis ligula. Aenean condimentum leo at

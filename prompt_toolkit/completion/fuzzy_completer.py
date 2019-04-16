@@ -1,7 +1,8 @@
 from __future__ import unicode_literals
-import re
 
+import re
 from collections import namedtuple
+
 from six import string_types
 
 from prompt_toolkit.document import Document

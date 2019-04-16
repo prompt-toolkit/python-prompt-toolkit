@@ -1,7 +1,8 @@
 from __future__ import absolute_import, unicode_literals
-import pyperclip
 
+import pyperclip
 from prompt_toolkit.selection import SelectionType
+
 from .base import Clipboard, ClipboardData
 
 __all__ = [

@@ -5,9 +5,10 @@ Demonstration of how to print using ANSI escape sequences.
 The advantage here is that this is cross platform. The escape sequences will be
 parsed and turned into appropriate Win32 API calls on Windows.
 """
-from __future__ import unicode_literals, print_function
+from __future__ import print_function, unicode_literals
+
 from prompt_toolkit import print_formatted_text
-from prompt_toolkit.formatted_text import HTML, ANSI
+from prompt_toolkit.formatted_text import ANSI, HTML
 
 print = print_formatted_text
 

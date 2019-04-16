@@ -1,10 +1,15 @@
 """
 Test the `print` function.
 """
-from __future__ import unicode_literals, print_function
+from __future__ import print_function, unicode_literals
+
 import pytest
 from prompt_toolkit import print_formatted_text as pt_print
-from prompt_toolkit.formatted_text import FormattedText, HTML, to_formatted_text
+from prompt_toolkit.formatted_text import (
+    HTML,
+    FormattedText,
+    to_formatted_text,
+)
 from prompt_toolkit.styles import Style
 from prompt_toolkit.utils import is_windows
 

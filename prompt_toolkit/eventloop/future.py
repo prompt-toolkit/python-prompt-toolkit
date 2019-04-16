@@ -1,11 +1,13 @@
 """
 Future implementation for the prompt_toolkit eventloop.
 """
-from __future__ import unicode_literals, print_function
-from .base import EventLoop
-from .context import get_context_id, context
-from .defaults import get_event_loop
+from __future__ import print_function, unicode_literals
+
 import sys
+
+from .base import EventLoop
+from .context import context, get_context_id
+from .defaults import get_event_loop
 
 __all__ = [
     'Future',

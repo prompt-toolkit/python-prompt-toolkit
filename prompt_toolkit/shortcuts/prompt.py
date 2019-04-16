@@ -26,6 +26,13 @@ Example::
 """
 from __future__ import unicode_literals
 
+import contextlib
+import threading
+import time
+from functools import partial
+
+from six import text_type
+
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.auto_suggest import DynamicAutoSuggest
@@ -34,36 +41,88 @@ from prompt_toolkit.clipboard import DynamicClipboard, InMemoryClipboard
 from prompt_toolkit.completion import DynamicCompleter, ThreadedCompleter
 from prompt_toolkit.document import Document
 from prompt_toolkit.enums import DEFAULT_BUFFER, SEARCH_BUFFER, EditingMode
-from prompt_toolkit.eventloop import ensure_future, Return, From, get_event_loop
-from prompt_toolkit.filters import is_done, has_focus, renderer_height_is_known, to_filter, is_true, Condition, has_arg
-from prompt_toolkit.formatted_text import to_formatted_text, merge_formatted_text, fragment_list_to_text
+from prompt_toolkit.eventloop import (
+    From,
+    Return,
+    ensure_future,
+    get_event_loop,
+)
+from prompt_toolkit.filters import (
+    Condition,
+    has_arg,
+    has_focus,
+    is_done,
+    is_true,
+    renderer_height_is_known,
+    to_filter,
+)
+from prompt_toolkit.formatted_text import (
+    fragment_list_to_text,
+    merge_formatted_text,
+    to_formatted_text,
+)
 from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.input.defaults import get_default_input
-from prompt_toolkit.key_binding.bindings.auto_suggest import load_auto_suggest_bindings
-from prompt_toolkit.key_binding.bindings.completion import display_completions_like_readline
-from prompt_toolkit.key_binding.bindings.open_in_editor import load_open_in_editor_bindings
-from prompt_toolkit.key_binding.key_bindings import KeyBindings, DynamicKeyBindings, merge_key_bindings, ConditionalKeyBindings, KeyBindingsBase
+from prompt_toolkit.key_binding.bindings.auto_suggest import (
+    load_auto_suggest_bindings,
+)
+from prompt_toolkit.key_binding.bindings.completion import (
+    display_completions_like_readline,
+)
+from prompt_toolkit.key_binding.bindings.open_in_editor import (
+    load_open_in_editor_bindings,
+)
+from prompt_toolkit.key_binding.key_bindings import (
+    ConditionalKeyBindings,
+    DynamicKeyBindings,
+    KeyBindings,
+    KeyBindingsBase,
+    merge_key_bindings,
+)
 from prompt_toolkit.keys import Keys
-from prompt_toolkit.layout import Window, HSplit, FloatContainer, Float
+from prompt_toolkit.layout import Float, FloatContainer, HSplit, Window
 from prompt_toolkit.layout.containers import ConditionalContainer, WindowAlign
-from prompt_toolkit.layout.controls import BufferControl, SearchBufferControl, FormattedTextControl
+from prompt_toolkit.layout.controls import (
+    BufferControl,
+    FormattedTextControl,
+    SearchBufferControl,
+)
 from prompt_toolkit.layout.dimension import Dimension
 from prompt_toolkit.layout.layout import Layout
-from prompt_toolkit.layout.menus import CompletionsMenu, MultiColumnCompletionsMenu
-from prompt_toolkit.layout.processors import DynamicProcessor, PasswordProcessor, ConditionalProcessor, AppendAutoSuggestion, HighlightIncrementalSearchProcessor, HighlightSelectionProcessor, DisplayMultipleCursors, ReverseSearchProcessor, merge_processors
+from prompt_toolkit.layout.menus import (
+    CompletionsMenu,
+    MultiColumnCompletionsMenu,
+)
+from prompt_toolkit.layout.processors import (
+    AppendAutoSuggestion,
+    ConditionalProcessor,
+    DisplayMultipleCursors,
+    DynamicProcessor,
+    HighlightIncrementalSearchProcessor,
+    HighlightSelectionProcessor,
+    PasswordProcessor,
+    ReverseSearchProcessor,
+    merge_processors,
+)
 from prompt_toolkit.layout.utils import explode_text_fragments
 from prompt_toolkit.lexers import DynamicLexer
 from prompt_toolkit.output.defaults import get_default_output
-from prompt_toolkit.styles import BaseStyle, DynamicStyle, StyleTransformation, DynamicStyleTransformation, ConditionalStyleTransformation, SwapLightAndDarkStyleTransformation, merge_style_transformations
-from prompt_toolkit.utils import suspend_to_background_supported, get_cwidth
+from prompt_toolkit.styles import (
+    BaseStyle,
+    ConditionalStyleTransformation,
+    DynamicStyle,
+    DynamicStyleTransformation,
+    StyleTransformation,
+    SwapLightAndDarkStyleTransformation,
+    merge_style_transformations,
+)
+from prompt_toolkit.utils import get_cwidth, suspend_to_background_supported
 from prompt_toolkit.validation import DynamicValidator
-from prompt_toolkit.widgets.toolbars import ValidationToolbar, SystemToolbar, SearchToolbar
-from six import text_type
-from functools import partial
-
-import contextlib
-import threading
-import time
+from prompt_toolkit.widgets.toolbars import (
+    SearchToolbar,
+    SystemToolbar,
+    ValidationToolbar,
+)
 
 __all__ = [
     'PromptSession',

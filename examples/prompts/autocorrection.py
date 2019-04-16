@@ -5,8 +5,9 @@ Example of implementing auto correction while typing.
 The word "impotr" will be corrected when the user types a space afterwards.
 """
 from __future__ import unicode_literals
-from prompt_toolkit.key_binding import KeyBindings
+
 from prompt_toolkit import prompt
+from prompt_toolkit.key_binding import KeyBindings
 
 # Database of words to be replaced by typing.
 corrections = {

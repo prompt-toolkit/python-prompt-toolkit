@@ -3,8 +3,10 @@
 Example of a 'dynamic' prompt. On that shows the current time in the prompt.
 """
 from __future__ import unicode_literals
-from prompt_toolkit.shortcuts import prompt
+
 import datetime
+
+from prompt_toolkit.shortcuts import prompt
 
 
 def get_prompt():

@@ -1,5 +1,10 @@
 from __future__ import unicode_literals
-from prompt_toolkit.styles import Attrs, Style, SwapLightAndDarkStyleTransformation
+
+from prompt_toolkit.styles import (
+    Attrs,
+    Style,
+    SwapLightAndDarkStyleTransformation,
+)
 
 
 def test_style_from_dict():

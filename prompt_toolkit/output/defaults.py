@@ -1,9 +1,15 @@
 from __future__ import unicode_literals
+
 import sys
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.eventloop.context import TaskLocal, TaskLocalNotSetError
-from prompt_toolkit.utils import is_windows, is_conemu_ansi, get_term_environment_variable
+from prompt_toolkit.utils import (
+    get_term_environment_variable,
+    is_conemu_ansi,
+    is_windows,
+)
+
 from .base import Output
 
 __all__ = [

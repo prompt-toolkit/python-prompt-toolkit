@@ -5,10 +5,12 @@ Styled similar to tqdm, another progress bar implementation in Python.
 See: https://github.com/noamraph/tqdm
 """
 from __future__ import unicode_literals
-from prompt_toolkit.shortcuts import ProgressBar
-from prompt_toolkit.styles import Style
-from prompt_toolkit.shortcuts.progress_bar import formatters
+
 import time
+
+from prompt_toolkit.shortcuts import ProgressBar
+from prompt_toolkit.shortcuts.progress_bar import formatters
+from prompt_toolkit.styles import Style
 
 style = Style.from_dict({
     '': 'cyan',

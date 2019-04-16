@@ -4,6 +4,7 @@ Parse vt100 input and print keys.
 For testing terminal input.
 """
 from __future__ import unicode_literals
+
 import sys
 
 from prompt_toolkit.input.vt100 import raw_mode

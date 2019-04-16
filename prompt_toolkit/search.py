@@ -6,10 +6,12 @@ For the key bindings implementation with attached filters, check
 instead of calling these function directly.)
 """
 from __future__ import unicode_literals
+
+import six
+
 from .application.current import get_app
 from .filters import is_searching, to_filter
 from .key_binding.vi_state import InputMode
-import six
 
 __all__ = [
     'SearchDirection',

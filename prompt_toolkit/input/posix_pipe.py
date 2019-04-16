@@ -1,6 +1,7 @@
-from .vt100 import Vt100Input
-from ..utils import DummyContext
 import os
+
+from ..utils import DummyContext
+from .vt100 import Vt100Input
 
 __all__ = [
     'PosixPipeInput',

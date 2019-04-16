@@ -5,14 +5,15 @@ from __future__ import unicode_literals
 
 import bisect
 import re
-import six
 import string
 import weakref
-from six.moves import range, map
+
+import six
+from six.moves import map, range
 
 from .clipboard import ClipboardData
 from .filters import vi_mode
-from .selection import SelectionType, SelectionState, PasteMode
+from .selection import PasteMode, SelectionState, SelectionType
 
 __all__ = [
     'Document',

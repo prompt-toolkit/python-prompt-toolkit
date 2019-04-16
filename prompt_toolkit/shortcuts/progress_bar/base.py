@@ -8,30 +8,38 @@ Progress bar implementation on top of prompt_toolkit.
             ...
 """
 from __future__ import unicode_literals
+
+import contextlib
+import datetime
+import functools
+import os
+import signal
+import sys
+import threading
+import time
+import traceback
+
 from prompt_toolkit.application import Application
 from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.filters import Condition, is_done, renderer_height_is_known
-from prompt_toolkit.formatted_text import to_formatted_text, is_formatted_text
+from prompt_toolkit.formatted_text import is_formatted_text, to_formatted_text
 from prompt_toolkit.input.defaults import get_default_input
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout import Layout, Window, ConditionalContainer, FormattedTextControl, HSplit, VSplit
-from prompt_toolkit.layout.controls import UIControl, UIContent
+from prompt_toolkit.layout import (
+    ConditionalContainer,
+    FormattedTextControl,
+    HSplit,
+    Layout,
+    VSplit,
+    Window,
+)
+from prompt_toolkit.layout.controls import UIContent, UIControl
 from prompt_toolkit.layout.dimension import D
 from prompt_toolkit.output.defaults import create_output
 from prompt_toolkit.styles import BaseStyle
 from prompt_toolkit.utils import in_main_thread
 
-import functools
-import contextlib
-import datetime
-import os
-import signal
-import threading
-import time
-import traceback
-import sys
-
-from .formatters import create_default_formatters, Formatter
+from .formatters import Formatter, create_default_formatters
 
 __all__ = [
     'ProgressBar',

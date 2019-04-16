@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
-from itertools import product
 from collections import defaultdict
+from itertools import product
 
 __all__ = [
     'MouseHandlers',

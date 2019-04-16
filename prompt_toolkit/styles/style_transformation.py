@@ -10,15 +10,18 @@ style strings are turned into `Attrs` objects that represent the actual
 formatting.
 """
 from __future__ import unicode_literals
+
 from abc import ABCMeta, abstractmethod
+from colorsys import hls_to_rgb, rgb_to_hls
+
 from six import with_metaclass
-from colorsys import rgb_to_hls, hls_to_rgb
+
+from prompt_toolkit.cache import memoized
+from prompt_toolkit.filters import to_filter
+from prompt_toolkit.utils import to_float, to_str
 
 from .base import ANSI_COLOR_NAMES
 from .style import parse_color
-from prompt_toolkit.cache import memoized
-from prompt_toolkit.filters import to_filter
-from prompt_toolkit.utils import to_str, to_float
 
 __all__ = [
     'StyleTransformation',

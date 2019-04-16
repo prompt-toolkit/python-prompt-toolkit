@@ -3,11 +3,13 @@
 A simple progress bar, visualised with rainbow colors (for fun).
 """
 from __future__ import unicode_literals
+
+import time
+
 from prompt_toolkit.output import ColorDepth
 from prompt_toolkit.shortcuts import ProgressBar
 from prompt_toolkit.shortcuts.progress_bar import formatters
 from prompt_toolkit.shortcuts.prompt import confirm
-import time
 
 
 def main():

@@ -3,8 +3,9 @@ from __future__ import unicode_literals
 from prompt_toolkit.completion import CompleteEvent, Completer, Completion
 from prompt_toolkit.contrib.regular_languages import compile
 from prompt_toolkit.contrib.regular_languages.compiler import Match, Variables
-from prompt_toolkit.contrib.regular_languages.completion import \
-    GrammarCompleter
+from prompt_toolkit.contrib.regular_languages.completion import (
+    GrammarCompleter,
+)
 from prompt_toolkit.document import Document
 
 

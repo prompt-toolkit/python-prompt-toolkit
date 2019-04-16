@@ -12,7 +12,6 @@ from __future__ import unicode_literals
 from prompt_toolkit.completion import FuzzyWordCompleter
 from prompt_toolkit.shortcuts import prompt
 
-
 animal_completer = FuzzyWordCompleter([
     'alligator', 'ant', 'ape', 'bat', 'bear', 'beaver', 'bee', 'bison',
     'butterfly', 'cat', 'chicken', 'crocodile', 'dinosaur', 'dog', 'dolphin',

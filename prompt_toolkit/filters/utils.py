@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
-from .base import Always, Never, Filter
+
+from .base import Always, Filter, Never
 
 __all__ = [
     'to_filter',

@@ -7,7 +7,8 @@ Inspired by `Twisted.conch.telnet`.
 from __future__ import unicode_literals
 
 import struct
-from six import int2byte, binary_type, iterbytes
+
+from six import binary_type, int2byte, iterbytes
 
 from .log import logger
 

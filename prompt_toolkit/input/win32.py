@@ -1,22 +1,30 @@
 from __future__ import unicode_literals
-from ctypes import windll, pointer
-from ctypes.wintypes import DWORD
-from six.moves import range
-from contextlib import contextmanager
 
-from .ansi_escape_sequences import REVERSE_ANSI_SEQUENCES
-from .base import Input
+import msvcrt
+import os
+import sys
+from contextlib import contextmanager
+from ctypes import pointer, windll
+from ctypes.wintypes import DWORD
+
+import six
+from six.moves import range
+
 from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.eventloop.win32 import wait_for_handles
 from prompt_toolkit.key_binding.key_processor import KeyPress
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.mouse_events import MouseEventType
-from prompt_toolkit.win32_types import EventTypes, KEY_EVENT_RECORD, MOUSE_EVENT_RECORD, INPUT_RECORD, STD_INPUT_HANDLE
+from prompt_toolkit.win32_types import (
+    INPUT_RECORD,
+    KEY_EVENT_RECORD,
+    MOUSE_EVENT_RECORD,
+    STD_INPUT_HANDLE,
+    EventTypes,
+)
 
-import msvcrt
-import os
-import sys
-import six
+from .ansi_escape_sequences import REVERSE_ANSI_SEQUENCES
+from .base import Input
 
 __all__ = [
     'Win32Input',

@@ -1,14 +1,19 @@
-from __future__ import unicode_literals, absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import re
 import shutil
 import tempfile
-
 from contextlib import contextmanager
+
 from six import text_type
 
-from prompt_toolkit.completion import CompleteEvent, PathCompleter, WordCompleter, FuzzyWordCompleter
+from prompt_toolkit.completion import (
+    CompleteEvent,
+    FuzzyWordCompleter,
+    PathCompleter,
+    WordCompleter,
+)
 from prompt_toolkit.document import Document
 
 

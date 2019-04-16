@@ -3,8 +3,9 @@ Lexer interface and implementations.
 Used for syntax highlighting.
 """
 from __future__ import unicode_literals
-from .base import Lexer, SimpleLexer, DynamicLexer
-from .pygments import PygmentsLexer, SyntaxSync, SyncFromStart, RegexSync
+
+from .base import DynamicLexer, Lexer, SimpleLexer
+from .pygments import PygmentsLexer, RegexSync, SyncFromStart, SyntaxSync
 
 __all__ = [
     # Base.

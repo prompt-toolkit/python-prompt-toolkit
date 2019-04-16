@@ -4,9 +4,11 @@ A progress bar that displays a formatted title above the progress bar and has a
 colored label.
 """
 from __future__ import unicode_literals
-from prompt_toolkit.shortcuts import ProgressBar
-from prompt_toolkit.formatted_text import HTML
+
 import time
+
+from prompt_toolkit.formatted_text import HTML
+from prompt_toolkit.shortcuts import ProgressBar
 
 
 def main():

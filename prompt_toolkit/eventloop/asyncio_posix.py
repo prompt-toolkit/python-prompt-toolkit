@@ -3,11 +3,12 @@ Posix asyncio event loop.
 """
 from __future__ import unicode_literals
 
+import asyncio
+
 from .base import EventLoop
 from .context import wrap_in_current_context
 from .future import Future
 from .utils import ThreadWithFuture
-import asyncio
 
 __all__ = [
     'PosixAsyncioEventLoop',

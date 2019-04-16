@@ -6,7 +6,8 @@ Usage::
     from pygments.styles.tango import TangoStyle
     style = style_from_pygments_cls(pygments_style_cls=TangoStyle)
 """
-from __future__ import unicode_literals, absolute_import
+from __future__ import absolute_import, unicode_literals
+
 from .style import Style
 
 __all__ = [

@@ -1,13 +1,14 @@
 from __future__ import unicode_literals
 
-from prompt_toolkit.utils import is_windows
+from ctypes import byref, windll
+from ctypes.wintypes import DWORD
+
 from prompt_toolkit.renderer import Output
+from prompt_toolkit.utils import is_windows
 from prompt_toolkit.win32_types import STD_OUTPUT_HANDLE
+
 from .vt100 import Vt100_Output
 from .win32 import Win32Output
-
-from ctypes import windll, byref
-from ctypes.wintypes import DWORD
 
 __all__ = [
     'Windows10_Output',

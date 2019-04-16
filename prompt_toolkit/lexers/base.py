@@ -2,8 +2,10 @@
 Base classes for prompt_toolkit lexers.
 """
 from __future__ import unicode_literals
+
 from abc import ABCMeta, abstractmethod
-from six import with_metaclass, text_type
+
+from six import text_type, with_metaclass
 
 __all__ = [
     'Lexer',

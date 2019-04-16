@@ -1,7 +1,9 @@
 from __future__ import unicode_literals
+
 import threading
+
+from .context import context, get_context_id
 from .future import Future
-from .context import get_context_id, context
 
 __all__ = [
     'ThreadWithFuture',

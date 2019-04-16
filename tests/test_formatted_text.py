@@ -1,5 +1,14 @@
 from __future__ import unicode_literals
-from prompt_toolkit.formatted_text import HTML, ANSI, to_formatted_text, Template, merge_formatted_text, PygmentsTokens, FormattedText
+
+from prompt_toolkit.formatted_text import (
+    ANSI,
+    HTML,
+    FormattedText,
+    PygmentsTokens,
+    Template,
+    merge_formatted_text,
+    to_formatted_text,
+)
 from prompt_toolkit.formatted_text.utils import split_lines
 
 

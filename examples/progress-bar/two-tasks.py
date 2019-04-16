@@ -3,9 +3,11 @@
 Two progress bars that run in parallel.
 """
 from __future__ import unicode_literals
-from prompt_toolkit.shortcuts import ProgressBar
-import time
+
 import threading
+import time
+
+from prompt_toolkit.shortcuts import ProgressBar
 
 
 def main():

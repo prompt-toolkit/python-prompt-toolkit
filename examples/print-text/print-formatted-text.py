@@ -2,9 +2,10 @@
 """
 Example of printing colored text to the output.
 """
-from __future__ import unicode_literals, print_function
+from __future__ import print_function, unicode_literals
+
 from prompt_toolkit import print_formatted_text
-from prompt_toolkit.formatted_text import HTML, ANSI, FormattedText
+from prompt_toolkit.formatted_text import ANSI, HTML, FormattedText
 from prompt_toolkit.styles import Style
 
 print = print_formatted_text

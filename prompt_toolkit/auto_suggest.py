@@ -12,7 +12,9 @@ then wrap the :class:`.AutoSuggest` instance into a
 :class:`.ThreadedAutoSuggest`.
 """
 from __future__ import unicode_literals
+
 from abc import ABCMeta, abstractmethod
+
 from six import with_metaclass
 
 from .eventloop import Future, run_in_executor

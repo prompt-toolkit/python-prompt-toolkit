@@ -16,11 +16,14 @@ from Python 3 (and asyncio).
         ...
 """
 from __future__ import unicode_literals
-from six.moves.queue import Queue
+
 from threading import RLock
+
+from six.moves.queue import Queue
+
+from .coroutine import From, Return
 from .defaults import run_in_executor
 from .future import Future
-from .coroutine import From, Return
 
 __all__ = [
     'AsyncGeneratorItem',

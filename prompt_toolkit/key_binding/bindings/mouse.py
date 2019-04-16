@@ -1,8 +1,9 @@
 from __future__ import unicode_literals
+
 from prompt_toolkit.key_binding.key_processor import KeyPress
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout.screen import Point
-from prompt_toolkit.mouse_events import MouseEventType, MouseEvent
+from prompt_toolkit.mouse_events import MouseEvent, MouseEventType
 from prompt_toolkit.renderer import HeightIsUnknownError
 from prompt_toolkit.utils import is_windows
 
