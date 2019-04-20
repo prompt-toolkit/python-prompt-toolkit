@@ -36,7 +36,7 @@ Like readline:
 
 Works everywhere:
 
-- Pure Python. Runs on all Python versions from 2.6 up to 3.4.
+- Pure Python. Runs on Python 2.7 and 3.5+.
 - Runs on Linux, OS X, OpenBSD and Windows systems.
 - Lightweight, the only dependencies are Pygments, six and wcwidth.
 - No assumptions about I/O are made. Every prompt_toolkit application should
