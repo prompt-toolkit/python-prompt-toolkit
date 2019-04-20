@@ -6,6 +6,7 @@ patches are applied.
 from __future__ import unicode_literals
 
 from gevent.monkey import patch_all
+
 from prompt_toolkit.eventloop.defaults import create_event_loop
 from prompt_toolkit.shortcuts import PromptSession
 

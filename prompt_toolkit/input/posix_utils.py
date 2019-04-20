@@ -4,8 +4,6 @@ import os
 import select
 from codecs import getincrementaldecoder
 
-import six
-
 __all__ = [
     'PosixStdinReader',
 ]
@@ -36,8 +34,7 @@ class PosixStdinReader:
     # of junk.  One occurrence of this that I had was when using iTerm2 on OS X,
     # with "Option as Meta" checked (You should choose "Option as +Esc".)
 
-    def __init__(self, stdin_fd,
-                 errors=('ignore' if six.PY2 else 'surrogateescape')):
+    def __init__(self, stdin_fd, errors='surrogateescape'):
         assert isinstance(stdin_fd, int)
         self.stdin_fd = stdin_fd
         self.errors = errors

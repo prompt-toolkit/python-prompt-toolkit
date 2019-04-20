@@ -7,8 +7,6 @@ Vi, Emacs, etc...
 """
 from __future__ import unicode_literals
 
-from six.moves import range
-
 __all__ = [
     'scroll_forward',
     'scroll_backward',

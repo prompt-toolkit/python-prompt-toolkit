@@ -4,9 +4,6 @@ the input using a regular grammar with annotations.
 """
 from __future__ import unicode_literals
 
-import six
-from six.moves import range
-
 from prompt_toolkit.document import Document
 from prompt_toolkit.formatted_text.utils import split_lines
 from prompt_toolkit.lexers import Lexer

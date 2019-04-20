@@ -12,8 +12,6 @@ from __future__ import unicode_literals
 import sys
 from abc import ABCMeta, abstractmethod
 
-from six import with_metaclass
-
 from prompt_toolkit.log import logger
 
 __all__ = [
@@ -22,7 +20,7 @@ __all__ = [
 ]
 
 
-class EventLoop(object, metaclass=ABCMeta):
+class EventLoop(metaclass=ABCMeta):
     """
     Eventloop interface.
     """

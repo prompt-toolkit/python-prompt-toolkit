@@ -4,8 +4,6 @@ from __future__ import unicode_literals
 
 from abc import ABCMeta, abstractmethod
 
-from six import text_type, with_metaclass
-
 from prompt_toolkit.eventloop import (
     AsyncGeneratorItem,
     generator_to_async_generator,
@@ -140,7 +138,7 @@ class CompleteEvent:
             self.__class__.__name__, self.text_inserted, self.completion_requested)
 
 
-class Completer(object, metaclass=ABCMeta):
+class Completer(metaclass=ABCMeta):
     """
     Base class for completer implementations.
     """

@@ -42,8 +42,6 @@ from __future__ import unicode_literals
 
 import re
 
-from six.moves import range
-
 from .regex_parser import (
     Any,
     Lookahead,

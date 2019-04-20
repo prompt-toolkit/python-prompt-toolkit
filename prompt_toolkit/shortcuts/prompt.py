@@ -31,8 +31,6 @@ import threading
 import time
 from functools import partial
 
-from six import text_type
-
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.auto_suggest import DynamicAutoSuggest

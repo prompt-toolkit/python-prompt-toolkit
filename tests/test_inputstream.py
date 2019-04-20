@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import pytest
+
 from prompt_toolkit.input.vt100_parser import Vt100Parser
 from prompt_toolkit.keys import Keys
 

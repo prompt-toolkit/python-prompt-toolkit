@@ -1,4 +1,5 @@
 import pytest
+
 from prompt_toolkit.styles import AdjustBrightnessStyleTransformation, Attrs
 
 

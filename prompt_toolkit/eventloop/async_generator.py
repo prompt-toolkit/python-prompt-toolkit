@@ -17,9 +17,8 @@ from Python 3 (and asyncio).
 """
 from __future__ import unicode_literals
 
+from queue import Queue
 from threading import RLock
-
-from six.moves.queue import Queue
 
 from .coroutine import From, Return
 from .defaults import run_in_executor

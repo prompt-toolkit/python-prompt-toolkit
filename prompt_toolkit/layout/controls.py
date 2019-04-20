@@ -7,10 +7,6 @@ import time
 from abc import ABCMeta, abstractmethod
 from collections import namedtuple
 
-import six
-from six import with_metaclass
-from six.moves import range
-
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.cache import SimpleCache
@@ -47,7 +43,7 @@ __all__ = [
 ]
 
 
-class UIControl(object, metaclass=ABCMeta):
+class UIControl(metaclass=ABCMeta):
     """
     Base class for all user interface controls.
     """

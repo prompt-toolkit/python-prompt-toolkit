@@ -6,8 +6,6 @@ from __future__ import absolute_import, unicode_literals
 from abc import ABCMeta, abstractmethod, abstractproperty
 from collections import namedtuple
 
-from six import with_metaclass
-
 __all__ = [
     'Attrs',
     'DEFAULT_ATTRS',
@@ -76,7 +74,7 @@ assert set(ANSI_COLOR_NAMES_ALIASES.values()).issubset(set(ANSI_COLOR_NAMES))
 assert not (set(ANSI_COLOR_NAMES_ALIASES.keys()) & set(ANSI_COLOR_NAMES))
 
 
-class BaseStyle(object, metaclass=ABCMeta):
+class BaseStyle(metaclass=ABCMeta):
     """
     Abstract base class for prompt_toolkit styles.
     """

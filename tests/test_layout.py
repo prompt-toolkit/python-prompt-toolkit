@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import pytest
+
 from prompt_toolkit.layout import InvalidLayoutError, Layout
 from prompt_toolkit.layout.containers import HSplit, VSplit, Window
 from prompt_toolkit.layout.controls import BufferControl

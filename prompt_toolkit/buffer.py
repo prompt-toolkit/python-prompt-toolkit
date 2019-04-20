@@ -11,9 +11,6 @@ import subprocess
 import tempfile
 from functools import wraps
 
-import six
-from six.moves import range
-
 from .application.current import get_app
 from .application.run_in_terminal import run_in_terminal
 from .auto_suggest import AutoSuggest

@@ -8,8 +8,6 @@ from __future__ import unicode_literals
 
 import struct
 
-from six import binary_type, int2byte, iterbytes
-
 from .log import logger
 
 __all__ = [
@@ -17,31 +15,31 @@ __all__ = [
 ]
 
 # Telnet constants.
-NOP      = int2byte(0)
-SGA      = int2byte(3)
+NOP      = bytes((0,))
+SGA      = bytes((3,))
 
-IAC      = int2byte(255)
-DO       = int2byte(253)
-DONT     = int2byte(254)
-LINEMODE = int2byte(34)
-SB       = int2byte(250)
-WILL     = int2byte(251)
-WONT     = int2byte(252)
-MODE     = int2byte(1)
-SE       = int2byte(240)
-ECHO     = int2byte(1)
-NAWS     = int2byte(31)
-LINEMODE = int2byte(34)
-SUPPRESS_GO_AHEAD = int2byte(3)
+IAC      = bytes((255,))
+DO       = bytes((253,))
+DONT     = bytes((254,))
+LINEMODE = bytes((34,))
+SB       = bytes((250,))
+WILL     = bytes((251,))
+WONT     = bytes((252,))
+MODE     = bytes((1,))
+SE       = bytes((240,))
+ECHO     = bytes((1,))
+NAWS     = bytes((31,))
+LINEMODE = bytes((34,))
+SUPPRESS_GO_AHEAD = bytes((3,))
 
-DM       = int2byte(242)
-BRK      = int2byte(243)
-IP       = int2byte(244)
-AO       = int2byte(245)
-AYT      = int2byte(246)
-EC       = int2byte(247)
-EL       = int2byte(248)
-GA       = int2byte(249)
+DM       = bytes((242,))
+BRK      = bytes((243,))
+IP       = bytes((244,))
+AO       = bytes((245,))
+AYT      = bytes((246,))
+EC       = bytes((247,))
+EL       = bytes((248,))
+GA       = bytes((249,))
 
 
 class TelnetProtocolParser:
@@ -106,8 +104,7 @@ class TelnetProtocolParser:
         """
         if len(data) == 4:
             # NOTE: the first parameter of struct.unpack should be
-            # a 'str' object. Both on Py2/py3. This crashes on OSX
-            # otherwise.
+            # a 'str' object. This crashes on OSX otherwise.
             columns, rows = struct.unpack(str('!HH'), data)
             self.size_received_callback(rows, columns)
         else:
@@ -133,7 +130,7 @@ class TelnetProtocolParser:
         while True:
             d = yield
 
-            if d == int2byte(0):
+            if d == bytes((0,)):
                 pass  # NOP
 
             # Go to state escaped.
@@ -179,4 +176,4 @@ class TelnetProtocolParser:
         """
         assert isinstance(data, bytes)
         for b in iter(data):
-            self._parser.send(int2byte(b))
+            self._parser.send(bytes((b,)))

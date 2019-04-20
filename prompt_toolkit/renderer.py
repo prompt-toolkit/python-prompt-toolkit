@@ -8,8 +8,6 @@ import threading
 import time
 from collections import deque
 
-from six.moves import range
-
 from prompt_toolkit.eventloop import (
     From,
     Future,

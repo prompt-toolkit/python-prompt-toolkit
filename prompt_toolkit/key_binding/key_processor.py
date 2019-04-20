@@ -12,9 +12,6 @@ import time
 import weakref
 from collections import deque
 
-import six
-from six.moves import range
-
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import EditReadOnlyBuffer
 from prompt_toolkit.enums import EditingMode

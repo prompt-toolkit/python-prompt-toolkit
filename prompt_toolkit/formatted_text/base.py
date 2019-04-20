@@ -1,7 +1,5 @@
 from __future__ import unicode_literals
 
-import six
-
 __all__ = [
     'to_formatted_text',
     'is_formatted_text',

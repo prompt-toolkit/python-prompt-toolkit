@@ -1,7 +1,5 @@
 from __future__ import print_function, unicode_literals
 
-import six
-
 from prompt_toolkit.application import Application
 from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.formatted_text import FormattedText, to_formatted_text

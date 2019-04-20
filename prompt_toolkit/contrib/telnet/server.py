@@ -7,8 +7,6 @@ import inspect
 import socket
 import sys
 
-from six import binary_type, int2byte, text_type
-
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.application.run_in_terminal import run_in_terminal
 from prompt_toolkit.eventloop import (
@@ -59,7 +57,7 @@ def _initialize_telnet(connection):
     connection.send(IAC + WILL + SUPPRESS_GO_AHEAD)
 
     # Iac sb
-    connection.send(IAC + SB + LINEMODE + MODE + int2byte(0) + IAC + SE)
+    connection.send(IAC + SB + LINEMODE + MODE + bytes((0,)) + IAC + SE)
 
     # IAC Will Echo
     connection.send(IAC + WILL + ECHO)

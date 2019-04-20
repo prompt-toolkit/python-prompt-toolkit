@@ -9,8 +9,6 @@ import weakref
 from collections import deque
 from functools import partial
 
-from six import PY2, text_type
-from six.moves import range
 from wcwidth import wcwidth
 
 from .cache import memoized
@@ -259,10 +257,7 @@ def in_main_thread():
 
 def get_term_environment_variable():
     " Return the $TERM environment variable. "
-    term = os.environ.get('TERM', '')
-    if PY2:
-        term = term.decode('utf-8')
-    return term
+    return os.environ.get('TERM', '')
 
 
 def take_using_weights(items, weights):

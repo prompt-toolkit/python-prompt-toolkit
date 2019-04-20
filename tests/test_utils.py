@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import itertools
 
 import pytest
+
 from prompt_toolkit.utils import take_using_weights
 
 

@@ -16,8 +16,6 @@ from __future__ import unicode_literals
 
 from functools import partial
 
-import six
-
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.auto_suggest import DynamicAutoSuggest
 from prompt_toolkit.buffer import Buffer

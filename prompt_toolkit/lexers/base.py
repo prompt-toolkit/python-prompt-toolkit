@@ -5,8 +5,6 @@ from __future__ import unicode_literals
 
 from abc import ABCMeta, abstractmethod
 
-from six import text_type, with_metaclass
-
 __all__ = [
     'Lexer',
     'SimpleLexer',
@@ -14,7 +12,7 @@ __all__ = [
 ]
 
 
-class Lexer(object, metaclass=ABCMeta):
+class Lexer(metaclass=ABCMeta):
     """
     Base class for all lexers.
     """

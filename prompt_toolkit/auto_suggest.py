@@ -15,8 +15,6 @@ from __future__ import unicode_literals
 
 from abc import ABCMeta, abstractmethod
 
-from six import with_metaclass
-
 from .eventloop import Future, run_in_executor
 from .filters import to_filter
 
@@ -44,7 +42,7 @@ class Suggestion:
         return 'Suggestion(%s)' % self.text
 
 
-class AutoSuggest(object, metaclass=ABCMeta):
+class AutoSuggest(metaclass=ABCMeta):
     """
     Base class for auto suggestion implementations.
     """

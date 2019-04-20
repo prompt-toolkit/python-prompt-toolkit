@@ -3,8 +3,6 @@ from __future__ import unicode_literals
 import re
 from collections import namedtuple
 
-from six import string_types
-
 from prompt_toolkit.document import Document
 from prompt_toolkit.filters import to_filter
 

@@ -6,8 +6,6 @@ from __future__ import unicode_literals
 
 from abc import ABCMeta, abstractmethod
 
-from six import text_type, with_metaclass
-
 from .eventloop import Future, run_in_executor
 from .filters import to_filter
 
@@ -38,7 +36,7 @@ class ValidationError(Exception):
             self.__class__.__name__, self.cursor_position, self.message)
 
 
-class Validator(object, metaclass=ABCMeta):
+class Validator(metaclass=ABCMeta):
     """
     Abstract base class for an input validator.
 

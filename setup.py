@@ -27,10 +27,7 @@ setup(
     description='Library for building powerful interactive command lines in Python',
     long_description=long_description,
     packages=find_packages('.'),
-    install_requires=[
-        'six>=1.9.0',
-        'wcwidth',
-    ],
+    install_requires=['wcwidth',],
     python_requires='>=3.3',
     classifiers=[
         'Development Status :: 5 - Production/Stable',

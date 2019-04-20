@@ -2,8 +2,6 @@ from __future__ import unicode_literals
 
 import xml.dom.minidom as minidom
 
-import six
-
 from .base import FormattedText
 
 __all__ = [

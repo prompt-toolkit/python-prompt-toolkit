@@ -6,8 +6,6 @@ import shutil
 import tempfile
 from contextlib import contextmanager
 
-from six import text_type
-
 from prompt_toolkit.completion import (
     CompleteEvent,
     FuzzyWordCompleter,

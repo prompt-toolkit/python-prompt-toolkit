@@ -4,9 +4,6 @@ from __future__ import unicode_literals
 import codecs
 import string
 
-import six
-from six.moves import range
-
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import indent, reshape_text, unindent
 from prompt_toolkit.clipboard import ClipboardData
@@ -57,12 +54,7 @@ __all__ = [
     'load_vi_search_bindings',
 ]
 
-if six.PY2:
-    ascii_lowercase = string.ascii_lowercase.decode('ascii')
-else:
-    ascii_lowercase = string.ascii_lowercase
-
-vi_register_names = ascii_lowercase + '0123456789'
+vi_register_names = string.ascii_lowercase + '0123456789'
 
 
 class TextObjectType:

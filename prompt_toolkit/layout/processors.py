@@ -10,9 +10,6 @@ from __future__ import unicode_literals
 import re
 from abc import ABCMeta, abstractmethod
 
-from six import text_type, with_metaclass
-from six.moves import range
-
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.cache import SimpleCache
 from prompt_toolkit.document import Document
@@ -53,7 +50,7 @@ __all__ = [
 ]
 
 
-class Processor(object, metaclass=ABCMeta):
+class Processor(metaclass=ABCMeta):
     """
     Manipulate the fragments for a given line in a
     :class:`~prompt_toolkit.layout.controls.BufferControl`.

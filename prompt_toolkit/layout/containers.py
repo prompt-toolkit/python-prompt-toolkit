@@ -7,9 +7,6 @@ from __future__ import unicode_literals
 from abc import ABCMeta, abstractmethod
 from functools import partial
 
-from six import text_type, with_metaclass
-from six.moves import range
-
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.cache import SimpleCache
 from prompt_toolkit.filters import emacs_insert_mode, to_filter, vi_insert_mode
@@ -59,7 +56,7 @@ __all__ = [
 ]
 
 
-class Container(object, metaclass=ABCMeta):
+class Container(metaclass=ABCMeta):
     """
     Base class for user interface layout.
     """

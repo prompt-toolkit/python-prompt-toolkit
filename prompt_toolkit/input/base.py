@@ -6,15 +6,13 @@ from __future__ import unicode_literals
 from abc import ABCMeta, abstractmethod, abstractproperty
 from contextlib import contextmanager
 
-from six import with_metaclass
-
 __all__ = [
     'Input',
     'DummyInput',
 ]
 
 
-class Input(object, metaclass=ABCMeta):
+class Input(metaclass=ABCMeta):
     """
     Abstraction for any input.
 

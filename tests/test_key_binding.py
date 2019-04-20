@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import pytest
+
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import set_app
 from prompt_toolkit.input.defaults import create_pipe_input

@@ -5,8 +5,6 @@ from __future__ import unicode_literals
 
 from abc import ABCMeta, abstractmethod
 
-from six import with_metaclass
-
 from prompt_toolkit.layout.screen import Size
 
 __all__ = [
@@ -15,7 +13,7 @@ __all__ = [
 ]
 
 
-class Output(object, metaclass=ABCMeta):
+class Output(metaclass=ABCMeta):
     """
     Base class defining the output interface for a
     :class:`~prompt_toolkit.renderer.Renderer`.

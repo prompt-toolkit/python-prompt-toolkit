@@ -13,8 +13,6 @@ from ctypes import (
 )
 from ctypes.wintypes import DWORD
 
-import six
-
 from prompt_toolkit.renderer import Output
 from prompt_toolkit.styles import ANSI_COLOR_NAMES
 from prompt_toolkit.utils import get_cwidth

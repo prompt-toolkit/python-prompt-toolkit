@@ -12,8 +12,6 @@ import datetime
 import os
 from abc import ABCMeta, abstractmethod
 
-from six import text_type, with_metaclass
-
 from .eventloop import (
     AsyncGeneratorItem,
     From,
@@ -32,7 +30,7 @@ __all__ = [
 ]
 
 
-class History(object, metaclass=ABCMeta):
+class History(metaclass=ABCMeta):
     """
     Base ``History`` class.
 

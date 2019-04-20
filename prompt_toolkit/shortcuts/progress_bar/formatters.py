@@ -7,8 +7,6 @@ from __future__ import unicode_literals
 import time
 from abc import ABCMeta, abstractmethod
 
-from six import text_type, with_metaclass
-
 from prompt_toolkit.formatted_text import HTML, to_formatted_text
 from prompt_toolkit.formatted_text.utils import fragment_list_width
 from prompt_toolkit.layout.dimension import D
@@ -31,7 +29,7 @@ __all__ = [
 ]
 
 
-class Formatter(object, metaclass=ABCMeta):
+class Formatter(metaclass=ABCMeta):
     """
     Base class for any formatter.
     """

@@ -14,8 +14,6 @@ from __future__ import unicode_literals
 from abc import ABCMeta, abstractmethod
 from colorsys import hls_to_rgb, rgb_to_hls
 
-from six import with_metaclass
-
 from prompt_toolkit.cache import memoized
 from prompt_toolkit.filters import to_filter
 from prompt_toolkit.utils import to_float, to_str
@@ -36,7 +34,7 @@ __all__ = [
 ]
 
 
-class StyleTransformation(object, metaclass=ABCMeta):
+class StyleTransformation(metaclass=ABCMeta):
     """
     Base class for any style transformation.
     """

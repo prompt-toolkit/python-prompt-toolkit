@@ -5,9 +5,6 @@ from __future__ import unicode_literals
 
 from abc import ABCMeta, abstractmethod
 
-import six
-from six import with_metaclass
-
 from prompt_toolkit.selection import SelectionType
 
 __all__ = [
@@ -33,7 +30,7 @@ class ClipboardData:
         self.type = type
 
 
-class Clipboard(object, metaclass=ABCMeta):
+class Clipboard(metaclass=ABCMeta):
     """
     Abstract baseclass for clipboards.
     (An implementation can be in memory, it can share the X11 or Windows

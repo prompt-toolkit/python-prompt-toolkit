@@ -2,8 +2,6 @@ from __future__ import unicode_literals
 
 from abc import ABCMeta, abstractmethod
 
-from six import with_metaclass
-
 from prompt_toolkit.utils import test_callable_args
 
 __all__ = [
@@ -14,7 +12,7 @@ __all__ = [
 ]
 
 
-class Filter(object, metaclass=ABCMeta):
+class Filter(metaclass=ABCMeta):
     """
     Base class for any filter to activate/deactivate a feature, depending on a
     condition.

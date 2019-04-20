@@ -12,9 +12,6 @@ import array
 import errno
 import sys
 
-import six
-from six.moves import range
-
 from prompt_toolkit.layout.screen import Size
 from prompt_toolkit.output import Output
 from prompt_toolkit.styles.base import ANSI_COLOR_NAMES
@@ -362,7 +359,7 @@ def _get_size(fileno):
     import termios
 
     # Buffer for the C call
-    buf = array.array(b'h' if six.PY2 else 'h', [0, 0, 0, 0])
+    buf = array.array('h', [0, 0, 0, 0])
 
     # Do TIOCGWINSZ (Get)
     # Note: We should not pass 'True' as a fourth parameter to 'ioctl'. (True

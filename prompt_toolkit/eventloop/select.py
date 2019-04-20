@@ -8,8 +8,6 @@ import errno
 import select
 import sys
 
-import six
-
 __all__ = [
     'AutoSelector',
     'PollSelector',
@@ -28,7 +26,7 @@ def fd_to_int(fd):
         return fd.fileno()
 
 
-class Selector(object, metaclass=abc.ABCMeta):
+class Selector(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def register(self, fd):
         assert isinstance(fd, int)
@@ -90,7 +88,7 @@ class AutoSelector(Selector):
         if self._py3_selector:
             try:
                 return self._py3_selector.select(timeout)
-            except PermissionError:  # noqa  (PermissionError doesn't exist in Py2)
+            except PermissionError:
                 # We had a situation (in pypager) where epoll raised a
                 # PermissionError when a local file descriptor was registered,
                 # however poll and select worked fine. So, in that case, just

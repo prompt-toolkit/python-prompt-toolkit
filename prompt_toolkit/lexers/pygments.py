@@ -9,9 +9,6 @@ from __future__ import absolute_import, unicode_literals
 import re
 from abc import ABCMeta, abstractmethod
 
-from six import text_type, with_metaclass
-from six.moves import range
-
 from prompt_toolkit.filters import to_filter
 from prompt_toolkit.formatted_text.utils import split_lines
 from prompt_toolkit.styles.pygments import pygments_token_to_classname
@@ -26,7 +23,7 @@ __all__ = [
 ]
 
 
-class SyntaxSync(object, metaclass=ABCMeta):
+class SyntaxSync(metaclass=ABCMeta):
     """
     Syntax synchroniser. This is a tool that finds a start position for the
     lexer. This is especially important when editing big documents; we don't

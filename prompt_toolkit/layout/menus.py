@@ -1,8 +1,7 @@
 from __future__ import unicode_literals
 
 import math
-
-from six.moves import range, zip_longest
+from itertools import zip_longest
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.filters import (

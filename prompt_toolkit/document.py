@@ -8,9 +8,6 @@ import re
 import string
 import weakref
 
-import six
-from six.moves import map, range
-
 from .clipboard import ClipboardData
 from .filters import vi_mode
 from .selection import PasteMode, SelectionState, SelectionType

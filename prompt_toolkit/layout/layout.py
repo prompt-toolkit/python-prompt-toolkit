@@ -3,8 +3,6 @@ Wrapper for the layout.
 """
 from __future__ import unicode_literals
 
-import six
-
 from prompt_toolkit.buffer import Buffer
 
 from .containers import ConditionalContainer, Container, Window, to_container

@@ -8,8 +8,6 @@ import time
 from subprocess import Popen
 from traceback import format_tb
 
-import six
-
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.cache import SimpleCache
 from prompt_toolkit.clipboard import Clipboard, InMemoryClipboard

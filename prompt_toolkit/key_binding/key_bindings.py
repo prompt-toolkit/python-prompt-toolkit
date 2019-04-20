@@ -38,8 +38,6 @@ from __future__ import unicode_literals
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 
-from six import text_type, with_metaclass
-
 from prompt_toolkit.cache import SimpleCache
 from prompt_toolkit.filters import Never, to_filter
 from prompt_toolkit.keys import ALL_KEYS, KEY_ALIASES, Keys
@@ -83,7 +81,7 @@ class _Binding:
             self.__class__.__name__, self.keys, self.handler)
 
 
-class KeyBindingsBase(object, metaclass=ABCMeta):
+class KeyBindingsBase(metaclass=ABCMeta):
     """
     Interface for a KeyBindings.
     """
