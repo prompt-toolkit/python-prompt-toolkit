@@ -3,8 +3,6 @@
 Example usage of 'print_container', a tool to print
 any layout in a non-interactive way.
 """
-from __future__ import print_function, unicode_literals
-
 from prompt_toolkit.shortcuts import print_container
 from prompt_toolkit.widgets import Frame, TextArea
 

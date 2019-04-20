@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from contextlib import contextmanager
 
 from prompt_toolkit.eventloop.context import TaskLocal, TaskLocalNotSetError

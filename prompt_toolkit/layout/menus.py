@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import math
 from itertools import zip_longest
 

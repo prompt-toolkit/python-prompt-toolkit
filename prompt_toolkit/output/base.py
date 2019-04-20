@@ -1,8 +1,6 @@
 """
 Interface for an output.
 """
-from __future__ import unicode_literals
-
 from abc import ABCMeta, abstractmethod
 
 from prompt_toolkit.layout.screen import Size

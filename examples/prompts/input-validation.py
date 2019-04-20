@@ -2,8 +2,6 @@
 """
 Simple example of input validation.
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit import prompt
 from prompt_toolkit.validation import Validator
 

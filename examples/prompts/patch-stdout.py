@@ -5,8 +5,6 @@ An example that demonstrates how `patch_stdout` works.
 This makes sure that output from other threads doesn't disturb the rendering of
 the prompt, but instead is printed nicely above the prompt.
 """
-from __future__ import unicode_literals
-
 import threading
 import time
 

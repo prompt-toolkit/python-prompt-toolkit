@@ -1,8 +1,6 @@
 """
 Tools for running functions on the terminal above the current application or prompt.
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit.eventloop import (
     From,
     Future,

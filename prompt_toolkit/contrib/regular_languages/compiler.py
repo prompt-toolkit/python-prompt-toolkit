@@ -38,8 +38,6 @@ Partial matches are possible::
     m.variables().get('operator2')  # Returns "add"
 
 """
-from __future__ import unicode_literals
-
 import re
 
 from .regex_parser import (

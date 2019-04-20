@@ -14,8 +14,6 @@ Remarks:
 Limitations:
 - Lookahead is not supported.
 """
-from __future__ import unicode_literals
-
 import re
 
 __all__ = [

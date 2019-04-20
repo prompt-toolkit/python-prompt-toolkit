@@ -2,8 +2,6 @@
 `GrammarLexer` is compatible with other lexers and can be used to highlight
 the input using a regular grammar with annotations.
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit.document import Document
 from prompt_toolkit.formatted_text.utils import split_lines
 from prompt_toolkit.lexers import Lexer

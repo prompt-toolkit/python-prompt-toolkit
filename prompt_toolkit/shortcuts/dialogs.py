@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import functools
 
 from prompt_toolkit.application import Application

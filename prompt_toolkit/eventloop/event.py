@@ -1,8 +1,6 @@
 """
 Asyncronous event implementation.
 """
-from __future__ import unicode_literals
-
 from .future import Future
 
 __all__ = [

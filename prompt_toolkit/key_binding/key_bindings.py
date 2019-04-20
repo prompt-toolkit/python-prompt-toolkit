@@ -34,8 +34,6 @@ been assigned, through the `key_binding` decorator.::
     # Later, add it to the key bindings.
     kb.add(Keys.A, my_key_binding)
 """
-from __future__ import unicode_literals
-
 from abc import ABCMeta, abstractmethod, abstractproperty
 
 from prompt_toolkit.cache import SimpleCache

@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from prompt_toolkit.key_binding.key_processor import KeyPress
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout.screen import Point

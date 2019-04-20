@@ -1,8 +1,6 @@
 """
 Posix asyncio event loop.
 """
-from __future__ import unicode_literals
-
 import asyncio
 
 from .base import EventLoop

@@ -1,8 +1,6 @@
 """
 Base classes for prompt_toolkit lexers.
 """
-from __future__ import unicode_literals
-
 from abc import ABCMeta, abstractmethod
 
 __all__ = [

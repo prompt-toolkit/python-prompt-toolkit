@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from abc import ABCMeta, abstractmethod
 
 from prompt_toolkit.utils import test_callable_args

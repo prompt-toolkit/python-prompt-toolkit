@@ -6,8 +6,6 @@ the input in the :class:`~prompt_toolkit.inputstream.InputStream` instance.
 The `KeyProcessor` will according to the implemented keybindings call the
 correct callbacks when new key presses are feed through `feed`.
 """
-from __future__ import unicode_literals
-
 import time
 import weakref
 from collections import deque

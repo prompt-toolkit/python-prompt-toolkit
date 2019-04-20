@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import xml.dom.minidom as minidom
 
 from .base import FormattedText

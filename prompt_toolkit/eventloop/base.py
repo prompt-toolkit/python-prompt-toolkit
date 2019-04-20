@@ -7,8 +7,6 @@ A special thanks to asyncio (tulip), Twisted, Tornado and Trollius for setting
 a good example on how to implement event loops. Possible, in the future, we'll
 run entirely on top of asyncio, but right now, we're still supporting Python 2.
 """
-from __future__ import unicode_literals
-
 import sys
 from abc import ABCMeta, abstractmethod
 

@@ -2,8 +2,6 @@
 """
 Example of a message box window.
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit.shortcuts import message_dialog
 
 

@@ -9,8 +9,6 @@ When the UI is rendered, these transformations can be applied right after the
 style strings are turned into `Attrs` objects that represent the actual
 formatting.
 """
-from __future__ import unicode_literals
-
 from abc import ABCMeta, abstractmethod
 from colorsys import hls_to_rgb, rgb_to_hls
 

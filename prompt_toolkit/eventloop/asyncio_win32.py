@@ -4,8 +4,6 @@ Win32 asyncio event loop.
 Windows notes:
 - Somehow it doesn't seem to work with the 'ProactorEventLoop'.
 """
-from __future__ import unicode_literals
-
 import asyncio
 
 from .base import EventLoop

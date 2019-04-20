@@ -1,8 +1,6 @@
 """
 Key binding handlers for displaying completions.
 """
-from __future__ import unicode_literals
-
 import math
 
 from prompt_toolkit.application.run_in_terminal import (

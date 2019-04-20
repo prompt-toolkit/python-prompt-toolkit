@@ -22,8 +22,6 @@ There are two ways to detect when input is ready:
 An alternative to using input hooks, is to create a custom `EventLoop` class that
 controls everything.
 """
-from __future__ import unicode_literals
-
 import os
 import threading
 

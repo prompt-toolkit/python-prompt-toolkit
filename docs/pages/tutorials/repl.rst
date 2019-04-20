@@ -23,7 +23,6 @@ function as a good practise.
 
 .. code:: python
 
-    from __future__ import unicode_literals
     from prompt_toolkit import prompt
 
     def main():
@@ -55,7 +54,6 @@ respectively.
 
 .. code:: python
 
-    from __future__ import unicode_literals
     from prompt_toolkit import PromptSession
 
     def main():
@@ -92,7 +90,6 @@ wrapped into a :class:`~prompt_toolkit.lexers.PygmentsLexer`.
 
 .. code:: python
 
-    from __future__ import unicode_literals
     from prompt_toolkit import PromptSession
     from prompt_toolkit.lexers import PygmentsLexer
     from pygments.lexers.sql import SqlLexer
@@ -134,8 +131,7 @@ Like the lexer, this ``sql_completer`` instance can be passed to either the
 
 .. code:: python
 
-    from __future__ import unicode_literals
-    from prompt_toolkit import PromptSession
+        from prompt_toolkit import PromptSession
     from prompt_toolkit.completion import WordCompleter
     from prompt_toolkit.lexers import PygmentsLexer
     from pygments.lexers.sql import SqlLexer
@@ -195,7 +191,6 @@ function.
 
 .. code:: python
 
-    from __future__ import unicode_literals
     from prompt_toolkit import PromptSession
     from prompt_toolkit.completion import WordCompleter
     from prompt_toolkit.lexers import PygmentsLexer
@@ -266,7 +261,6 @@ gives a good idea of how to get started.
 .. code:: python
 
     #!/usr/bin/env python
-    from __future__ import unicode_literals
     import sys
     import sqlite3
 

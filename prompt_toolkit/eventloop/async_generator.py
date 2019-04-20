@@ -15,8 +15,6 @@ from Python 3 (and asyncio).
         yield AsyncGeneratorItem(some_value)
         ...
 """
-from __future__ import unicode_literals
-
 from queue import Queue
 from threading import RLock
 

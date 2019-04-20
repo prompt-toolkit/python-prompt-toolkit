@@ -2,8 +2,6 @@
 Input validation for a `Buffer`.
 (Validators will be called before accepting input.)
 """
-from __future__ import unicode_literals
-
 from abc import ABCMeta, abstractmethod
 
 from .eventloop import Future, run_in_executor

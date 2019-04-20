@@ -7,8 +7,6 @@ Progress bar implementation on top of prompt_toolkit.
         for item in pb(data):
             ...
 """
-from __future__ import unicode_literals
-
 import contextlib
 import datetime
 import functools

@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from prompt_toolkit.formatted_text import (
     ANSI,
     HTML,

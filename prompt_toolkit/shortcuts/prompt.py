@@ -24,8 +24,6 @@ Example::
         s = PromptSession()
         result = s.prompt('Say something: ')
 """
-from __future__ import unicode_literals
-
 import contextlib
 import threading
 import time

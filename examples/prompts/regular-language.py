@@ -12,8 +12,6 @@ Type for instance::
 This example shows how you can define the grammar of a regular language and how
 to use variables in this grammar with completers and tokens attached.
 """
-from __future__ import unicode_literals
-
 import math
 
 from prompt_toolkit import prompt

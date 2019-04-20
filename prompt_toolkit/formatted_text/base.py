@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 __all__ = [
     'to_formatted_text',
     'is_formatted_text',

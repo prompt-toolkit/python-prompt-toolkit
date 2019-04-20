@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-
-
 class EditingMode:
     # The set of key bindings that is active.
     VI = 'VI'

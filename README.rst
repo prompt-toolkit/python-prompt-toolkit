@@ -110,10 +110,6 @@ examples are chosen to demonstrate only one thing. Also, don't be afraid to
 look at the source code. The implementation of the ``prompt`` function could be
 a good start.
 
-Note for Python 2: all strings are expected to be unicode strings. So, either
-put a small ``u`` in front of every string or put ``from __future__ import
-unicode_literals`` at the start of the above example.
-
 
 Projects using prompt_toolkit
 *****************************

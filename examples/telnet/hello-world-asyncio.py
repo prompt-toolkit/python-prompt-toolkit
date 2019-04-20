@@ -8,8 +8,6 @@ WARNING: This is experimental! Prompt_toolkit TaskLocals don't work together
          with asyncio coroutines. This is also why we have to specify the
          output and input manually.
 """
-from __future__ import unicode_literals
-
 import asyncio
 import logging
 

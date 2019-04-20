@@ -3,8 +3,6 @@
 Demonstration of a custom completer wrapped in a `FuzzyCompleter` for fuzzy
 matching.
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit.completion import Completer, Completion, FuzzyCompleter
 from prompt_toolkit.output.color_depth import ColorDepth
 from prompt_toolkit.shortcuts import CompleteStyle, prompt

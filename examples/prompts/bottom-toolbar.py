@@ -10,8 +10,6 @@ The bottom toolbar will always receive the style 'bottom-toolbar', and the text
 inside will get 'bottom-toolbar.text'. These can be used to change the default
 style.
 """
-from __future__ import unicode_literals
-
 import time
 
 from prompt_toolkit import prompt

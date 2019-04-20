@@ -1,8 +1,6 @@
 """
 Future implementation for the prompt_toolkit eventloop.
 """
-from __future__ import print_function, unicode_literals
-
 from .base import EventLoop
 from .context import context, get_context_id
 from .defaults import get_event_loop

@@ -13,8 +13,6 @@ See the examples directory to learn about the usage.
 Probably, to get started, you might also want to have a look at
 `prompt_toolkit.shortcuts.prompt`.
 """
-from __future__ import unicode_literals
-
 from .application import Application
 from .formatted_text import ANSI, HTML
 from .shortcuts import PromptSession, print_formatted_text, prompt

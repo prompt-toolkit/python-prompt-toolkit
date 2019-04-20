@@ -1,8 +1,6 @@
 """
 Selectors for the Posix event loop.
 """
-from __future__ import absolute_import, unicode_literals
-
 import abc
 import errno
 import select

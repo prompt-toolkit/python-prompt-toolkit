@@ -2,8 +2,6 @@
 """
 A simple example of a a text area displaying "Hello World!".
 """
-from __future__ import unicode_literals
-
 import asyncio
 
 from prompt_toolkit.application import Application

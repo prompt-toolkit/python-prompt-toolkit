@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from .application import Application
 from .current import NoRunningApplicationError, get_app, set_app
 from .dummy import DummyApplication

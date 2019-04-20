@@ -3,8 +3,6 @@
 Autocompletion example that displays the autocompletions like readline does by
 binding a custom handler to the Tab key.
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.shortcuts import CompleteStyle, prompt
 

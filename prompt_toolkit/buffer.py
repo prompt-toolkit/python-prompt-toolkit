@@ -2,8 +2,6 @@
 Data structures for the Buffer.
 It holds the text, cursor position, history, etc...
 """
-from __future__ import unicode_literals
-
 import os
 import re
 import shlex

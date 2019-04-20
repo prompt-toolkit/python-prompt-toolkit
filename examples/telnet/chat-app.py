@@ -4,8 +4,6 @@ A simple chat application over telnet.
 Everyone that connects is asked for his name, and then people can chat with
 each other.
 """
-from __future__ import unicode_literals
-
 import logging
 import random
 

@@ -21,8 +21,6 @@ A new scope can be created as follows::
 Within this scope, a new value can be assigned, which is only visible within
 the scope. The scope as passed along when code is sent to an executor and back.
 """
-from __future__ import unicode_literals
-
 from functools import wraps
 from threading import local
 

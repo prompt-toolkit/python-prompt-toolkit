@@ -5,8 +5,6 @@ This are separate bindings, because GNU readline doesn't have them, but
 they are very useful for navigating through long multiline buffers, like in
 Vi, Emacs, etc...
 """
-from __future__ import unicode_literals
-
 __all__ = [
     'scroll_forward',
     'scroll_backward',

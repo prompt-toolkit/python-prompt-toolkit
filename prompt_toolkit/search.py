@@ -5,8 +5,6 @@ For the key bindings implementation with attached filters, check
 `prompt_toolkit.key_binding.bindings.search`. (Use these for new key bindings
 instead of calling these function directly.)
 """
-from __future__ import unicode_literals
-
 from .application.current import get_app
 from .filters import is_searching, to_filter
 from .key_binding.vi_state import InputMode

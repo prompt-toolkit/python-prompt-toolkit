@@ -1,5 +1,3 @@
-from __future__ import absolute_import, unicode_literals
-
 import pyperclip
 from prompt_toolkit.selection import SelectionType
 

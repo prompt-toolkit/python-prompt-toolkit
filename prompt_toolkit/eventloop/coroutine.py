@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import types
 
 from prompt_toolkit.eventloop.defaults import get_event_loop

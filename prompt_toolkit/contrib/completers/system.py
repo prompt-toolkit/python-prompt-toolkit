@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from prompt_toolkit.completion.filesystem import (
     ExecutableCompleter,
     PathCompleter,

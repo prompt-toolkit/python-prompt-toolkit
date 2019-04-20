@@ -6,8 +6,6 @@ NOTE: Notice that there is no `DynamicHistory`. This doesn't work well, because
       when a history entry is loaded. This loading can be done asynchronously
       and making the history swappable would probably break this.
 """
-from __future__ import unicode_literals
-
 import datetime
 import os
 from abc import ABCMeta, abstractmethod

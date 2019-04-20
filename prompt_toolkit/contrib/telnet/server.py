@@ -1,8 +1,6 @@
 """
 Telnet server.
 """
-from __future__ import unicode_literals
-
 import inspect
 import socket
 import sys

@@ -3,8 +3,6 @@
 Example of a telnet application that displays a bottom toolbar and completions
 in the prompt.
 """
-from __future__ import unicode_literals
-
 import logging
 
 from prompt_toolkit.completion import WordCompleter

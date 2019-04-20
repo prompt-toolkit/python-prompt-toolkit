@@ -2,8 +2,6 @@
 Container for the layout.
 (Containers can contain other containers or user interface controls.)
 """
-from __future__ import unicode_literals
-
 from abc import ABCMeta, abstractmethod
 from collections.abc import Sequence
 from functools import partial

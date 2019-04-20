@@ -5,8 +5,6 @@ from a buffer before the BufferControl will render it to the screen.
 They can insert fragments before or after, or highlight fragments by replacing the
 fragment types.
 """
-from __future__ import unicode_literals
-
 import re
 from abc import ABCMeta, abstractmethod
 

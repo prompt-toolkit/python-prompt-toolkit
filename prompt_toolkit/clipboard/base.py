@@ -1,8 +1,6 @@
 """
 Clipboard for command line interface.
 """
-from __future__ import unicode_literals
-
 from abc import ABCMeta, abstractmethod
 
 from prompt_toolkit.selection import SelectionType

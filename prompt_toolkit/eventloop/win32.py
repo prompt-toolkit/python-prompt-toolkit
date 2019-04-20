@@ -1,8 +1,6 @@
 """
 Win32 event loop.
 """
-from __future__ import unicode_literals
-
 import msvcrt
 from ctypes import pointer, windll
 from ctypes.wintypes import BOOL, DWORD, HANDLE

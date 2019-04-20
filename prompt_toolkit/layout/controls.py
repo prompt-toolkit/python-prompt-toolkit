@@ -1,8 +1,6 @@
 """
 User interface Controls for the layout.
 """
-from __future__ import unicode_literals
-
 import time
 from abc import ABCMeta, abstractmethod
 from collections import namedtuple

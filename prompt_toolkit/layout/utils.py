@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 __all__ = [
     'explode_text_fragments',
 ]

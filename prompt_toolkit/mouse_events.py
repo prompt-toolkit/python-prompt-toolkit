@@ -15,8 +15,6 @@ through the `Window` class where the coordinates are translated from absolute
 coordinates to coordinates relative to the user control, and there
 `UIControl.mouse_handler` is called.
 """
-from __future__ import unicode_literals
-
 __all__ = [
     'MouseEventType',
     'MouseEvent'

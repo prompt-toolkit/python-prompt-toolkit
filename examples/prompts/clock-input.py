@@ -2,8 +2,6 @@
 """
 Example of a 'dynamic' prompt. On that shows the current time in the prompt.
 """
-from __future__ import unicode_literals
-
 import datetime
 
 from prompt_toolkit.shortcuts import prompt

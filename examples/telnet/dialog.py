@@ -2,8 +2,6 @@
 """
 Example of a telnet application that displays a dialog window.
 """
-from __future__ import unicode_literals
-
 import logging
 
 from prompt_toolkit.contrib.telnet.server import TelnetServer

@@ -12,8 +12,6 @@ container object.
     guarantees are made yet). The public API in
     `prompt_toolkit.shortcuts.dialogs` on the other hand is considered stable.
 """
-from __future__ import unicode_literals
-
 from functools import partial
 
 from prompt_toolkit.application.current import get_app

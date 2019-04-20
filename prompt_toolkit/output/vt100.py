@@ -6,8 +6,6 @@ A lot of thanks, regarding outputting of colors, goes to the Pygments project:
 everything has been highly optimized.)
 http://pygments.org/
 """
-from __future__ import unicode_literals
-
 import array
 import errno
 import sys

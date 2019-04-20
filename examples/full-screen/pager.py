@@ -2,8 +2,6 @@
 """
 A simple application that shows a Pager application.
 """
-from __future__ import unicode_literals
-
 from pygments.lexers.python import PythonLexer
 
 from prompt_toolkit.application import Application

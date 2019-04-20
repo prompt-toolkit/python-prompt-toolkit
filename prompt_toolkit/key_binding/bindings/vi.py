@@ -1,6 +1,4 @@
 # pylint: disable=function-redefined
-from __future__ import unicode_literals
-
 import codecs
 import string
 from itertools import accumulate

@@ -7,8 +7,6 @@ styling.
 This also demonstrates that the `title` argument can be any kind of formatted
 text.
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.shortcuts import message_dialog
 from prompt_toolkit.styles import Style

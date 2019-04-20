@@ -2,8 +2,6 @@
 """
 Example of multiple individual completers that are combined into one.
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import (
     Completer,

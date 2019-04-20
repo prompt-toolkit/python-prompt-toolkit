@@ -4,8 +4,6 @@ Default key bindings.::
     key_bindings = load_key_bindings()
     app = Application(key_bindings=key_bindings)
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit.filters import buffer_has_focus
 from prompt_toolkit.key_binding.bindings.basic import load_basic_bindings
 from prompt_toolkit.key_binding.bindings.cpr import load_cpr_bindings

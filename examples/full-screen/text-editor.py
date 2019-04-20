@@ -2,8 +2,6 @@
 """
 A simple example of a Notepad-like text editor.
 """
-from __future__ import unicode_literals
-
 import datetime
 
 from prompt_toolkit.application import Application

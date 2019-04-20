@@ -1,8 +1,6 @@
 """
 The base classes for the styling.
 """
-from __future__ import absolute_import, unicode_literals
-
 from abc import ABCMeta, abstractmethod, abstractproperty
 from collections import namedtuple
 

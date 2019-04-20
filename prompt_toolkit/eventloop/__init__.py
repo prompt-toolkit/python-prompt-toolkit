@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from .async_generator import (
     AsyncGeneratorItem,
     consume_async_generator,

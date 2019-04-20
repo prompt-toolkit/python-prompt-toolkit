@@ -44,8 +44,6 @@ And one prepared menu:
 - CompletionsMenu
 
 """
-from __future__ import unicode_literals
-
 from .containers import (
     ColorColumn,
     ConditionalContainer,

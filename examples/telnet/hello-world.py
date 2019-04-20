@@ -6,8 +6,6 @@ The interaction function is a prompt_toolkit coroutine.
 Also see the `hello-world-asyncio.py` example which uses an asyncio coroutine.
 That is probably the preferred way if you only need Python 3 support.
 """
-from __future__ import unicode_literals
-
 import logging
 
 from prompt_toolkit.contrib.telnet.server import TelnetServer

@@ -1,6 +1,4 @@
 # pylint: disable=function-redefined
-from __future__ import unicode_literals
-
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.filters import (
     Condition,

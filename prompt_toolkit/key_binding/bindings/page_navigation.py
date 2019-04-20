@@ -2,8 +2,6 @@
 Key bindings for extra page navigation: bindings for up/down scrolling through
 long pages, like in Emacs or Vi.
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit.filters import buffer_has_focus, emacs_mode, vi_mode
 from prompt_toolkit.key_binding.key_bindings import (
     ConditionalKeyBindings,

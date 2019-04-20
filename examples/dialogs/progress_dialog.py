@@ -2,8 +2,6 @@
 """
 Example of a progress bar dialog.
 """
-from __future__ import unicode_literals
-
 import os
 import time
 

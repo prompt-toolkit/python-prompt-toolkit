@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from ctypes import byref, windll
 from ctypes.wintypes import DWORD
 

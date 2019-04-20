@@ -26,33 +26,21 @@ The print function can be imported as follows:
 
 .. code:: python
 
-    from __future__ import unicode_literals
     from prompt_toolkit import print_formatted_text
 
     print_formatted_text('Hello world')
 
 .. note::
 
-    `prompt_toolkit` expects unicode strings everywhere. If you are using
-    Python 2, make sure that all strings which are passed to `prompt_toolkit`
-    are unicode strings (and not bytes). Either use
-    ``from __future__ import unicode_literals`` or explicitly put a small
-    ``'u'`` in front of every string.
+    `prompt_toolkit` expects unicode strings everywhere.
 
 You can replace the built in ``print`` function as follows, if you want to.
 
 .. code:: python
 
-    from __future__ import unicode_literals, print_function
     from prompt_toolkit import print_formatted_text as print
 
     print('Hello world')
-
-.. note::
-
-    If you're using Python 2, make sure to add ``from __future__ import
-    print_function``. Otherwise, it will not be possible to import a function
-    named ``print``.
 
 .. _formatted_text:
 
@@ -81,7 +69,6 @@ italic and underline: ``<b>``, ``<i>`` and ``<u>``.
 
 .. code:: python
 
-    from __future__ import unicode_literals, print_function
     from prompt_toolkit import print_formatted_text, HTML
 
     print_formatted_text(HTML('<b>This is bold</b>'))
@@ -114,7 +101,6 @@ assign a style for a custom tag.
 
 .. code:: python
 
-    from __future__ import unicode_literals, print_function
     from prompt_toolkit import print_formatted_text, HTML
     from prompt_toolkit.styles import Style
 
@@ -137,7 +123,6 @@ class takes care of that.
 
 .. code:: python
 
-    from __future__ import unicode_literals, print_function
     from prompt_toolkit import print_formatted_text, ANSI
 
     print_formatted_text(ANSI('\x1b[31mhello \x1b[32mworld'))
@@ -160,7 +145,6 @@ way of expressing formatted text.
 
 .. code:: python
 
-    from __future__ import unicode_literals, print_function
     from prompt_toolkit import print_formatted_text
     from prompt_toolkit.formatted_text import FormattedText
 
@@ -177,7 +161,6 @@ possible to use class names, and separate the styling in a style sheet.
 
 .. code:: python
 
-    from __future__ import unicode_literals, print_function
     from prompt_toolkit import print_formatted_text
     from prompt_toolkit.formatted_text import FormattedText
     from prompt_toolkit.styles import Style

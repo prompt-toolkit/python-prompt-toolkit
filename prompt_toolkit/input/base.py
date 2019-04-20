@@ -1,8 +1,6 @@
 """
 Abstraction of CLI Input.
 """
-from __future__ import unicode_literals
-
 from abc import ABCMeta, abstractmethod, abstractproperty
 from contextlib import contextmanager
 

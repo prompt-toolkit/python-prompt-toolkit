@@ -2,8 +2,6 @@
 Formatter classes for the progress bar.
 Each progress bar consists of a list of these formatters.
 """
-from __future__ import unicode_literals
-
 import time
 from abc import ABCMeta, abstractmethod
 
