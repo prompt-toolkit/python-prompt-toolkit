@@ -3,8 +3,6 @@ Future implementation for the prompt_toolkit eventloop.
 """
 from __future__ import print_function, unicode_literals
 
-import sys
-
 from .base import EventLoop
 from .context import context, get_context_id
 from .defaults import get_event_loop
@@ -41,21 +39,16 @@ class Future(object):
         # applications, attached to different outputs.)
         self._ctx_id = get_context_id()
 
-    # Thanks to asyncio for the following destructor!
-    # On Python 3.3 and older, objects with a destructor part of a reference
-    # cycle are never destroyed. It's not more the case on Python 3.4 thanks
-    # to the PEP 442.
-    if sys.version_info >= (3, 4):
-        def __del__(self):
-            if self._exception and not self._retrieved_result:
-                exc = self._exception
-                context = {
-                    'message': ('%s exception was never retrieved'
-                                % self.__class__.__name__),
-                    'exception': exc,
-                    'future': self,
-                }
-                self.loop.call_exception_handler(context)
+    def __del__(self):
+        if self._exception and not self._retrieved_result:
+            exc = self._exception
+            context = {
+                'message': ('%s exception was never retrieved'
+                            % self.__class__.__name__),
+                'exception': exc,
+                'future': self,
+            }
+            self.loop.call_exception_handler(context)
 
     @classmethod
     def succeed(cls, result):

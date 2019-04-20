@@ -45,7 +45,7 @@ Some features:
 - Both Emacs and Vi key bindings. (Similar to readline.)
 - Even some advanced Vi functionality, like named registers and digraphs.
 - Reverse and forward incremental search.
-- Runs on all Python versions from 2.6 up to 3.7.
+- Runs on Python 3.3+.
 - Works well with Unicode double width characters. (Chinese input.)
 - Selecting text for copy/paste. (Both Emacs and Vi style.)
 - Support for `bracketed paste <https://cirw.in/blog/bracketed-paste>`_.
