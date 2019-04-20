@@ -5,6 +5,7 @@ Container for the layout.
 from __future__ import unicode_literals
 
 from abc import ABCMeta, abstractmethod
+from collections.abc import Sequence
 from functools import partial
 
 from prompt_toolkit.application.current import get_app
@@ -29,11 +30,6 @@ from .dimension import (
 from .margins import Margin
 from .screen import _CHAR_CACHE, Point, WritePosition
 from .utils import explode_text_fragments
-
-try:
-    from collections.abc import Sequence
-except ImportError:
-    from collections import Sequence
 
 __all__ = [
     'Container',

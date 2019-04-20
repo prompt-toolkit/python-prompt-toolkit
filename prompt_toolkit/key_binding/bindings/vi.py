@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import codecs
 import string
+from itertools import accumulate
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import indent, reshape_text, unindent
@@ -38,16 +39,6 @@ from prompt_toolkit.selection import PasteMode, SelectionState, SelectionType
 
 from ..key_bindings import ConditionalKeyBindings, KeyBindings, KeyBindingsBase
 from .named_commands import get_by_name
-
-try:
-    from itertools import accumulate
-except ImportError:  # < Python 3.2
-    def accumulate(iterable):
-        " Super simple 'accumulate' implementation. "
-        total = 0
-        for item in iterable:
-            total += item
-            yield total
 
 __all__ = [
     'load_vi_bindings',
