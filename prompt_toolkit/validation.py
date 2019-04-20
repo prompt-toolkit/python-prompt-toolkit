@@ -34,7 +34,7 @@ class ValidationError(Exception):
         self.message = message
 
     def __repr__(self):
-        return '%s(cursor_position=%r, message=%r)' % (
+        return '{}(cursor_position={!r}, message={!r})'.format(
             self.__class__.__name__, self.cursor_position, self.message)
 
 
@@ -108,7 +108,7 @@ class _ValidatorFromCallable(Validator):
         self.move_cursor_to_end = move_cursor_to_end
 
     def __repr__(self):
-        return 'Validator.from_callable(%r)' % (self.func, )
+        return 'Validator.from_callable({!r})'.format(self.func)
 
     def validate(self, document):
         if not self.func(document.text):

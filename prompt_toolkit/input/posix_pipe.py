@@ -67,4 +67,4 @@ class PosixPipeInput(Vt100Input):
         """
         This needs to be unique for every `PipeInput`.
         """
-        return 'pipe-input-%s' % (self._id, )
+        return 'pipe-input-{}'.format(self._id)

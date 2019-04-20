@@ -34,9 +34,9 @@ def to_formatted_text(value, style='', auto_convert=False):
     elif isinstance(value, list):
         if len(value):
             assert isinstance(value[0][0], six.text_type), \
-                'Expecting string, got: %r' % (value[0][0], )
+                'Expecting string, got: {!r}'.format(value[0][0])
             assert isinstance(value[0][1], six.text_type), \
-                'Expecting string, got: %r' % (value[0][1], )
+                'Expecting string, got: {!r}'.format(value[0][1])
 
         result = value
     elif hasattr(value, '__pt_formatted_text__'):

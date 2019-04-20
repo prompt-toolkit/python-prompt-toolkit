@@ -81,7 +81,7 @@ class FuzzyCompleter(Completer):
 
         fuzzy_matches = []
         pat = '.*?'.join(map(re.escape, word_before_cursor))
-        pat = '(?=({0}))'.format(pat)   # lookahead regex to manage overlapping matches
+        pat = '(?=({}))'.format(pat)   # lookahead regex to manage overlapping matches
         regex = re.compile(pat, re.IGNORECASE)
         for compl in completions:
             matches = list(regex.finditer(compl.text))

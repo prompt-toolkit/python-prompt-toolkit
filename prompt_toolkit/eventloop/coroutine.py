@@ -22,7 +22,7 @@ def ensure_future(future_or_coroutine):
     elif isinstance(future_or_coroutine, types.GeneratorType):
         return _run_coroutine(future_or_coroutine)
     else:
-        raise ValueError('Expecting coroutine or Future object. Got %r: %r' % (
+        raise ValueError('Expecting coroutine or Future object. Got {!r}: {!r}'.format(
                          type(future_or_coroutine), future_or_coroutine))
 
 
@@ -37,7 +37,7 @@ class Return(Exception):
         self.value = value
 
     def __repr__(self):
-        return 'Return(%r)' % (self.value, )
+        return 'Return({!r})'.format(self.value)
 
 
 def From(obj):
@@ -107,7 +107,7 @@ def _run_coroutine(coroutine):
             ref.forget()
         else:
             # Process yielded value from coroutine.
-            assert isinstance(new_f, Future), 'got %r' % (new_f, )
+            assert isinstance(new_f, Future), 'got {!r}'.format(new_f)
 
             @new_f.add_done_callback
             def continue_(_):

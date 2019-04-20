@@ -157,7 +157,7 @@ class Win32Output(Output):
             return func(*a, **kw)
         except ArgumentError as e:
             if _DEBUG_RENDER_OUTPUT:
-                self.LOG.write(('    Error in %r %r %s\n' % (func.__name__, e, e)).encode('utf-8'))
+                self.LOG.write(('    Error in {!r} {!r} {}\n'.format(func.__name__, e, e)).encode('utf-8'))
 
     def get_win32_screen_buffer_info(self):
         """

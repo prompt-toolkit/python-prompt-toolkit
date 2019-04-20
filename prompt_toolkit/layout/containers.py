@@ -957,9 +957,9 @@ class WindowRenderInfo(object):
 
     @property
     def visible_line_to_input_line(self):
-        return dict(
-            (visible_line, rowcol[0])
-            for visible_line, rowcol in self.visible_line_to_row_col.items())
+        return {
+            visible_line: rowcol[0]
+            for visible_line, rowcol in self.visible_line_to_row_col.items()}
 
     @property
     def cursor_position(self):
@@ -1138,7 +1138,7 @@ class ScrollOffsets(object):
         return to_int(self._right)
 
     def __repr__(self):
-        return 'ScrollOffsets(top=%r, bottom=%r, left=%r, right=%r)' % (
+        return 'ScrollOffsets(top={!r}, bottom={!r}, left={!r}, right={!r})'.format(
             self._top, self._bottom, self._left, self._right)
 
 
@@ -1516,7 +1516,7 @@ class Window(Container):
                 return
 
             # Find row/col position first.
-            yx_to_rowcol = dict((v, k) for k, v in rowcol_to_yx.items())
+            yx_to_rowcol = {v: k for k, v in rowcol_to_yx.items()}
             y = mouse_event.position.y
             x = mouse_event.position.x
 
@@ -2173,7 +2173,7 @@ class ConditionalContainer(Container):
         self.filter = to_filter(filter)
 
     def __repr__(self):
-        return 'ConditionalContainer(%r, filter=%r)' % (self.content, self.filter)
+        return 'ConditionalContainer({!r}, filter={!r})'.format(self.content, self.filter)
 
     def reset(self):
         self.content.reset()
@@ -2270,7 +2270,7 @@ def to_window(container):
     elif hasattr(container, '__pt_container__'):
         return to_window(container.__pt_container__())
     else:
-        raise ValueError('Not a Window object: %r.' % (container, ))
+        raise ValueError('Not a Window object: {!r}.'.format(container))
 
 
 def is_container(value):

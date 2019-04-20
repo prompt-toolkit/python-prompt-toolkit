@@ -293,7 +293,7 @@ class FormattedTextControl(UIControl):
         return self.focusable()
 
     def __repr__(self):
-        return '%s(%r)' % (self.__class__.__name__, self.text)
+        return '{}({!r})'.format(self.__class__.__name__, self.text)
 
     def _get_formatted_text_cached(self):
         """
@@ -466,7 +466,7 @@ class BufferControl(UIControl):
         assert input_processors is None or isinstance(input_processors, list)
         assert isinstance(include_default_input_processors, bool)
         assert menu_position is None or callable(menu_position)
-        assert lexer is None or isinstance(lexer, Lexer), 'Got %r' % (lexer, )
+        assert lexer is None or isinstance(lexer, Lexer), 'Got {!r}'.format(lexer)
         assert (search_buffer_control is None or
                 callable(search_buffer_control) or
                 isinstance(search_buffer_control, SearchBufferControl))
@@ -503,7 +503,7 @@ class BufferControl(UIControl):
         self._last_get_processed_line = None
 
     def __repr__(self):
-        return '<%s buffer=%r at %r>' % (self.__class__.__name__, self.buffer, id(self))
+        return '<{} buffer={!r} at {!r}>'.format(self.__class__.__name__, self.buffer, id(self))
 
     @property
     def search_buffer_control(self):

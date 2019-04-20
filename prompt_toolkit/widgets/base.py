@@ -757,7 +757,7 @@ class ProgressBar(object):
     def percentage(self, value):
         assert isinstance(value, int)
         self._percentage = value
-        self.label.text = '{0}%'.format(value)
+        self.label.text = '{}%'.format(value)
 
     def __pt_container__(self):
         return self.container

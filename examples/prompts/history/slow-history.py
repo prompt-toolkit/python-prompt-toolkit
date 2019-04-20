@@ -20,7 +20,7 @@ class SlowHistory(History):
     def load_history_strings(self):
         for i in range(1000):
             time.sleep(1)  # Emulate slowness.
-            yield 'item-%s' % (i, )
+            yield 'item-{}'.format(i)
 
     def store_string(self, string):
         pass  # Don't store strings.

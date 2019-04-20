@@ -72,7 +72,7 @@ class CompletionState(object):
         self.complete_index = complete_index  # Position in the `_completions` array.
 
     def __repr__(self):
-        return '%s(%r, <%r> completions, index=%r)' % (
+        return '{}({!r}, <{!r}> completions, index={!r})'.format(
             self.__class__.__name__,
             self.original_document, len(self.completions), self.complete_index)
 
@@ -129,7 +129,7 @@ class YankNthArgState(object):
         self.n = n
 
     def __repr__(self):
-        return '%s(history_position=%r, n=%r, previous_inserted_word=%r)' % (
+        return '{}(history_position={!r}, n={!r}, previous_inserted_word={!r})'.format(
             self.__class__.__name__, self.history_position, self.n,
             self.previous_inserted_word)
 
@@ -274,7 +274,7 @@ class Buffer(object):
         else:
             text = self.text[:12] + '...'
 
-        return '<Buffer(name=%r, text=%r) at %r>' % (self.name, text, id(self))
+        return '<Buffer(name={!r}, text={!r}) at {!r}>'.format(self.name, text, id(self))
 
     def reset(self, document=None, append_to_history=False):
         """
@@ -834,7 +834,7 @@ class Buffer(object):
                         if i == self.working_index:
                             display_meta = "Current, line %s" % (j + 1)
                         else:
-                            display_meta = "History %s, line %s" % (i + 1, j + 1)
+                            display_meta = "History {}, line {}".format(i + 1, j + 1)
 
                         completions.append(Completion(
                             l,

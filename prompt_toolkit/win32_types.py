@@ -20,7 +20,7 @@ class COORD(Structure):
     ]
 
     def __repr__(self):
-        return '%s(X=%r, Y=%r, type_x=%r, type_y=%r)' % (
+        return '{}(X={!r}, Y={!r}, type_x={!r}, type_y={!r})'.format(
             self.__class__.__name__, self.X, self.Y, type(self.X), type(self.Y))
 
 

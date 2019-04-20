@@ -362,7 +362,7 @@ def _get_size(fileno):
     import termios
 
     # Buffer for the C call
-    buf = array.array(b'h' if six.PY2 else u'h', [0, 0, 0, 0])
+    buf = array.array(b'h' if six.PY2 else 'h', [0, 0, 0, 0])
 
     # Do TIOCGWINSZ (Get)
     # Note: We should not pass 'True' as a fourth parameter to 'ioctl'. (True

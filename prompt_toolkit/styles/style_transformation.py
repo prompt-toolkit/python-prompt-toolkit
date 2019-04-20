@@ -53,7 +53,7 @@ class StyleTransformation(with_metaclass(ABCMeta, object)):
         """
         When this changes, the cache should be invalidated.
         """
-        return '%s-%s' % (self.__class__.__name__, id(self))
+        return '{}-{}'.format(self.__class__.__name__, id(self))
 
 
 class SwapLightAndDarkStyleTransformation(StyleTransformation):
@@ -173,7 +173,7 @@ class AdjustBrightnessStyleTransformation(StyleTransformation):
             brightness = self._interpolate_brightness(
                 brightness, min_brightness, max_brightness)
             r, g, b = hls_to_rgb(hue, brightness, saturation)
-            new_color = '%02x%02x%02x' % (
+            new_color = '{:02x}{:02x}{:02x}'.format(
                 int(r * 255),
                 int(g * 255),
                 int(b * 255))
@@ -355,4 +355,4 @@ def get_opposite_color(colorname):
         g = int(g * 255)
         b = int(b * 255)
 
-        return '%02x%02x%02x' % (r, g, b)
+        return '{:02x}{:02x}{:02x}'.format(r, g, b)

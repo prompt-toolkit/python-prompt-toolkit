@@ -62,10 +62,10 @@ class Completion(object):
 
     def __repr__(self):
         if self.display == self.text:
-            return '%s(text=%r, start_position=%r)' % (
+            return '{}(text={!r}, start_position={!r})'.format(
                 self.__class__.__name__, self.text, self.start_position)
         else:
-            return '%s(text=%r, start_position=%r, display=%r)' % (
+            return '{}(text={!r}, start_position={!r}, display={!r})'.format(
                 self.__class__.__name__, self.text, self.start_position,
                 self.display)
 
@@ -136,7 +136,7 @@ class CompleteEvent(object):
         self.completion_requested = completion_requested
 
     def __repr__(self):
-        return '%s(text_inserted=%r, completion_requested=%r)' % (
+        return '{}(text_inserted={!r}, completion_requested={!r})'.format(
             self.__class__.__name__, self.text_inserted, self.completion_requested)
 
 
@@ -189,7 +189,7 @@ class ThreadedCompleter(Completer):
     can already select a completion, even if not all completions are displayed.
     """
     def __init__(self, completer=None):
-        assert isinstance(completer, Completer), 'Got %r' % (completer, )
+        assert isinstance(completer, Completer), 'Got {!r}'.format(completer)
         self.completer = completer
 
     def get_completions(self, document, complete_event):
@@ -204,7 +204,7 @@ class ThreadedCompleter(Completer):
             lambda: self.completer.get_completions(document, complete_event))
 
     def __repr__(self):
-        return 'ThreadedCompleter(%r)' % (self.completer, )
+        return 'ThreadedCompleter({!r})'.format(self.completer)
 
 
 class DummyCompleter(Completer):
@@ -237,7 +237,7 @@ class DynamicCompleter(Completer):
         return completer.get_completions_async(document, complete_event)
 
     def __repr__(self):
-        return 'DynamicCompleter(%r -> %r)' % (
+        return 'DynamicCompleter({!r} -> {!r})'.format(
             self.get_completer, self.get_completer())
 
 

@@ -55,7 +55,7 @@ class SearchState(object):
         self.ignore_case = ignore_case
 
     def __repr__(self):
-        return '%s(%r, direction=%r, ignore_case=%r)' % (
+        return '{}({!r}, direction={!r}, ignore_case={!r})'.format(
             self.__class__.__name__, self.text, self.direction, self.ignore_case)
 
     def __invert__(self):
@@ -189,5 +189,5 @@ def _get_reverse_search_links(layout):
     """
     Return mapping from BufferControl to SearchBufferControl.
     """
-    return dict((buffer_control, search_buffer_control)
-            for search_buffer_control, buffer_control in layout.search_links.items())
+    return {buffer_control: search_buffer_control
+            for search_buffer_control, buffer_control in layout.search_links.items()}

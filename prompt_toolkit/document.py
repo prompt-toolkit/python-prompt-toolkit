@@ -90,7 +90,7 @@ class Document(object):
         # Check cursor position. It can also be right after the end. (Where we
         # insert text.)
         assert cursor_position is None or cursor_position <= len(text), AssertionError(
-                'cursor_position=%r, len_text=%r' % (cursor_position, len(text)))
+                'cursor_position={!r}, len_text={!r}'.format(cursor_position, len(text)))
 
         # By default, if no cursor position was given, make sure to put the
         # cursor position is at the end of the document. This is what makes
@@ -120,7 +120,7 @@ class Document(object):
         # assert self._cache
 
     def __repr__(self):
-        return '%s(%r, %r)' % (self.__class__.__name__, self.text, self.cursor_position)
+        return '{}({!r}, {!r})'.format(self.__class__.__name__, self.text, self.cursor_position)
 
     def __eq__(self, other):
         assert isinstance(other, Document)

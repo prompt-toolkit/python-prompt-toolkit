@@ -55,7 +55,7 @@ class Layout(object):
         self.visible_windows = []  # List of `Window` objects.
 
     def __repr__(self):
-        return 'Layout(%r, current_window=%r)' % (
+        return 'Layout({!r}, current_window={!r})'.format(
             self.container, self.current_window)
 
     def find_all_windows(self):
@@ -89,7 +89,7 @@ class Layout(object):
                 if isinstance(control, BufferControl) and control.buffer.name == value:
                     self.focus(control)
                     return
-            raise ValueError("Couldn't find Buffer in the current layout: %r." % (value, ))
+            raise ValueError("Couldn't find Buffer in the current layout: {!r}.".format(value))
 
         # BufferControl by buffer object.
         elif isinstance(value, Buffer):
@@ -97,7 +97,7 @@ class Layout(object):
                 if isinstance(control, BufferControl) and control.buffer == value:
                     self.focus(control)
                     return
-            raise ValueError("Couldn't find Buffer in the current layout: %r." % (value, ))
+            raise ValueError("Couldn't find Buffer in the current layout: {!r}.".format(value))
 
         # Focus UIControl.
         elif isinstance(value, UIControl):
@@ -141,7 +141,7 @@ class Layout(object):
                     self.current_window = windows[0]
                     return
 
-                raise ValueError('Invalid value. Container cannot be focused: %r' % (value, ))
+                raise ValueError('Invalid value. Container cannot be focused: {!r}'.format(value))
 
     def has_focus(self, value):
         """

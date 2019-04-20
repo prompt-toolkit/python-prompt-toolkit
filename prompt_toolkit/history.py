@@ -135,7 +135,7 @@ class ThreadedHistory(History):
     wait for everything to be loaded.
     """
     def __init__(self, history=None):
-        assert isinstance(history, History), 'Got %r' % (history, )
+        assert isinstance(history, History), 'Got {!r}'.format(history)
         self.history = history
         super(ThreadedHistory, self).__init__()
 
@@ -156,7 +156,7 @@ class ThreadedHistory(History):
         self.history.store_string(string)
 
     def __repr__(self):
-        return 'ThreadedHistory(%r)' % (self.history, )
+        return 'ThreadedHistory({!r})'.format(self.history)
 
 
 class InMemoryHistory(History):

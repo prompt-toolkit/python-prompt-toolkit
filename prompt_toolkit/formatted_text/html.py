@@ -33,7 +33,7 @@ class HTML(object):
     def __init__(self, value):
         assert isinstance(value, six.text_type)
         self.value = value
-        document = minidom.parseString('<html-root>%s</html-root>' % (value, ))
+        document = minidom.parseString('<html-root>{}</html-root>'.format(value))
 
         result = []
         name_stack = []
@@ -86,7 +86,7 @@ class HTML(object):
         self.formatted_text = FormattedText(result)
 
     def __repr__(self):
-        return 'HTML(%r)' % (self.value, )
+        return 'HTML({!r})'.format(self.value)
 
     def __pt_formatted_text__(self):
         return self.formatted_text
@@ -98,7 +98,7 @@ class HTML(object):
         """
         # Escape all the arguments.
         args = [html_escape(a) for a in args]
-        kwargs = dict((k, html_escape(v)) for k, v in kwargs.items())
+        kwargs = {k: html_escape(v) for k, v in kwargs.items()}
 
         return HTML(self.value.format(*args, **kwargs))
 

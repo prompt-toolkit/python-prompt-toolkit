@@ -51,7 +51,7 @@ async def interactive_shell():
     while True:
         try:
             result = await session.prompt(async_=True)
-            print('You said: "{0}"'.format(result))
+            print('You said: "{}"'.format(result))
         except (EOFError, KeyboardInterrupt):
             return
 

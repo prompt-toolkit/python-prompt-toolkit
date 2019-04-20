@@ -142,8 +142,8 @@ class HighlightSearchProcessor(Processor):
         buffer_control, document, lineno, source_to_display, fragments, _, _ = transformation_input.unpack()
 
         search_text = self._get_search_text(buffer_control)
-        searchmatch_fragment = ' class:%s ' % (self._classname, )
-        searchmatch_current_fragment = ' class:%s ' % (self._classname_current, )
+        searchmatch_fragment = ' class:{} '.format(self._classname)
+        searchmatch_current_fragment = ' class:{} '.format(self._classname_current)
 
         if search_text and not get_app().is_done:
             # For each search match, replace the style string.
@@ -393,7 +393,7 @@ class BeforeInput(Processor):
                               display_to_source=display_to_source)
 
     def __repr__(self):
-        return 'BeforeInput(%r, %r)' % (self.text, self.style)
+        return 'BeforeInput({!r}, {!r})'.format(self.text, self.style)
 
 
 class ShowArg(BeforeInput):
@@ -445,7 +445,7 @@ class AfterInput(Processor):
             return Transformation(fragments=ti.fragments)
 
     def __repr__(self):
-        return '%s(%r, style=%r)' % (
+        return '{}({!r}, style={!r})'.format(
             self.__class__.__name__, self.text, self.style)
 
 
@@ -609,7 +609,7 @@ class TabsProcessor(Processor):
 
         def display_to_source(display_pos):
             " Maps display cursor position to the original one. "
-            position_mappings_reversed = dict((v, k) for k, v in position_mappings.items())
+            position_mappings_reversed = {v: k for k, v in position_mappings.items()}
 
             while display_pos >= 0:
                 try:
@@ -766,7 +766,7 @@ class ConditionalProcessor(Processor):
             return Transformation(transformation_input.fragments)
 
     def __repr__(self):
-        return '%s(processor=%r, filter=%r)' % (
+        return '{}(processor={!r}, filter={!r})'.format(
             self.__class__.__name__, self.processor, self.filter)
 
 

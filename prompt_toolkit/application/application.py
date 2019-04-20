@@ -171,12 +171,12 @@ class Application(object):
         enable_page_navigation_bindings = to_filter(enable_page_navigation_bindings)
         include_default_pygments_style = to_filter(include_default_pygments_style)
 
-        assert layout is None or isinstance(layout, Layout), 'Got layout: %r' % (layout, )
+        assert layout is None or isinstance(layout, Layout), 'Got layout: {!r}'.format(layout)
         assert key_bindings is None or isinstance(key_bindings, KeyBindingsBase)
         assert clipboard is None or isinstance(clipboard, Clipboard)
         assert isinstance(full_screen, bool)
         assert (color_depth is None or callable(color_depth) or
-                color_depth in ColorDepth._ALL), 'Got color_depth: %r' % (color_depth, )
+                color_depth in ColorDepth._ALL), 'Got color_depth: {!r}'.format(color_depth)
         assert isinstance(editing_mode, six.string_types)
         assert style is None or isinstance(style, BaseStyle)
         assert style_transformation is None or isinstance(style_transformation, StyleTransformation)
@@ -723,7 +723,7 @@ class Application(object):
                 # but don't use logger. (This works better on Python 2.)
                 print('\nUnhandled exception in event loop:')
                 print(formatted_tb)
-                print('Exception %s' % (context.get('exception'), ))
+                print('Exception {}'.format(context.get('exception')))
 
                 yield From(_do_wait_for_enter('Press ENTER to continue...'))
             run_coroutine_in_terminal(print_exception)

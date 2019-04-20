@@ -64,7 +64,7 @@ class PosixStdinReader(object):
         wrong during the decoding.
         """
         if self.closed:
-            return u''
+            return ''
 
         # Check whether there is some input to read. `os.read` would block
         # otherwise.
@@ -73,7 +73,7 @@ class PosixStdinReader(object):
         # reason this happens in certain situations.)
         try:
             if not select.select([self.stdin_fd], [], [], 0)[0]:
-                return u''
+                return ''
         except IOError:
             # Happens for instance when the file descriptor was closed.
             # (We had this in ptterm, where the FD became ready, a callback was
