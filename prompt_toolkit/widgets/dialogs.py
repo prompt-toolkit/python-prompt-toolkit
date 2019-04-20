@@ -20,7 +20,7 @@ __all__ = [
 ]
 
 
-class Dialog(object):
+class Dialog:
     """
     Simple dialog window. This is the base for input dialogs, message dialogs
     and confirmation dialogs.

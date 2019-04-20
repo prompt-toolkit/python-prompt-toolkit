@@ -50,7 +50,7 @@ class SystemCompleter(GrammarCompleter):
             })
 
         # Create GrammarCompleter
-        super(SystemCompleter, self).__init__(
+        super().__init__(
             g,
             {
                 'executable': ExecutableCompleter(),

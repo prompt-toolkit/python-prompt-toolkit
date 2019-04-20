@@ -17,7 +17,7 @@ Point = namedtuple('Point', 'x y')
 Size = namedtuple('Size', 'rows columns')
 
 
-class Char(object):
+class Char:
     """
     Represent a single character in a :class:`.Screen`.
 
@@ -132,14 +132,14 @@ class Char(object):
         return self.char != other.char or self.style != other.style
 
     def __repr__(self):
-        return '%s(%r, %r)' % (self.__class__.__name__, self.char, self.style)
+        return '{}({!r}, {!r})'.format(self.__class__.__name__, self.char, self.style)
 
 
 _CHAR_CACHE = FastDictCache(Char, size=1000 * 1000)
 Transparent = '[transparent]'
 
 
-class Screen(object):
+class Screen:
     """
     Two dimensional buffer of :class:`.Char` instances.
     """
@@ -272,7 +272,7 @@ class Screen(object):
                 row[x] = char_cache[cell.char, prepend_style + cell.style + append_style]
 
 
-class WritePosition(object):
+class WritePosition:
     def __init__(self, xpos, ypos, width, height):
         assert height >= 0
         assert width >= 0
@@ -284,6 +284,6 @@ class WritePosition(object):
         self.height = height
 
     def __repr__(self):
-        return '%s(x=%r, y=%r, width=%r, height=%r)' % (
+        return '{}(x={!r}, y={!r}, width={!r}, height={!r})'.format(
             self.__class__.__name__,
             self.xpos, self.ypos, self.width, self.height)

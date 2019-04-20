@@ -14,7 +14,7 @@ __all__ = [
 ]
 
 
-class Input(with_metaclass(ABCMeta, object)):
+class Input(object, metaclass=ABCMeta):
     """
     Abstraction for any input.
 

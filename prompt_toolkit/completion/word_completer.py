@@ -30,7 +30,7 @@ class WordCompleter(Completer):
     def __init__(self, words, ignore_case=False, meta_dict=None, WORD=False,
                  sentence=False, match_middle=False, pattern=None):
         assert not (WORD and sentence)
-        assert callable(words) or all(isinstance(w, string_types) for w in words)
+        assert callable(words) or all(isinstance(w, str) for w in words)
 
         self.words = words
         self.ignore_case = ignore_case

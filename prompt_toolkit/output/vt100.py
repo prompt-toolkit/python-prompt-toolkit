@@ -344,7 +344,7 @@ class _EscapeCodeCache(dict):
         result.extend(get(fg_color, False))
         result.extend(get(bg_color, True))
 
-        return map(six.text_type, result)
+        return map(str, result)
 
 
 def _get_size(fileno):
@@ -362,7 +362,7 @@ def _get_size(fileno):
     import termios
 
     # Buffer for the C call
-    buf = array.array(b'h' if six.PY2 else u'h', [0, 0, 0, 0])
+    buf = array.array(b'h' if six.PY2 else 'h', [0, 0, 0, 0])
 
     # Do TIOCGWINSZ (Get)
     # Note: We should not pass 'True' as a fourth parameter to 'ioctl'. (True
@@ -387,7 +387,7 @@ class Vt100_Output(Output):
 
     def __init__(self, stdout, get_size, term=None, write_binary=True):
         assert callable(get_size)
-        assert term is None or isinstance(term, six.text_type)
+        assert term is None or isinstance(term, str)
         assert all(hasattr(stdout, a) for a in ('write', 'flush'))
 
         if write_binary:

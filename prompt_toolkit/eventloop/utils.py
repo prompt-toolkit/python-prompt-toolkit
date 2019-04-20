@@ -10,7 +10,7 @@ __all__ = [
 ]
 
 
-class ThreadWithFuture(object):
+class ThreadWithFuture:
     """
     Wrapper around `Thread`.
 

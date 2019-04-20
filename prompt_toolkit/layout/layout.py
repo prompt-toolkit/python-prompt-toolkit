@@ -17,7 +17,7 @@ __all__ = [
 ]
 
 
-class Layout(object):
+class Layout:
     """
     The layout for a prompt_toolkit
     :class:`~prompt_toolkit.application.Application`.
@@ -55,7 +55,7 @@ class Layout(object):
         self.visible_windows = []  # List of `Window` objects.
 
     def __repr__(self):
-        return 'Layout(%r, current_window=%r)' % (
+        return 'Layout({!r}, current_window={!r})'.format(
             self.container, self.current_window)
 
     def find_all_windows(self):
@@ -84,12 +84,12 @@ class Layout(object):
           focusable :class:`.Window` of the container.
         """
         # BufferControl by buffer name.
-        if isinstance(value, six.text_type):
+        if isinstance(value, str):
             for control in self.find_all_controls():
                 if isinstance(control, BufferControl) and control.buffer.name == value:
                     self.focus(control)
                     return
-            raise ValueError("Couldn't find Buffer in the current layout: %r." % (value, ))
+            raise ValueError("Couldn't find Buffer in the current layout: {!r}.".format(value))
 
         # BufferControl by buffer object.
         elif isinstance(value, Buffer):
@@ -97,7 +97,7 @@ class Layout(object):
                 if isinstance(control, BufferControl) and control.buffer == value:
                     self.focus(control)
                     return
-            raise ValueError("Couldn't find Buffer in the current layout: %r." % (value, ))
+            raise ValueError("Couldn't find Buffer in the current layout: {!r}.".format(value))
 
         # Focus UIControl.
         elif isinstance(value, UIControl):
@@ -141,14 +141,14 @@ class Layout(object):
                     self.current_window = windows[0]
                     return
 
-                raise ValueError('Invalid value. Container cannot be focused: %r' % (value, ))
+                raise ValueError('Invalid value. Container cannot be focused: {!r}'.format(value))
 
     def has_focus(self, value):
         """
         Check whether the given control has the focus.
         :param value: :class:`.UIControl` or :class:`.Window` instance.
         """
-        if isinstance(value, six.text_type):
+        if isinstance(value, str):
             if self.current_buffer is None:
                 return False
             return self.current_buffer.name == value

@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 
-class ClipboardData(object):
+class ClipboardData:
     """
     Text on the clipboard.
 
@@ -26,14 +26,14 @@ class ClipboardData(object):
     :param type: :class:`~prompt_toolkit.selection.SelectionType`
     """
     def __init__(self, text='', type=SelectionType.CHARACTERS):
-        assert isinstance(text, six.string_types)
+        assert isinstance(text, str)
         assert type in (SelectionType.CHARACTERS, SelectionType.LINES, SelectionType.BLOCK)
 
         self.text = text
         self.type = type
 
 
-class Clipboard(with_metaclass(ABCMeta, object)):
+class Clipboard(object, metaclass=ABCMeta):
     """
     Abstract baseclass for clipboards.
     (An implementation can be in memory, it can share the X11 or Windows
@@ -51,7 +51,7 @@ class Clipboard(with_metaclass(ABCMeta, object)):
         """
         Shortcut for setting plain text on clipboard.
         """
-        assert isinstance(text, six.string_types)
+        assert isinstance(text, str)
         self.set_data(ClipboardData(text))
 
     def rotate(self):

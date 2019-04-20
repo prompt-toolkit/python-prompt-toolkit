@@ -36,7 +36,7 @@ __all__ = [
 ]
 
 
-class InputHookContext(object):
+class InputHookContext:
     """
     Given as a parameter to the inputhook.
     """

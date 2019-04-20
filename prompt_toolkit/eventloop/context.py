@@ -47,7 +47,7 @@ def get_context_id():
         return 0  # Default context.
 
 
-class context(object):
+class context:
     """
     Context manager that activates a new scope.
     """
@@ -76,7 +76,7 @@ class context(object):
             _storage.context_id = self._previous_id
 
 
-class TaskLocal(object):
+class TaskLocal:
     """
     Like a thread local, but tied to the current task.
     """

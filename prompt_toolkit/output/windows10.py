@@ -19,7 +19,7 @@ ENABLE_PROCESSED_INPUT = 0x0001
 ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
 
 
-class Windows10_Output(object):
+class Windows10_Output:
     """
     Windows 10 output abstraction. This enables and uses vt100 escape sequences.
     """

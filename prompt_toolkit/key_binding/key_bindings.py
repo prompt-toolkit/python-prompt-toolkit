@@ -54,7 +54,7 @@ __all__ = [
 ]
 
 
-class _Binding(object):
+class _Binding:
     """
     (Immutable binding class.)
 
@@ -79,11 +79,11 @@ class _Binding(object):
         return self.handler(event)
 
     def __repr__(self):
-        return '%s(keys=%r, handler=%r)' % (
+        return '{}(keys={!r}, handler={!r})'.format(
             self.__class__.__name__, self.keys, self.handler)
 
 
-class KeyBindingsBase(with_metaclass(ABCMeta, object)):
+class KeyBindingsBase(object, metaclass=ABCMeta):
     """
     Interface for a KeyBindings.
     """
@@ -257,7 +257,7 @@ class KeyBindings(KeyBindingsBase):
             self._clear_cache()
         else:
             # No key binding found for this function. Raise ValueError.
-            raise ValueError('Binding not found: %r' % (function, ))
+            raise ValueError('Binding not found: {!r}'.format(function))
 
     # For backwards-compatibility.
     add_binding = add
@@ -333,9 +333,9 @@ def _check_and_expand_key(key):
         key = ' '
 
     # Final validation.
-    assert isinstance(key, text_type), 'Got %r' % (key, )
+    assert isinstance(key, str), 'Got {!r}'.format(key)
     if len(key) != 1 and key not in ALL_KEYS:
-        raise ValueError('Invalid key: %s' % (key, ))
+        raise ValueError('Invalid key: {}'.format(key))
 
     return key
 

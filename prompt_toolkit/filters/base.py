@@ -14,7 +14,7 @@ __all__ = [
 ]
 
 
-class Filter(with_metaclass(ABCMeta, object)):
+class Filter(object, metaclass=ABCMeta):
     """
     Base class for any filter to activate/deactivate a feature, depending on a
     condition.

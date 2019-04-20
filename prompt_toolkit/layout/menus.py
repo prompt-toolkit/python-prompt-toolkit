@@ -165,7 +165,7 @@ def _get_menu_item_fragments(
     width.
     """
     if is_current_completion:
-        style_str = 'class:completion-menu.completion.current %s %s' % (
+        style_str = 'class:completion-menu.completion.current {} {}'.format(
             completion.style, completion.selected_style)
     else:
         style_str = 'class:completion-menu.completion ' + completion.style
@@ -218,7 +218,7 @@ class CompletionsMenu(ConditionalContainer):
         extra_filter = to_filter(extra_filter)
         display_arrows = to_filter(display_arrows)
 
-        super(CompletionsMenu, self).__init__(
+        super().__init__(
             content=Window(
                 content=CompletionsMenuControl(),
                 width=Dimension(min=8),
@@ -548,7 +548,7 @@ class MultiColumnCompletionsMenu(HSplit):
             filter=show_meta & full_filter & any_completion_has_meta)
 
         # Initialise split.
-        super(MultiColumnCompletionsMenu, self).__init__([
+        super().__init__([
             completions_window,
             meta_window
         ], z_index=z_index)

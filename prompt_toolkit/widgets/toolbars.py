@@ -51,14 +51,14 @@ class FormattedTextToolbar(Window):
         # `FormattedTextControl`.
         style = kw.pop('style', '')
 
-        super(FormattedTextToolbar, self).__init__(
+        super().__init__(
             FormattedTextControl(text, **kw),
             style=style,
             dont_extend_height=True,
             height=Dimension(min=1))
 
 
-class SystemToolbar(object):
+class SystemToolbar:
     """
     Toolbar for a system prompt.
 
@@ -166,7 +166,7 @@ class SystemToolbar(object):
         return self.container
 
 
-class ArgToolbar(object):
+class ArgToolbar:
     def __init__(self):
         def get_formatted_text():
             arg = get_app().key_processor.arg or ''
@@ -190,7 +190,7 @@ class ArgToolbar(object):
         return self.container
 
 
-class SearchToolbar(object):
+class SearchToolbar:
     """
     :param vi_mode: Display '/' and '?' instead of I-search.
     :param ignore_case: Search case insensitive.
@@ -296,7 +296,7 @@ class _CompletionsToolbarControl(UIControl):
         return UIContent(get_line=get_line, line_count=1)
 
 
-class CompletionsToolbar(object):
+class CompletionsToolbar:
     def __init__(self):
         self.container = ConditionalContainer(
             content=Window(
@@ -309,7 +309,7 @@ class CompletionsToolbar(object):
         return self.container
 
 
-class ValidationToolbar(object):
+class ValidationToolbar:
     def __init__(self, show_position=False):
         def get_formatted_text():
             buff = get_app().current_buffer
@@ -319,7 +319,7 @@ class ValidationToolbar(object):
                     buff.validation_error.cursor_position)
 
                 if show_position:
-                    text = '%s (line=%s column=%s)' % (
+                    text = '{} (line={} column={})'.format(
                         buff.validation_error.message, row + 1, column + 1)
                 else:
                     text = buff.validation_error.message

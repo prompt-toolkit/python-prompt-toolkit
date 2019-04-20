@@ -8,7 +8,7 @@ __all__ = [
 ]
 
 
-class MouseHandlers(object):
+class MouseHandlers:
     """
     Two dimensional raster of callbacks for mouse events.
     """

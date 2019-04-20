@@ -17,7 +17,7 @@ class InvalidStateError(Exception):
     " The operation is not allowed in this state. "
 
 
-class Future(object):
+class Future:
     """
     `Future` object for use with the prompt_toolkit event loops.  (Not by
     accident very similar to asyncio -- but much more limited in functionality.

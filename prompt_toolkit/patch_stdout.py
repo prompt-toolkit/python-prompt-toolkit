@@ -64,7 +64,7 @@ def patch_stdout(raw=False):
         sys.stderr = original_stderr
 
 
-class StdoutProxy(object):
+class StdoutProxy:
     """
     Proxy object for stdout which captures everything and prints output above
     the current application.

@@ -10,7 +10,7 @@ __all__ = [
 ]
 
 
-class SimpleCache(object):
+class SimpleCache:
     """
     Very simple cache that discards the oldest item when the cache size is
     exceeded.

@@ -31,7 +31,7 @@ def register(name):
     """
     Store handler in the `_readline_commands` dictionary.
     """
-    assert isinstance(name, six.text_type)
+    assert isinstance(name, str)
 
     def decorator(handler):
         " `handler` is a callable or _Binding. "

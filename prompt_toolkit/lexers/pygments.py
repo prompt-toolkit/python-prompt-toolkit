@@ -26,7 +26,7 @@ __all__ = [
 ]
 
 
-class SyntaxSync(with_metaclass(ABCMeta, object)):
+class SyntaxSync(object, metaclass=ABCMeta):
     """
     Syntax synchroniser. This is a tool that finds a start position for the
     lexer. This is especially important when editing big documents; we don't
@@ -66,7 +66,7 @@ class RegexSync(SyntaxSync):
     FROM_START_IF_NO_SYNC_POS_FOUND = 100
 
     def __init__(self, pattern):
-        assert isinstance(pattern, text_type)
+        assert isinstance(pattern, str)
         self._compiled_pattern = re.compile(pattern)
 
     def get_sync_start_position(self, document, lineno):

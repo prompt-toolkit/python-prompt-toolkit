@@ -24,7 +24,7 @@ class Win32AsyncioEventLoop(EventLoop):
     Wrapper around the Asyncio event loop, but compatible with prompt_toolkit.
     """
     def __init__(self, loop=None):
-        super(Win32AsyncioEventLoop, self).__init__()
+        super().__init__()
 
         self.loop = loop or asyncio.get_event_loop()
         self.closed = False

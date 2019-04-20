@@ -76,7 +76,7 @@ assert set(ANSI_COLOR_NAMES_ALIASES.values()).issubset(set(ANSI_COLOR_NAMES))
 assert not (set(ANSI_COLOR_NAMES_ALIASES.keys()) & set(ANSI_COLOR_NAMES))
 
 
-class BaseStyle(with_metaclass(ABCMeta, object)):
+class BaseStyle(object, metaclass=ABCMeta):
     """
     Abstract base class for prompt_toolkit styles.
     """

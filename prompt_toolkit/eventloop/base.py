@@ -22,7 +22,7 @@ __all__ = [
 ]
 
 
-class EventLoop(with_metaclass(ABCMeta, object)):
+class EventLoop(object, metaclass=ABCMeta):
     """
     Eventloop interface.
     """

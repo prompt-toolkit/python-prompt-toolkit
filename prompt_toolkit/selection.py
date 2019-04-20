@@ -10,7 +10,7 @@ __all__ = [
 ]
 
 
-class SelectionType(object):
+class SelectionType:
     """
     Type of selection.
     """
@@ -24,13 +24,13 @@ class SelectionType(object):
     BLOCK = 'BLOCK'
 
 
-class PasteMode(object):
+class PasteMode:
     EMACS = 'EMACS'  # Yank like emacs.
     VI_AFTER = 'VI_AFTER'  # When pressing 'p' in Vi.
     VI_BEFORE = 'VI_BEFORE'  # When pressing 'P' in Vi.
 
 
-class SelectionState(object):
+class SelectionState:
     """
     State of the current selection.
 
@@ -42,6 +42,6 @@ class SelectionState(object):
         self.type = type
 
     def __repr__(self):
-        return '%s(original_cursor_position=%r, type=%r)' % (
+        return '{}(original_cursor_position={!r}, type={!r})'.format(
             self.__class__.__name__,
             self.original_cursor_position, self.type)

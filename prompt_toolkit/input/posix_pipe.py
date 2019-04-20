@@ -23,14 +23,14 @@ class PosixPipeInput(Vt100Input):
     def __init__(self, text=''):
         self._r, self._w = os.pipe()
 
-        class Stdin(object):
+        class Stdin:
             def isatty(stdin):
                 return True
 
             def fileno(stdin):
                 return self._r
 
-        super(PosixPipeInput, self).__init__(Stdin())
+        super().__init__(Stdin())
         self.send_text(text)
 
         # Identifier for every PipeInput for the hash.
@@ -67,4 +67,4 @@ class PosixPipeInput(Vt100Input):
         """
         This needs to be unique for every `PipeInput`.
         """
-        return 'pipe-input-%s' % (self._id, )
+        return 'pipe-input-{}'.format(self._id)

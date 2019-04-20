@@ -74,7 +74,7 @@ def _is_coroutine(func):
     return False
 
 
-class _ConnectionStdout(object):
+class _ConnectionStdout:
     """
     Wrapper around socket which provides `write` and `flush` methods for the
     Vt100_Output output.
@@ -85,7 +85,7 @@ class _ConnectionStdout(object):
         self._buffer = []
 
     def write(self, data):
-        assert isinstance(data, text_type)
+        assert isinstance(data, str)
         self._buffer.append(data.encode(self._encoding))
         self.flush()
 
@@ -98,7 +98,7 @@ class _ConnectionStdout(object):
         self._buffer = []
 
 
-class TelnetConnection(object):
+class TelnetConnection:
     """
     Class that represents one Telnet connection.
     """
@@ -106,7 +106,7 @@ class TelnetConnection(object):
         assert isinstance(addr, tuple)  # (addr, port) tuple
         assert callable(interact)
         assert isinstance(server, TelnetServer)
-        assert isinstance(encoding, text_type)  # e.g. 'utf-8'
+        assert isinstance(encoding, str)  # e.g. 'utf-8'
 
         self.conn = conn
         self.addr = addr
@@ -137,7 +137,7 @@ class TelnetConnection(object):
 
         def data_received(data):
             """ TelnetProtocolParser 'data_received' callback """
-            assert isinstance(data, binary_type)
+            assert isinstance(data, bytes)
             self.vt100_input.send_bytes(data)
 
         def size_received(rows, columns):
@@ -195,7 +195,7 @@ class TelnetConnection(object):
         """
         Handler for incoming data. (Called by TelnetServer.)
         """
-        assert isinstance(data, binary_type)
+        assert isinstance(data, bytes)
         self.parser.feed(data)
 
     def close(self):
@@ -239,16 +239,16 @@ class TelnetConnection(object):
         self.vt100_output.flush()
 
 
-class TelnetServer(object):
+class TelnetServer:
     """
     Telnet server implementation.
     """
     def __init__(self, host='127.0.0.1', port=23, interact=None,
                  encoding='utf-8', style=None):
-        assert isinstance(host, text_type)
+        assert isinstance(host, str)
         assert isinstance(port, int)
         assert callable(interact)
-        assert isinstance(encoding, text_type)
+        assert isinstance(encoding, str)
 
         self.host = host
         self.port = port

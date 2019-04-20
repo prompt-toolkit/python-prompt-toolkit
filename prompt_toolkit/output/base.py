@@ -15,7 +15,7 @@ __all__ = [
 ]
 
 
-class Output(with_metaclass(ABCMeta, object)):
+class Output(object, metaclass=ABCMeta):
     """
     Base class defining the output interface for a
     :class:`~prompt_toolkit.renderer.Renderer`.

@@ -29,16 +29,16 @@ class ValidationError(Exception):
     :param message: Text.
     """
     def __init__(self, cursor_position=0, message=''):
-        super(ValidationError, self).__init__(message)
+        super().__init__(message)
         self.cursor_position = cursor_position
         self.message = message
 
     def __repr__(self):
-        return '%s(cursor_position=%r, message=%r)' % (
+        return '{}(cursor_position={!r}, message={!r})'.format(
             self.__class__.__name__, self.cursor_position, self.message)
 
 
-class Validator(with_metaclass(ABCMeta, object)):
+class Validator(object, metaclass=ABCMeta):
     """
     Abstract base class for an input validator.
 
@@ -101,14 +101,14 @@ class _ValidatorFromCallable(Validator):
     """
     def __init__(self, func, error_message, move_cursor_to_end):
         assert callable(func)
-        assert isinstance(error_message, text_type)
+        assert isinstance(error_message, str)
 
         self.func = func
         self.error_message = error_message
         self.move_cursor_to_end = move_cursor_to_end
 
     def __repr__(self):
-        return 'Validator.from_callable(%r)' % (self.func, )
+        return 'Validator.from_callable({!r})'.format(self.func)
 
     def validate(self, document):
         if not self.func(document.text):

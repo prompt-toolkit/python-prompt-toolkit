@@ -48,14 +48,14 @@ class EditReadOnlyBuffer(Exception):
     " Attempt editing of read-only :class:`.Buffer`. "
 
 
-class ValidationState(object):
+class ValidationState:
     " The validation state of a buffer. This is set after the validation. "
     VALID = 'VALID'
     INVALID = 'INVALID'
     UNKNOWN = 'UNKNOWN'
 
 
-class CompletionState(object):
+class CompletionState:
     """
     Immutable class that contains a completion state.
     """
@@ -72,7 +72,7 @@ class CompletionState(object):
         self.complete_index = complete_index  # Position in the `_completions` array.
 
     def __repr__(self):
-        return '%s(%r, <%r> completions, index=%r)' % (
+        return '{}({!r}, <{!r}> completions, index={!r})'.format(
             self.__class__.__name__,
             self.original_document, len(self.completions), self.complete_index)
 
@@ -119,7 +119,7 @@ class CompletionState(object):
 _QUOTED_WORDS_RE = re.compile(r"""(\s+|".*?"|'.*?')""")
 
 
-class YankNthArgState(object):
+class YankNthArgState:
     """
     For yank-last-arg/yank-nth-arg: Keep track of where we are in the history.
     """
@@ -129,12 +129,12 @@ class YankNthArgState(object):
         self.n = n
 
     def __repr__(self):
-        return '%s(history_position=%r, n=%r, previous_inserted_word=%r)' % (
+        return '{}(history_position={!r}, n={!r}, previous_inserted_word={!r})'.format(
             self.__class__.__name__, self.history_position, self.n,
             self.previous_inserted_word)
 
 
-class Buffer(object):
+class Buffer:
     """
     The core data structure that holds the text and cursor position of the
     current input line and implements all text manipulations on top of it. It
@@ -207,8 +207,8 @@ class Buffer(object):
         assert auto_suggest is None or isinstance(auto_suggest, AutoSuggest)
         assert history is None or isinstance(history, History)
         assert validator is None or isinstance(validator, Validator)
-        assert callable(tempfile_suffix) or isinstance(tempfile_suffix, six.text_type)
-        assert isinstance(name, six.text_type)
+        assert callable(tempfile_suffix) or isinstance(tempfile_suffix, str)
+        assert isinstance(name, str)
         assert on_text_changed is None or callable(on_text_changed)
         assert on_text_insert is None or callable(on_text_insert)
         assert on_cursor_position_changed is None or callable(on_cursor_position_changed)
@@ -274,7 +274,7 @@ class Buffer(object):
         else:
             text = self.text[:12] + '...'
 
-        return '<Buffer(name=%r, text=%r) at %r>' % (self.name, text, id(self))
+        return '<Buffer(name={!r}, text={!r}) at {!r}>'.format(self.name, text, id(self))
 
     def reset(self, document=None, append_to_history=False):
         """
@@ -374,7 +374,7 @@ class Buffer(object):
         valid for this text. text/cursor_position should be consistent at any time,
         otherwise set a Document instead.)
         """
-        assert isinstance(value, six.text_type), 'Got %r' % value
+        assert isinstance(value, str), 'Got %r' % value
 
         # Ensure cursor position remains within the size of the text.
         if self.cursor_position > len(value):
@@ -834,7 +834,7 @@ class Buffer(object):
                         if i == self.working_index:
                             display_meta = "Current, line %s" % (j + 1)
                         else:
-                            display_meta = "History %s, line %s" % (i + 1, j + 1)
+                            display_meta = "History {}, line {}".format(i + 1, j + 1)
 
                         completions.append(Completion(
                             l,

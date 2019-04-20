@@ -43,8 +43,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'prompt_toolkit'
-copyright = u'2014-2018, Jonathan Slenders'
+project = 'prompt_toolkit'
+copyright = '2014-2018, Jonathan Slenders'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -207,8 +207,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'prompt_toolkit.tex', u'prompt_toolkit Documentation',
-   u'Jonathan Slenders', 'manual'),
+  ('index', 'prompt_toolkit.tex', 'prompt_toolkit Documentation',
+   'Jonathan Slenders', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -237,8 +237,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'prompt_toolkit', u'prompt_toolkit Documentation',
-     [u'Jonathan Slenders'], 1)
+    ('index', 'prompt_toolkit', 'prompt_toolkit Documentation',
+     ['Jonathan Slenders'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -251,8 +251,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'prompt_toolkit', u'prompt_toolkit Documentation',
-   u'Jonathan Slenders', 'prompt_toolkit', 'One line description of project.',
+  ('index', 'prompt_toolkit', 'prompt_toolkit Documentation',
+   'Jonathan Slenders', 'prompt_toolkit', 'One line description of project.',
    'Miscellaneous'),
 ]
 

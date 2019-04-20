@@ -31,7 +31,7 @@ __all__ = [
 ]
 
 
-class Event(object):
+class Event:
     """
     Simple event to which event handlers can be attached. For instance::
 
@@ -159,7 +159,7 @@ def _func_takes_one_arg(func):
     return test_callable_args(func, [None])
 
 
-class DummyContext(object):
+class DummyContext:
     """
     (contextlib.nested is not available on Py3)
     """
@@ -178,7 +178,7 @@ class _CharSizesCache(dict):
     MAX_LONG_STRINGS = 16  # Maximum number of long strings to remember.
 
     def __init__(self):
-        super(_CharSizesCache, self).__init__()
+        super().__init__()
         # Keep track of the "long" strings in this cache.
         self._long_strings = deque()
 
@@ -325,7 +325,7 @@ def to_str(value):
     if callable(value):
         return to_str(value())
     else:
-        return text_type(value)
+        return str(value)
 
 
 def to_int(value):

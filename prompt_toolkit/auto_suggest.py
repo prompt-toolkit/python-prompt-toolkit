@@ -31,7 +31,7 @@ __all__ = [
 ]
 
 
-class Suggestion(object):
+class Suggestion:
     """
     Suggestion returned by an auto-suggest algorithm.
 
@@ -44,7 +44,7 @@ class Suggestion(object):
         return 'Suggestion(%s)' % self.text
 
 
-class AutoSuggest(with_metaclass(ABCMeta, object)):
+class AutoSuggest(object, metaclass=ABCMeta):
     """
     Base class for auto suggestion implementations.
     """

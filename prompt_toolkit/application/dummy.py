@@ -16,7 +16,7 @@ class DummyApplication(Application):
     :func:`.get_app` will run an instance of this :class:`.DummyApplication` instead.
     """
     def __init__(self):
-        super(DummyApplication, self).__init__(output=DummyOutput(), input=DummyInput())
+        super().__init__(output=DummyOutput(), input=DummyInput())
 
     def run(self):
         raise NotImplementedError('A DummyApplication is not supposed to run.')

@@ -10,7 +10,7 @@ __all__ = [
 ]
 
 
-class ConEmuOutput(object):
+class ConEmuOutput:
     """
     ConEmu (Windows) output abstraction.
 

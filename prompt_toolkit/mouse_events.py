@@ -30,7 +30,7 @@ class MouseEventType:
     SCROLL_DOWN = 'SCROLL_DOWN'
 
 
-class MouseEvent(object):
+class MouseEvent:
     """
     Mouse event, sent to `UIControl.mouse_handler`.
 
@@ -42,4 +42,4 @@ class MouseEvent(object):
         self.event_type = event_type
 
     def __repr__(self):
-        return 'MouseEvent(%r, %r)' % (self.position, self.event_type)
+        return 'MouseEvent({!r}, {!r})'.format(self.position, self.event_type)

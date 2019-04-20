@@ -32,14 +32,14 @@ __all__ = [
 ]
 
 
-class KeyPress(object):
+class KeyPress:
     """
     :param key: A `Keys` instance or text (one character).
     :param data: The received string on stdin. (Often vt100 escape codes.)
     """
     def __init__(self, key, data=None):
         assert key in ALL_KEYS or len(key) == 1
-        assert data is None or isinstance(data, six.text_type)
+        assert data is None or isinstance(data, str)
 
         if data is None:
             data = key
@@ -48,7 +48,7 @@ class KeyPress(object):
         self.data = data
 
     def __repr__(self):
-        return '%s(key=%r, data=%r)' % (
+        return '{}(key={!r}, data={!r})'.format(
             self.__class__.__name__, self.key, self.data)
 
     def __eq__(self, other):
@@ -62,7 +62,7 @@ NOTE: the implementation is very similar to the VT100 parser.
 _Flush = KeyPress('?', data='_Flush')
 
 
-class KeyProcessor(object):
+class KeyProcessor:
     """
     Statemachine that receives :class:`KeyPress` instances and according to the
     key bindings in the given :class:`KeyBindings`, calls the matching handlers.
@@ -135,7 +135,7 @@ class KeyProcessor(object):
         # Note that we transform it into a `set`, because we don't care about
         # the actual bindings and executing it more than once doesn't make
         # sense. (Many key bindings share the same filter.)
-        filters = set(b.filter for b in self._bindings.get_bindings_starting_with_keys(keys))
+        filters = {b.filter for b in self._bindings.get_bindings_starting_with_keys(keys)}
 
         # When any key binding is active, return True.
         return any(f() for f in filters)
@@ -411,7 +411,7 @@ class KeyProcessor(object):
         run_in_executor(wait, _daemon=True)
 
 
-class KeyPressEvent(object):
+class KeyPressEvent:
     """
     Key press event, delivered to key bindings.
 
@@ -434,7 +434,7 @@ class KeyPressEvent(object):
         self._app = get_app()
 
     def __repr__(self):
-        return 'KeyPressEvent(arg=%r, key_sequence=%r, is_repeat=%r)' % (
+        return 'KeyPressEvent(arg={!r}, key_sequence={!r}, is_repeat={!r})'.format(
                 self.arg, self.key_sequence, self.is_repeat)
 
     @property
@@ -497,7 +497,7 @@ class KeyPressEvent(object):
         elif current is None:
             result = data
         else:
-            result = "%s%s" % (current, data)
+            result = "{}{}".format(current, data)
 
         self.key_processor.arg = result
 

@@ -32,7 +32,7 @@ __all__ = [
 ]
 
 
-class History(with_metaclass(ABCMeta, object)):
+class History(object, metaclass=ABCMeta):
     """
     Base ``History`` class.
 
@@ -116,7 +116,7 @@ class History(with_metaclass(ABCMeta, object)):
         asynchronous generator.
         """
         for item in self.load_history_strings():
-            assert isinstance(item, text_type)
+            assert isinstance(item, str)
             yield AsyncGeneratorItem(item)
 
     @abstractmethod
@@ -135,9 +135,9 @@ class ThreadedHistory(History):
     wait for everything to be loaded.
     """
     def __init__(self, history=None):
-        assert isinstance(history, History), 'Got %r' % (history, )
+        assert isinstance(history, History), 'Got {!r}'.format(history)
         self.history = history
-        super(ThreadedHistory, self).__init__()
+        super().__init__()
 
     def load_history_strings_async(self):
         """
@@ -156,7 +156,7 @@ class ThreadedHistory(History):
         self.history.store_string(string)
 
     def __repr__(self):
-        return 'ThreadedHistory(%r)' % (self.history, )
+        return 'ThreadedHistory({!r})'.format(self.history)
 
 
 class InMemoryHistory(History):
@@ -191,7 +191,7 @@ class FileHistory(History):
     """
     def __init__(self, filename):
         self.filename = filename
-        super(FileHistory, self).__init__()
+        super().__init__()
 
     def load_history_strings(self):
         strings = []

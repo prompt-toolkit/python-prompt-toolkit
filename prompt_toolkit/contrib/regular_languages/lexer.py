@@ -34,7 +34,7 @@ class GrammarLexer(Lexer):
     """
     def __init__(self, compiled_grammar, default_style='', lexers=None):
         assert isinstance(compiled_grammar, _CompiledGrammar)
-        assert isinstance(default_style, six.text_type)
+        assert isinstance(default_style, str)
         assert lexers is None or all(isinstance(v, Lexer) for k, v in lexers.items())
         assert lexers is None or isinstance(lexers, dict)
 

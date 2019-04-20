@@ -92,7 +92,7 @@ class Win32Input(Input):
         return self.console_input_reader.handle
 
 
-class ConsoleInputReader(object):
+class ConsoleInputReader:
     """
     :param recognize_paste: When True, try to discover paste actions and turn
         the event into a BracketedPaste.
@@ -230,7 +230,7 @@ class ConsoleInputReader(object):
                 # Pasting: if the current key consists of text or \n, turn it
                 # into a BracketedPaste.
                 data = []
-                while k and (isinstance(k.key, six.text_type) or
+                while k and (isinstance(k.key, str) or
                              k.key == Keys.ControlJ):
                     data.append(k.data)
                     try:
@@ -295,7 +295,7 @@ class ConsoleInputReader(object):
         newline_count = 0
 
         for k in keys:
-            if isinstance(k.key, six.text_type):
+            if isinstance(k.key, str):
                 text_count += 1
             if k.key == Keys.ControlM:
                 newline_count += 1
@@ -454,7 +454,7 @@ def detach_win32_input(input):
             _current_callbacks[loop] = previous
 
 
-class raw_mode(object):
+class raw_mode:
     """
     ::
 

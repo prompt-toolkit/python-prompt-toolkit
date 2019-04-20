@@ -257,14 +257,14 @@ class _StyleStringToAttrsCache(dict):
         return attrs
 
 
-class CPR_Support(object):
+class CPR_Support:
     " Enum: whether or not CPR is supported. "
     SUPPORTED = 'SUPPORTED'
     NOT_SUPPORTED = 'NOT_SUPPORTED'
     UNKNOWN = 'UNKNOWN'
 
 
-class Renderer(object):
+class Renderer:
     """
     Typical usage:
 

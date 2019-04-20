@@ -24,7 +24,7 @@ __all__ = [
 ]
 
 
-class Margin(with_metaclass(ABCMeta, object)):
+class Margin(object, metaclass=ABCMeta):
     """
     Base interface for a margin.
     """

@@ -10,7 +10,7 @@ __all__ = [
 ]
 
 
-class Event(object):
+class Event:
     """
     Like `asyncio.event`.
 

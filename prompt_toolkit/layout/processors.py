@@ -53,7 +53,7 @@ __all__ = [
 ]
 
 
-class Processor(with_metaclass(ABCMeta, object)):
+class Processor(object, metaclass=ABCMeta):
     """
     Manipulate the fragments for a given line in a
     :class:`~prompt_toolkit.layout.controls.BufferControl`.
@@ -68,7 +68,7 @@ class Processor(with_metaclass(ABCMeta, object)):
         return Transformation(transformation_input.fragments)
 
 
-class TransformationInput(object):
+class TransformationInput:
     """
     :param control: :class:`.BufferControl` instance.
     :param lineno: The number of the line to which we apply the processor.
@@ -93,7 +93,7 @@ class TransformationInput(object):
                 self.source_to_display, self.fragments, self.width, self.height)
 
 
-class Transformation(object):
+class Transformation:
     """
     Transformation result, as returned by :meth:`.Processor.apply_transformation`.
 
@@ -142,8 +142,8 @@ class HighlightSearchProcessor(Processor):
         buffer_control, document, lineno, source_to_display, fragments, _, _ = transformation_input.unpack()
 
         search_text = self._get_search_text(buffer_control)
-        searchmatch_fragment = ' class:%s ' % (self._classname, )
-        searchmatch_current_fragment = ' class:%s ' % (self._classname_current, )
+        searchmatch_fragment = ' class:{} '.format(self._classname)
+        searchmatch_current_fragment = ' class:{} '.format(self._classname_current)
 
         if search_text and not get_app().is_done:
             # For each search match, replace the style string.
@@ -393,7 +393,7 @@ class BeforeInput(Processor):
                               display_to_source=display_to_source)
 
     def __repr__(self):
-        return 'BeforeInput(%r, %r)' % (self.text, self.style)
+        return 'BeforeInput({!r}, {!r})'.format(self.text, self.style)
 
 
 class ShowArg(BeforeInput):
@@ -404,7 +404,7 @@ class ShowArg(BeforeInput):
     `Window.get_line_prefix` function instead.
     """
     def __init__(self):
-        super(ShowArg, self).__init__(self._get_text_fragments)
+        super().__init__(self._get_text_fragments)
 
     def _get_text_fragments(self):
         app = get_app()
@@ -445,7 +445,7 @@ class AfterInput(Processor):
             return Transformation(fragments=ti.fragments)
 
     def __repr__(self):
-        return '%s(%r, style=%r)' % (
+        return '{}({!r}, style={!r})'.format(
             self.__class__.__name__, self.text, self.style)
 
 
@@ -558,8 +558,8 @@ class TabsProcessor(Processor):
     """
     def __init__(self, tabstop=4, char1='|', char2='\u2508', style='class:tab'):
         assert isinstance(tabstop, int) or callable(tabstop)
-        assert callable(char1) or isinstance(char1, text_type)
-        assert callable(char2) or isinstance(char2, text_type)
+        assert callable(char1) or isinstance(char1, str)
+        assert callable(char2) or isinstance(char2, str)
 
         self.char1 = char1
         self.char2 = char2
@@ -609,7 +609,7 @@ class TabsProcessor(Processor):
 
         def display_to_source(display_pos):
             " Maps display cursor position to the original one. "
-            position_mappings_reversed = dict((v, k) for k, v in position_mappings.items())
+            position_mappings_reversed = {v: k for k, v in position_mappings.items()}
 
             while display_pos >= 0:
                 try:
@@ -766,7 +766,7 @@ class ConditionalProcessor(Processor):
             return Transformation(transformation_input.fragments)
 
     def __repr__(self):
-        return '%s(processor=%r, filter=%r)' % (
+        return '{}(processor={!r}, filter={!r})'.format(
             self.__class__.__name__, self.processor, self.filter)
 
 

@@ -13,14 +13,14 @@ class _ExplodedList(list):
     automatically exploded as well.
     """
     def __init__(self, *a, **kw):
-        super(_ExplodedList, self).__init__(*a, **kw)
+        super().__init__(*a, **kw)
         self.exploded = True
 
     def append(self, item):
         self.extend([item])
 
     def extend(self, lst):
-        super(_ExplodedList, self).extend(explode_text_fragments(lst))
+        super().extend(explode_text_fragments(lst))
 
     def insert(self, index, item):
         raise NotImplementedError  # TODO
@@ -35,7 +35,7 @@ class _ExplodedList(list):
         if not isinstance(index, slice):
             index = slice(index, index + 1)
         value = explode_text_fragments([value])
-        super(_ExplodedList, self).__setitem__(index, value)
+        super().__setitem__(index, value)
 
 
 def explode_text_fragments(fragments):

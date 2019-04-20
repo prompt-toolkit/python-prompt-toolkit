@@ -31,7 +31,7 @@ __all__ = [
 ]
 
 
-class Formatter(with_metaclass(ABCMeta, object)):
+class Formatter(object, metaclass=ABCMeta):
     """
     Base class for any formatter.
     """
@@ -67,7 +67,7 @@ class Label(Formatter):
         If no task name was given, no suffix will be added.
     """
     def __init__(self, width=None, suffix=''):
-        assert isinstance(suffix, text_type)
+        assert isinstance(suffix, str)
         self.width = width
         self.suffix = suffix
 
@@ -170,7 +170,7 @@ class Progress(Formatter):
             total=progress.total or '?')
 
     def get_width(self, progress_bar):
-        all_lengths = [len('{0:>3}'.format(c.total)) for c in progress_bar.counters]
+        all_lengths = [len('{:>3}'.format(c.total)) for c in progress_bar.counters]
         all_lengths.append(1)
         return D.exact(max(all_lengths) * 2 + 1)
 
@@ -179,7 +179,7 @@ def _format_timedelta(timedelta):
     """
     Return hh:mm:ss, or mm:ss if the amount of hours is zero.
     """
-    result = '{0}'.format(timedelta).split('.')[0]
+    result = '{}'.format(timedelta).split('.')[0]
     if result.startswith('0:'):
         result = result[2:]
     return result
@@ -234,7 +234,7 @@ class IterationsPerSecond(Formatter):
         return HTML(self.template.format(iterations_per_second=value))
 
     def get_width(self, progress_bar):
-        all_values = [len('{0:.2f}'.format(c.current / c.time_elapsed.total_seconds()))
+        all_values = [len('{:.2f}'.format(c.current / c.time_elapsed.total_seconds()))
                       for c in progress_bar.counters]
         if all_values:
             return max(all_values)

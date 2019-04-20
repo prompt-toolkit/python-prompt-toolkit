@@ -66,7 +66,7 @@ __all__ = [
 _INVALID_TRAILING_INPUT = 'invalid_trailing'
 
 
-class _CompiledGrammar(object):
+class _CompiledGrammar:
     """
     Compiles a grammar. This will take the parse tree of a regular expression
     and compile the grammar.
@@ -104,7 +104,7 @@ class _CompiledGrammar(object):
         # input. This will ensure that we can still highlight the input correctly, even when the
         # input contains some additional characters at the end that don't match the grammar.)
         self._re_prefix_with_trailing_input = [
-            re.compile(r'(?:%s)(?P<%s>.*?)$' % (t.rstrip('$'), _INVALID_TRAILING_INPUT), flags)
+            re.compile(r'(?:{})(?P<{}>.*?)$'.format(t.rstrip('$'), _INVALID_TRAILING_INPUT), flags)
             for t in self._re_prefix_patterns]
 
     def escape(self, varname, value):
@@ -149,7 +149,7 @@ class _CompiledGrammar(object):
 
             # A `Variable` wraps the children into a named group.
             elif isinstance(node, Variable):
-                return '(?P<%s>%s)' % (create_group_func(node), transform(node.childnode))
+                return '(?P<{}>{})'.format(create_group_func(node), transform(node.childnode))
 
             # `Repeat`.
             elif isinstance(node, Repeat):
@@ -159,7 +159,7 @@ class _CompiledGrammar(object):
                     ('' if node.greedy else '?')
                 )
             else:
-                raise TypeError('Got %r' % (node, ))
+                raise TypeError('Got {!r}'.format(node))
 
         return transform(root_node)
 
@@ -214,7 +214,7 @@ class _CompiledGrammar(object):
                 # (Note that we should not append a '?' here. the 'transform'
                 # method will already recursively do that.)
                 for c in transform(node.childnode):
-                    yield '(?P<%s>%s)' % (create_group_func(node), c)
+                    yield '(?P<{}>{})'.format(create_group_func(node), c)
 
             elif isinstance(node, Repeat):
                 # If we have a repetition of 8 times. That would mean that the
@@ -227,7 +227,7 @@ class _CompiledGrammar(object):
                         repeat_sign = '{,%i}' % (node.max_repeat - 1)
                     else:
                         repeat_sign = '*'
-                    yield '(?:%s)%s%s(?:%s)?' % (
+                    yield '(?:{}){}{}(?:{})?'.format(
                         prefix,
                         repeat_sign,
                         ('' if node.greedy else '?'),
@@ -270,7 +270,7 @@ class _CompiledGrammar(object):
                 return Match(string, matches, self._group_names_to_nodes, self.unescape_funcs)
 
 
-class Match(object):
+class Match:
     """
     :param string: The input string.
     :param re_matches: List of (compiled_re_pattern, re_match) tuples.
@@ -351,14 +351,14 @@ class Match(object):
                 yield MatchVariable(varname, value, (reg[0], reg[1]))
 
 
-class Variables(object):
+class Variables:
     def __init__(self, tuples):
         #: List of (varname, value, slice) tuples.
         self._tuples = tuples
 
     def __repr__(self):
-        return '%s(%s)' % (
-            self.__class__.__name__, ', '.join('%s=%r' % (k, v) for k, v, _ in self._tuples))
+        return '{}({})'.format(
+            self.__class__.__name__, ', '.join('{}={!r}'.format(k, v) for k, v, _ in self._tuples))
 
     def get(self, key, default=None):
         items = self.getall(key)
@@ -378,7 +378,7 @@ class Variables(object):
             yield MatchVariable(varname, value, slice)
 
 
-class MatchVariable(object):
+class MatchVariable:
     """
     Represents a match of a variable in the grammar.
 
@@ -396,7 +396,7 @@ class MatchVariable(object):
         self.stop = self.slice[1]
 
     def __repr__(self):
-        return '%s(%r, %r)' % (self.__class__.__name__, self.varname, self.value)
+        return '{}({!r}, {!r})'.format(self.__class__.__name__, self.varname, self.value)
 
 
 def compile(expression, escape_funcs=None, unescape_funcs=None):

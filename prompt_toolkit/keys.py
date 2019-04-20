@@ -6,7 +6,7 @@ __all__ = [
 ]
 
 
-class Keys(object):
+class Keys:
     """
     List of keys for use in key bindings.
     """

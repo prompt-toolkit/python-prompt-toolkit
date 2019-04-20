@@ -14,7 +14,7 @@ __all__ = [
 ]
 
 
-class Lexer(with_metaclass(ABCMeta, object)):
+class Lexer(object, metaclass=ABCMeta):
     """
     Base class for all lexers.
     """
@@ -45,7 +45,7 @@ class SimpleLexer(Lexer):
     :param style: The style string for this lexer.
     """
     def __init__(self, style=''):
-        assert isinstance(style, text_type)
+        assert isinstance(style, str)
         self.style = style
 
     def lex_document(self, document):

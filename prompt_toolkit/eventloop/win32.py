@@ -32,7 +32,7 @@ class Win32EventLoop(EventLoop):
         the event into a BracketedPaste.
     """
     def __init__(self, recognize_paste=True):
-        super(Win32EventLoop, self).__init__()
+        super().__init__()
 
         self._event = create_win32_event()
         self._calls_from_executor = []

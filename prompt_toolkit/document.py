@@ -60,7 +60,7 @@ class _ImmutableLineList(list):
     sort = _error
 
 
-class _DocumentCache(object):
+class _DocumentCache:
     def __init__(self):
         #: List of lines for the Document text.
         self.lines = None
@@ -69,7 +69,7 @@ class _DocumentCache(object):
         self.line_indexes = None
 
 
-class Document(object):
+class Document:
     """
     This is a immutable class around the text and cursor position, and contains
     methods for querying this data, e.g. to give the text before the cursor.
@@ -84,13 +84,13 @@ class Document(object):
     __slots__ = ('_text', '_cursor_position', '_selection', '_cache')
 
     def __init__(self, text='', cursor_position=None, selection=None):
-        assert isinstance(text, six.text_type), 'Got %r' % text
+        assert isinstance(text, str), 'Got %r' % text
         assert selection is None or isinstance(selection, SelectionState)
 
         # Check cursor position. It can also be right after the end. (Where we
         # insert text.)
         assert cursor_position is None or cursor_position <= len(text), AssertionError(
-                'cursor_position=%r, len_text=%r' % (cursor_position, len(text)))
+                'cursor_position={!r}, len_text={!r}'.format(cursor_position, len(text)))
 
         # By default, if no cursor position was given, make sure to put the
         # cursor position is at the end of the document. This is what makes
@@ -120,7 +120,7 @@ class Document(object):
         # assert self._cache
 
     def __repr__(self):
-        return '%s(%r, %r)' % (self.__class__.__name__, self.text, self.cursor_position)
+        return '{}({!r}, {!r})'.format(self.__class__.__name__, self.text, self.cursor_position)
 
     def __eq__(self, other):
         assert isinstance(other, Document)

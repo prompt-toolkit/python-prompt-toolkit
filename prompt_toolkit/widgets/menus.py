@@ -23,7 +23,7 @@ __all__ = [
 ]
 
 
-class MenuContainer(object):
+class MenuContainer:
     """
     :param floats: List of extra Float objects to display.
     :param menu_items: List of `MenuItem` objects.
@@ -297,7 +297,7 @@ class MenuContainer(object):
         return self.container
 
 
-class MenuItem(object):
+class MenuItem:
     def __init__(self, text='', handler=None, children=None, shortcut=None,
                  disabled=False):
         self.text = text

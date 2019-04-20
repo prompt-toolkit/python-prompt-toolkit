@@ -9,13 +9,13 @@ __all__ = [
 ]
 
 
-class PygmentsTokens(object):
+class PygmentsTokens:
     """
     Turn a pygments token list into a list of prompt_toolkit text fragments
     (``(style_str, text)`` tuples).
     """
     def __init__(self, token_list):
-        assert isinstance(token_list, list), 'Got %r' % (token_list, )
+        assert isinstance(token_list, list), 'Got {!r}'.format(token_list)
         self.token_list = token_list
 
     def __pt_formatted_text__(self):

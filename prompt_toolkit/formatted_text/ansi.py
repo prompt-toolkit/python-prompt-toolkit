@@ -11,7 +11,7 @@ __all__ = [
 ]
 
 
-class ANSI(object):
+class ANSI:
     """
     ANSI formatted text.
     Take something ANSI escaped text, for use as a formatted string. E.g.
@@ -172,7 +172,7 @@ class ANSI(object):
                 # True colors.
                 if n == 2 and len(attrs) >= 3:
                     try:
-                        color_str = '%02x%02x%02x' % (
+                        color_str = '{:02x}{:02x}{:02x}'.format(
                             attrs.pop(), attrs.pop(), attrs.pop())
                     except IndexError:
                         pass
@@ -207,7 +207,7 @@ class ANSI(object):
         return ' '.join(result)
 
     def __repr__(self):
-        return 'ANSI(%r)' % (self.value, )
+        return 'ANSI({!r})'.format(self.value)
 
     def __pt_formatted_text__(self):
         return self._formatted_text
@@ -219,20 +219,20 @@ class ANSI(object):
         """
         # Escape all the arguments.
         args = [ansi_escape(a) for a in args]
-        kwargs = dict((k, ansi_escape(v)) for k, v in kwargs.items())
+        kwargs = {k: ansi_escape(v) for k, v in kwargs.items()}
 
         return ANSI(self.value.format(*args, **kwargs))
 
 
 # Mapping of the ANSI color codes to their names.
-_fg_colors = dict((v, k) for k, v in FG_ANSI_COLORS.items())
-_bg_colors = dict((v, k) for k, v in BG_ANSI_COLORS.items())
+_fg_colors = {v: k for k, v in FG_ANSI_COLORS.items()}
+_bg_colors = {v: k for k, v in BG_ANSI_COLORS.items()}
 
 # Mapping of the escape codes for 256colors to their 'ffffff' value.
 _256_colors = {}
 
 for i, (r, g, b) in enumerate(_256_colors_table.colors):
-    _256_colors[i] = '#%02x%02x%02x' % (r, g, b)
+    _256_colors[i] = '#{:02x}{:02x}{:02x}'.format(r, g, b)
 
 
 def ansi_escape(text):

@@ -59,7 +59,7 @@ __all__ = [
 ]
 
 
-class Container(with_metaclass(ABCMeta, object)):
+class Container(object, metaclass=ABCMeta):
     """
     Base class for user interface layout.
     """
@@ -155,13 +155,13 @@ class _Split(Container):
         assert window_too_small is None or isinstance(window_too_small, Container)
         assert isinstance(children, Sequence)
         assert isinstance(modal, bool)
-        assert callable(style) or isinstance(style, text_type)
+        assert callable(style) or isinstance(style, str)
         assert is_dimension(width)
         assert is_dimension(height)
         assert z_index is None or isinstance(z_index, int)  # `None` means: inherit from parent.
         assert is_dimension(padding)
-        assert padding_char is None or isinstance(padding_char, text_type)
-        assert isinstance(padding_style, text_type)
+        assert padding_char is None or isinstance(padding_char, str)
+        assert isinstance(padding_style, str)
 
         self.children = [to_container(c) for c in children]
         self.window_too_small = window_too_small or _window_too_small()
@@ -224,7 +224,7 @@ class HSplit(_Split):
                  align=VerticalAlign.JUSTIFY, padding=0, padding_char=None,
                  padding_style='', width=None, height=None, z_index=None,
                  modal=False, key_bindings=None, style=''):
-        super(HSplit, self).__init__(
+        super().__init__(
             children=children, window_too_small=window_too_small,
             padding=padding, padding_char=padding_char,
             padding_style=padding_style, width=width, height=height,
@@ -420,7 +420,7 @@ class VSplit(_Split):
                  padding=Dimension.exact(0), padding_char=None,
                  padding_style='', width=None, height=None, z_index=None,
                  modal=False, key_bindings=None, style=''):
-        super(VSplit, self).__init__(
+        super().__init__(
             children=children, window_too_small=window_too_small,
             padding=padding, padding_char=padding_char,
             padding_style=padding_style, width=width, height=height,
@@ -620,7 +620,7 @@ class FloatContainer(Container):
     def __init__(self, content, floats, modal=False, key_bindings=None, style='', z_index=None):
         assert all(isinstance(f, Float) for f in floats)
         assert isinstance(modal, bool)
-        assert callable(style) or isinstance(style, text_type)
+        assert callable(style) or isinstance(style, str)
         assert z_index is None or isinstance(z_index, int)
 
         self.content = to_container(content)
@@ -825,7 +825,7 @@ class FloatContainer(Container):
         return children
 
 
-class Float(object):
+class Float:
     """
     Float for use in a :class:`.FloatContainer`.
     Except for the `content` parameter, all other options are optional.
@@ -896,7 +896,7 @@ class Float(object):
         return 'Float(content=%r)' % self.content
 
 
-class WindowRenderInfo(object):
+class WindowRenderInfo:
     """
     Render information, for the last render time of this control.
     It stores mapping information between the input buffers (in case of a
@@ -957,9 +957,9 @@ class WindowRenderInfo(object):
 
     @property
     def visible_line_to_input_line(self):
-        return dict(
-            (visible_line, rowcol[0])
-            for visible_line, rowcol in self.visible_line_to_row_col.items())
+        return {
+            visible_line: rowcol[0]
+            for visible_line, rowcol in self.visible_line_to_row_col.items()}
 
     @property
     def cursor_position(self):
@@ -1104,7 +1104,7 @@ class WindowRenderInfo(object):
             return 1
 
 
-class ScrollOffsets(object):
+class ScrollOffsets:
     """
     Scroll offsets for the :class:`.Window` class.
 
@@ -1138,15 +1138,15 @@ class ScrollOffsets(object):
         return to_int(self._right)
 
     def __repr__(self):
-        return 'ScrollOffsets(top=%r, bottom=%r, left=%r, right=%r)' % (
+        return 'ScrollOffsets(top={!r}, bottom={!r}, left={!r}, right={!r})'.format(
             self._top, self._bottom, self._left, self._right)
 
 
-class ColorColumn(object):
+class ColorColumn:
     " Column for a :class:`.Window` to be colored. "
     def __init__(self, position, style='class:color-column'):
         assert isinstance(position, int)
-        assert isinstance(style, text_type)
+        assert isinstance(style, str)
 
         self.position = position
         self.style = style
@@ -1248,8 +1248,8 @@ class Window(Container):
         assert get_horizontal_scroll is None or callable(get_horizontal_scroll)
         assert colorcolumns is None or callable(colorcolumns) or isinstance(colorcolumns, list)
         assert callable(align) or align in WindowAlign._ALL
-        assert callable(style) or isinstance(style, text_type)
-        assert char is None or callable(char) or isinstance(char, text_type)
+        assert callable(style) or isinstance(style, str)
+        assert char is None or callable(char) or isinstance(char, str)
         assert z_index is None or isinstance(z_index, int)
         assert get_line_prefix is None or callable(get_line_prefix)
 
@@ -1516,7 +1516,7 @@ class Window(Container):
                 return
 
             # Find row/col position first.
-            yx_to_rowcol = dict((v, k) for k, v in rowcol_to_yx.items())
+            yx_to_rowcol = {v: k for k, v in rowcol_to_yx.items()}
             y = mouse_event.position.y
             x = mouse_event.position.x
 
@@ -2173,7 +2173,7 @@ class ConditionalContainer(Container):
         self.filter = to_filter(filter)
 
     def __repr__(self):
-        return 'ConditionalContainer(%r, filter=%r)' % (self.content, self.filter)
+        return 'ConditionalContainer({!r}, filter={!r})'.format(self.content, self.filter)
 
     def reset(self):
         self.content.reset()
@@ -2270,7 +2270,7 @@ def to_window(container):
     elif hasattr(container, '__pt_container__'):
         return to_window(container.__pt_container__())
     else:
-        raise ValueError('Not a Window object: %r.' % (container, ))
+        raise ValueError('Not a Window object: {!r}.'.format(container))
 
 
 def is_container(value):

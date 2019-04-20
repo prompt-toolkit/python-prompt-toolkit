@@ -32,12 +32,12 @@ __all__ = [
 ]
 
 
-class AsyncGeneratorItem(object):
+class AsyncGeneratorItem:
     def __init__(self, value):
         self.value = value
 
     def __repr__(self):
-        return 'AsyncGeneratorItem(%r)' % (self.value, )
+        return 'AsyncGeneratorItem({!r})'.format(self.value)
 
 
 def generator_to_async_generator(get_iterable):
@@ -137,7 +137,7 @@ def consume_async_generator(iterator, cancel, item_callback):
                 except StopIteration:
                     break
         else:
-            raise TypeError('Expecting Completion or Future, got %r' % (item, ))
+            raise TypeError('Expecting Completion or Future, got {!r}'.format(item))
 
         try:
             item = iterator.send(send)

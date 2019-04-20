@@ -20,7 +20,7 @@ class PosixAsyncioEventLoop(EventLoop):
     Wrapper around the Asyncio event loop, but compatible with prompt_toolkit.
     """
     def __init__(self, loop=None):
-        super(PosixAsyncioEventLoop, self).__init__()
+        super().__init__()
 
         self.loop = loop or asyncio.get_event_loop()
         self.closed = False

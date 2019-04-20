@@ -65,14 +65,14 @@ else:
 vi_register_names = ascii_lowercase + '0123456789'
 
 
-class TextObjectType(object):
+class TextObjectType:
     EXCLUSIVE = 'EXCLUSIVE'
     INCLUSIVE = 'INCLUSIVE'
     LINEWISE = 'LINEWISE'
     BLOCK = 'BLOCK'
 
 
-class TextObject(object):
+class TextObject:
     """
     Return struct for functions wrapped in ``text_object``.
     Both `start` and `end` are relative to the current cursor position.
@@ -1769,7 +1769,7 @@ def load_vi_bindings():
             # Insert digraph.
             overwrite = event.app.vi_state.input_mode == InputMode.REPLACE
             event.current_buffer.insert_text(
-                six.unichr(symbol), overwrite=overwrite)
+                chr(symbol), overwrite=overwrite)
             event.app.vi_state.waiting_for_digraph = False
         finally:
             event.app.vi_state.waiting_for_digraph = False

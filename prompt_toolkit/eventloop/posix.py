@@ -26,7 +26,7 @@ class PosixEventLoop(EventLoop):
     def __init__(self, selector=AutoSelector):
         assert issubclass(selector, Selector)
 
-        super(PosixEventLoop, self).__init__()
+        super().__init__()
 
         self.closed = False
         self._running = False

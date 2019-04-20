@@ -7,20 +7,20 @@ __all__ = [
 ]
 
 
-class InputMode(object):
+class InputMode:
     INSERT = 'vi-insert'
     INSERT_MULTIPLE = 'vi-insert-multiple'
     NAVIGATION = 'vi-navigation'  # Normal mode.
     REPLACE = 'vi-replace'
 
 
-class CharacterFind(object):
+class CharacterFind:
     def __init__(self, character, backwards=False):
         self.character = character
         self.backwards = backwards
 
 
-class ViState(object):
+class ViState:
     """
     Mutable class to hold the state of the Vi navigation.
     """

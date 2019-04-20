@@ -56,7 +56,7 @@ def has_focus(value):
     from prompt_toolkit.layout.containers import to_container, Window
     from prompt_toolkit.layout import walk
 
-    if isinstance(value, six.text_type):
+    if isinstance(value, str):
         def test():
             return get_app().current_buffer.name == value
     elif isinstance(value, Buffer):

@@ -16,7 +16,7 @@ __all__ = [
 ]
 
 
-class Dimension(object):
+class Dimension:
     """
     Specified dimension (width/height) of a user control or window.
 

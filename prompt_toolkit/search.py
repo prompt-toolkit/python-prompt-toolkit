@@ -20,14 +20,14 @@ __all__ = [
 ]
 
 
-class SearchDirection(object):
+class SearchDirection:
     FORWARD = 'FORWARD'
     BACKWARD = 'BACKWARD'
 
     _ALL = [FORWARD, BACKWARD]
 
 
-class SearchState(object):
+class SearchState:
     """
     A search 'query', associated with a search field (like a SearchToolbar).
 
@@ -45,7 +45,7 @@ class SearchState(object):
     __slots__ = ('text', 'direction', 'ignore_case')
 
     def __init__(self, text='', direction=SearchDirection.FORWARD, ignore_case=False):
-        assert isinstance(text, six.text_type)
+        assert isinstance(text, str)
         assert direction in (SearchDirection.FORWARD, SearchDirection.BACKWARD)
 
         ignore_case = to_filter(ignore_case)
@@ -55,7 +55,7 @@ class SearchState(object):
         self.ignore_case = ignore_case
 
     def __repr__(self):
-        return '%s(%r, direction=%r, ignore_case=%r)' % (
+        return '{}({!r}, direction={!r}, ignore_case={!r})'.format(
             self.__class__.__name__, self.text, self.direction, self.ignore_case)
 
     def __invert__(self):
@@ -189,5 +189,5 @@ def _get_reverse_search_links(layout):
     """
     Return mapping from BufferControl to SearchBufferControl.
     """
-    return dict((buffer_control, search_buffer_control)
-            for search_buffer_control, buffer_control in layout.search_links.items())
+    return {buffer_control: search_buffer_control
+            for search_buffer_control, buffer_control in layout.search_links.items()}

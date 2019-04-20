@@ -34,7 +34,7 @@ _cpr_response_prefix_re = re.compile('^' + re.escape('\x1b[') + r'[\d;]*\Z')
 _mouse_event_prefix_re = re.compile('^' + re.escape('\x1b[') + r'(<?[\d;]*|M.{0,2})\Z')
 
 
-class _Flush(object):
+class _Flush:
     """ Helper object to indicate flush operation to the parser. """
     pass
 
@@ -60,7 +60,7 @@ class _IsPrefixOfLongerMatchCache(dict):
 _IS_PREFIX_OF_LONGER_MATCH_CACHE = _IsPrefixOfLongerMatchCache()
 
 
-class Vt100Parser(object):
+class Vt100Parser:
     """
     Parser for VT100 input stream.
     Data can be fed through the `feed` method and the given callback will be
@@ -184,7 +184,7 @@ class Vt100Parser(object):
 
         :param data: Input string (unicode).
         """
-        assert isinstance(data, six.text_type)
+        assert isinstance(data, str)
 
         # Handle bracketed paste. (We bypass the parser that matches all other
         # key presses and keep reading input until we see the end mark.)

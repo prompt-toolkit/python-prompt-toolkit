@@ -171,7 +171,7 @@ def _split_multiline_prompt(get_prompt_text):
 class _RPrompt(Window):
     " The prompt that is displayed on the right side of the Window. "
     def __init__(self, get_formatted_text):
-        super(_RPrompt, self).__init__(
+        super().__init__(
             FormattedTextControl(get_formatted_text),
             align=WindowAlign.RIGHT,
             style='class:rprompt')
@@ -184,7 +184,7 @@ class CompleteStyle:
     READLINE_LIKE = 'READLINE_LIKE'
 
 
-class PromptSession(object):
+class PromptSession:
     """
     PromptSession for a prompt application, which can be used as a GNU Readline
     replacement.
@@ -751,7 +751,7 @@ class PromptSession(object):
             value without allowing the user to edit the input.
         :param pre_run: Callable, called at the start of `Application.run`.
         """
-        assert isinstance(default, text_type)
+        assert isinstance(default, str)
 
         # NOTE: We used to create a backup of the PromptSession attributes and
         #       restore them after exiting the prompt. This code has been
@@ -911,7 +911,7 @@ def create_confirm_session(message, suffix=' (y/n) '):
     """
     Create a `PromptSession` object for the 'confirm' function.
     """
-    assert isinstance(message, text_type)
+    assert isinstance(message, str)
     bindings = KeyBindings()
 
     @bindings.add('y')

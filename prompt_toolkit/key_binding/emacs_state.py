@@ -5,7 +5,7 @@ __all__ = [
 ]
 
 
-class EmacsState(object):
+class EmacsState:
     """
     Mutable class to hold Emacs specific state.
     """

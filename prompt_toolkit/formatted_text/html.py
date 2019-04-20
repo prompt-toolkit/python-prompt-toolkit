@@ -11,7 +11,7 @@ __all__ = [
 ]
 
 
-class HTML(object):
+class HTML:
     """
     HTML formatted text.
     Take something HTML-like, for use as a formatted string.
@@ -31,9 +31,9 @@ class HTML(object):
     ``username``.
     """
     def __init__(self, value):
-        assert isinstance(value, six.text_type)
+        assert isinstance(value, str)
         self.value = value
-        document = minidom.parseString('<html-root>%s</html-root>' % (value, ))
+        document = minidom.parseString('<html-root>{}</html-root>'.format(value))
 
         result = []
         name_stack = []
@@ -86,7 +86,7 @@ class HTML(object):
         self.formatted_text = FormattedText(result)
 
     def __repr__(self):
-        return 'HTML(%r)' % (self.value, )
+        return 'HTML({!r})'.format(self.value)
 
     def __pt_formatted_text__(self):
         return self.formatted_text
@@ -98,7 +98,7 @@ class HTML(object):
         """
         # Escape all the arguments.
         args = [html_escape(a) for a in args]
-        kwargs = dict((k, html_escape(v)) for k, v in kwargs.items())
+        kwargs = {k: html_escape(v) for k, v in kwargs.items()}
 
         return HTML(self.value.format(*args, **kwargs))
 
@@ -116,7 +116,7 @@ class HTML(object):
 def html_escape(text):
     # The string interpolation functions also take integers and other types.
     # Convert to string first.
-    if not isinstance(text, six.text_type):
+    if not isinstance(text, str):
         text = '{}'.format(text)
 
     return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')

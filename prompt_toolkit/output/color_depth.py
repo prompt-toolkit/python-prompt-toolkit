@@ -9,7 +9,7 @@ __all__ = [
 ]
 
 
-class ColorDepth(object):
+class ColorDepth:
     """
     Possible color depth values for the output.
     """

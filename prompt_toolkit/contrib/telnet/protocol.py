@@ -44,7 +44,7 @@ EL       = int2byte(248)
 GA       = int2byte(249)
 
 
-class TelnetProtocolParser(object):
+class TelnetProtocolParser:
     """
     Parser for the Telnet protocol.
     Usage::
@@ -177,6 +177,6 @@ class TelnetProtocolParser(object):
         """
         Feed data to the parser.
         """
-        assert isinstance(data, binary_type)
-        for b in iterbytes(data):
+        assert isinstance(data, bytes)
+        for b in iter(data):
             self._parser.send(int2byte(b))

@@ -25,18 +25,18 @@ def to_formatted_text(value, style='', auto_convert=False):
     :param auto_convert: If `True`, also accept other types, and convert them
         to a string first.
     """
-    assert isinstance(style, six.text_type)
+    assert isinstance(style, str)
 
     if value is None:
         result = []
-    elif isinstance(value, six.text_type):
+    elif isinstance(value, str):
         result = [('', value)]
     elif isinstance(value, list):
         if len(value):
-            assert isinstance(value[0][0], six.text_type), \
-                'Expecting string, got: %r' % (value[0][0], )
-            assert isinstance(value[0][1], six.text_type), \
-                'Expecting string, got: %r' % (value[0][1], )
+            assert isinstance(value[0][0], str), \
+                'Expecting string, got: {!r}'.format(value[0][0])
+            assert isinstance(value[0][1], str), \
+                'Expecting string, got: {!r}'.format(value[0][1])
 
         result = value
     elif hasattr(value, '__pt_formatted_text__'):
@@ -78,7 +78,7 @@ def is_formatted_text(value):
     """
     if callable(value):
         return True
-    if isinstance(value, (six.text_type, list)):
+    if isinstance(value, (str, list)):
         return True
     if hasattr(value, '__pt_formatted_text__'):
         return True
@@ -97,10 +97,10 @@ class FormattedText(list):
 
     def __repr__(self):
         return 'FormattedText(%s)' % (
-            super(FormattedText, self).__repr__())
+            super().__repr__())
 
 
-class Template(object):
+class Template:
     """
     Template for string interpolation with formatted text.
 
@@ -111,7 +111,7 @@ class Template(object):
     :param text: Plain text.
     """
     def __init__(self, text):
-        assert isinstance(text, six.text_type)
+        assert isinstance(text, str)
         assert '{0}' not in text
         self.text = text
 

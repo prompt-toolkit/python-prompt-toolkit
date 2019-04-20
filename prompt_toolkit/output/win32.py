@@ -75,7 +75,7 @@ class NoConsoleScreenBufferError(Exception):
                        'that is compiled for Cygwin.' % os.environ['TERM'])
         else:
             message = 'No Windows console found. Are you running cmd.exe?'
-        super(NoConsoleScreenBufferError, self).__init__(message)
+        super().__init__(message)
 
 
 class Win32Output(Output):
@@ -157,7 +157,7 @@ class Win32Output(Output):
             return func(*a, **kw)
         except ArgumentError as e:
             if _DEBUG_RENDER_OUTPUT:
-                self.LOG.write(('    Error in %r %r %s\n' % (func.__name__, e, e)).encode('utf-8'))
+                self.LOG.write(('    Error in {!r} {!r} {}\n'.format(func.__name__, e, e)).encode('utf-8'))
 
     def get_win32_screen_buffer_info(self):
         """
@@ -197,7 +197,7 @@ class Win32Output(Output):
         """
         Set terminal title.
         """
-        assert isinstance(title, six.text_type)
+        assert isinstance(title, str)
         self._winapi(windll.kernel32.SetConsoleTitleW, title)
 
     def clear_title(self):
@@ -484,7 +484,7 @@ assert set(FG_ANSI_COLORS) == set(ANSI_COLOR_NAMES)
 assert set(BG_ANSI_COLORS) == set(ANSI_COLOR_NAMES)
 
 
-class ColorLookupTable(object):
+class ColorLookupTable:
     """
     Inspired by pygments/formatters/terminal256.py
     """

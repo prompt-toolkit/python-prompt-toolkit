@@ -28,7 +28,7 @@ def fd_to_int(fd):
         return fd.fileno()
 
 
-class Selector(six.with_metaclass(abc.ABCMeta, object)):
+class Selector(object, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def register(self, fd):
         assert isinstance(fd, int)
@@ -203,7 +203,7 @@ def select_fds(read_fds, timeout, selector=AutoSelector):
     # Map to ensure that we return the objects that were passed in originally.
     # Whether they are a fd integer or an object that has a fileno().
     # (The 'poll' implementation for instance, returns always integers.)
-    fd_map = dict((fd_to_int(fd), fd) for fd in read_fds)
+    fd_map = {fd_to_int(fd): fd for fd in read_fds}
 
     # Wait, using selector.
     sel = selector()

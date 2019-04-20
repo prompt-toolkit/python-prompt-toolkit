@@ -23,7 +23,7 @@ __all__ = [
 ]
 
 
-class Completion(object):
+class Completion:
     """
     :param text: The new string that will be inserted into the document.
     :param start_position: Position relative to the cursor_position where the
@@ -40,10 +40,10 @@ class Completion(object):
     """
     def __init__(self, text, start_position=0, display=None, display_meta=None,
                  style='', selected_style=''):
-        assert isinstance(text, text_type)
+        assert isinstance(text, str)
         assert isinstance(start_position, int)
-        assert isinstance(style, text_type)
-        assert isinstance(selected_style, text_type)
+        assert isinstance(style, str)
+        assert isinstance(selected_style, str)
 
         from prompt_toolkit.formatted_text import to_formatted_text
         self.text = text
@@ -62,10 +62,10 @@ class Completion(object):
 
     def __repr__(self):
         if self.display == self.text:
-            return '%s(text=%r, start_position=%r)' % (
+            return '{}(text={!r}, start_position={!r})'.format(
                 self.__class__.__name__, self.text, self.start_position)
         else:
-            return '%s(text=%r, start_position=%r, display=%r)' % (
+            return '{}(text={!r}, start_position={!r}, display={!r})'.format(
                 self.__class__.__name__, self.text, self.start_position,
                 self.display)
 
@@ -112,7 +112,7 @@ class Completion(object):
             display_meta=self._display_meta)
 
 
-class CompleteEvent(object):
+class CompleteEvent:
     """
     Event that called the completer.
 
@@ -136,11 +136,11 @@ class CompleteEvent(object):
         self.completion_requested = completion_requested
 
     def __repr__(self):
-        return '%s(text_inserted=%r, completion_requested=%r)' % (
+        return '{}(text_inserted={!r}, completion_requested={!r})'.format(
             self.__class__.__name__, self.text_inserted, self.completion_requested)
 
 
-class Completer(with_metaclass(ABCMeta, object)):
+class Completer(object, metaclass=ABCMeta):
     """
     Base class for completer implementations.
     """
@@ -189,7 +189,7 @@ class ThreadedCompleter(Completer):
     can already select a completion, even if not all completions are displayed.
     """
     def __init__(self, completer=None):
-        assert isinstance(completer, Completer), 'Got %r' % (completer, )
+        assert isinstance(completer, Completer), 'Got {!r}'.format(completer)
         self.completer = completer
 
     def get_completions(self, document, complete_event):
@@ -204,7 +204,7 @@ class ThreadedCompleter(Completer):
             lambda: self.completer.get_completions(document, complete_event))
 
     def __repr__(self):
-        return 'ThreadedCompleter(%r)' % (self.completer, )
+        return 'ThreadedCompleter({!r})'.format(self.completer)
 
 
 class DummyCompleter(Completer):
@@ -237,7 +237,7 @@ class DynamicCompleter(Completer):
         return completer.get_completions_async(document, complete_event)
 
     def __repr__(self):
-        return 'DynamicCompleter(%r -> %r)' % (
+        return 'DynamicCompleter({!r} -> {!r})'.format(
             self.get_completer, self.get_completer())
 
 
