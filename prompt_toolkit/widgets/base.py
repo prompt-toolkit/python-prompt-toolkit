@@ -83,8 +83,9 @@ __all__ = [
     'VerticalLine',
     'HorizontalLine',
     'RadioList',
+    'CheckboxList',
 
-    'Checkbox',  # XXX: refactor into CheckboxList.
+    'Checkbox',  # backward compatibility
     'ProgressBar',
 ]
 
@@ -570,61 +571,38 @@ class Box:
         return self.container
 
 
-class Checkbox:
-    def __init__(self, text: AnyFormattedText = '') -> None:
-        self.checked = True
-
-        kb = KeyBindings()
-
-        @kb.add(' ')
-        @kb.add('enter')
-        def _(event: E) -> None:
-            self.checked = not self.checked
-
-        self.control = FormattedTextControl(
-            self._get_text_fragments,
-            key_bindings=kb,
-            focusable=True)
-
-        self.window = Window(
-            width=3, content=self.control, height=1)
-
-        self.container = VSplit([
-            self.window,
-            Label(text=Template(' {}').format(text))
-        ], style='class:checkbox')
-
-    def _get_text_fragments(self) -> StyleAndTextTuples:
-        result: StyleAndTextTuples = [('', '[')]
-        result.append(('[SetCursorPosition]', ''))
-
-        if self.checked:
-            result.append(('', '*'))
-        else:
-            result.append(('', ' '))
-
-        result.append(('', ']'))
-
-        return result
-
-    def __pt_container__(self) -> Container:
-        return self.container
-
-
 _T = TypeVar('_T')
 
 
-class RadioList(Generic[_T]):
-    """
-    List of radio buttons. Only one can be checked at the same time.
+class _DialogList(Generic[_T]):
+    class_style_container = None
+    class_style = None
+    class_style_selected = None
+    class_style_checked = None
+    multiple_selection = False
 
-    :param values: List of (value, label) tuples.
-    """
+    def _handle_enter(self) -> None:
+        if self.multiple_selection:
+            val = self.values[self._selected_index][0]
+            if val in self.current_values:
+                self.current_values.remove(val)
+            else:
+                self.current_values.append(val)
+        else:
+            self.current_value = self.values[self._selected_index][0]
+
     def __init__(self, values: List[Tuple[_T, AnyFormattedText]]) -> None:
+        assert self.class_style_container is not None
+        assert self.class_style is not None
+        assert self.class_style_selected is not None
+        assert self.class_style_checked is not None
         assert len(values) > 0
 
         self.values = values
-        self.current_value: _T = values[0][0]
+        if self.multiple_selection:
+            self.current_values = []
+        else:
+            self.current_value: _T = values[0][0]
         self._selected_index = 0
 
         # Key bindings.
@@ -658,7 +636,7 @@ class RadioList(Generic[_T]):
         @kb.add('enter')
         @kb.add(' ')
         def _(event: E) -> None:
-            self.current_value = self.values[self._selected_index][0]
+            self._handle_enter()
 
         @kb.add(Keys.Any)
         def _(event: E) -> None:
@@ -676,7 +654,7 @@ class RadioList(Generic[_T]):
 
         self.window = Window(
             content=self.control,
-            style='class:radio-list',
+            style=self.class_style_container,
             right_margins=[
                 ScrollbarMargin(display_arrows=True),
             ],
@@ -690,20 +668,23 @@ class RadioList(Generic[_T]):
             """
             if mouse_event.event_type == MouseEventType.MOUSE_UP:
                 self._selected_index = mouse_event.position.y
-                self.current_value = self.values[self._selected_index][0]
+                self._handle_enter()
 
         result: StyleAndTextTuples = []
         for i, value in enumerate(self.values):
-            checked = (value[0] == self.current_value)
+            if self.multiple_selection:
+                checked = (value[0] in self.current_values)
+            else:
+                checked = (value[0] == self.current_value)
             selected = (i == self._selected_index)
 
             style = ''
             if checked:
-                style += ' class:radio-checked'
+                style += ' %s' % self.class_style_checked
             if selected:
-                style += ' class:radio-selected'
+                style += ' %s' % self.class_style_selected
 
-            result.append((style, '('))
+            result.append((style, self.class_style_open))
 
             if selected:
                 result.append(('[SetCursorPosition]', ''))
@@ -713,9 +694,9 @@ class RadioList(Generic[_T]):
             else:
                 result.append((style, ' '))
 
-            result.append((style, ')'))
-            result.append(('class:radio', ' '))
-            result.extend(to_formatted_text(value[1], style='class:radio'))
+            result.append((style, self.class_style_close))
+            result.append((self.class_style, ' '))
+            result.extend(to_formatted_text(value[1], style=self.class_style))
             result.append(('', '\n'))
 
         # Add mouse handler to all fragments.
@@ -729,7 +710,51 @@ class RadioList(Generic[_T]):
         return self.window
 
 
-class VerticalLine:
+class RadioList(_DialogList):
+    """
+    List of radio buttons. Only one can be checked at the same time.
+
+    :param values: List of (value, label) tuples.
+    """
+    class_style_open = "("
+    class_style_close = ")"
+    class_style_container = "class:radio-list"
+    class_style = "class:radio"
+    class_style_selected = "class:radio-selected"
+    class_style_checked = "class:radio-checked"
+    multiple_selection = False
+
+
+class CheckboxList(_DialogList):
+    """
+    List of checkbox buttons. Several can be checked at the same time.
+
+    :param values: List of (value, label) tuples.
+    """
+    class_style_open = "["
+    class_style_close = "]"
+    class_style_container = "class:checkbox-list"
+    class_style = "class:checkbox"
+    class_style_selected = "class:checkbox-selected"
+    class_style_checked = "class:checkbox-checked"
+    multiple_selection = True
+
+
+class Checkbox(CheckboxList):
+    """Backward compatibility util: creates a 1-sized CheckboxList
+
+    :param text: the text
+    """
+    def __init__(self, text: AnyFormattedText = '') -> None:
+        values = [("value", text)]
+        CheckboxList.__init__(self, values)
+
+    @property
+    def checked(self) -> bool:
+        return "value" in self.current_values
+
+
+class VerticalLine(object):
     """
     A simple vertical line with a width of 1.
     """
