@@ -585,16 +585,20 @@ class RadioList(object):
     List of radio buttons. Only one can be checked at the same time.
 
     :param values: List of (value, label) tuples.
+    :param default: Default index to select, defaults to 0
     """
-    def __init__(self, values):
+    def __init__(self, values, default=0):
         assert isinstance(values, list)
         assert len(values) > 0
         assert all(isinstance(i, tuple) and len(i) == 2
                    for i in values)
+        assert isinstance(default, int)
+        assert 0 <= default < len(values)
 
         self.values = values
-        self.current_value = values[0][0]
-        self._selected_index = 0
+
+        self.current_value = values[default][0]
+        self._selected_index = default
 
         # Key bindings.
         kb = KeyBindings()
