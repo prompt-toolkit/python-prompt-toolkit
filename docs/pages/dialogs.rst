@@ -116,3 +116,79 @@ dialogs to override the default style. Also, text can be styled by passing an
 
 .. image:: ../images/dialogs/styled.png
 
+Styling reference sheet
+-----------------------
+
+In reality, the shortcut commands presented above build a full-screen frame by using a list of components. The two tables below allow you to get the classnames available for each shortcut, therefore you will be able to provide a custom style for every element that is displayed, using the method provided above.
+
+.. note:: All the shortcuts use the ``Dialog`` component, therefore it isn't specified explicitely below.
+
++--------------------------+-------------------------+
+| Shortcut                 | Components used         |
++==========================+=========================+
+| ``yes_no_dialog``        | - ``Label``             |
+|                          | - ``Button`` (x2)       |
++--------------------------+-------------------------+
+| ``button_dialog``        | - ``Label``             |
+|                          | - ``Button``            |
++--------------------------+-------------------------+
+| ``input_dialog``         | - ``TextArea``          |
+|                          | - ``Button`` (x2)       |
++--------------------------+-------------------------+
+| ``message_dialog``       | - ``Label``             |
+|                          | - ``Button``            |
++--------------------------+-------------------------+
+| ``radiolist_dialog``     | - ``Label``             |
+|                          | - ``RadioList``         |
+|                          | - ``Button`` (x2)       |
++--------------------------+-------------------------+
+| ``checkboxlist_dialog``  | - ``Label``             |
+|                          | - ``CheckboxList``      |
+|                          | - ``Button`` (x2)       |
++--------------------------+-------------------------+
+| ``progress_dialog``      | - ``Label``             |
+|                          | - ``TextArea`` (locked) |
+|                          | - ``ProgressBar``       |
++--------------------------+-------------------------+
+
++----------------+-----------------------------+
+| Components     | Available classnames        |
++================+=============================+
+| Dialog         | - ``dialog``                |
+|                | - ``dialog.body``           |
++----------------+-----------------------------+
+| TextArea       | - ``text-area``             |
+|                | - ``text-area.prompt``      |
++----------------+-----------------------------+
+| Label          | - ``label``                 |
++----------------+-----------------------------+
+| Button         | - ``button``                |
+|                | - ``button.focused``        |
+|                | - ``button.arrow``          |
+|                | - ``button.text``           |
++----------------+-----------------------------+
+| Frame          | - ``frame``                 |
+|                | - ``frame.border``          |
+|                | - ``frame.label``           |
++----------------+-----------------------------+
+| Shadow         | - ``shadow``                |
++----------------+-----------------------------+
+| RadioList      | - ``radio-list``            |
+|                | - ``radio``                 |
+|                | - ``radio-checked``         |
+|                | - ``radio-selected``        |
++----------------+-----------------------------+
+| CheckboxList   | - ``checkbox-list``         |
+|                | - ``checkbox``              |
+|                | - ``checkbox-checked``      |
+|                | - ``checkbox-selected``     |
++----------------+-----------------------------+
+| VerticalLine   | - ``line``                  |
+|                | - ``vertical-line``         |
++----------------+-----------------------------+
+| HorizontalLine | - ``line``                  |
+|                | - ``horizontal-line``       |
++----------------+-----------------------------+
+| ProgressBar    | - ``progress-bar``          |
+|                | - ``progress-bar.used``     |
++----------------+-----------------------------+
