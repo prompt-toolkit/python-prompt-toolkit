@@ -204,7 +204,10 @@ def checkboxlist_dialog(
     Several elements can be selected at a time using Arrow keys and Enter.
     The focus can be moved between the list and the Ok/Cancel button with tab.
     """
-    def ok_handler():
+    if values is None:
+        values = []
+
+    def ok_handler() -> None:
         get_app().exit(result=cb_list.current_values)
 
     cb_list = CheckboxList(values)
@@ -221,7 +224,7 @@ def checkboxlist_dialog(
         ],
         with_background=True)
 
-    return _run_dialog(dialog, style, async_=async_)
+    return _create_app(dialog, style)
 
 
 def progress_dialog(
