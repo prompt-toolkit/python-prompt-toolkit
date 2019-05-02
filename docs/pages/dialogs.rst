@@ -64,7 +64,7 @@ confirmation dialog. It will return a boolean according to the selection.
 
 
 Button dialog
---------------------------
+-------------
 
 The :func:`~prompt_toolkit.shortcuts.button_dialog` function displays a dialog
 with choices offered as buttons. Buttons are indicated as a list of tuples,
@@ -85,6 +85,49 @@ each providing the label (first) and return value if clicked (second).
     )
 
 .. image:: ../images/dialogs/button.png
+
+
+Radio list dialog
+-----------------
+
+The :func:`~prompt_toolkit.shortcuts.radiolist_dialog` functiom displays a dialog
+with choices offered as a radio list. The values are provided as a list of tuples,
+each providing the return value (first element) and the displayed value (second element).
+
+.. code:: python
+
+    from prompt_toolkit.shortcuts import radiolist_dialog
+
+    result = radiolist_dialog( 
+        title="RadioList dialog", 
+        text="Which breakfast would you like ?", 
+        values=[ 
+            ("breakfast1", "Eggs and beacon"), 
+            ("breakfast2", "French breakfast"), 
+            ("breakfast3", "Equestrian breakfast") 
+        ] 
+    )
+
+
+Checkbox list dialog
+--------------------
+
+The :func:`~prompt_toolkit.shortcuts.checkboxlist_dialog` has the same usage and purpose than the Radiolist dialog, but allows several values to be selected and therefore returned.
+
+.. code:: python
+
+    from prompt_toolkit.shortcuts import checkboxlist_dialog
+
+    results_array = checkboxlist_dialog( 
+        title="CheckboxList dialog", 
+        text="What would you like in your breakfast ?",
+        values=[ 
+            ("eggs", "Eggs"),
+            ("bacon", "Bacon"),
+            ("croissants", "20 Croissants"),
+            ("daily", "The breakfast of the day")
+        ] 
+    )
 
 
 Styling of dialogs
