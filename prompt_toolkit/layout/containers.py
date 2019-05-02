@@ -234,7 +234,7 @@ class HSplit(_Split):
         self.align = align
 
         self._children_cache = SimpleCache(maxsize=1)
-        self._remaining_space_window = Window()  # Dummy window.
+        self._remaining_space_window = Window(style=padding_style)  # Dummy window.
 
     def preferred_width(self, max_available_width):
         if self.width is not None:
@@ -430,7 +430,7 @@ class VSplit(_Split):
         self.align = align
 
         self._children_cache = SimpleCache(maxsize=1)
-        self._remaining_space_window = Window()  # Dummy window.
+        self._remaining_space_window = Window(style=padding_style)  # Dummy window.
 
     def preferred_width(self, max_available_width):
         if self.width is not None:
