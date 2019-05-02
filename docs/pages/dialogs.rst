@@ -146,7 +146,7 @@ dialogs to override the default style. Also, text can be styled by passing an
 
     example_style = Style.from_dict({
         'dialog':             'bg:#88ff88',
-        'dialog frame-label': 'bg:#ffffff #000000',
+        'dialog frame.label': 'bg:#ffffff #000000',
         'dialog.body':        'bg:#000000 #00ff00',
         'dialog shadow':      'bg:#00aa00',
     })
