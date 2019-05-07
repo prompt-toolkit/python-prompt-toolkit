@@ -28,7 +28,6 @@ setup(
     long_description=long_description,
     packages=find_packages('.'),
     install_requires=[
-        'six>=1.9.0',
         'wcwidth',
     ],
     classifiers=[

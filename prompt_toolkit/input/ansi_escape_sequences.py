@@ -2,7 +2,7 @@
 Mappings from VT100 (ANSI) escape sequences to the corresponding prompt_toolkit
 keys.
 """
-from __future__ import unicode_literals
+from typing import Dict, Tuple, Union
 
 from ..keys import Keys
 
@@ -13,7 +13,7 @@ __all__ = [
 
 
 # Mapping of vt100 escape codes to Keys.
-ANSI_SEQUENCES = {
+ANSI_SEQUENCES: Dict[str, Union[Keys, Tuple[Keys, ...]]] = {
     '\x00': Keys.ControlAt,  # Control-At (Also for Ctrl-Space)
     '\x01': Keys.ControlA,  # Control-A (home)
     '\x02': Keys.ControlB,  # Control-B (emacs cursor left)
@@ -181,12 +181,12 @@ ANSI_SEQUENCES = {
 }
 
 
-def _get_reverse_ansi_sequences():
+def _get_reverse_ansi_sequences() -> Dict[Keys, str]:
     """
     Create a dictionary that maps prompt_toolkit keys back to the VT100 escape
     sequences.
     """
-    result = {}
+    result: Dict[Keys, str] = {}
 
     for sequence, key in ANSI_SEQUENCES.items():
         if not isinstance(key, tuple):

@@ -1,7 +1,7 @@
-from __future__ import unicode_literals
+from enum import Enum
 
 
-class EditingMode(object):
+class EditingMode(Enum):
     # The set of key bindings that is active.
     VI = 'VI'
     EMACS = 'EMACS'

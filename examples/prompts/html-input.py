@@ -3,8 +3,6 @@
 Simple example of a syntax-highlighted HTML input line.
 (This requires Pygments to be installed.)
 """
-from __future__ import unicode_literals
-
 from pygments.lexers.html import HtmlLexer
 
 from prompt_toolkit import prompt

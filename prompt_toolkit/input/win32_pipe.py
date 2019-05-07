@@ -1,18 +1,19 @@
 from ctypes import windll
+from typing import Callable, ContextManager, List
 
 from prompt_toolkit.eventloop.win32 import create_win32_event
 
+from ..key_binding import KeyPress
 from ..utils import DummyContext
-from .base import Input
 from .vt100_parser import Vt100Parser
-from .win32 import attach_win32_input, detach_win32_input
+from .win32 import _Win32InputBase, attach_win32_input, detach_win32_input
 
 __all__ = [
     'Win32PipeInput'
 ]
 
 
-class Win32PipeInput(Input):
+class Win32PipeInput(_Win32InputBase):
     """
     This is an input pipe that works on Windows.
     Text or bytes can be feed into the pipe, and key strokes can be read from
@@ -28,7 +29,8 @@ class Win32PipeInput(Input):
         input.send_text('inputdata')
     """
     _id = 0
-    def __init__(self):
+    def __init__(self) -> None:
+        super().__init__()
         # Event (handle) for registering this input in the event loop.
         # This event is set when there is data available to read from the pipe.
         # Note: We use this approach instead of using a regular pipe, like
@@ -39,7 +41,7 @@ class Win32PipeInput(Input):
         self._closed = False
 
         # Parser for incoming keys.
-        self._buffer = []  # Buffer to collect the Key objects.
+        self._buffer: List[KeyPress] = []  # Buffer to collect the Key objects.
         self.vt100_parser = Vt100Parser(
             lambda key: self._buffer.append(key))
 
@@ -48,7 +50,7 @@ class Win32PipeInput(Input):
         self._id = self.__class__._id
 
     @property
-    def closed(self):
+    def closed(self) -> bool:
         return self._closed
 
     def fileno(self):
@@ -62,22 +64,21 @@ class Win32PipeInput(Input):
         " The handle used for registering this pipe in the event loop. "
         return self._event
 
-    def attach(self, input_ready_callback):
+    def attach(self, input_ready_callback: Callable) -> ContextManager[None]:
         """
         Return a context manager that makes this input active in the current
         event loop.
         """
-        assert callable(input_ready_callback)
         return attach_win32_input(self, input_ready_callback)
 
-    def detach(self):
+    def detach(self) -> ContextManager[None]:
         """
         Return a context manager that makes sure that this input is not active
         in the current event loop.
         """
         return detach_win32_input(self)
 
-    def read_keys(self):
+    def read_keys(self) -> List[KeyPress]:
         " Read list of KeyPress. "
 
         # Return result.
@@ -89,7 +90,7 @@ class Win32PipeInput(Input):
 
         return result
 
-    def flush_keys(self):
+    def flush_keys(self) -> List[KeyPress]:
         """
         Flush pending keys and return them.
         (Used for flushing the 'escape' key.)
@@ -104,14 +105,14 @@ class Win32PipeInput(Input):
         return result
 
     @property
-    def responds_to_cpr(self):
+    def responds_to_cpr(self) -> bool:
         return False
 
-    def send_bytes(self, data):
+    def send_bytes(self, data: bytes) -> None:
         " Send bytes to the input. "
         self.send_text(data.decode('utf-8', 'ignore'))
 
-    def send_text(self, text):
+    def send_text(self, text: str) -> None:
         " Send text to the input. "
         # Pass it through our vt100 parser.
         self.vt100_parser.feed(text)
@@ -119,18 +120,18 @@ class Win32PipeInput(Input):
         # Set event.
         windll.kernel32.SetEvent(self._event)
 
-    def raw_mode(self):
+    def raw_mode(self) -> ContextManager[None]:
         return DummyContext()
 
-    def cooked_mode(self):
+    def cooked_mode(self) -> ContextManager[None]:
         return DummyContext()
 
-    def close(self):
+    def close(self) -> None:
         " Close pipe handles. "
         windll.kernel32.CloseHandle(self._event)
         self._closed = True
 
-    def typeahead_hash(self):
+    def typeahead_hash(self) -> str:
         """
         This needs to be unique for every `PipeInput`.
         """

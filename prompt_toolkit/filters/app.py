@@ -1,15 +1,17 @@
 """
 Filters that accept a `Application` as argument.
 """
-from __future__ import unicode_literals
-
-import six
+from typing import TYPE_CHECKING, cast
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.cache import memoized
 from prompt_toolkit.enums import EditingMode
 
 from .base import Condition
+
+if TYPE_CHECKING:
+    from prompt_toolkit.layout.layout import FocusableElement
+
 
 __all__ = [
     'has_arg',
@@ -47,49 +49,49 @@ __all__ = [
 
 
 @memoized()
-def has_focus(value):
+def has_focus(value: 'FocusableElement') -> Condition:
     """
     Enable when this buffer has the focus.
     """
     from prompt_toolkit.buffer import Buffer
     from prompt_toolkit.layout.controls import UIControl
-    from prompt_toolkit.layout.containers import to_container, Window
+    from prompt_toolkit.layout.containers import to_container, Window, Container
     from prompt_toolkit.layout import walk
 
-    if isinstance(value, six.text_type):
-        def test():
+    if isinstance(value, str):
+        def test() -> bool:
             return get_app().current_buffer.name == value
     elif isinstance(value, Buffer):
-        def test():
+        def test() -> bool:
             return get_app().current_buffer == value
     elif isinstance(value, UIControl):
-        def test():
+        def test() -> bool:
             return get_app().layout.current_control == value
     else:
         value = to_container(value)
 
         if isinstance(value, Window):
-            def test():
+            def test() -> bool:
                 return get_app().layout.current_window == value
         else:
-            def test():
+            def test() -> bool:
                 # Consider focused when any window inside this container is
                 # focused.
                 current_window = get_app().layout.current_window
 
-                for c in walk(value):
+                for c in walk(cast(Container, value)):
                     if isinstance(c, Window) and c == current_window:
                         return True
                 return False
 
     @Condition
-    def has_focus_filter():
+    def has_focus_filter() -> bool:
         return test()
     return has_focus_filter
 
 
 @Condition
-def buffer_has_focus():
+def buffer_has_focus() -> bool:
     """
     Enabled when the currently focused control is a `BufferControl`.
     """
@@ -97,7 +99,7 @@ def buffer_has_focus():
 
 
 @Condition
-def has_selection():
+def has_selection() -> bool:
     """
     Enable when the current buffer has a selection.
     """
@@ -105,7 +107,7 @@ def has_selection():
 
 
 @Condition
-def has_completions():
+def has_completions() -> bool:
     """
     Enable when the current buffer has completions.
     """
@@ -114,7 +116,7 @@ def has_completions():
 
 
 @Condition
-def completion_is_selected():
+def completion_is_selected() -> bool:
     """
     True when the user selected a completion.
     """
@@ -124,7 +126,7 @@ def completion_is_selected():
 
 
 @Condition
-def is_read_only():
+def is_read_only() -> bool:
     """
     True when the current buffer is read only.
     """
@@ -132,7 +134,7 @@ def is_read_only():
 
 
 @Condition
-def is_multiline():
+def is_multiline() -> bool:
     """
     True when the current buffer has been marked as multiline.
     """
@@ -140,19 +142,19 @@ def is_multiline():
 
 
 @Condition
-def has_validation_error():
+def has_validation_error() -> bool:
     " Current buffer has validation error.  "
     return get_app().current_buffer.validation_error is not None
 
 
 @Condition
-def has_arg():
+def has_arg() -> bool:
     " Enable when the input processor has an 'arg'. "
     return get_app().key_processor.arg is not None
 
 
 @Condition
-def is_done():
+def is_done() -> bool:
     """
     True when the CLI is returning, aborting or exiting.
     """
@@ -160,7 +162,7 @@ def is_done():
 
 
 @Condition
-def renderer_height_is_known():
+def renderer_height_is_known() -> bool:
     """
     Only True when the renderer knows it's real height.
 
@@ -174,27 +176,31 @@ def renderer_height_is_known():
 
 
 @memoized()
-def in_editing_mode(editing_mode):
-    " Check whether a given editing mode is active. (Vi or Emacs.) "
+def in_editing_mode(editing_mode: EditingMode) -> Condition:
+    """
+    Check whether a given editing mode is active. (Vi or Emacs.)
+    """
     @Condition
-    def in_editing_mode_filter():
+    def in_editing_mode_filter() -> bool:
         return get_app().editing_mode == editing_mode
     return in_editing_mode_filter
 
 
 @Condition
-def in_paste_mode():
+def in_paste_mode() -> bool:
     return get_app().paste_mode()
 
 
 @Condition
-def vi_mode():
+def vi_mode() -> bool:
     return get_app().editing_mode == EditingMode.VI
 
 
 @Condition
-def vi_navigation_mode():
-    " Active when the set for Vi navigation key bindings are active. "
+def vi_navigation_mode() -> bool:
+    """
+    Active when the set for Vi navigation key bindings are active.
+    """
     from prompt_toolkit.key_binding.vi_state import InputMode
     app = get_app()
 
@@ -210,7 +216,7 @@ def vi_navigation_mode():
 
 
 @Condition
-def vi_insert_mode():
+def vi_insert_mode() -> bool:
     from prompt_toolkit.key_binding.vi_state import InputMode
     app = get_app()
 
@@ -226,7 +232,7 @@ def vi_insert_mode():
 
 
 @Condition
-def vi_insert_multiple_mode():
+def vi_insert_multiple_mode() -> bool:
     from prompt_toolkit.key_binding.vi_state import InputMode
     app = get_app()
 
@@ -242,7 +248,7 @@ def vi_insert_multiple_mode():
 
 
 @Condition
-def vi_replace_mode():
+def vi_replace_mode() -> bool:
     from prompt_toolkit.key_binding.vi_state import InputMode
     app = get_app()
 
@@ -258,7 +264,7 @@ def vi_replace_mode():
 
 
 @Condition
-def vi_selection_mode():
+def vi_selection_mode() -> bool:
     app = get_app()
     if app.editing_mode != EditingMode.VI:
         return False
@@ -267,7 +273,7 @@ def vi_selection_mode():
 
 
 @Condition
-def vi_waiting_for_text_object_mode():
+def vi_waiting_for_text_object_mode() -> bool:
     app = get_app()
     if app.editing_mode != EditingMode.VI:
         return False
@@ -276,7 +282,7 @@ def vi_waiting_for_text_object_mode():
 
 
 @Condition
-def vi_digraph_mode():
+def vi_digraph_mode() -> bool:
     app = get_app()
     if app.editing_mode != EditingMode.VI:
         return False
@@ -285,7 +291,7 @@ def vi_digraph_mode():
 
 
 @Condition
-def vi_recording_macro():
+def vi_recording_macro() -> bool:
     " When recording a Vi macro. "
     app = get_app()
     if app.editing_mode != EditingMode.VI:
@@ -295,13 +301,13 @@ def vi_recording_macro():
 
 
 @Condition
-def emacs_mode():
+def emacs_mode() -> bool:
     " When the Emacs bindings are active. "
     return get_app().editing_mode == EditingMode.EMACS
 
 
 @Condition
-def emacs_insert_mode():
+def emacs_insert_mode() -> bool:
     app = get_app()
     if (app.editing_mode != EditingMode.EMACS
             or app.current_buffer.selection_state
@@ -311,21 +317,21 @@ def emacs_insert_mode():
 
 
 @Condition
-def emacs_selection_mode():
+def emacs_selection_mode() -> bool:
     app = get_app()
-    return (app.editing_mode == EditingMode.EMACS
+    return bool(app.editing_mode == EditingMode.EMACS
             and app.current_buffer.selection_state)
 
 
 @Condition
-def is_searching():
+def is_searching() -> bool:
     " When we are searching. "
     app = get_app()
     return app.layout.is_searching
 
 
 @Condition
-def control_is_searchable():
+def control_is_searchable() -> bool:
     " When the current UIControl is searchable. "
     from prompt_toolkit.layout.controls import BufferControl
     control = get_app().layout.current_control
@@ -335,6 +341,6 @@ def control_is_searchable():
 
 
 @Condition
-def vi_search_direction_reversed():
+def vi_search_direction_reversed() -> bool:
     " When the '/' and '?' key bindings for Vi-style searching have been reversed. "
     return get_app().reverse_vi_search_direction()

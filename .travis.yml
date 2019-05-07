@@ -8,27 +8,23 @@ matrix:
       dist: xenial
       sudo: required
     - python: 3.6
-    - python: 3.5
-    - python: 3.4
-    - python: 2.7
-    - python: 2.6
-    - python: nightly
-    - python: pypy
-    - python: pypy3
 
 install:
-  - pip install . pytest coverage codecov flake8
-  - if [ "$TRAVIS_PYTHON_VERSION" != "2.6" ]; then pip install isort; fi
+  - pip install . pytest coverage codecov flake8 mypy
+  - pip install isort
   - pip list
 
 script:
   - echo "$TRAVIS_PYTHON_VERSION"
-  - if [ "$TRAVIS_PYTHON_VERSION" != "2.6" ]; then flake8 prompt_toolkit; fi
+  - flake8 prompt_toolkit
   - coverage run -m pytest
+
+  # Run type checker
+  - mypy prompt_toolkit --ignore-missing-imports --platform win32 | grep -v 'already defined' | true
 
   # Check wheather the imports were sorted correctly.
   # When this fails, please run ./tools/sort-imports.sh
-  - if [ "$TRAVIS_PYTHON_VERSION" != "2.6" ]; then isort -c -m 3 -tc -rc prompt_toolkit; fi
+  - isort -c -m 3 -tc -rc prompt_toolkit
 
 after_success:
   - codecov

@@ -2,8 +2,6 @@
 """
 Example of nested progress bars.
 """
-from __future__ import unicode_literals
-
 import time
 
 from prompt_toolkit import HTML

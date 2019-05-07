@@ -2,8 +2,6 @@
 """
 Styled just like an apt-get installation.
 """
-from __future__ import unicode_literals
-
 import time
 
 from prompt_toolkit.shortcuts import ProgressBar

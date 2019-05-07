@@ -2,12 +2,10 @@
 """
 Example of a telnet application that displays a dialog window.
 """
-from __future__ import unicode_literals
-
+from asyncio import get_event_loop
 import logging
 
 from prompt_toolkit.contrib.telnet.server import TelnetServer
-from prompt_toolkit.eventloop import From, get_event_loop
 from prompt_toolkit.shortcuts.dialogs import yes_no_dialog
 
 # Set up logging
@@ -15,9 +13,9 @@ logging.basicConfig()
 logging.getLogger().setLevel(logging.INFO)
 
 
-def interact(connection):
-    result = yield From(yes_no_dialog(
-        title='Yes/no dialog demo', text='Press yes or no', async_=True))
+async def interact(connection):
+    result = await yes_no_dialog(
+        title='Yes/no dialog demo', text='Press yes or no').run_async()
 
     connection.send('You said: {}\n'.format(result))
     connection.send('Bye.\n')

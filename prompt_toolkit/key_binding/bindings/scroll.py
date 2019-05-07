@@ -5,9 +5,7 @@ This are separate bindings, because GNU readline doesn't have them, but
 they are very useful for navigating through long multiline buffers, like in
 Vi, Emacs, etc...
 """
-from __future__ import unicode_literals
-
-from six.moves import range
+from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 
 __all__ = [
     'scroll_forward',
@@ -18,8 +16,10 @@ __all__ = [
     'scroll_one_line_down',
 ]
 
+E = KeyPressEvent
 
-def scroll_forward(event, half=False):
+
+def scroll_forward(event: E, half: bool = False) -> None:
     """
     Scroll window down.
     """
@@ -50,7 +50,7 @@ def scroll_forward(event, half=False):
         b.cursor_position = b.document.translate_row_col_to_index(y, 0)
 
 
-def scroll_backward(event, half=False):
+def scroll_backward(event: E, half: bool = False) -> None:
     """
     Scroll window up.
     """
@@ -80,21 +80,21 @@ def scroll_backward(event, half=False):
         b.cursor_position = b.document.translate_row_col_to_index(y, 0)
 
 
-def scroll_half_page_down(event):
+def scroll_half_page_down(event: E) -> None:
     """
     Same as ControlF, but only scroll half a page.
     """
     scroll_forward(event, half=True)
 
 
-def scroll_half_page_up(event):
+def scroll_half_page_up(event: E) -> None:
     """
     Same as ControlB, but only scroll half a page.
     """
     scroll_backward(event, half=True)
 
 
-def scroll_one_line_down(event):
+def scroll_one_line_down(event: E) -> None:
     """
     scroll_offset += 1
     """
@@ -113,7 +113,7 @@ def scroll_one_line_down(event):
                 w.vertical_scroll += 1
 
 
-def scroll_one_line_up(event):
+def scroll_one_line_up(event: E) -> None:
     """
     scroll_offset -= 1
     """
@@ -140,7 +140,7 @@ def scroll_one_line_up(event):
                 w.vertical_scroll -= 1
 
 
-def scroll_page_down(event):
+def scroll_page_down(event: E) -> None:
     """
     Scroll page down. (Prefer the cursor at the top of the page, after scrolling.)
     """
@@ -156,7 +156,7 @@ def scroll_page_down(event):
         b.cursor_position += b.document.get_start_of_line_position(after_whitespace=True)
 
 
-def scroll_page_up(event):
+def scroll_page_up(event: E) -> None:
     """
     Scroll page up. (Prefer the cursor at the bottom of the page, after scrolling.)
     """

@@ -12,8 +12,6 @@ An example of how to deal with slow auto completion code.
 - We also set a `loading` boolean in the completer function to keep track of
   when the completer is running, and display this in the toolbar.
 """
-from __future__ import unicode_literals
-
 import time
 
 from prompt_toolkit.completion import Completer, Completion

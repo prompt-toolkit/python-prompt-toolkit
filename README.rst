@@ -11,13 +11,13 @@ applications in Python.*
 Read the `documentation on readthedocs
 <http://python-prompt-toolkit.readthedocs.io/en/stable/>`_.
 
-NOTICE: prompt_toolkit 2.0
+NOTICE: prompt_toolkit 3.0
 **************************
 
-Please notice that this is prompt_toolkit 2.0. It is incompatible with the 1.0
-branch, but much better in many regards. Many applications are still using
-prompt_toolkit 1.0, but upgrading is strongly recommended. Feel free to open a
-new issue if you don't manage to upgrade to prompt_toolkit 2.0.
+Please notice that this branch is the prompt_toolkit 3.0 branch. For most
+users, it should be compatible with prompt_toolkit 2.0, but it requires at
+least Python 3.6. On the plus side, prompt_toolkit 3.0 is completly type
+annotated and uses asyncio natively.
 
 
 Ptpython

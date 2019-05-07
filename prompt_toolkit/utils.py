@@ -1,19 +1,21 @@
-from __future__ import unicode_literals
-
-import inspect
 import os
 import signal
 import sys
 import threading
-import weakref
 from collections import deque
-from functools import partial
+from typing import (
+    Callable,
+    Deque,
+    Dict,
+    Generator,
+    Generic,
+    List,
+    Optional,
+    TypeVar,
+    Union,
+)
 
-from six import PY2, text_type
-from six.moves import range
 from wcwidth import wcwidth
-
-from .cache import memoized
 
 __all__ = [
     'Event',
@@ -24,14 +26,15 @@ __all__ = [
     'is_windows',
     'in_main_thread',
     'take_using_weights',
-    'test_callable_args',
     'to_str',
     'to_int',
     'to_float',
 ]
 
+_Sender = TypeVar('_Sender', covariant=True)
 
-class Event(object):
+
+class Event(Generic[_Sender]):
     """
     Simple event to which event handlers can be attached. For instance::
 
@@ -51,142 +54,82 @@ class Event(object):
         # Fire event.
         obj.event()
     """
-    def __init__(self, sender, handler=None):
+    def __init__(self, sender: _Sender, handler: Optional[Callable[[_Sender], None]] = None):
         self.sender = sender
-        self._handlers = []
+        self._handlers: List[Callable[[_Sender], None]] = []
 
         if handler is not None:
             self += handler
 
-    def __call__(self):
+    def __call__(self) -> None:
         " Fire event. "
         for handler in self._handlers:
             handler(self.sender)
 
-    def fire(self):
+    def fire(self) -> None:
         " Alias for just calling the event. "
         self()
 
-    def add_handler(self, handler):
+    def add_handler(self, handler: Callable[[_Sender], None]) -> None:
         """
         Add another handler to this callback.
         (Handler should be a callable that takes exactly one parameter: the
         sender object.)
         """
-        # Test handler.
-        assert callable(handler)
-        if not _func_takes_one_arg(handler):
-            raise TypeError("%r doesn't take exactly one argument." % handler)
-
         # Add to list of event handlers.
         self._handlers.append(handler)
 
-    def remove_handler(self, handler):
+    def remove_handler(self, handler: Callable[[_Sender], None]) -> None:
         """
         Remove a handler from this callback.
         """
         if handler in self._handlers:
             self._handlers.remove(handler)
 
-    def __iadd__(self, handler):
-        " `event += handler` notation for adding a handler. "
+    def __iadd__(self, handler: Callable[[_Sender], None]) -> 'Event[_Sender]':
+        """
+        `event += handler` notation for adding a handler.
+        """
         self.add_handler(handler)
         return self
 
-    def __isub__(self, handler):
-        " `event -= handler` notation for removing a handler. "
+    def __isub__(self, handler: Callable[[_Sender], None]) -> 'Event[_Sender]':
+        """
+        `event -= handler` notation for removing a handler.
+        """
         self.remove_handler(handler)
         return self
 
 
-# Cache of signatures. Improves the performance of `test_callable_args`.
-_signatures_cache = weakref.WeakKeyDictionary()
-
-_inspect_signature = getattr(inspect, 'signature', None)  # Only on Python 3.
-
-
-def test_callable_args(func, args):
-    """
-    Return True when this function can be called with the given arguments.
-    """
-    assert isinstance(args, (list, tuple))
-
-    if _inspect_signature is not None:
-        # For Python 3, use inspect.signature.
-        try:
-            sig = _signatures_cache[func]
-        except KeyError:
-            sig = _inspect_signature(func)
-            _signatures_cache[func] = sig
-
-        try:
-            sig.bind(*args)
-        except TypeError:
-            return False
-        else:
-            return True
-    else:
-        # For older Python versions, fall back to using getargspec
-        # and don't check for `partial`.
-        if isinstance(func, partial):
-            return True
-
-        spec = inspect.getargspec(func)
-
-        # Drop the 'self'
-        def drop_self(spec):
-            args, varargs, varkw, defaults = spec
-            if args[0:1] == ['self']:
-                args = args[1:]
-            return inspect.ArgSpec(args, varargs, varkw, defaults)
-
-        spec = drop_self(spec)
-
-        # When taking *args, always return True.
-        if spec.varargs is not None:
-            return True
-
-        # Test whether the given amount of args is between the min and max
-        # accepted argument counts.
-        return len(spec.args) - len(spec.defaults or []) <= len(args) <= len(spec.args)
-
-
-@memoized(maxsize=1024)
-def _func_takes_one_arg(func):
-    """
-    Test whether the given function can be called with exactly one argument.
-    """
-    return test_callable_args(func, [None])
-
-
-class DummyContext(object):
+class DummyContext:
     """
     (contextlib.nested is not available on Py3)
     """
-    def __enter__(self):
+    def __enter__(self) -> None:
         pass
 
-    def __exit__(self, *a):
+    def __exit__(self, *a) -> None:
         pass
 
 
-class _CharSizesCache(dict):
+class _CharSizesCache(Dict[str, int]):
     """
     Cache for wcwidth sizes.
     """
     LONG_STRING_MIN_LEN = 64  # Minimum string length for considering it long.
     MAX_LONG_STRINGS = 16  # Maximum number of long strings to remember.
 
-    def __init__(self):
-        super(_CharSizesCache, self).__init__()
+    def __init__(self) -> None:
+        super().__init__()
         # Keep track of the "long" strings in this cache.
-        self._long_strings = deque()
+        self._long_strings: Deque[str] = deque()
 
-    def __missing__(self, string):
+    def __missing__(self, string: str) -> int:
         # Note: We use the `max(0, ...` because some non printable control
         #       characters, like e.g. Ctrl-underscore get a -1 wcwidth value.
         #       It can be possible that these characters end up in the input
         #       text.
+        result: int
         if len(string) == 1:
             result = max(0, wcwidth(string))
         else:
@@ -212,14 +155,14 @@ class _CharSizesCache(dict):
 _CHAR_SIZES_CACHE = _CharSizesCache()
 
 
-def get_cwidth(string):
+def get_cwidth(string: str) -> int:
     """
     Return width of a string. Wrapper around ``wcwidth``.
     """
     return _CHAR_SIZES_CACHE[string]
 
 
-def suspend_to_background_supported():
+def suspend_to_background_supported() -> bool:
     """
     Returns `True` when the Python implementation supports
     suspend-to-background. This is typically `False' on Windows systems.
@@ -227,14 +170,14 @@ def suspend_to_background_supported():
     return hasattr(signal, 'SIGTSTP')
 
 
-def is_windows():
+def is_windows() -> bool:
     """
     True when we are using Windows.
     """
     return sys.platform.startswith('win')  # E.g. 'win32', not 'darwin' or 'linux2'
 
 
-def is_windows_vt100_supported():
+def is_windows_vt100_supported() -> bool:
     """
     True when we are using Windows, but VT100 escape sequences are supported.
     """
@@ -243,29 +186,30 @@ def is_windows_vt100_supported():
     return is_windows() and is_win_vt100_enabled()
 
 
-def is_conemu_ansi():
+def is_conemu_ansi() -> bool:
     """
     True when the ConEmu Windows console is used.
     """
     return is_windows() and os.environ.get('ConEmuANSI', 'OFF') == 'ON'
 
 
-def in_main_thread():
+def in_main_thread() -> bool:
     """
     True when the current thread is the main thread.
     """
     return threading.current_thread().__class__.__name__ == '_MainThread'
 
 
-def get_term_environment_variable():
+def get_term_environment_variable() -> str:
     " Return the $TERM environment variable. "
-    term = os.environ.get('TERM', '')
-    if PY2:
-        term = term.decode('utf-8')
-    return term
+    return os.environ.get('TERM', '')
 
 
-def take_using_weights(items, weights):
+_T = TypeVar('_T')
+
+
+def take_using_weights(
+        items: List[_T], weights: List[int]) -> Generator[_T, None, None]:
     """
     Generator that keeps yielding items from the items list, in proportion to
     their weight. For instance::
@@ -278,18 +222,15 @@ def take_using_weights(items, weights):
     :param weights: Integers representing the weight. (Numbers have to be
                     integers, not floats.)
     """
-    assert isinstance(items, list)
-    assert isinstance(weights, list)
-    assert all(isinstance(i, int) for i in weights)
     assert len(items) == len(weights)
     assert len(items) > 0
 
     # Remove items with zero-weight.
     items2 = []
     weights2 = []
-    for i, w in zip(items, weights):
+    for item, w in zip(items, weights):
         if w > 0:
-            items2.append(i)
+            items2.append(item)
             weights2.append(w)
 
     items = items2
@@ -320,15 +261,15 @@ def take_using_weights(items, weights):
         i += 1
 
 
-def to_str(value):
+def to_str(value: Union[Callable[[], str], str]) -> str:
     " Turn callable or string into string. "
     if callable(value):
         return to_str(value())
     else:
-        return text_type(value)
+        return str(value)
 
 
-def to_int(value):
+def to_int(value: Union[Callable[[], int], int]) -> int:
     " Turn callable or int into int. "
     if callable(value):
         return to_int(value())
@@ -336,7 +277,7 @@ def to_int(value):
         return int(value)
 
 
-def to_float(value):
+def to_float(value: Union[Callable[[], float], float]) -> float:
     " Turn callable or float into float. "
     if callable(value):
         return to_float(value())

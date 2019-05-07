@@ -1,12 +1,8 @@
 """
 Parser for VT100 input stream.
 """
-from __future__ import unicode_literals
-
 import re
-
-import six
-from six.moves import range
+from typing import Callable, Dict, Generator, Tuple, Union
 
 from ..key_binding.key_processor import KeyPress
 from ..keys import Keys
@@ -34,17 +30,17 @@ _cpr_response_prefix_re = re.compile('^' + re.escape('\x1b[') + r'[\d;]*\Z')
 _mouse_event_prefix_re = re.compile('^' + re.escape('\x1b[') + r'(<?[\d;]*|M.{0,2})\Z')
 
 
-class _Flush(object):
+class _Flush:
     """ Helper object to indicate flush operation to the parser. """
     pass
 
 
-class _IsPrefixOfLongerMatchCache(dict):
+class _IsPrefixOfLongerMatchCache(Dict[str, bool]):
     """
     Dictionary that maps input sequences to a boolean indicating whether there is
     any key that start with this characters.
     """
-    def __missing__(self, prefix):
+    def __missing__(self, prefix: str) -> bool:
         # (hard coded) If this could be a prefix of a CPR response, return
         # True.
         if (_cpr_response_prefix_re.match(prefix) or _mouse_event_prefix_re.match(prefix)):
@@ -60,7 +56,7 @@ class _IsPrefixOfLongerMatchCache(dict):
 _IS_PREFIX_OF_LONGER_MATCH_CACHE = _IsPrefixOfLongerMatchCache()
 
 
-class Vt100Parser(object):
+class Vt100Parser:
     """
     Parser for VT100 input stream.
     Data can be fed through the `feed` method and the given callback will be
@@ -78,26 +74,24 @@ class Vt100Parser(object):
     # Lookup table of ANSI escape sequences for a VT100 terminal
     # Hint: in order to know what sequences your terminal writes to stdin, run
     #       "od -c" and start typing.
-    def __init__(self, feed_key_callback):
-        assert callable(feed_key_callback)
-
+    def __init__(self, feed_key_callback: Callable[[KeyPress], None]) -> None:
         self.feed_key_callback = feed_key_callback
         self.reset()
 
-    def reset(self, request=False):
+    def reset(self, request: bool = False) -> None:
         self._in_bracketed_paste = False
         self._start_parser()
 
-    def _start_parser(self):
+    def _start_parser(self) -> None:
         """
         Start the parser coroutine.
         """
         self._input_parser = self._input_parser_generator()
-        self._input_parser.send(None)
+        self._input_parser.send(None)  # type: ignore
 
-    def _get_match(self, prefix):
+    def _get_match(self, prefix: str) -> Union[None, Keys, Tuple[Keys, ...]]:
         """
-        Return the key that maps to this prefix.
+        Return the key (or keys) that maps to this prefix.
         """
         # (hard coded) If we match a CPR response, return Keys.CPRResponse.
         # (This one doesn't fit in the ANSI_SEQUENCES, because it contains
@@ -114,7 +108,7 @@ class Vt100Parser(object):
         except KeyError:
             return None
 
-    def _input_parser_generator(self):
+    def _input_parser_generator(self) -> Generator[None, Union[str, _Flush], None]:
         """
         Coroutine (state machine) for the input parser.
         """
@@ -131,7 +125,7 @@ class Vt100Parser(object):
                 # Get next character.
                 c = yield
 
-                if c == _Flush:
+                if isinstance(c, _Flush):
                     flush = True
                 else:
                     prefix += c
@@ -164,7 +158,8 @@ class Vt100Parser(object):
                         self._call_handler(prefix[0], prefix[0])
                         prefix = prefix[1:]
 
-    def _call_handler(self, key, insert_text):
+    def _call_handler(self, key: Union[str, Keys, Tuple[Keys, ...]],
+                      insert_text: str) -> None:
         """
         Callback to handler.
         """
@@ -178,14 +173,12 @@ class Vt100Parser(object):
             else:
                 self.feed_key_callback(KeyPress(key, insert_text))
 
-    def feed(self, data):
+    def feed(self, data: str) -> None:
         """
         Feed the input stream.
 
         :param data: Input string (unicode).
         """
-        assert isinstance(data, six.text_type)
-
         # Handle bracketed paste. (We bypass the parser that matches all other
         # key presses and keep reading input until we see the end mark.)
         # This is much faster then parsing character by character.
@@ -218,7 +211,7 @@ class Vt100Parser(object):
                 else:
                     self._input_parser.send(c)
 
-    def flush(self):
+    def flush(self) -> None:
         """
         Flush the buffer of the input stream.
 
@@ -230,9 +223,9 @@ class Vt100Parser(object):
         timeout, and processes everything that's still in the buffer as-is, so
         without assuming any characters will follow.
         """
-        self._input_parser.send(_Flush)
+        self._input_parser.send(_Flush())
 
-    def feed_and_flush(self, data):
+    def feed_and_flush(self, data: str) -> None:
         """
         Wrapper around ``feed`` and ``flush``.
         """

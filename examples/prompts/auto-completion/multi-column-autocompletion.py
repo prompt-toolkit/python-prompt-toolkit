@@ -2,8 +2,6 @@
 """
 Similar to the autocompletion example. But display all the completions in multiple columns.
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.shortcuts import CompleteStyle, prompt
 

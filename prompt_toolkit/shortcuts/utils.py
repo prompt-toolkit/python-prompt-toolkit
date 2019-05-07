@@ -1,22 +1,29 @@
-from __future__ import print_function, unicode_literals
-
-import six
+from asyncio import get_event_loop
+from typing import TYPE_CHECKING, Any, Optional, TextIO
 
 from prompt_toolkit.application import Application
-from prompt_toolkit.eventloop import get_event_loop
-from prompt_toolkit.formatted_text import FormattedText, to_formatted_text
+from prompt_toolkit.application.current import get_app_session
+from prompt_toolkit.formatted_text import (
+    FormattedText,
+    StyleAndTextTuples,
+    to_formatted_text,
+)
 from prompt_toolkit.input import DummyInput
 from prompt_toolkit.layout import Layout
 from prompt_toolkit.output import ColorDepth, Output
-from prompt_toolkit.output.defaults import create_output, get_default_output
+from prompt_toolkit.output.defaults import create_output
 from prompt_toolkit.renderer import \
     print_formatted_text as renderer_print_formatted_text
 from prompt_toolkit.styles import (
     BaseStyle,
+    StyleTransformation,
     default_pygments_style,
     default_ui_style,
     merge_styles,
 )
+
+if TYPE_CHECKING:
+    from prompt_toolkit.layout.containers import Container
 
 __all__ = [
     'print_formatted_text',
@@ -27,7 +34,17 @@ __all__ = [
 ]
 
 
-def print_formatted_text(*values, **kwargs):
+def print_formatted_text(
+        *values: Any,
+        sep: str = ' ',
+        end: str = '\n',
+        file: Optional[TextIO] = None,
+        flush: bool = False,
+        style: Optional[BaseStyle] = None,
+        output: Optional[Output] = None,
+        color_depth: Optional[ColorDepth] = None,
+        style_transformation: Optional[StyleTransformation] = None,
+        include_default_pygments_style: bool = True) -> None:
     """
     ::
 
@@ -74,19 +91,7 @@ def print_formatted_text(*values, **kwargs):
     :param include_default_pygments_style: `bool`. Include the default Pygments
         style when set to `True` (the default).
     """
-    # Pop kwargs (Python 2 compatibility).
-    sep = kwargs.pop('sep', ' ')
-    end = kwargs.pop('end', '\n')
-    file = kwargs.pop('file', None)
-    flush = kwargs.pop('flush', False)
-    style = kwargs.pop('style', None)
-    output = kwargs.pop('output', None)
-    color_depth = kwargs.pop('color_depth', None)
-    style_transformation = kwargs.pop('style_transformation', None)
-    include_default_pygments_style = kwargs.pop('include_default_pygments_style', True)
-    assert not kwargs
     assert not (output and file)
-    assert style is None or isinstance(style, BaseStyle)
 
     # Build/merge style.
     styles = [default_ui_style()]
@@ -102,7 +107,7 @@ def print_formatted_text(*values, **kwargs):
         if file:
             output = create_output(stdout=file)
         else:
-            output = get_default_output()
+            output = get_app_session().default_output
 
     assert isinstance(output, Output)
 
@@ -110,7 +115,7 @@ def print_formatted_text(*values, **kwargs):
     color_depth = color_depth or ColorDepth.default()
 
     # Merges values.
-    def to_text(val):
+    def to_text(val: Any) -> StyleAndTextTuples:
         # Normal lists which are not instances of `FormattedText` are
         # considered plain text.
         if isinstance(val, list) and not isinstance(val, FormattedText):
@@ -136,7 +141,7 @@ def print_formatted_text(*values, **kwargs):
         output.flush()
 
 
-def print_container(container, file=None):
+def print_container(container: 'Container', file: Optional[TextIO] = None) -> None:
     """
     Print any layout to the output in a non-interactive way.
 
@@ -149,42 +154,39 @@ def print_container(container, file=None):
     if file:
         output = create_output(stdout=file)
     else:
-        output = get_default_output()
+        output = get_app_session().default_output
 
-    def exit_immediately():
+    def exit_immediately() -> None:
         # Use `call_from_executor` to exit "soon", so that we still render one
         # initial time, before exiting the application.
-        get_event_loop().call_from_executor(
-             lambda: app.exit())
+        get_event_loop().call_soon(lambda: app.exit())
 
-    app = Application(
+    app: Application[None] = Application(
         layout=Layout(container=container),
         output=output,
         input=DummyInput())
     app.run(pre_run=exit_immediately)
 
 
-def clear():
+def clear() -> None:
     """
     Clear the screen.
     """
-    out = get_default_output()
-    out.erase_screen()
-    out.cursor_goto(0, 0)
-    out.flush()
+    output = get_app_session().default_output
+    output.erase_screen()
+    output.cursor_goto(0, 0)
+    output.flush()
 
 
-def set_title(text):
+def set_title(text: str) -> None:
     """
     Set the terminal title.
     """
-    assert isinstance(text, six.text_type)
-
-    output = get_default_output()
+    output = get_app_session().default_output
     output.set_title(text)
 
 
-def clear_title():
+def clear_title() -> None:
     """
     Erase the current title.
     """

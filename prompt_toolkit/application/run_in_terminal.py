@@ -1,26 +1,30 @@
 """
 Tools for running functions on the terminal above the current application or prompt.
 """
-from __future__ import unicode_literals
+from asyncio import Future, ensure_future
+from typing import AsyncGenerator, Awaitable, Callable, TypeVar
 
-from prompt_toolkit.eventloop import (
-    From,
-    Future,
-    Return,
-    ensure_future,
-    get_event_loop,
-    run_in_executor,
-)
+from prompt_toolkit.eventloop import run_in_executor_with_context
 
-from .current import get_app
+from .current import get_app_or_none
+
+try:
+    from contextlib import asynccontextmanager
+except ImportError:
+    from prompt_toolkit.eventloop.async_context_manager import asynccontextmanager
+
 
 __all__ = [
     'run_in_terminal',
-    'run_coroutine_in_terminal',
+    'in_terminal',
 ]
 
+_T = TypeVar('_T')
 
-def run_in_terminal(func, render_cli_done=False, in_executor=False):
+
+def run_in_terminal(
+        func: Callable[[], _T], render_cli_done: bool = False,
+        in_executor: bool = False) -> Awaitable[_T]:
     """
     Run function on the terminal above the current application or prompt.
 
@@ -38,80 +42,63 @@ def run_in_terminal(func, render_cli_done=False, in_executor=False):
 
     :returns: A `Future`.
     """
-    if in_executor:
-        def async_func():
-            f = run_in_executor(func)
-            return f
-    else:
-        def async_func():
-            result = func()
-            return Future.succeed(result)
+    async def run() -> _T:
+        async with in_terminal(render_cli_done=render_cli_done):
+            if in_executor:
+                return await run_in_executor_with_context(func)
+            else:
+                return func()
 
-    return run_coroutine_in_terminal(async_func, render_cli_done=render_cli_done)
+    return ensure_future(run())
 
 
-def run_coroutine_in_terminal(async_func, render_cli_done=False):
+@asynccontextmanager
+async def in_terminal(render_cli_done: bool = False) -> AsyncGenerator[None, None]:
     """
-    Suspend the current application and run this coroutine instead.
-    `async_func` can be a coroutine or a function that returns a Future.
-
-    :param async_func: A function that returns either a Future or coroutine
-        when called.
-    :returns: A `Future`.
+    Context manager that suspends the current application and runs the body in
+    the terminal.
     """
-    assert callable(async_func)
-    loop = get_event_loop()
-
-    # Make sure to run this function in the current `Application`, or if no
-    # application is active, run it normally.
-    app = get_app(return_none=True)
-
-    if app is None:
-        return ensure_future(async_func())
-    assert app._is_running
+    app = get_app_or_none()
+    if app is None or not app._is_running:
+        yield
+        return
 
     # When a previous `run_in_terminal` call was in progress. Wait for that
     # to finish, before starting this one. Chain to previous call.
     previous_run_in_terminal_f = app._running_in_terminal_f
-    new_run_in_terminal_f = loop.create_future()
+    new_run_in_terminal_f: Future[None] = Future()
     app._running_in_terminal_f = new_run_in_terminal_f
 
-    def _run_in_t():
-        " Coroutine. "
-        # Wait for the previous `run_in_terminal` to finish.
-        if previous_run_in_terminal_f is not None:
-            yield previous_run_in_terminal_f
+    # Wait for the previous `run_in_terminal` to finish.
+    if previous_run_in_terminal_f is not None:
+        await previous_run_in_terminal_f
 
-        # Wait for all CPRs to arrive. We don't want to detach the input until
-        # all cursor position responses have been arrived. Otherwise, the tty
-        # will echo its input and can show stuff like ^[[39;1R.
-        if app.input.responds_to_cpr:
-            yield From(app.renderer.wait_for_cpr_responses())
+    # Wait for all CPRs to arrive. We don't want to detach the input until
+    # all cursor position responses have been arrived. Otherwise, the tty
+    # will echo its input and can show stuff like ^[[39;1R.
+    if app.input.responds_to_cpr:
+        await app.renderer.wait_for_cpr_responses()
 
-        # Draw interface in 'done' state, or erase.
-        if render_cli_done:
-            app._redraw(render_as_done=True)
-        else:
-            app.renderer.erase()
+    # Draw interface in 'done' state, or erase.
+    if render_cli_done:
+        app._redraw(render_as_done=True)
+    else:
+        app.renderer.erase()
 
-        # Disable rendering.
-        app._running_in_terminal = True
+    # Disable rendering.
+    app._running_in_terminal = True
 
-        # Detach input.
+    # Detach input.
+    try:
+        with app.input.detach():
+            with app.input.cooked_mode():
+                yield
+    finally:
+        # Redraw interface again.
         try:
-            with app.input.detach():
-                with app.input.cooked_mode():
-                    result = yield From(async_func())
-
-            raise Return(result)  # Same as: "return result"
+            app._running_in_terminal = False
+            app.renderer.reset()
+            app._request_absolute_cursor_position()
+            app._redraw()
         finally:
-            # Redraw interface again.
-            try:
-                app._running_in_terminal = False
-                app.renderer.reset()
-                app._request_absolute_cursor_position()
-                app._redraw()
-            finally:
-                new_run_in_terminal_f.set_result(None)
-
-    return ensure_future(_run_in_t())
+            new_run_in_terminal_f.set_result(None)

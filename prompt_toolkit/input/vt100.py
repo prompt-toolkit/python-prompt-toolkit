@@ -1,13 +1,24 @@
-from __future__ import unicode_literals
-
 import contextlib
 import io
 import os
 import sys
 import termios
 import tty
+from asyncio import AbstractEventLoop, get_event_loop
+from typing import (
+    Callable,
+    ContextManager,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Set,
+    TextIO,
+    Tuple,
+    Union,
+)
 
-from ..eventloop import get_event_loop
+from ..key_binding import KeyPress
 from .base import Input
 from .posix_utils import PosixStdinReader
 from .vt100_parser import Vt100Parser
@@ -24,10 +35,11 @@ class Vt100Input(Input):
     Vt100 input for Posix systems.
     (This uses a posix file descriptor that can be registered in the event loop.)
     """
-    _fds_not_a_terminal = set()  # For the error messages. Only display "Input
-                                 # is not a terminal" once per file descriptor.
+    # For the error messages. Only display "Input is not a terminal" once per
+    # file descriptor.
+    _fds_not_a_terminal: Set[int] = set()
 
-    def __init__(self, stdin):
+    def __init__(self, stdin: TextIO) -> None:
         # Test whether the given input object has a file descriptor.
         # (Idle reports stdin to be a TTY, but fileno() is not implemented.)
         try:
@@ -60,33 +72,35 @@ class Vt100Input(Input):
         # underlying file is closed, so that `typeahead_hash()` keeps working.
         self._fileno = stdin.fileno()
 
-        self._buffer = []  # Buffer to collect the Key objects.
+        self._buffer: List[KeyPress] = []  # Buffer to collect the Key objects.
         self.stdin_reader = PosixStdinReader(self._fileno)
         self.vt100_parser = Vt100Parser(
-            lambda key: self._buffer.append(key))
+            lambda key_press: self._buffer.append(key_press))
 
     @property
-    def responds_to_cpr(self):
+    def responds_to_cpr(self) -> bool:
         # When the input is a tty, we assume that CPR is supported.
         # It's not when the input is piped from Pexpect.
-        return self.stdin.isatty()
+        try:
+            return self.stdin.isatty()
+        except ValueError:
+            return False  # ValueError: I/O operation on closed file
 
-    def attach(self, input_ready_callback):
+    def attach(self, input_ready_callback: Callable[[], None]) -> ContextManager[None]:
         """
         Return a context manager that makes this input active in the current
         event loop.
         """
-        assert callable(input_ready_callback)
         return _attached_input(self, input_ready_callback)
 
-    def detach(self):
+    def detach(self) -> ContextManager[None]:
         """
         Return a context manager that makes sure that this input is not active
         in the current event loop.
         """
         return _detached_input(self)
 
-    def read_keys(self):
+    def read_keys(self) -> List[KeyPress]:
         " Read list of KeyPress. "
         # Read text from stdin.
         data = self.stdin_reader.read()
@@ -99,7 +113,7 @@ class Vt100Input(Input):
         self._buffer = []
         return result
 
-    def flush_keys(self):
+    def flush_keys(self) -> List[KeyPress]:
         """
         Flush pending keys and return them.
         (Used for flushing the 'escape' key.)
@@ -114,27 +128,27 @@ class Vt100Input(Input):
         return result
 
     @property
-    def closed(self):
+    def closed(self) -> bool:
         return self.stdin_reader.closed
 
-    def raw_mode(self):
+    def raw_mode(self) -> ContextManager[None]:
         return raw_mode(self.stdin.fileno())
 
-    def cooked_mode(self):
+    def cooked_mode(self) -> ContextManager[None]:
         return cooked_mode(self.stdin.fileno())
 
-    def fileno(self):
+    def fileno(self) -> int:
         return self.stdin.fileno()
 
-    def typeahead_hash(self):
+    def typeahead_hash(self) -> str:
         return 'fd-%s' % (self._fileno, )
 
 
-_current_callbacks = {}  # (loop, fd) -> current callback
+_current_callbacks: Dict[Tuple[AbstractEventLoop, int], Optional[Callable[[], None]]] = {}  # (loop, fd) -> current callback
 
 
 @contextlib.contextmanager
-def _attached_input(input, callback):
+def _attached_input(input: Vt100Input, callback: Callable[[], None]) -> Generator[None, None, None]:
     """
     Context manager that makes this input active in the current event loop.
 
@@ -161,7 +175,7 @@ def _attached_input(input, callback):
 
 
 @contextlib.contextmanager
-def _detached_input(input):
+def _detached_input(input: Vt100Input) -> Generator[None, None, None]:
     loop = get_event_loop()
     fd = input.fileno()
     previous = _current_callbacks.get((loop, fd))
@@ -178,7 +192,7 @@ def _detached_input(input):
             _current_callbacks[loop, fd] = previous
 
 
-class raw_mode(object):
+class raw_mode:
     """
     ::
 
@@ -201,19 +215,20 @@ class raw_mode(object):
 
     # 2. Related, when stdin is an SSH pipe, and no full terminal was allocated.
     #    See: https://github.com/jonathanslenders/python-prompt-toolkit/pull/165
-    def __init__(self, fileno):
+    def __init__(self, fileno: int) -> None:
         self.fileno = fileno
+        self.attrs_before: Optional[List[Union[int, List[bytes]]]]
         try:
             self.attrs_before = termios.tcgetattr(fileno)
-        except termios.error:
+        except termios.error:  # type: ignore
             # Ignore attribute errors.
             self.attrs_before = None
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         # NOTE: On os X systems, using pty.setraw() fails. Therefor we are using this:
         try:
             newattr = termios.tcgetattr(self.fileno)
-        except termios.error:
+        except termios.error:  # type: ignore
             pass
         else:
             newattr[tty.LFLAG] = self._patch_lflag(newattr[tty.LFLAG])
@@ -224,7 +239,7 @@ class raw_mode(object):
             # Solaris and derived operating systems it defaults to 4. (This is
             # because the VMIN slot is the same as the VEOF slot, which
             # defaults to ASCII EOT = Ctrl-D = 4.)
-            newattr[tty.CC][termios.VMIN] = 1
+            newattr[tty.CC][termios.VMIN] = 1  # type: ignore
 
             termios.tcsetattr(self.fileno, termios.TCSANOW, newattr)
 
@@ -251,7 +266,7 @@ class raw_mode(object):
         if self.attrs_before is not None:
             try:
                 termios.tcsetattr(self.fileno, termios.TCSANOW, self.attrs_before)
-            except termios.error:
+            except termios.error:  # type: ignore
                 pass
 
             # # Put the terminal in application mode.

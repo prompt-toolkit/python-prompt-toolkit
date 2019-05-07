@@ -1,7 +1,7 @@
 """
 Data structures for the selection.
 """
-from __future__ import unicode_literals
+from enum import Enum
 
 __all__ = [
     'SelectionType',
@@ -10,7 +10,7 @@ __all__ = [
 ]
 
 
-class SelectionType(object):
+class SelectionType(Enum):
     """
     Type of selection.
     """
@@ -24,24 +24,26 @@ class SelectionType(object):
     BLOCK = 'BLOCK'
 
 
-class PasteMode(object):
+class PasteMode(Enum):
     EMACS = 'EMACS'  # Yank like emacs.
     VI_AFTER = 'VI_AFTER'  # When pressing 'p' in Vi.
     VI_BEFORE = 'VI_BEFORE'  # When pressing 'P' in Vi.
 
 
-class SelectionState(object):
+class SelectionState:
     """
     State of the current selection.
 
     :param original_cursor_position: int
     :param type: :class:`~.SelectionType`
     """
-    def __init__(self, original_cursor_position=0, type=SelectionType.CHARACTERS):
+    def __init__(self, original_cursor_position: int = 0,
+                 type: SelectionType = SelectionType.CHARACTERS) -> None:
+
         self.original_cursor_position = original_cursor_position
         self.type = type
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '%s(original_cursor_position=%r, type=%r)' % (
             self.__class__.__name__,
             self.original_cursor_position, self.type)

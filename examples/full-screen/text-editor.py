@@ -2,14 +2,12 @@
 """
 A simple example of a Notepad-like text editor.
 """
-from __future__ import unicode_literals
-
 import datetime
+from asyncio import Future, ensure_future
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.completion import PathCompleter
-from prompt_toolkit.eventloop import From, Future, Return, ensure_future
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout.containers import (
@@ -159,14 +157,14 @@ def _(event):
 #
 
 def do_open_file():
-    def coroutine():
+    async def coroutine():
         global current_path
         open_dialog = TextInputDialog(
             title='Open file',
             label_text='Enter the path of a file:',
             completer=PathCompleter())
 
-        path = yield From(show_dialog_as_float(open_dialog))
+        path = await show_dialog_as_float(open_dialog)
         current_path = path
 
         if path is not None:
@@ -184,14 +182,14 @@ def do_about():
 
 
 def show_message(title, text):
-    def coroutine():
+    async def coroutine():
         dialog = MessageDialog(title, text)
-        yield From(show_dialog_as_float(dialog))
+        await show_dialog_as_float(dialog)
 
     ensure_future(coroutine())
 
 
-def show_dialog_as_float(dialog):
+async def show_dialog_as_float(dialog):
     " Coroutine. "
     float_ = Float(content=dialog)
     root_container.floats.insert(0, float_)
@@ -200,13 +198,13 @@ def show_dialog_as_float(dialog):
 
     focused_before = app.layout.current_window
     app.layout.focus(dialog)
-    result = yield dialog.future
+    result = await dialog.future
     app.layout.focus(focused_before)
 
     if float_ in root_container.floats:
         root_container.floats.remove(float_)
 
-    raise Return(result)
+    return result
 
 
 def do_new_file():
@@ -223,12 +221,12 @@ def do_time_date():
 
 
 def do_go_to():
-    def coroutine():
+    async def coroutine():
         dialog = TextInputDialog(
             title='Go to line',
             label_text='Line number:')
 
-        line_number = yield From(show_dialog_as_float(dialog))
+        line_number = await show_dialog_as_float(dialog)
 
         try:
             line_number = int(line_number)

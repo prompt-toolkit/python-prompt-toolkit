@@ -2,14 +2,14 @@
 All modern web browsers support these 140 color names.
 Taken from: https://www.w3schools.com/colors/colors_names.asp
 """
-from __future__ import unicode_literals
+from typing import Dict
 
 __all__ = [
     'NAMED_COLORS',
 ]
 
 
-NAMED_COLORS = {
+NAMED_COLORS: Dict[str, str] = {
     'AliceBlue':            '#f0f8ff',
     'AntiqueWhite':         '#faebd7',
     'Aqua':                 '#00ffff',

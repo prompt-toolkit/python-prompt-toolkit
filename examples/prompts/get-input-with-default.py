@@ -3,8 +3,6 @@
 Example of a call to `prompt` with a default value.
 The input is pre-filled, but the user can still edit the default.
 """
-from __future__ import unicode_literals
-
 import getpass
 
 from prompt_toolkit import prompt

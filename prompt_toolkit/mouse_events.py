@@ -15,7 +15,9 @@ through the `Window` class where the coordinates are translated from absolute
 coordinates to coordinates relative to the user control, and there
 `UIControl.mouse_handler` is called.
 """
-from __future__ import unicode_literals
+from enum import Enum
+
+from .data_structures import Point
 
 __all__ = [
     'MouseEventType',
@@ -23,23 +25,23 @@ __all__ = [
 ]
 
 
-class MouseEventType:
+class MouseEventType(Enum):
     MOUSE_UP = 'MOUSE_UP'
     MOUSE_DOWN = 'MOUSE_DOWN'
     SCROLL_UP = 'SCROLL_UP'
     SCROLL_DOWN = 'SCROLL_DOWN'
 
 
-class MouseEvent(object):
+class MouseEvent:
     """
     Mouse event, sent to `UIControl.mouse_handler`.
 
     :param position: `Point` instance.
     :param event_type: `MouseEventType`.
     """
-    def __init__(self, position, event_type):
+    def __init__(self, position: Point, event_type: MouseEventType) -> None:
         self.position = position
         self.event_type = event_type
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'MouseEvent(%r, %r)' % (self.position, self.event_type)

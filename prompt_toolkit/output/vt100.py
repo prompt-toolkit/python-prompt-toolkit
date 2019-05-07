@@ -6,18 +6,24 @@ A lot of thanks, regarding outputting of colors, goes to the Pygments project:
 everything has been highly optimized.)
 http://pygments.org/
 """
-from __future__ import unicode_literals
-
 import array
 import errno
 import sys
+from typing import (
+    IO,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    TextIO,
+    Tuple,
+)
 
-import six
-from six.moves import range
-
-from prompt_toolkit.layout.screen import Size
+from prompt_toolkit.data_structures import Size
 from prompt_toolkit.output import Output
-from prompt_toolkit.styles.base import ANSI_COLOR_NAMES
+from prompt_toolkit.styles import ANSI_COLOR_NAMES, Attrs
 
 from .color_depth import ColorDepth
 
@@ -173,13 +179,13 @@ class _16ColorCache(dict):
         return code, match
 
 
-class _256ColorCache(dict):
+class _256ColorCache(Dict[Tuple[int, int, int], int]):
     """
     Cache which maps (r, g, b) tuples to 256 colors.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         # Build color table.
-        colors = []
+        colors: List[Tuple[int, int, int]] = []
 
         # colors 0..15: 16 basic colors
         colors.append((0x00, 0x00, 0x00))  # 0
@@ -215,7 +221,7 @@ class _256ColorCache(dict):
 
         self.colors = colors
 
-    def __missing__(self, value):
+    def __missing__(self, value: Tuple[int, int, int]) -> int:
         r, g, b = value
 
         # Find closest color.
@@ -243,22 +249,21 @@ _16_bg_colors = _16ColorCache(bg=True)
 _256_colors = _256ColorCache()
 
 
-class _EscapeCodeCache(dict):
+class _EscapeCodeCache(Dict[Attrs, str]):
     """
     Cache for VT100 escape codes. It maps
     (fgcolor, bgcolor, bold, underline, reverse) tuples to VT100 escape sequences.
 
     :param true_color: When True, use 24bit colors instead of 256 colors.
     """
-    def __init__(self, color_depth):
-        assert color_depth in ColorDepth._ALL
+    def __init__(self, color_depth: ColorDepth) -> None:
         self.color_depth = color_depth
 
-    def __missing__(self, attrs):
+    def __missing__(self, attrs: Attrs) -> str:
         fgcolor, bgcolor, bold, underline, italic, blink, reverse, hidden = attrs
-        parts = []
+        parts: List[str] = []
 
-        parts.extend(self._colors_to_code(fgcolor, bgcolor))
+        parts.extend(self._colors_to_code(fgcolor or '', bgcolor or ''))
 
         if bold:
             parts.append('1')
@@ -281,7 +286,7 @@ class _EscapeCodeCache(dict):
         self[attrs] = result
         return result
 
-    def _color_name_to_rgb(self, color):
+    def _color_name_to_rgb(self, color: str) -> Tuple[int, int, int]:
         " Turn 'ffffff', into (0xff, 0xff, 0xff). "
         try:
             rgb = int(color, 16)
@@ -293,8 +298,10 @@ class _EscapeCodeCache(dict):
             b = rgb & 0xff
             return r, g, b
 
-    def _colors_to_code(self, fg_color, bg_color):
-        " Return a tuple with the vt100 values  that represent this color. "
+    def _colors_to_code(self, fg_color: str, bg_color: str) -> Iterable[str]:
+        """
+        Return a tuple with the vt100 values  that represent this color.
+        """
         # When requesting ANSI colors only, and both fg/bg color were converted
         # to ANSI, ensure that the foreground and background color are not the
         # same. (Unless they were explicitly defined to be the same color.)
@@ -340,14 +347,14 @@ class _EscapeCodeCache(dict):
                 else:
                     return (48 if bg else 38, 5, _256_colors[rgb])
 
-        result = []
+        result: List[int] = []
         result.extend(get(fg_color, False))
         result.extend(get(bg_color, True))
 
-        return map(six.text_type, result)
+        return map(str, result)
 
 
-def _get_size(fileno):
+def _get_size(fileno: int) -> Tuple[int, int]:
     # Thanks to fabric (fabfile.org), and
     # http://sqizit.bartletts.id.au/2011/02/14/pseudo-terminals-in-python/
     """
@@ -362,13 +369,13 @@ def _get_size(fileno):
     import termios
 
     # Buffer for the C call
-    buf = array.array(b'h' if six.PY2 else u'h', [0, 0, 0, 0])
+    buf = array.array('h', [0, 0, 0, 0])
 
     # Do TIOCGWINSZ (Get)
     # Note: We should not pass 'True' as a fourth parameter to 'ioctl'. (True
     #       is the default.) This causes segmentation faults on some systems.
     #       See: https://github.com/jonathanslenders/python-prompt-toolkit/pull/364
-    fcntl.ioctl(fileno, termios.TIOCGWINSZ, buf)
+    fcntl.ioctl(fileno, termios.TIOCGWINSZ, buf)  # type: ignore
 
     # Return rows, cols
     return buf[0], buf[1]
@@ -382,25 +389,29 @@ class Vt100_Output(Output):
     :param write_binary: Encode the output before writing it. If `True` (the
         default), the `stdout` object is supposed to expose an `encoding` attribute.
     """
-    _fds_not_a_terminal = set()  # For the error messages. Only display "Output
-                                 # is not a terminal" once per file descriptor.
+    # For the error messages. Only display "Output is not a terminal" once per
+    # file descriptor.
+    _fds_not_a_terminal: Set[int] = set()
 
-    def __init__(self, stdout, get_size, term=None, write_binary=True):
-        assert callable(get_size)
-        assert term is None or isinstance(term, six.text_type)
+    def __init__(self,
+                 stdout: TextIO,
+                 get_size: Callable[[], Size],
+                 term: Optional[str] = None,
+                 write_binary: bool = True) -> None:
+
         assert all(hasattr(stdout, a) for a in ('write', 'flush'))
 
         if write_binary:
             assert hasattr(stdout, 'encoding')
 
-        self._buffer = []
+        self._buffer: List[str] = []
         self.stdout = stdout
         self.write_binary = write_binary
-        self.get_size = get_size
+        self._get_size = get_size
         self.term = term or 'xterm'
 
         # Cache for escape codes.
-        self._escape_code_caches = {
+        self._escape_code_caches: Dict[ColorDepth, _EscapeCodeCache] = {
             ColorDepth.DEPTH_1_BIT: _EscapeCodeCache(ColorDepth.DEPTH_1_BIT),
             ColorDepth.DEPTH_4_BIT: _EscapeCodeCache(ColorDepth.DEPTH_4_BIT),
             ColorDepth.DEPTH_8_BIT: _EscapeCodeCache(ColorDepth.DEPTH_8_BIT),
@@ -408,7 +419,7 @@ class Vt100_Output(Output):
         }
 
     @classmethod
-    def from_pty(cls, stdout, term=None):
+    def from_pty(cls, stdout, term: Optional[str] = None) -> 'Vt100_Output':
         """
         Create an Output class from a pseudo terminal.
         (This will take the dimensions by reading the pseudo
@@ -425,7 +436,7 @@ class Vt100_Output(Output):
             sys.stderr.write(msg % fd)
             cls._fds_not_a_terminal.add(fd)
 
-        def get_size():
+        def get_size() -> Size:
             # If terminal (incorrectly) reports its size as 0, pick a
             # reasonable default.  See
             # https://github.com/ipython/ipython/issues/10071
@@ -437,51 +448,54 @@ class Vt100_Output(Output):
 
         return cls(stdout, get_size, term=term)
 
-    def fileno(self):
+    def get_size(self) -> Size:
+        return self._get_size()
+
+    def fileno(self) -> int:
         " Return file descriptor. "
         return self.stdout.fileno()
 
-    def encoding(self):
+    def encoding(self) -> str:
         " Return encoding used for stdout. "
         return self.stdout.encoding
 
-    def write_raw(self, data):
+    def write_raw(self, data: str) -> None:
         """
         Write raw data to output.
         """
         self._buffer.append(data)
 
-    def write(self, data):
+    def write(self, data: str) -> None:
         """
         Write text to output.
         (Removes vt100 escape codes. -- used for safely writing text.)
         """
         self._buffer.append(data.replace('\x1b', '?'))
 
-    def set_title(self, title):
+    def set_title(self, title: str) -> None:
         """
         Set terminal title.
         """
         if self.term not in ('linux', 'eterm-color'):  # Not supported by the Linux console.
             self.write_raw('\x1b]2;%s\x07' % title.replace('\x1b', '').replace('\x07', ''))
 
-    def clear_title(self):
+    def clear_title(self) -> None:
         self.set_title('')
 
-    def erase_screen(self):
+    def erase_screen(self) -> None:
         """
         Erases the screen with the background colour and moves the cursor to
         home.
         """
         self.write_raw('\x1b[2J')
 
-    def enter_alternate_screen(self):
+    def enter_alternate_screen(self) -> None:
         self.write_raw('\x1b[?1049h\x1b[H')
 
-    def quit_alternate_screen(self):
+    def quit_alternate_screen(self) -> None:
         self.write_raw('\x1b[?1049l')
 
-    def enable_mouse_support(self):
+    def enable_mouse_support(self) -> None:
         self.write_raw('\x1b[?1000h')
 
         # Enable urxvt Mouse mode. (For terminals that understand this.)
@@ -493,28 +507,28 @@ class Vt100_Output(Output):
         # Note: E.g. lxterminal understands 1000h, but not the urxvt or sgr
         #       extensions.
 
-    def disable_mouse_support(self):
+    def disable_mouse_support(self) -> None:
         self.write_raw('\x1b[?1000l')
         self.write_raw('\x1b[?1015l')
         self.write_raw('\x1b[?1006l')
 
-    def erase_end_of_line(self):
+    def erase_end_of_line(self) -> None:
         """
         Erases from the current cursor position to the end of the current line.
         """
         self.write_raw('\x1b[K')
 
-    def erase_down(self):
+    def erase_down(self) -> None:
         """
         Erases the screen from the current line down to the bottom of the
         screen.
         """
         self.write_raw('\x1b[J')
 
-    def reset_attributes(self):
+    def reset_attributes(self) -> None:
         self.write_raw('\x1b[0m')
 
-    def set_attributes(self, attrs, color_depth):
+    def set_attributes(self, attrs: Attrs, color_depth: ColorDepth) -> None:
         """
         Create new style and output.
 
@@ -526,23 +540,25 @@ class Vt100_Output(Output):
         # Write escape character.
         self.write_raw(escape_code_cache[attrs])
 
-    def disable_autowrap(self):
+    def disable_autowrap(self) -> None:
         self.write_raw('\x1b[?7l')
 
-    def enable_autowrap(self):
+    def enable_autowrap(self) -> None:
         self.write_raw('\x1b[?7h')
 
-    def enable_bracketed_paste(self):
+    def enable_bracketed_paste(self) -> None:
         self.write_raw('\x1b[?2004h')
 
-    def disable_bracketed_paste(self):
+    def disable_bracketed_paste(self) -> None:
         self.write_raw('\x1b[?2004l')
 
-    def cursor_goto(self, row=0, column=0):
-        """ Move cursor position. """
+    def cursor_goto(self, row: int = 0, column: int = 0) -> None:
+        """
+        Move cursor position.
+        """
         self.write_raw('\x1b[%i;%iH' % (row, column))
 
-    def cursor_up(self, amount):
+    def cursor_up(self, amount: int) -> None:
         if amount == 0:
             pass
         elif amount == 1:
@@ -550,7 +566,7 @@ class Vt100_Output(Output):
         else:
             self.write_raw('\x1b[%iA' % amount)
 
-    def cursor_down(self, amount):
+    def cursor_down(self, amount: int) -> None:
         if amount == 0:
             pass
         elif amount == 1:
@@ -560,7 +576,7 @@ class Vt100_Output(Output):
         else:
             self.write_raw('\x1b[%iB' % amount)
 
-    def cursor_forward(self, amount):
+    def cursor_forward(self, amount: int) -> None:
         if amount == 0:
             pass
         elif amount == 1:
@@ -568,7 +584,7 @@ class Vt100_Output(Output):
         else:
             self.write_raw('\x1b[%iC' % amount)
 
-    def cursor_backward(self, amount):
+    def cursor_backward(self, amount: int) -> None:
         if amount == 0:
             pass
         elif amount == 1:
@@ -576,13 +592,13 @@ class Vt100_Output(Output):
         else:
             self.write_raw('\x1b[%iD' % amount)
 
-    def hide_cursor(self):
+    def hide_cursor(self) -> None:
         self.write_raw('\x1b[?25l')
 
-    def show_cursor(self):
+    def show_cursor(self) -> None:
         self.write_raw('\x1b[?12l\x1b[?25h')  # Stop blinking cursor and show.
 
-    def flush(self):
+    def flush(self) -> None:
         """
         Write to output stream and flush.
         """
@@ -597,6 +613,7 @@ class Vt100_Output(Output):
             # UnicodeEncodeError crashes. E.g. u'\xb7' does not appear in 'ascii'.)
             # My Arch Linux installation of july 2015 reported 'ANSI_X3.4-1968'
             # for sys.stdout.encoding in xterm.
+            out: IO
             if self.write_binary:
                 if hasattr(self.stdout, 'buffer'):
                     out = self.stdout.buffer  # Py3.
@@ -626,14 +643,14 @@ class Vt100_Output(Output):
 
         self._buffer = []
 
-    def ask_for_cpr(self):
+    def ask_for_cpr(self) -> None:
         """
         Asks for a cursor position report (CPR).
         """
         self.write_raw('\x1b[6n')
         self.flush()
 
-    def bell(self):
+    def bell(self) -> None:
         " Sound bell. "
         self.write_raw('\a')
         self.flush()

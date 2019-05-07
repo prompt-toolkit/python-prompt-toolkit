@@ -1,5 +1,4 @@
-from __future__ import unicode_literals
-
+from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.keys import Keys
 
 from ..key_bindings import KeyBindings
@@ -8,12 +7,14 @@ __all__ = [
     'load_cpr_bindings',
 ]
 
+E = KeyPressEvent
 
-def load_cpr_bindings():
+
+def load_cpr_bindings() -> KeyBindings:
     key_bindings = KeyBindings()
 
     @key_bindings.add(Keys.CPRResponse, save_before=lambda e: False)
-    def _(event):
+    def _(event: E) -> None:
         """
         Handle incoming Cursor-Position-Request response.
         """

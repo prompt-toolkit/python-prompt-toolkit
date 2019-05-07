@@ -1,10 +1,7 @@
-from __future__ import unicode_literals
-
-from prompt_toolkit.key_binding.key_processor import KeyPress
+from prompt_toolkit.data_structures import Point
+from prompt_toolkit.key_binding.key_processor import KeyPress, KeyPressEvent
 from prompt_toolkit.keys import Keys
-from prompt_toolkit.layout.screen import Point
 from prompt_toolkit.mouse_events import MouseEvent, MouseEventType
-from prompt_toolkit.renderer import HeightIsUnknownError
 from prompt_toolkit.utils import is_windows
 
 from ..key_bindings import KeyBindings
@@ -13,8 +10,10 @@ __all__ = [
     'load_mouse_bindings',
 ]
 
+E = KeyPressEvent
 
-def load_mouse_bindings():
+
+def load_mouse_bindings() -> KeyBindings:
     """
     Key bindings, required for mouse support.
     (Mouse events enter through the key binding system.)
@@ -22,7 +21,7 @@ def load_mouse_bindings():
     key_bindings = KeyBindings()
 
     @key_bindings.add(Keys.Vt100MouseEvent)
-    def _(event):
+    def _(event: E) -> None:
         """
         Handling of incoming mouse event.
         """
@@ -85,6 +84,7 @@ def load_mouse_bindings():
         if event.app.renderer.height_is_known and mouse_event is not None:
             # Take region above the layout into account. The reported
             # coordinates are absolute to the visible part of the terminal.
+            from prompt_toolkit.renderer import HeightIsUnknownError
             try:
                 y -= event.app.renderer.rows_above_layout
             except HeightIsUnknownError:
@@ -96,19 +96,23 @@ def load_mouse_bindings():
                                event_type=mouse_event))
 
     @key_bindings.add(Keys.ScrollUp)
-    def _(event):
-        " Scroll up event without cursor position. "
+    def _(event: E) -> None:
+        """
+        Scroll up event without cursor position.
+        """
         # We don't receive a cursor position, so we don't know which window to
         # scroll. Just send an 'up' key press instead.
         event.key_processor.feed(KeyPress(Keys.Up), first=True)
 
     @key_bindings.add(Keys.ScrollDown)
-    def _(event):
-        " Scroll down event without cursor position. "
+    def _(event: E) -> None:
+        """
+        Scroll down event without cursor position.
+        """
         event.key_processor.feed(KeyPress(Keys.Down), first=True)
 
     @key_bindings.add(Keys.WindowsMouseEvent)
-    def _(event):
+    def _(event: E) -> None:
         """
         Handling of mouse events for Windows.
         """

@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from prompt_toolkit.completion.filesystem import (
     ExecutableCompleter,
     PathCompleter,
@@ -18,7 +16,7 @@ class SystemCompleter(GrammarCompleter):
     """
     Completer for system commands.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         # Compile grammar.
         g = compile(
             r"""
@@ -50,7 +48,7 @@ class SystemCompleter(GrammarCompleter):
             })
 
         # Create GrammarCompleter
-        super(SystemCompleter, self).__init__(
+        super().__init__(
             g,
             {
                 'executable': ExecutableCompleter(),

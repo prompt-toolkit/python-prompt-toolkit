@@ -3,8 +3,6 @@
 A simple example of a calculator program.
 This could be used as inspiration for a REPL.
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit.application import Application
 from prompt_toolkit.document import Document
 from prompt_toolkit.filters import has_focus

@@ -3,8 +3,6 @@
 A very simple progress bar which keep track of the progress as we consume an
 iterator.
 """
-from __future__ import unicode_literals
-
 import time
 
 from prompt_toolkit.formatted_text import HTML

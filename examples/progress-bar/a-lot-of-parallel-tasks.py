@@ -2,8 +2,6 @@
 """
 More complex demonstration of what's possible with the progress bar.
 """
-from __future__ import unicode_literals
-
 import random
 import threading
 import time

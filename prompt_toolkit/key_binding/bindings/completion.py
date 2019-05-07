@@ -1,25 +1,35 @@
 """
 Key binding handlers for displaying completions.
 """
-from __future__ import unicode_literals
-
 import math
+from asyncio import Future, ensure_future
+from typing import TYPE_CHECKING, List
 
-from prompt_toolkit.application.run_in_terminal import (
-    run_coroutine_in_terminal,
+from prompt_toolkit.application.run_in_terminal import in_terminal
+from prompt_toolkit.completion import (
+    CompleteEvent,
+    Completion,
+    get_common_complete_suffix,
 )
-from prompt_toolkit.completion import CompleteEvent, get_common_complete_suffix
+from prompt_toolkit.formatted_text import StyleAndTextTuples
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
+from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.utils import get_cwidth
+
+if TYPE_CHECKING:
+    from prompt_toolkit.application import Application
+    from prompt_toolkit.shortcuts import PromptSession
 
 __all__ = [
     'generate_completions',
     'display_completions_like_readline',
 ]
 
+E = KeyPressEvent
 
-def generate_completions(event):
+
+def generate_completions(event: E) -> None:
     r"""
     Tab-completion: where the first tab completes the common suffix and the
     second tab lists all the completions.
@@ -33,7 +43,7 @@ def generate_completions(event):
         b.start_completion(insert_common_part=True)
 
 
-def display_completions_like_readline(event):
+def display_completions_like_readline(event: E) -> None:
     """
     Key binding handler for readline-style tab completion.
     This is meant to be as similar as possible to the way how readline displays
@@ -69,7 +79,8 @@ def display_completions_like_readline(event):
         _display_completions_like_readline(event.app, completions)
 
 
-def _display_completions_like_readline(app, completions):
+def _display_completions_like_readline(
+        app: 'Application', completions: List[Completion]) -> Future:
     """
     Display the list of completions in columns above the prompt.
     This will ask for a confirmation if there are too many completions to fit
@@ -77,7 +88,6 @@ def _display_completions_like_readline(app, completions):
     """
     from prompt_toolkit.shortcuts.prompt import create_confirm_session
     from prompt_toolkit.formatted_text import to_formatted_text
-    assert isinstance(completions, list)
 
     # Get terminal dimensions.
     term_size = app.output.get_size()
@@ -94,7 +104,7 @@ def _display_completions_like_readline(app, completions):
     page_count = int(math.ceil(len(completions) / float(completions_per_page)))
         # Note: math.ceil can return float on Python2.
 
-    def display(page):
+    def display(page: int) -> None:
         # Display completions.
         page_completions = completions[page * completions_per_page:
                                        (page + 1) * completions_per_page]
@@ -103,7 +113,7 @@ def _display_completions_like_readline(app, completions):
         page_columns = [page_completions[i * page_row_count:(i + 1) * page_row_count]
                    for i in range(column_count)]
 
-        result = []  # FormattedText list: (style,text) tuples.
+        result: StyleAndTextTuples = []
 
         for r in range(page_row_count):
             for c in range(column_count):
@@ -123,35 +133,36 @@ def _display_completions_like_readline(app, completions):
         app.print_text(to_formatted_text(result, 'class:readline-like-completions'))
 
     # User interaction through an application generator function.
-    def run_compl():
+    async def run_compl() -> None:
         " Coroutine. "
-        if len(completions) > completions_per_page:
-            # Ask confirmation if it doesn't fit on the screen.
-            confirm = yield create_confirm_session(
-                'Display all {} possibilities?'.format(len(completions)),
-                ).prompt(async_=True)
+        async with in_terminal(render_cli_done=True):
+            if len(completions) > completions_per_page:
+                # Ask confirmation if it doesn't fit on the screen.
+                confirm = await create_confirm_session(
+                    'Display all {} possibilities?'.format(len(completions)),
+                    ).prompt(async_=True)
 
-            if confirm:
-                # Display pages.
-                for page in range(page_count):
-                    display(page)
+                if confirm:
+                    # Display pages.
+                    for page in range(page_count):
+                        display(page)
 
-                    if page != page_count - 1:
-                        # Display --MORE-- and go to the next page.
-                        show_more = yield _create_more_session('--MORE--').prompt(async_=True)
+                        if page != page_count - 1:
+                            # Display --MORE-- and go to the next page.
+                            show_more = await _create_more_session('--MORE--').prompt(async_=True)
 
-                        if not show_more:
-                            return
+                            if not show_more:
+                                return
+                else:
+                    app.output.flush()
             else:
-                app.output.flush()
-        else:
-            # Display all completions.
-            display(0)
+                # Display all completions.
+                display(0)
 
-    run_coroutine_in_terminal(run_compl, render_cli_done=True)
+    return ensure_future(run_compl())
 
 
-def _create_more_session(message='--MORE--'):
+def _create_more_session(message: str = '--MORE--') -> 'PromptSession':
     """
     Create a `PromptSession` object for displaying the "--MORE--".
     """
@@ -164,7 +175,7 @@ def _create_more_session(message='--MORE--'):
     @bindings.add(Keys.ControlJ)
     @bindings.add(Keys.ControlM)
     @bindings.add(Keys.ControlI)  # Tab.
-    def _(event):
+    def _(event: E) -> None:
         event.app.exit(result=True)
 
     @bindings.add('n')
@@ -172,14 +183,14 @@ def _create_more_session(message='--MORE--'):
     @bindings.add('q')
     @bindings.add('Q')
     @bindings.add(Keys.ControlC)
-    def _(event):
+    def _(event: E) -> None:
         event.app.exit(result=False)
 
     @bindings.add(Keys.Any)
-    def _(event):
+    def _(event: E) -> None:
         " Disable inserting of text. "
 
-    session = PromptSession(message,
+    return PromptSession(
+        message,
         key_bindings=bindings,
         erase_when_done=True)
-    return session

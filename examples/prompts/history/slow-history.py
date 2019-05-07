@@ -5,8 +5,6 @@ Simple example of a custom, very slow history, that is loaded asynchronously.
 By wrapping it in `ThreadedHistory`, the history will load in the background
 without blocking any user interaction.
 """
-from __future__ import unicode_literals
-
 import time
 
 from prompt_toolkit import PromptSession

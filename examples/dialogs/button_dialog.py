@@ -2,8 +2,6 @@
 """
 Example of button dialog window.
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit.shortcuts import button_dialog
 
 
@@ -16,7 +14,7 @@ def main():
             ('No', False),
             ('Maybe...', None),
         ],
-    )
+    ).run()
 
     print('Result = {}'.format(result))
 

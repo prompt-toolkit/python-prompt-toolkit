@@ -1,12 +1,12 @@
 """
 Completer for a regular grammar.
 """
-from __future__ import unicode_literals
+from typing import Dict, Iterable, List
 
-from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.completion import CompleteEvent, Completer, Completion
 from prompt_toolkit.document import Document
 
-from .compiler import _CompiledGrammar
+from .compiler import Match, _CompiledGrammar
 
 __all__ = [
     'GrammarCompleter',
@@ -22,14 +22,14 @@ class GrammarCompleter(Completer):
     :param completers: `dict` mapping variable names of the grammar to the
                        `Completer` instances to be used for each variable.
     """
-    def __init__(self, compiled_grammar, completers):
-        assert isinstance(compiled_grammar, _CompiledGrammar)
-        assert isinstance(completers, dict)
+    def __init__(self, compiled_grammar: _CompiledGrammar,
+                 completers: Dict[str, Completer]) -> None:
 
         self.compiled_grammar = compiled_grammar
         self.completers = completers
 
-    def get_completions(self, document, complete_event):
+    def get_completions(self, document: Document,
+                        complete_event: CompleteEvent) -> Iterable[Completion]:
         m = self.compiled_grammar.match_prefix(document.text_before_cursor)
 
         if m:
@@ -39,7 +39,9 @@ class GrammarCompleter(Completer):
             for c in completions:
                 yield c
 
-    def _get_completions_for_match(self, match, complete_event):
+    def _get_completions_for_match(
+            self, match: Match,
+            complete_event: CompleteEvent) -> Iterable[Completion]:
         """
         Yield all the possible completions for this input string.
         (The completer assumes that the cursor position was at the end of the
@@ -71,13 +73,13 @@ class GrammarCompleter(Completer):
                         display=completion.display,
                         display_meta=completion.display_meta)
 
-    def _remove_duplicates(self, items):
+    def _remove_duplicates(self, items: Iterable[Completion]) -> List[Completion]:
         """
         Remove duplicates, while keeping the order.
         (Sometimes we have duplicates, because the there several matches of the
         same grammar, each yielding similar completions.)
         """
-        result = []
+        result: List[Completion] = []
         for i in items:
             if i not in result:
                 result.append(i)

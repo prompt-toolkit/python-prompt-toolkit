@@ -19,7 +19,7 @@ class COORD(Structure):
         ('Y', c_short),  # Short
     ]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '%s(X=%r, Y=%r, type_x=%r, type_y=%r)' % (
             self.__class__.__name__, self.X, self.Y, type(self.X), type(self.Y))
 
@@ -133,7 +133,7 @@ class CONSOLE_SCREEN_BUFFER_INFO(Structure):
         ("dwMaximumWindowSize", COORD),
     ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '(%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d)' % (
             self.dwSize.Y, self.dwSize.X,
             self.dwCursorPosition.Y, self.dwCursorPosition.X,

@@ -1,11 +1,11 @@
 """
 Tool for creating styles from a dictionary.
 """
-from __future__ import absolute_import, unicode_literals
-
 import itertools
 import re
 import sys
+from enum import Enum
+from typing import Dict, Hashable, List, Set, Tuple, TypeVar
 
 from prompt_toolkit.cache import SimpleCache
 
@@ -29,7 +29,7 @@ _named_colors_lowercase = dict(
     (k.lower(), v.lstrip('#')) for k, v in NAMED_COLORS.items())
 
 
-def parse_color(text):
+def parse_color(text: str) -> str:
     """
     Parse/validate color format.
 
@@ -81,7 +81,7 @@ _EMPTY_ATTRS = Attrs(color=None, bgcolor=None, bold=None, underline=None,
                      italic=None, blink=None, reverse=None, hidden=None)
 
 
-def _expand_classname(classname):
+def _expand_classname(classname: str) -> List[str]:
     """
     Split a single class name at the `.` operator, and build a list of classes.
 
@@ -96,7 +96,7 @@ def _expand_classname(classname):
     return result
 
 
-def _parse_style_str(style_str):
+def _parse_style_str(style_str: str) -> Attrs:
     """
     Take a style string, e.g.  'bg:red #88ff00 class:title'
     and return a `Attrs` instance.
@@ -163,7 +163,7 @@ def _parse_style_str(style_str):
 CLASS_NAMES_RE = re.compile(r'^[a-z0-9.\s_-]*$')  # This one can't contain a comma!
 
 
-class Priority:
+class Priority(Enum):
     """
     The priority of the rules, when a style is created from a dictionary.
 
@@ -181,8 +181,6 @@ class Priority:
     """
     DICT_KEY_ORDER = 'KEY_ORDER'
     MOST_PRECISE = 'MOST_PRECISE'
-
-    _ALL = [DICT_KEY_ORDER, MOST_PRECISE]
 
 
 # In the latest python verions, we take the dictionary ordering like it is,
@@ -216,9 +214,7 @@ class Style(BaseStyle):
 
     The ``from_dict`` classmethod is similar, but takes a dictionary as input.
     """
-    def __init__(self, style_rules):
-        assert isinstance(style_rules, list)
-
+    def __init__(self, style_rules: List[Tuple[str, str]]) -> None:
         class_names_and_attrs = []
 
         # Loop through the rules in the order they were defined.
@@ -228,28 +224,27 @@ class Style(BaseStyle):
 
             # The order of the class names doesn't matter.
             # (But the order of rules does matter.)
-            class_names = frozenset(class_names.lower().split())
+            class_names_set = frozenset(class_names.lower().split())
             attrs = _parse_style_str(style_str)
 
-            class_names_and_attrs.append((class_names, attrs))
+            class_names_and_attrs.append((class_names_set, attrs))
 
         self._style_rules = style_rules
         self.class_names_and_attrs = class_names_and_attrs
 
     @property
-    def style_rules(self):
+    def style_rules(self) -> List[Tuple[str, str]]:
         return self._style_rules
 
     @classmethod
-    def from_dict(cls, style_dict, priority=default_priority):
+    def from_dict(cls, style_dict: Dict[str, str],
+                  priority: Priority = default_priority) -> 'Style':
         """
         :param style_dict: Style dictionary.
         :param priority: `Priority` value.
         """
-        assert priority in Priority._ALL
-
         if priority == Priority.MOST_PRECISE:
-            def key(item):
+            def key(item: Tuple[str, str]) -> int:
                 # Split on '.' and whitespace. Count elements.
                 return sum(len(i.split('.')) for i in item[0].split())
 
@@ -257,12 +252,13 @@ class Style(BaseStyle):
         else:
             return cls(list(style_dict.items()))
 
-    def get_attrs_for_style_str(self, style_str, default=DEFAULT_ATTRS):
+    def get_attrs_for_style_str(self, style_str: str,
+                                default: Attrs = DEFAULT_ATTRS) -> Attrs:
         """
         Get `Attrs` for the given style string.
         """
         list_of_attrs = [default]
-        class_names = set()
+        class_names: Set[str] = set()
 
         # Apply default styling.
         for names, attr in self.class_names_and_attrs:
@@ -304,21 +300,25 @@ class Style(BaseStyle):
 
         return _merge_attrs(list_of_attrs)
 
-    def invalidation_hash(self):
+    def invalidation_hash(self) -> Hashable:
         return id(self.class_names_and_attrs)
 
 
-def _merge_attrs(list_of_attrs):
+_T = TypeVar('_T')
+
+
+def _merge_attrs(list_of_attrs: List[Attrs]) -> Attrs:
     """
     Take a list of :class:`.Attrs` instances and merge them into one.
     Every `Attr` in the list can override the styling of the previous one. So,
     the last one has highest priority.
     """
-    def _or(*values):
+    def _or(*values: _T) -> _T:
         " Take first not-None value, starting at the end. "
         for v in values[::-1]:
             if v is not None:
                 return v
+        raise ValueError  # Should not happen, there's always one non-null value.
 
     return Attrs(
         color=_or('', *[a.color for a in list_of_attrs]),
@@ -331,7 +331,7 @@ def _merge_attrs(list_of_attrs):
         hidden=_or(False, *[a.hidden for a in list_of_attrs]))
 
 
-def merge_styles(styles):
+def merge_styles(styles: List[BaseStyle]) -> '_MergedStyle':
     """
     Merge multiple `Style` objects.
     """
@@ -354,28 +354,27 @@ class _MergedStyle(BaseStyle):
     #       the next style specified a default color for any text. (The
     #       explicit styling of class:aborted should have taken priority,
     #       because it was more precise.)
-    def __init__(self, styles):
-        assert all(isinstance(style, BaseStyle) for style in styles)
-
+    def __init__(self, styles: List[BaseStyle]) -> None:
         self.styles = styles
-        self._style = SimpleCache(maxsize=1)
+        self._style: SimpleCache[Hashable, Style] = SimpleCache(maxsize=1)
 
     @property
-    def _merged_style(self):
+    def _merged_style(self) -> Style:
         " The `Style` object that has the other styles merged together. "
-        def get():
+        def get() -> Style:
             return Style(self.style_rules)
         return self._style.get(self.invalidation_hash(), get)
 
     @property
-    def style_rules(self):
+    def style_rules(self) -> List[Tuple[str, str]]:
         style_rules = []
         for s in self.styles:
             style_rules.extend(s.style_rules)
         return style_rules
 
-    def get_attrs_for_style_str(self, style_str, default=DEFAULT_ATTRS):
+    def get_attrs_for_style_str(self, style_str: str,
+                                default: Attrs = DEFAULT_ATTRS) -> Attrs:
         return self._merged_style.get_attrs_for_style_str(style_str, default)
 
-    def invalidation_hash(self):
+    def invalidation_hash(self) -> Hashable:
         return tuple(s.invalidation_hash() for s in self.styles)

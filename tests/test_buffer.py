@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import pytest
+
 from prompt_toolkit.buffer import Buffer
 
 

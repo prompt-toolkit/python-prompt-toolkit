@@ -1,8 +1,24 @@
-from __future__ import unicode_literals
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Iterable,
+    List,
+    Tuple,
+    Union,
+    cast,
+)
 
-import six
+from prompt_toolkit.mouse_events import MouseEvent
+
+if TYPE_CHECKING:
+    from typing_extensions import Protocol
 
 __all__ = [
+    'OneStyleAndTextTuple',
+    'StyleAndTextTuples',
+    'MagicFormattedText',
+    'AnyFormattedText',
     'to_formatted_text',
     'is_formatted_text',
     'Template',
@@ -10,8 +26,38 @@ __all__ = [
     'FormattedText',
 ]
 
+OneStyleAndTextTuple = Union[
+    Tuple[str, str],
+    Tuple[str, str, Callable[[MouseEvent], None]],
+]
 
-def to_formatted_text(value, style='', auto_convert=False):
+# List of (style, text) tuples.
+StyleAndTextTuples = List[OneStyleAndTextTuple]
+
+
+if TYPE_CHECKING:
+    class MagicFormattedText(Protocol):
+        """
+        Any object that implements ``__pt_formatted_text__`` represents formatted
+        text.
+        """
+        def __pt_formatted_text__(self) -> StyleAndTextTuples:
+            ...
+
+
+AnyFormattedText = Union[
+    str,
+    'MagicFormattedText',
+    StyleAndTextTuples,
+    # Callable[[], 'AnyFormattedText']  # Recursive definition not supported by mypy.
+    Callable[[], Any]
+]
+
+
+def to_formatted_text(
+        value: AnyFormattedText,
+        style: str = '',
+        auto_convert: bool = False) -> 'FormattedText':
     """
     Convert the given value (which can be formatted text) into a list of text
     fragments. (Which is the canonical form of formatted text.) The outcome is
@@ -25,22 +71,16 @@ def to_formatted_text(value, style='', auto_convert=False):
     :param auto_convert: If `True`, also accept other types, and convert them
         to a string first.
     """
-    assert isinstance(style, six.text_type)
+    result: Union[FormattedText, StyleAndTextTuples]
 
     if value is None:
         result = []
-    elif isinstance(value, six.text_type):
+    elif isinstance(value, str):
         result = [('', value)]
     elif isinstance(value, list):
-        if len(value):
-            assert isinstance(value[0][0], six.text_type), \
-                'Expecting string, got: %r' % (value[0][0], )
-            assert isinstance(value[0][1], six.text_type), \
-                'Expecting string, got: %r' % (value[0][1], )
-
-        result = value
+        result = cast(StyleAndTextTuples, value)
     elif hasattr(value, '__pt_formatted_text__'):
-        result = value.__pt_formatted_text__()
+        result = cast('MagicFormattedText', value).__pt_formatted_text__()
     elif callable(value):
         return to_formatted_text(value(), style=style)
     elif auto_convert:
@@ -51,15 +91,10 @@ def to_formatted_text(value, style='', auto_convert=False):
 
     # Apply extra style.
     if style:
-        try:
-            result = [(style + ' ' + k, v) for k, v in result]
-        except ValueError:
-            # Too many values to unpack:
-            #     If the above failed, try the slower version (almost twice as
-            #     slow) which supports multiple items. This is used in the
-            #     `to_formatted_text` call in `FormattedTextControl` which also
-            #     accepts (style, text, mouse_handler) tuples.
-            result = [(style + ' ' + item[0], ) + item[1:] for item in result]
+        result = cast(
+            StyleAndTextTuples,
+            [(style + ' ' + item_style, *rest) for item_style, *rest in result]
+        )
 
     # Make sure the result is wrapped in a `FormattedText`. Among other
     # reasons, this is important for `print_formatted_text` to work correctly
@@ -70,7 +105,7 @@ def to_formatted_text(value, style='', auto_convert=False):
         return FormattedText(result)
 
 
-def is_formatted_text(value):
+def is_formatted_text(value: object) -> bool:
     """
     Check whether the input is valid formatted text (for use in assert
     statements).
@@ -78,29 +113,28 @@ def is_formatted_text(value):
     """
     if callable(value):
         return True
-    if isinstance(value, (six.text_type, list)):
+    if isinstance(value, (str, list)):
         return True
     if hasattr(value, '__pt_formatted_text__'):
         return True
     return False
 
 
-class FormattedText(list):
+class FormattedText(StyleAndTextTuples):
     """
     A list of ``(style, text)`` tuples.
 
     (In some situations, this can also be ``(style, text, mouse_handler)``
     tuples.)
     """
-    def __pt_formatted_text__(self):
+    def __pt_formatted_text__(self) -> StyleAndTextTuples:
         return self
 
-    def __repr__(self):
-        return 'FormattedText(%s)' % (
-            super(FormattedText, self).__repr__())
+    def __repr__(self) -> str:
+        return 'FormattedText(%s)' % super().__repr__()
 
 
-class Template(object):
+class Template:
     """
     Template for string interpolation with formatted text.
 
@@ -110,14 +144,11 @@ class Template(object):
 
     :param text: Plain text.
     """
-    def __init__(self, text):
-        assert isinstance(text, six.text_type)
+    def __init__(self, text: str) -> None:
         assert '{0}' not in text
         self.text = text
 
-    def format(self, *values):
-        assert all(is_formatted_text(v) for v in values)
-
+    def format(self, *values: AnyFormattedText) -> AnyFormattedText:
         def get_result():
             # Split the template in parts.
             parts = self.text.split('{}')
@@ -132,15 +163,14 @@ class Template(object):
         return get_result
 
 
-def merge_formatted_text(items):
+def merge_formatted_text(items: Iterable[AnyFormattedText]) -> AnyFormattedText:
     """
     Merge (Concatenate) several pieces of formatted text together.
     """
-    assert all(is_formatted_text(v) for v in items)
-
     def _merge_formatted_text():
         result = FormattedText()
         for i in items:
             result.extend(to_formatted_text(i))
         return result
+
     return _merge_formatted_text

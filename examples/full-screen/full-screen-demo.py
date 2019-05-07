@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 """
 """
-from __future__ import unicode_literals
-
 from pygments.lexers.html import HtmlLexer
 
 from prompt_toolkit.application import Application

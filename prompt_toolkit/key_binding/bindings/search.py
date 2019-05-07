@@ -1,8 +1,6 @@
 """
 Search related key bindings.
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit import search
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.filters import (
@@ -10,6 +8,7 @@ from prompt_toolkit.filters import (
     control_is_searchable,
     is_searching,
 )
+from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 
 from ..key_bindings import key_binding
 
@@ -23,9 +22,11 @@ __all__ = [
     'accept_search_and_accept_input',
 ]
 
+E = KeyPressEvent
+
 
 @key_binding(filter=is_searching)
-def abort_search(event):
+def abort_search(event: E) -> None:
     """
     Abort an incremental search and restore the original
     line.
@@ -35,7 +36,7 @@ def abort_search(event):
 
 
 @key_binding(filter=is_searching)
-def accept_search(event):
+def accept_search(event: E) -> None:
     """
     When enter pressed in isearch, quit isearch mode. (Multiline
     isearch would be too complicated.)
@@ -45,7 +46,7 @@ def accept_search(event):
 
 
 @key_binding(filter=control_is_searchable)
-def start_reverse_incremental_search(event):
+def start_reverse_incremental_search(event: E) -> None:
     """
     Enter reverse incremental search.
     (Usually ControlR.)
@@ -54,7 +55,7 @@ def start_reverse_incremental_search(event):
 
 
 @key_binding(filter=control_is_searchable)
-def start_forward_incremental_search(event):
+def start_forward_incremental_search(event: E) -> None:
     """
     Enter forward incremental search.
     (Usually ControlS.)
@@ -63,7 +64,7 @@ def start_forward_incremental_search(event):
 
 
 @key_binding(filter=is_searching)
-def reverse_incremental_search(event):
+def reverse_incremental_search(event: E) -> None:
     """
     Apply reverse incremental search, but keep search buffer focused.
     """
@@ -72,7 +73,7 @@ def reverse_incremental_search(event):
 
 
 @key_binding(filter=is_searching)
-def forward_incremental_search(event):
+def forward_incremental_search(event: E) -> None:
     """
     Apply forward incremental search, but keep search buffer focused.
     """
@@ -81,16 +82,16 @@ def forward_incremental_search(event):
 
 
 @Condition
-def _previous_buffer_is_returnable():
+def _previous_buffer_is_returnable() -> bool:
     """
     True if the previously focused buffer has a return handler.
     """
     prev_control = get_app().layout.search_target_buffer_control
-    return prev_control and prev_control.buffer.is_returnable
+    return bool(prev_control and prev_control.buffer.is_returnable)
 
 
 @key_binding(filter=is_searching & _previous_buffer_is_returnable)
-def accept_search_and_accept_input(event):
+def accept_search_and_accept_input(event: E) -> None:
     """
     Accept the search operation first, then accept the input.
     """

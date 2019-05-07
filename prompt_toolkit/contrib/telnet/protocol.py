@@ -4,17 +4,18 @@ specification, but sufficient for a command line interface.)
 
 Inspired by `Twisted.conch.telnet`.
 """
-from __future__ import unicode_literals
-
 import struct
-
-from six import binary_type, int2byte, iterbytes
 
 from .log import logger
 
 __all__ = [
     'TelnetProtocolParser',
 ]
+
+
+def int2byte(number: int) -> bytes:
+    return bytes((number, ))
+
 
 # Telnet constants.
 NOP      = int2byte(0)
@@ -44,7 +45,7 @@ EL       = int2byte(248)
 GA       = int2byte(249)
 
 
-class TelnetProtocolParser(object):
+class TelnetProtocolParser:
     """
     Parser for the Telnet protocol.
     Usage::
@@ -173,10 +174,9 @@ class TelnetProtocolParser(object):
             else:
                 self.received_data(d)
 
-    def feed(self, data):
+    def feed(self, data: bytes):
         """
         Feed data to the parser.
         """
-        assert isinstance(data, binary_type)
-        for b in iterbytes(data):
+        for b in data:
             self._parser.send(int2byte(b))

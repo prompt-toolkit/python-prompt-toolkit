@@ -1,11 +1,11 @@
 """
 Base classes for prompt_toolkit lexers.
 """
-from __future__ import unicode_literals
-
 from abc import ABCMeta, abstractmethod
+from typing import Callable, Hashable, Optional
 
-from six import text_type, with_metaclass
+from prompt_toolkit.document import Document
+from prompt_toolkit.formatted_text.base import StyleAndTextTuples
 
 __all__ = [
     'Lexer',
@@ -14,12 +14,12 @@ __all__ = [
 ]
 
 
-class Lexer(with_metaclass(ABCMeta, object)):
+class Lexer(metaclass=ABCMeta):
     """
     Base class for all lexers.
     """
     @abstractmethod
-    def lex_document(self, document):
+    def lex_document(self, document: Document) -> Callable[[int], StyleAndTextTuples]:
         """
         Takes a :class:`~prompt_toolkit.document.Document` and returns a
         callable that takes a line number and returns a list of
@@ -29,7 +29,7 @@ class Lexer(with_metaclass(ABCMeta, object)):
              of ``(Token, text)`` tuples, just like a Pygments lexer.
         """
 
-    def invalidation_hash(self):
+    def invalidation_hash(self) -> Hashable:
         """
         When this changes, `lex_document` could give a different output.
         (Only used for `DynamicLexer`.)
@@ -44,14 +44,13 @@ class SimpleLexer(Lexer):
 
     :param style: The style string for this lexer.
     """
-    def __init__(self, style=''):
-        assert isinstance(style, text_type)
+    def __init__(self, style: str = '') -> None:
         self.style = style
 
-    def lex_document(self, document):
+    def lex_document(self, document: Document) -> Callable[[int], StyleAndTextTuples]:
         lines = document.lines
 
-        def get_line(lineno):
+        def get_line(lineno: int) -> StyleAndTextTuples:
             " Return the tokens for the given line. "
             try:
                 return [(self.style, lines[lineno])]
@@ -66,15 +65,14 @@ class DynamicLexer(Lexer):
 
     :param get_lexer: Callable that returns a :class:`.Lexer` instance.
     """
-    def __init__(self, get_lexer):
+    def __init__(self, get_lexer: Callable[[], Optional[Lexer]]) -> None:
         self.get_lexer = get_lexer
         self._dummy = SimpleLexer()
 
-    def lex_document(self, document):
+    def lex_document(self, document: Document) -> Callable[[int], StyleAndTextTuples]:
         lexer = self.get_lexer() or self._dummy
-        assert isinstance(lexer, Lexer)
         return lexer.lex_document(document)
 
-    def invalidation_hash(self):
+    def invalidation_hash(self) -> Hashable:
         lexer = self.get_lexer() or self._dummy
         return id(lexer)

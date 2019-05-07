@@ -1,10 +1,14 @@
-from __future__ import unicode_literals
-
 import functools
+from asyncio import get_event_loop
+from typing import Any, Callable, List, Optional, Tuple, TypeVar
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app
-from prompt_toolkit.eventloop import run_in_executor
+from prompt_toolkit.buffer import Buffer
+from prompt_toolkit.completion import Completer
+from prompt_toolkit.eventloop import run_in_executor_with_context
+from prompt_toolkit.filters import FilterOrBool
+from prompt_toolkit.formatted_text import AnyFormattedText
 from prompt_toolkit.key_binding.bindings.focus import (
     focus_next,
     focus_previous,
@@ -15,8 +19,9 @@ from prompt_toolkit.key_binding.key_bindings import (
     merge_key_bindings,
 )
 from prompt_toolkit.layout import Layout
-from prompt_toolkit.layout.containers import HSplit
+from prompt_toolkit.layout.containers import AnyContainer, HSplit
 from prompt_toolkit.layout.dimension import Dimension as D
+from prompt_toolkit.styles import BaseStyle
 from prompt_toolkit.widgets import (
     Box,
     Button,
@@ -37,16 +42,20 @@ __all__ = [
 ]
 
 
-def yes_no_dialog(title='', text='', yes_text='Yes', no_text='No', style=None,
-                  async_=False):
+def yes_no_dialog(
+        title: AnyFormattedText = '',
+        text: AnyFormattedText = '',
+        yes_text: str = 'Yes',
+        no_text: str = 'No',
+        style: Optional[BaseStyle] = None) -> Application[bool]:
     """
     Display a Yes/No dialog.
     Return a boolean.
     """
-    def yes_handler():
+    def yes_handler() -> None:
         get_app().exit(result=True)
 
-    def no_handler():
+    def no_handler() -> None:
         get_app().exit(result=False)
 
     dialog = Dialog(
@@ -57,38 +66,51 @@ def yes_no_dialog(title='', text='', yes_text='Yes', no_text='No', style=None,
             Button(text=no_text, handler=no_handler),
         ], with_background=True)
 
-    return _run_dialog(dialog, style, async_=async_)
+    return _create_app(dialog, style)
 
 
-def button_dialog(title='', text='', buttons=[], style=None,
-                  async_=False):
+_T = TypeVar('_T')
+
+
+def button_dialog(
+        title: AnyFormattedText = '',
+        text: AnyFormattedText = '',
+        buttons: List[Tuple[str, _T]] = [],
+        style: Optional[BaseStyle] = None) -> Application[_T]:
     """
     Display a dialog with button choices (given as a list of tuples).
     Return the value associated with button.
     """
-    def button_handler(v):
+    def button_handler(v: _T) -> None:
         get_app().exit(result=v)
 
     dialog = Dialog(
         title=title,
         body=Label(text=text, dont_extend_height=True),
-        buttons=[Button(text=t, handler=functools.partial(button_handler, v)) for t, v in buttons],
+        buttons=[Button(text=t, handler=functools.partial(button_handler, v))
+                 for t, v in buttons],
         with_background=True)
 
-    return _run_dialog(dialog, style, async_=async_)
+    return _create_app(dialog, style)
 
 
-def input_dialog(title='', text='', ok_text='OK', cancel_text='Cancel',
-                 completer=None, password=False, style=None, async_=False):
+def input_dialog(
+        title: AnyFormattedText = '',
+        text: AnyFormattedText = '',
+        ok_text: str = 'OK',
+        cancel_text: str = 'Cancel',
+        completer: Optional[Completer] = None,
+        password: FilterOrBool = False,
+        style: Optional[BaseStyle] = None) -> Application[str]:
     """
     Display a text input box.
     Return the given text, or None when cancelled.
     """
-    def accept(buf):
+    def accept(buf: Buffer) -> bool:
         get_app().layout.focus(ok_button)
         return True  # Keep text.
 
-    def ok_handler():
+    def ok_handler() -> None:
         get_app().exit(result=textfield.text)
 
     ok_button = Button(text=ok_text, handler=ok_handler)
@@ -109,10 +131,14 @@ def input_dialog(title='', text='', ok_text='OK', cancel_text='Cancel',
         buttons=[ok_button, cancel_button],
         with_background=True)
 
-    return _run_dialog(dialog, style, async_=async_)
+    return _create_app(dialog, style)
 
 
-def message_dialog(title='', text='', ok_text='Ok', style=None, async_=False):
+def message_dialog(
+        title: AnyFormattedText = '',
+        text: AnyFormattedText = '',
+        ok_text: str = 'Ok',
+        style: Optional[BaseStyle] = None) -> Application[None]:
     """
     Display a simple message box and wait until the user presses enter.
     """
@@ -124,18 +150,26 @@ def message_dialog(title='', text='', ok_text='Ok', style=None, async_=False):
         ],
         with_background=True)
 
-    return _run_dialog(dialog, style, async_=async_)
+    return _create_app(dialog, style)
 
 
-def radiolist_dialog(title='', text='', ok_text='Ok', cancel_text='Cancel',
-                     values=None, style=None, async_=False):
+def radiolist_dialog(
+        title: AnyFormattedText = '',
+        text: AnyFormattedText = '',
+        ok_text: str = 'Ok',
+        cancel_text: str = 'Cancel',
+        values: Optional[List[Tuple[_T, AnyFormattedText]]] = None,
+        style: Optional[BaseStyle] = None) -> Application[_T]:
     """
     Display a simple list of element the user can choose amongst.
 
     Only one element can be selected at a time using Arrow keys and Enter.
     The focus can be moved between the list and the Ok/Cancel button with tab.
     """
-    def ok_handler():
+    if values is None:
+        values = []
+
+    def ok_handler() -> None:
         get_app().exit(result=radio_list.current_value)
 
     radio_list = RadioList(values)
@@ -152,16 +186,19 @@ def radiolist_dialog(title='', text='', ok_text='Ok', cancel_text='Cancel',
         ],
         with_background=True)
 
-    return _run_dialog(dialog, style, async_=async_)
+    return _create_app(dialog, style)
 
 
-def progress_dialog(title='', text='', run_callback=None, style=None, async_=False):
+def progress_dialog(
+        title: AnyFormattedText = '',
+        text: AnyFormattedText = '',
+        run_callback: Callable[[Callable[[int], None], Callable[[str], None]], None] = (lambda *a: None),
+        style: Optional[BaseStyle] = None) -> Application[None]:
     """
     :param run_callback: A function that receives as input a `set_percentage`
         function and it does the work.
     """
-    assert callable(run_callback)
-
+    loop = get_event_loop()
     progressbar = ProgressBar()
     text_area = TextArea(
         focusable=False,
@@ -180,40 +217,30 @@ def progress_dialog(title='', text='', run_callback=None, style=None, async_=Fal
         with_background=True)
     app = _create_app(dialog, style)
 
-    def set_percentage(value):
+    def set_percentage(value: int) -> None:
         progressbar.percentage = int(value)
         app.invalidate()
 
-    def log_text(text):
-        text_area.buffer.insert_text(text)
+    def log_text(text: str) -> None:
+        loop.call_soon_threadsafe(text_area.buffer.insert_text, text)
         app.invalidate()
 
     # Run the callback in the executor. When done, set a return value for the
     # UI, so that it quits.
-    def start():
+    def start() -> None:
         try:
             run_callback(set_percentage, log_text)
         finally:
             app.exit()
 
-    run_in_executor(start)
+    def pre_run() -> None:
+        run_in_executor_with_context(start)
+    app.pre_run_callables.append(pre_run)
 
-    if async_:
-        return app.run_async()
-    else:
-        return app.run()
-
-
-def _run_dialog(dialog, style, async_=False):
-    " Turn the `Dialog` into an `Application` and run it. "
-    application = _create_app(dialog, style)
-    if async_:
-        return application.run_async()
-    else:
-        return application.run()
+    return app
 
 
-def _create_app(dialog, style):
+def _create_app(dialog: AnyContainer, style: Optional[BaseStyle]) -> Application[Any]:
     # Key bindings.
     bindings = KeyBindings()
     bindings.add('tab')(focus_next)
@@ -227,9 +254,9 @@ def _create_app(dialog, style):
         ]),
         mouse_support=True,
         style=style,
-        full_screen=True)
+        full_screen=False)
 
 
-def _return_none():
+def _return_none() -> None:
     " Button handler that returns None. "
     get_app().exit()

@@ -2,8 +2,6 @@
 """
 Example of a radio list box dialog.
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.shortcuts import radiolist_dialog
 
@@ -17,7 +15,7 @@ def main():
             ('orange', 'Orange'),
         ],
         title='Radiolist dialog example',
-        text='Please select a color:')
+        text='Please select a color:').run()
 
     print('Result = {}'.format(result))
 
@@ -30,7 +28,7 @@ def main():
             ('orange', HTML('<style bg="orange" fg="white">Orange</style>')),
         ],
         title=HTML('Radiolist dialog example <reverse>with colors</reverse>'),
-        text='Please select a color:')
+        text='Please select a color:').run()
 
     print('Result = {}'.format(result))
 

@@ -2,8 +2,6 @@
 """
 Demonstration of all the ANSI colors.
 """
-from __future__ import print_function, unicode_literals
-
 from prompt_toolkit import print_formatted_text
 from prompt_toolkit.formatted_text import HTML, FormattedText
 

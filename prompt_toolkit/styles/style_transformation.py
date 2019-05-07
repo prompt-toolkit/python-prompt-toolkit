@@ -9,18 +9,15 @@ When the UI is rendered, these transformations can be applied right after the
 style strings are turned into `Attrs` objects that represent the actual
 formatting.
 """
-from __future__ import unicode_literals
-
 from abc import ABCMeta, abstractmethod
 from colorsys import hls_to_rgb, rgb_to_hls
-
-from six import with_metaclass
+from typing import Callable, Hashable, Optional, Sequence, Tuple, Union
 
 from prompt_toolkit.cache import memoized
-from prompt_toolkit.filters import to_filter
+from prompt_toolkit.filters import FilterOrBool, to_filter
 from prompt_toolkit.utils import to_float, to_str
 
-from .base import ANSI_COLOR_NAMES
+from .base import ANSI_COLOR_NAMES, Attrs
 from .style import parse_color
 
 __all__ = [
@@ -36,12 +33,12 @@ __all__ = [
 ]
 
 
-class StyleTransformation(with_metaclass(ABCMeta, object)):
+class StyleTransformation(metaclass=ABCMeta):
     """
     Base class for any style transformation.
     """
     @abstractmethod
-    def transform_attrs(self, attrs):
+    def transform_attrs(self, attrs: Attrs) -> Attrs:
         """
         Take an `Attrs` object and return a new `Attrs` object.
 
@@ -49,7 +46,7 @@ class StyleTransformation(with_metaclass(ABCMeta, object)):
         lowercase hexadecimal color (without '#' prefix).
         """
 
-    def invalidation_hash(self):
+    def invalidation_hash(self) -> Hashable:
         """
         When this changes, the cache should be invalidated.
         """
@@ -73,7 +70,7 @@ class SwapLightAndDarkStyleTransformation(StyleTransformation):
     'default' color is chosen, it's what works best for the terminal, and
     reverse works good with that.
     """
-    def transform_attrs(self, attrs):
+    def transform_attrs(self, attrs: Attrs) -> Attrs:
         """
         Return the `Attrs` used when opposite luminosity should be used.
         """
@@ -90,7 +87,7 @@ class ReverseStyleTransformation(StyleTransformation):
 
     (This is still experimental.)
     """
-    def transform_attrs(self, attrs):
+    def transform_attrs(self, attrs: Attrs) -> Attrs:
         return attrs._replace(reverse=not attrs.reverse)
 
 
@@ -103,11 +100,14 @@ class SetDefaultColorStyleTransformation(StyleTransformation):
         foreground.
     :param bg: Like `fg`, but for the background.
     """
-    def __init__(self, fg, bg):
+    def __init__(self,
+                 fg: Union[str, Callable[[], str]],
+                 bg: Union[str, Callable[[], str]]) -> None:
+
         self.fg = fg
         self.bg = bg
 
-    def transform_attrs(self, attrs):
+    def transform_attrs(self, attrs: Attrs) -> Attrs:
         if attrs.bgcolor in ('', 'default'):
             attrs = attrs._replace(bgcolor=parse_color(to_str(self.bg)))
 
@@ -116,7 +116,7 @@ class SetDefaultColorStyleTransformation(StyleTransformation):
 
         return attrs
 
-    def invalidation_hash(self):
+    def invalidation_hash(self) -> Hashable:
         return (
             'set-default-color',
             to_str(self.fg),
@@ -147,11 +147,13 @@ class AdjustBrightnessStyleTransformation(StyleTransformation):
     :param max_brightness: Float between 0.0 and 1.0 or a callable that returns
         a float.
     """
-    def __init__(self, min_brightness=0.0, max_brightness=1.0):
+    def __init__(self, min_brightness: float = 0.0,
+                 max_brightness: float = 1.0) -> None:
+
         self.min_brightness = min_brightness
         self.max_brightness = max_brightness
 
-    def transform_attrs(self, attrs):
+    def transform_attrs(self, attrs: Attrs) -> Attrs:
         min_brightness = to_float(self.min_brightness)
         max_brightness = to_float(self.max_brightness)
         assert 0 <= min_brightness <= 1
@@ -168,7 +170,7 @@ class AdjustBrightnessStyleTransformation(StyleTransformation):
 
         if has_fgcolor and no_background:
             # Calculate new RGB values.
-            r, g, b = self._color_to_rgb(attrs.color)
+            r, g, b = self._color_to_rgb(attrs.color or '')
             hue, brightness, saturation = rgb_to_hls(r, g, b)
             brightness = self._interpolate_brightness(
                 brightness, min_brightness, max_brightness)
@@ -182,7 +184,7 @@ class AdjustBrightnessStyleTransformation(StyleTransformation):
 
         return attrs
 
-    def _color_to_rgb(self, color):
+    def _color_to_rgb(self, color: str) -> Tuple[float, float, float]:
         """
         Parse `style.Attrs` color into RGB tuple.
         """
@@ -195,15 +197,17 @@ class AdjustBrightnessStyleTransformation(StyleTransformation):
             pass
 
         # Parse RRGGBB format.
-        r = int(color[0:2], 16) / 255.0
-        g = int(color[2:4], 16) / 255.0
-        b = int(color[4:6], 16) / 255.0
-        return r, g, b
+        return (
+            int(color[0:2], 16) / 255.0,
+            int(color[2:4], 16) / 255.0,
+            int(color[4:6], 16) / 255.0,
+        )
 
         # NOTE: we don't have to support named colors here. They are already
         #       transformed into RGB values in `style.parse_color`.
 
-    def _interpolate_brightness(self, value, min_brightness, max_brightness):
+    def _interpolate_brightness(self, value: float, min_brightness: float,
+                                max_brightness: float) -> float:
         """
         Map the brightness to the (min_brightness..max_brightness) range.
         """
@@ -212,7 +216,7 @@ class AdjustBrightnessStyleTransformation(StyleTransformation):
             (max_brightness - min_brightness) * value
         )
 
-    def invalidation_hash(self):
+    def invalidation_hash(self) -> Hashable:
         return (
             'adjust-brightness',
             to_float(self.min_brightness),
@@ -224,10 +228,10 @@ class DummyStyleTransformation(StyleTransformation):
     """
     Don't transform anything at all.
     """
-    def transform_attrs(self, attrs):
+    def transform_attrs(self, attrs: Attrs) -> Attrs:
         return attrs
 
-    def invalidation_hash(self):
+    def invalidation_hash(self) -> Hashable:
         # Always return the same hash for these dummy instances.
         return 'dummy-style-transformation'
 
@@ -240,15 +244,16 @@ class DynamicStyleTransformation(StyleTransformation):
     :param get_style_transformation: Callable that returns a
         :class:`.StyleTransformation` instance.
     """
-    def __init__(self, get_style_transformation):
-        assert callable(get_style_transformation)
+    def __init__(
+            self, get_style_transformation: Callable[[], Optional[StyleTransformation]]) -> None:
+
         self.get_style_transformation = get_style_transformation
 
-    def transform_attrs(self, attrs):
+    def transform_attrs(self, attrs: Attrs) -> Attrs:
         style_transformation = self.get_style_transformation() or DummyStyleTransformation()
         return style_transformation.transform_attrs(attrs)
 
-    def invalidation_hash(self):
+    def invalidation_hash(self) -> Hashable:
         style_transformation = self.get_style_transformation() or DummyStyleTransformation()
         return style_transformation.invalidation_hash()
 
@@ -257,18 +262,18 @@ class ConditionalStyleTransformation(StyleTransformation):
     """
     Apply the style transformation depending on a condition.
     """
-    def __init__(self, style_transformation, filter):
-        assert isinstance(style_transformation, StyleTransformation)
+    def __init__(self, style_transformation: StyleTransformation,
+                 filter: FilterOrBool) -> None:
 
         self.style_transformation = style_transformation
         self.filter = to_filter(filter)
 
-    def transform_attrs(self, attrs):
+    def transform_attrs(self, attrs: Attrs) -> Attrs:
         if self.filter():
             return self.style_transformation.transform_attrs(attrs)
         return attrs
 
-    def invalidation_hash(self):
+    def invalidation_hash(self) -> Hashable:
         return (
             self.filter(),
             self.style_transformation.invalidation_hash()
@@ -276,19 +281,20 @@ class ConditionalStyleTransformation(StyleTransformation):
 
 
 class _MergedStyleTransformation(StyleTransformation):
-    def __init__(self, style_transformations):
+    def __init__(self, style_transformations: Sequence[StyleTransformation]) -> None:
         self.style_transformations = style_transformations
 
-    def transform_attrs(self, attrs):
+    def transform_attrs(self, attrs: Attrs) -> Attrs:
         for transformation in self.style_transformations:
             attrs = transformation.transform_attrs(attrs)
         return attrs
 
-    def invalidation_hash(self):
+    def invalidation_hash(self) -> Hashable:
         return tuple(t.invalidation_hash() for t in self.style_transformations)
 
 
-def merge_style_transformations(style_transformations):
+def merge_style_transformations(
+        style_transformations: Sequence[StyleTransformation]) -> StyleTransformation:
     """
     Merge multiple transformations together.
     """
@@ -324,7 +330,7 @@ assert set(OPPOSITE_ANSI_COLOR_NAMES.values()) == set(ANSI_COLOR_NAMES)
 
 
 @memoized()
-def get_opposite_color(colorname):
+def get_opposite_color(colorname: Optional[str]) -> Optional[str]:
     """
     Take a color name in either 'ansi...' format or 6 digit RGB, return the
     color of opposite luminosity (same hue/saturation).
@@ -332,6 +338,9 @@ def get_opposite_color(colorname):
     This is used for turning color schemes that work on a light background
     usable on a dark background.
     """
+    if colorname is None:  # Because color/bgcolor can be None in `Attrs`.
+        return None
+
     # Special values.
     if colorname in ('', 'default'):
         return colorname

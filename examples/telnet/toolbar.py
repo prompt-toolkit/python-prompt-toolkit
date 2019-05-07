@@ -3,13 +3,11 @@
 Example of a telnet application that displays a bottom toolbar and completions
 in the prompt.
 """
-from __future__ import unicode_literals
-
 import logging
+from asyncio import get_event_loop
 
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.contrib.telnet.server import TelnetServer
-from prompt_toolkit.eventloop import From, get_event_loop
 from prompt_toolkit.shortcuts import prompt
 
 # Set up logging
@@ -17,7 +15,7 @@ logging.basicConfig()
 logging.getLogger().setLevel(logging.INFO)
 
 
-def interact(connection):
+async def interact(connection):
     # When a client is connected, erase the screen from the client and say
     # Hello.
     connection.send('Welcome!\n')
@@ -28,11 +26,11 @@ def interact(connection):
     def get_toolbar():
         return 'Bottom toolbar...'
 
-    result = yield From(prompt(
+    result = await prompt(
         'Say something: ',
         bottom_toolbar=get_toolbar,
         completer=animal_completer,
-        async_=True))
+        async_=True)
 
     connection.send('You said: {}\n'.format(result))
     connection.send('Bye.\n')

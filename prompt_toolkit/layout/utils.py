@@ -1,44 +1,56 @@
-from __future__ import unicode_literals
+from typing import Iterable, List, TypeVar, Union, cast, overload
+
+from prompt_toolkit.formatted_text.base import OneStyleAndTextTuple
 
 __all__ = [
     'explode_text_fragments',
 ]
 
+_T = TypeVar('_T', bound=OneStyleAndTextTuple)
 
-class _ExplodedList(list):
+
+class _ExplodedList(List[_T]):
     """
     Wrapper around a list, that marks it as 'exploded'.
 
     As soon as items are added or the list is extended, the new items are
     automatically exploded as well.
     """
-    def __init__(self, *a, **kw):
-        super(_ExplodedList, self).__init__(*a, **kw)
-        self.exploded = True
+    exploded = True
 
-    def append(self, item):
+    def append(self, item: _T) -> None:
         self.extend([item])
 
-    def extend(self, lst):
-        super(_ExplodedList, self).extend(explode_text_fragments(lst))
+    def extend(self, lst: Iterable[_T]) -> None:
+        super().extend(explode_text_fragments(lst))
 
-    def insert(self, index, item):
+    def insert(self, index: int, item: _T) -> None:
         raise NotImplementedError  # TODO
 
     # TODO: When creating a copy() or [:], return also an _ExplodedList.
 
-    def __setitem__(self, index, value):
+    @overload
+    def __setitem__(self, index: int, value: _T) -> None:
+        ...
+
+    @overload
+    def __setitem__(self, index: slice, value: Iterable[_T]) -> None:
+        ...
+
+    def __setitem__(self, index: Union[int, slice], value: Union[_T, Iterable[_T]]) -> None:
         """
         Ensure that when `(style_str, 'long string')` is set, the string will be
         exploded.
         """
         if not isinstance(index, slice):
             index = slice(index, index + 1)
-        value = explode_text_fragments([value])
-        super(_ExplodedList, self).__setitem__(index, value)
+        if isinstance(value, tuple):  # In case of `OneStyleAndTextTuple`.
+            value = cast('List[_T]', [value])
+
+        super().__setitem__(index, explode_text_fragments(value))
 
 
-def explode_text_fragments(fragments):
+def explode_text_fragments(fragments: Iterable[_T]) -> _ExplodedList[_T]:
     """
     Turn a list of (style_str, text) tuples into another list where each string is
     exactly one character.
@@ -49,13 +61,13 @@ def explode_text_fragments(fragments):
     :param fragments: List of (style, text) tuples.
     """
     # When the fragments is already exploded, don't explode again.
-    if getattr(fragments, 'exploded', False):
+    if isinstance(fragments, _ExplodedList):
         return fragments
 
-    result = []
+    result: List[_T] = []
 
-    for style, string in fragments:
+    for style, string, *rest in fragments:  # type: ignore
         for c in string:
-            result.append((style, c))
+            result.append((style, c, *rest))  # type: ignore
 
     return _ExplodedList(result)

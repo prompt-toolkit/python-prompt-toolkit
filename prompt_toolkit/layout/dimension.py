@@ -2,21 +2,20 @@
 Layout dimensions are used to give the minimum, maximum and preferred
 dimensions for containers and controls.
 """
-from __future__ import unicode_literals
-
-from prompt_toolkit.utils import test_callable_args
+from typing import Any, Callable, List, Optional, Union
 
 __all__ = [
     'Dimension',
     'D',
     'sum_layout_dimensions',
     'max_layout_dimensions',
+    'AnyDimension',
     'to_dimension',
     'is_dimension',
 ]
 
 
-class Dimension(object):
+class Dimension:
     """
     Specified dimension (width/height) of a user control or window.
 
@@ -33,8 +32,16 @@ class Dimension(object):
                    twice as big as the first, if the min/max values allow it.
     :param preferred: Preferred size.
     """
-    def __init__(self, min=None, max=None, weight=None, preferred=None):
-        assert weight is None or (isinstance(weight, int) and weight >= 0)   # Cannot be a float.
+    def __init__(
+        self,
+        min: Optional[int] = None,
+        max: Optional[int] = None,
+        weight: Optional[int] = None,
+        preferred: Optional[int] = None
+    ):
+        if weight is not None:
+            assert weight >= 0   # Also cannot be a float.
+
         assert min is None or min >= 0
         assert max is None or max >= 0
         assert preferred is None or preferred >= 0
@@ -70,7 +77,7 @@ class Dimension(object):
             self.preferred = self.max
 
     @classmethod
-    def exact(cls, amount):
+    def exact(cls, amount: int) -> 'Dimension':
         """
         Return a :class:`.Dimension` with an exact size. (min, max and
         preferred set to ``amount``).
@@ -78,18 +85,18 @@ class Dimension(object):
         return cls(min=amount, max=amount, preferred=amount)
 
     @classmethod
-    def zero(cls):
+    def zero(cls) -> 'Dimension':
         """
         Create a dimension that represents a zero size. (Used for 'invisible'
         controls.)
         """
         return cls.exact(amount=0)
 
-    def is_zero(self):
+    def is_zero(self) -> bool:
         " True if this `Dimension` represents a zero size. "
         return self.preferred == 0 or self.max == 0
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         fields = []
         if self.min_specified:
             fields.append('min=%r' % self.min)
@@ -103,7 +110,7 @@ class Dimension(object):
         return 'Dimension(%s)' % ', '.join(fields)
 
 
-def sum_layout_dimensions(dimensions):
+def sum_layout_dimensions(dimensions: List[Dimension]) -> Dimension:
     """
     Sum a list of :class:`.Dimension` instances.
     """
@@ -114,7 +121,7 @@ def sum_layout_dimensions(dimensions):
     return Dimension(min=min, max=max, preferred=preferred)
 
 
-def max_layout_dimensions(dimensions):
+def max_layout_dimensions(dimensions: List[Dimension]) -> Dimension:
     """
     Take the maximum of a list of :class:`.Dimension` instances.
     Used when we have a HSplit/VSplit, and we want to get the best width/height.)
@@ -159,7 +166,17 @@ def max_layout_dimensions(dimensions):
         return Dimension()
 
 
-def to_dimension(value):
+# Anything that can be converted to a dimension.
+AnyDimension = Union[
+    None,  # None is a valid dimension that will fit anything.
+    int,
+    Dimension,
+    # Callable[[], 'AnyDimension']  # Recursive definition not supported by mypy.
+    Callable[[], Any]
+]
+
+
+def to_dimension(value: AnyDimension) -> Dimension:
     """
     Turn the given object into a `Dimension` object.
     """
@@ -175,7 +192,7 @@ def to_dimension(value):
     raise ValueError('Not an integer or Dimension object.')
 
 
-def is_dimension(value):
+def is_dimension(value: object) -> bool:
     """
     Test whether the given value could be a valid dimension.
     (For usage in an assertion. It's not guaranteed in case of a callable.)
@@ -183,7 +200,7 @@ def is_dimension(value):
     if value is None:
         return True
     if callable(value):
-        return test_callable_args(value, [])
+        return True  # Assume it's a callable that doesn't take arguments.
     if isinstance(value, (int, Dimension)):
         return True
     return False

@@ -2,14 +2,13 @@
 Input validation for a `Buffer`.
 (Validators will be called before accepting input.)
 """
-from __future__ import unicode_literals
-
 from abc import ABCMeta, abstractmethod
+from typing import Callable, Optional
 
-from six import text_type, with_metaclass
+from prompt_toolkit.eventloop import run_in_executor_with_context
 
-from .eventloop import Future, run_in_executor
-from .filters import to_filter
+from .document import Document
+from .filters import FilterOrBool, to_filter
 
 __all__ = [
     'ConditionalValidator',
@@ -28,17 +27,17 @@ class ValidationError(Exception):
     :param cursor_position: The cursor position where the error occurred.
     :param message: Text.
     """
-    def __init__(self, cursor_position=0, message=''):
-        super(ValidationError, self).__init__(message)
+    def __init__(self, cursor_position: int = 0, message: str = '') -> None:
+        super().__init__(message)
         self.cursor_position = cursor_position
         self.message = message
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '%s(cursor_position=%r, message=%r)' % (
             self.__class__.__name__, self.cursor_position, self.message)
 
 
-class Validator(with_metaclass(ABCMeta, object)):
+class Validator(metaclass=ABCMeta):
     """
     Abstract base class for an input validator.
 
@@ -51,7 +50,7 @@ class Validator(with_metaclass(ABCMeta, object)):
     thread, this can be wrapped in a :class:`.ThreadedValidator`.
     """
     @abstractmethod
-    def validate(self, document):
+    def validate(self, document: Document) -> None:
         """
         Validate the input.
         If invalid, this should raise a :class:`.ValidationError`.
@@ -60,7 +59,7 @@ class Validator(with_metaclass(ABCMeta, object)):
         """
         pass
 
-    def get_validate_future(self, document):
+    async def validate_async(self, document: Document) -> None:
         """
         Return a `Future` which is set when the validation is ready.
         This function can be overloaded in order to provide an asynchronous
@@ -68,14 +67,13 @@ class Validator(with_metaclass(ABCMeta, object)):
         """
         try:
             self.validate(document)
-        except ValidationError as e:
-            return Future.fail(e)
-        else:
-            return Future.succeed(None)
+        except ValidationError:
+            raise
 
     @classmethod
-    def from_callable(cls, validate_func, error_message='Invalid input',
-                      move_cursor_to_end=False):
+    def from_callable(cls, validate_func: Callable[[str], bool],
+                      error_message: str = 'Invalid input',
+                      move_cursor_to_end: bool = False) -> 'Validator':
         """
         Create a validator from a simple validate callable. E.g.:
 
@@ -99,18 +97,18 @@ class _ValidatorFromCallable(Validator):
     """
     Validate input from a simple callable.
     """
-    def __init__(self, func, error_message, move_cursor_to_end):
-        assert callable(func)
-        assert isinstance(error_message, text_type)
+    def __init__(self, func: Callable[[str], bool],
+                 error_message: str,
+                 move_cursor_to_end: bool) -> None:
 
         self.func = func
         self.error_message = error_message
         self.move_cursor_to_end = move_cursor_to_end
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'Validator.from_callable(%r)' % (self.func, )
 
-    def validate(self, document):
+    def validate(self, document: Document) -> None:
         if not self.func(document.text):
             if self.move_cursor_to_end:
                 index = len(document.text)
@@ -127,28 +125,27 @@ class ThreadedValidator(Validator):
     (Use this to prevent the user interface from becoming unresponsive if the
     input validation takes too much time.)
     """
-    def __init__(self, validator):
-        assert isinstance(validator, Validator)
+    def __init__(self, validator: Validator) -> None:
         self.validator = validator
 
-    def validate(self, document):
-        return self.validator.validate(document)
+    def validate(self, document: Document) -> None:
+        self.validator.validate(document)
 
-    def get_validate_future(self, document):
+    async def validate_async(self, document: Document) -> None:
         """
         Run the `validate` function in a thread.
         """
-        def run_validation_thread():
+        def run_validation_thread() -> None:
             return self.validate(document)
-        f = run_in_executor(run_validation_thread)
-        return f
+
+        await run_in_executor_with_context(run_validation_thread)
 
 
 class DummyValidator(Validator):
     """
     Validator class that accepts any input.
     """
-    def validate(self, document):
+    def validate(self, document: Document) -> None:
         pass  # Don't raise any exception.
 
 
@@ -157,13 +154,11 @@ class ConditionalValidator(Validator):
     Validator that can be switched on/off according to
     a filter. (This wraps around another validator.)
     """
-    def __init__(self, validator, filter):
-        assert isinstance(validator, Validator)
-
+    def __init__(self, validator: Validator, filter: FilterOrBool) -> None:
         self.validator = validator
         self.filter = to_filter(filter)
 
-    def validate(self, document):
+    def validate(self, document: Document) -> None:
         # Call the validator only if the filter is active.
         if self.filter():
             self.validator.validate(document)
@@ -175,16 +170,13 @@ class DynamicValidator(Validator):
 
     :param get_validator: Callable that returns a :class:`.Validator` instance.
     """
-    def __init__(self, get_validator):
-        assert callable(get_validator)
+    def __init__(self, get_validator: Callable[[], Optional[Validator]]) -> None:
         self.get_validator = get_validator
 
-    def validate(self, document):
+    def validate(self, document: Document) -> None:
         validator = self.get_validator() or DummyValidator()
-        assert isinstance(validator, Validator)
-        return validator.validate(document)
+        validator.validate(document)
 
-    def get_validate_future(self, document):
+    async def validate_async(self, document: Document) -> None:
         validator = self.get_validator() or DummyValidator()
-        assert isinstance(validator, Validator)
-        return validator.get_validate_future(document)
+        await validator.validate_async(document)

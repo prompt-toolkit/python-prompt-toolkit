@@ -1,26 +1,32 @@
 """
 Collection of reusable components for building full screen applications.
 """
-from __future__ import unicode_literals
+from typing import Optional, Sequence, Union
 
 from prompt_toolkit.filters import has_completions, has_focus
-from prompt_toolkit.formatted_text import is_formatted_text
+from prompt_toolkit.formatted_text import AnyFormattedText
 from prompt_toolkit.key_binding.bindings.focus import (
     focus_next,
     focus_previous,
 )
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
-from prompt_toolkit.layout.containers import DynamicContainer, HSplit, VSplit
+from prompt_toolkit.layout.containers import (
+    AnyContainer,
+    DynamicContainer,
+    HSplit,
+    VSplit,
+)
+from prompt_toolkit.layout.dimension import AnyDimension
 from prompt_toolkit.layout.dimension import Dimension as D
 
-from .base import Box, Frame, Shadow
+from .base import Box, Button, Frame, Shadow
 
 __all__ = [
     'Dialog',
 ]
 
 
-class Dialog(object):
+class Dialog:
     """
     Simple dialog window. This is the base for input dialogs, message dialogs
     and confirmation dialogs.
@@ -32,10 +38,13 @@ class Dialog(object):
     :param title: Text to be displayed in the heading of the dialog.
     :param buttons: A list of `Button` widgets, displayed at the bottom.
     """
-    def __init__(self, body, title='', buttons=None, modal=True, width=None,
-                 with_background=False):
-        assert is_formatted_text(title)
-        assert buttons is None or isinstance(buttons, list)
+    def __init__(self,
+                 body: AnyContainer,
+                 title: AnyFormattedText = '',
+                 buttons: Optional[Sequence[Button]] = None,
+                 modal: bool = True,
+                 width: AnyDimension = None,
+                 with_background: bool = False) -> None:
 
         self.body = body
         self.title = title
@@ -51,6 +60,7 @@ class Dialog(object):
             buttons_kb.add('left', filter=~first_selected)(focus_previous)
             buttons_kb.add('right', filter=~last_selected)(focus_next)
 
+        frame_body: AnyContainer
         if buttons:
             frame_body = HSplit([
                 # Add optional padding around the body.
@@ -78,6 +88,7 @@ class Dialog(object):
             modal=modal,
         ))
 
+        self.container: Union[Box, Shadow]
         if with_background:
             self.container = Box(
                 body=frame,
@@ -86,5 +97,5 @@ class Dialog(object):
         else:
             self.container = frame
 
-    def __pt_container__(self):
+    def __pt_container__(self) -> AnyContainer:
         return self.container

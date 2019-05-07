@@ -12,8 +12,6 @@ Type for instance::
 This example shows how you can define the grammar of a regular language and how
 to use variables in this grammar with completers and tokens attached.
 """
-from __future__ import unicode_literals
-
 import math
 
 from prompt_toolkit import prompt
@@ -27,7 +25,7 @@ from prompt_toolkit.lexers import SimpleLexer
 from prompt_toolkit.styles import Style
 
 operators1 = ['add', 'sub', 'div', 'mul']
-operators2 = ['sqrt', 'log', 'sin', 'ln']
+operators2 = ['cos', 'sin']
 
 
 def create_grammar():
@@ -89,6 +87,7 @@ if __name__ == '__main__':
                     'mul': (lambda a, b: a * b),
                     'div': (lambda a, b: a / b),
                     'sin': (lambda a, b: math.sin(a)),
+                    'cos': (lambda a, b: math.cos(a)),
                 }[vars.get('operator1') or vars.get('operator2')]
 
                 # Execute and print the result.

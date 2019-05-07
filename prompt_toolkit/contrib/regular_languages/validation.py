@@ -1,7 +1,7 @@
 """
 Validator for a regular language.
 """
-from __future__ import unicode_literals
+from typing import Dict
 
 from prompt_toolkit.document import Document
 from prompt_toolkit.validation import ValidationError, Validator
@@ -22,14 +22,13 @@ class GrammarValidator(Validator):
     :param validators: `dict` mapping variable names of the grammar to the
                        `Validator` instances to be used for each variable.
     """
-    def __init__(self, compiled_grammar, validators):
-        assert isinstance(compiled_grammar, _CompiledGrammar)
-        assert isinstance(validators, dict)
+    def __init__(self, compiled_grammar: _CompiledGrammar,
+                 validators: Dict[str, Validator]) -> None:
 
         self.compiled_grammar = compiled_grammar
         self.validators = validators
 
-    def validate(self, document):
+    def validate(self, document: Document) -> None:
         # Parse input document.
         # We use `match`, not `match_prefix`, because for validation, we want
         # the actual, unambiguous interpretation of the input.

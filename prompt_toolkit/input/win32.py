@@ -1,16 +1,14 @@
-from __future__ import unicode_literals
-
 import msvcrt
 import os
 import sys
+from abc import abstractmethod
+from asyncio import get_event_loop
 from contextlib import contextmanager
 from ctypes import pointer, windll
 from ctypes.wintypes import DWORD
+from typing import Callable, ContextManager, Dict, Iterable
 
-import six
-from six.moves import range
-
-from prompt_toolkit.eventloop import get_event_loop
+from prompt_toolkit.eventloop import run_in_executor_with_context
 from prompt_toolkit.eventloop.win32 import wait_for_handles
 from prompt_toolkit.key_binding.key_processor import KeyPress
 from prompt_toolkit.keys import Keys
@@ -36,11 +34,25 @@ __all__ = [
 ]
 
 
-class Win32Input(Input):
+class _Win32InputBase(Input):
+    """
+    Base class for `Win32Input` and `Win32PipeInput`.
+    """
+    def __init__(self) -> None:
+        self.win32_handles = _Win32Handles()
+
+    @property
+    @abstractmethod
+    def handle(self) -> int:
+        pass
+
+
+class Win32Input(_Win32InputBase):
     """
     `Input` class that reads from the Windows console.
     """
     def __init__(self, stdin=None):
+        super().__init__()
         self.console_input_reader = ConsoleInputReader()
 
     def attach(self, input_ready_callback):
@@ -51,7 +63,7 @@ class Win32Input(Input):
         assert callable(input_ready_callback)
         return attach_win32_input(self, input_ready_callback)
 
-    def detach(self):
+    def detach(self) -> ContextManager[None]:
         """
         Return a context manager that makes sure that this input is not active
         in the current event loop.
@@ -61,38 +73,38 @@ class Win32Input(Input):
     def read_keys(self):
         return list(self.console_input_reader.read())
 
-    def flush(self):
+    def flush(self) -> None:
         pass
 
     @property
-    def closed(self):
+    def closed(self) -> bool:
         return False
 
-    def raw_mode(self):
+    def raw_mode(self) -> ContextManager[None]:
         return raw_mode()
 
-    def cooked_mode(self):
+    def cooked_mode(self) -> ContextManager[None]:
         return cooked_mode()
 
-    def fileno(self):
+    def fileno(self) -> int:
         # The windows console doesn't depend on the file handle, so
         # this is not used for the event loop (which uses the
         # handle instead). But it's used in `Application.run_system_command`
         # which opens a subprocess with a given stdin/stdout.
         return sys.stdin.fileno()
 
-    def typeahead_hash(self):
+    def typeahead_hash(self) -> str:
         return 'win32-input'
 
-    def close(self):
+    def close(self) -> None:
         self.console_input_reader.close()
 
     @property
-    def handle(self):
+    def handle(self) -> int:
         return self.console_input_reader.handle
 
 
-class ConsoleInputReader(object):
+class ConsoleInputReader:
     """
     :param recognize_paste: When True, try to discover paste actions and turn
         the event into a BracketedPaste.
@@ -174,24 +186,25 @@ class ConsoleInputReader(object):
     LEFT_CTRL_PRESSED = 0x0008
     RIGHT_CTRL_PRESSED = 0x0004
 
-    def __init__(self, recognize_paste=True):
+    def __init__(self, recognize_paste: bool = True) -> None:
         self._fdcon = None
         self.recognize_paste = recognize_paste
 
         # When stdin is a tty, use that handle, otherwise, create a handle from
         # CONIN$.
+        self.handle: int
         if sys.stdin.isatty():
             self.handle = windll.kernel32.GetStdHandle(STD_INPUT_HANDLE)
         else:
             self._fdcon = os.open('CONIN$', os.O_RDWR | os.O_BINARY)
             self.handle = msvcrt.get_osfhandle(self._fdcon)
 
-    def close(self):
+    def close(self) -> None:
         " Close fdcon. "
         if self._fdcon is not None:
             os.close(self._fdcon)
 
-    def read(self):
+    def read(self) -> Iterable[KeyPress]:
         """
         Return a list of `KeyPress` instances. It won't return anything when
         there was nothing to read.  (This function doesn't block.)
@@ -230,7 +243,7 @@ class ConsoleInputReader(object):
                 # Pasting: if the current key consists of text or \n, turn it
                 # into a BracketedPaste.
                 data = []
-                while k and (isinstance(k.key, six.text_type) or
+                while k and (isinstance(k.key, str) or
                              k.key == Keys.ControlJ):
                     data.append(k.data)
                     try:
@@ -246,14 +259,18 @@ class ConsoleInputReader(object):
             for k in all_keys:
                 yield k
 
-    def _insert_key_data(self, key_press):
+    def _insert_key_data(self, key_press: KeyPress) -> KeyPress:
         """
         Insert KeyPress data, for vt100 compatibility.
         """
         if key_press.data:
             return key_press
 
-        data = REVERSE_ANSI_SEQUENCES.get(key_press.key, '')
+        if isinstance(key_press.key, Keys):
+            data = REVERSE_ANSI_SEQUENCES.get(key_press.key, '')
+        else:
+            data = ''
+
         return KeyPress(key_press.key, data)
 
     def _get_keys(self, read, input_records):
@@ -281,7 +298,7 @@ class ConsoleInputReader(object):
                         yield key_press
 
     @staticmethod
-    def _is_paste(keys):
+    def _is_paste(keys) -> bool:
         """
         Return `True` when we should consider this list of keys as a paste
         event. Pasted text on windows will be turned into a
@@ -295,7 +312,7 @@ class ConsoleInputReader(object):
         newline_count = 0
 
         for k in keys:
-            if isinstance(k.key, six.text_type):
+            if isinstance(k.key, str):
                 text_count += 1
             if k.key == Keys.ControlM:
                 newline_count += 1
@@ -402,59 +419,89 @@ class ConsoleInputReader(object):
         return result
 
 
-_current_callbacks = {}  # loop -> callback
+class _Win32Handles:
+    """
+    Utility to keep track of which handles are connectod to which callbacks.
+    """
+    def __init__(self) -> None:
+        self._handle_callbacks: Dict[int, Callable[[], None]] = {}
+
+    def add_win32_handle(self, handle: int, callback: Callable[[], None]) -> None:
+        """
+        Add a Win32 handle to the event loop.
+        """
+        loop = get_event_loop()
+        self._handle_callbacks[handle] = callback
+
+        # Add reader.
+        def ready() -> None:
+            # Tell the callback that input's ready.
+            try:
+                callback()
+            finally:
+                run_in_executor_with_context(wait, loop=loop)
+
+        # Wait for the input to become ready.
+        # (Use an executor for this, the Windows asyncio event loop doesn't
+        # allow us to wait for handles like stdin.)
+        def wait() -> None:
+            if self._handle_callbacks.get(handle) != callback:
+                return
+
+            wait_for_handles([handle])
+            loop.call_soon_threadsafe(ready)
+
+        run_in_executor_with_context(wait, loop=loop)
+
+    def remove_win32_handle(self, handle: int) -> None:
+        """
+        Remove a Win32 handle from the event loop.
+        """
+        if handle in self._handle_callbacks:
+            del self._handle_callbacks[handle]
 
 
 @contextmanager
-def attach_win32_input(input, callback):
+def attach_win32_input(input: _Win32InputBase, callback: Callable[[], None]):
     """
     Context manager that makes this input active in the current event loop.
 
     :param input: :class:`~prompt_toolkit.input.Input` object.
     :param input_ready_callback: Called when the input is ready to read.
     """
-    assert isinstance(input, Input)
-    assert callable(callback)
-
-    loop = get_event_loop()
-    previous_callback = _current_callbacks.get(loop)
+    win32_handles = input.win32_handles
+    handle = input.handle
 
     # Add reader.
-    loop.add_win32_handle(input.handle, callback)
-    _current_callbacks[loop] = callback
+    previous_callback = win32_handles._handle_callbacks.get(handle)
+    win32_handles.add_win32_handle(handle, callback)
 
     try:
         yield
     finally:
-        loop.remove_win32_handle(input.handle)
+        win32_handles.remove_win32_handle(handle)
 
         if previous_callback:
-            loop.add_win32_handle(input.handle, previous_callback)
-            _current_callbacks[loop] = previous_callback
-        else:
-            del _current_callbacks[loop]
+            win32_handles.add_win32_handle(handle, previous_callback)
 
 
 @contextmanager
-def detach_win32_input(input):
-    assert isinstance(input, Input)
+def detach_win32_input(input: _Win32InputBase):
+    win32_handles = input.win32_handles
+    handle = input.handle
 
-    loop = get_event_loop()
-    previous = _current_callbacks.get(loop)
-
+    previous = win32_handles._handle_callbacks.get(handle)
     if previous:
-        loop.remove_win32_handle(input.handle)
-        _current_callbacks[loop] = None
+        win32_handles.remove_win32_handle(handle)
 
     try:
         yield
     finally:
         if previous:
-            loop.add_win32_handle(input.handle, previous)
-            _current_callbacks[loop] = previous
+            win32_handles.add_win32_handle(handle, previous)
 
 
-class raw_mode(object):
+class raw_mode:
     """
     ::
 
@@ -475,7 +522,7 @@ class raw_mode(object):
 
         self._patch()
 
-    def _patch(self):
+    def _patch(self) -> None:
         # Set raw
         ENABLE_ECHO_INPUT = 0x0004
         ENABLE_LINE_INPUT = 0x0002
@@ -497,7 +544,7 @@ class cooked_mode(raw_mode):
         with cooked_mode(stdin):
             ''' The pseudo-terminal stdin is now used in cooked mode. '''
     """
-    def _patch(self):
+    def _patch(self) -> None:
         # Set cooked.
         ENABLE_ECHO_INPUT = 0x0004
         ENABLE_LINE_INPUT = 0x0002

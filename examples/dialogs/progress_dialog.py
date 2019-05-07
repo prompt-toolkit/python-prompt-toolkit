@@ -2,8 +2,6 @@
 """
 Example of a progress bar dialog.
 """
-from __future__ import unicode_literals
-
 import os
 import time
 
@@ -34,7 +32,6 @@ def worker(set_percentage, log_text):
     # Show 100% for a second, before quitting.
     set_percentage(100)
     time.sleep(1)
-    return
 
 
 def main():
@@ -42,7 +39,7 @@ def main():
         title='Progress dialog example',
         text='As an examples, we walk through the filesystem and print '
              'all directories',
-        run_callback=worker)
+        run_callback=worker).run()
 
 
 if __name__ == '__main__':

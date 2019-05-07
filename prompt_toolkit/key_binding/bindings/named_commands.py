@@ -3,16 +3,14 @@ Key bindings which are also known by GNU Readline by the given names.
 
 See: http://www.delorie.com/gnu/docs/readline/rlman_13.html
 """
-from __future__ import unicode_literals
-
-import six
-from six.moves import range
+from typing import Callable, Dict, TypeVar, Union
 
 from prompt_toolkit.document import Document
 from prompt_toolkit.enums import EditingMode
-from prompt_toolkit.key_binding.key_bindings import key_binding
-from prompt_toolkit.key_binding.key_processor import KeyPress
+from prompt_toolkit.key_binding.key_bindings import Binding, key_binding
+from prompt_toolkit.key_binding.key_processor import KeyPress, KeyPressEvent
 from prompt_toolkit.keys import Keys
+from prompt_toolkit.layout.controls import BufferControl
 from prompt_toolkit.search import SearchDirection
 from prompt_toolkit.selection import PasteMode
 
@@ -23,24 +21,29 @@ __all__ = [
 ]
 
 
+# Typing.
+_Handler = Callable[[KeyPressEvent], None]
+_HandlerOrBinding = Union[_Handler, Binding]
+_T = TypeVar('_T', bound=_HandlerOrBinding)
+E = KeyPressEvent
+
+
 # Registry that maps the Readline command names to their handlers.
-_readline_commands = {}
+_readline_commands: Dict[str, _HandlerOrBinding] = {}
 
 
-def register(name):
+def register(name: str) -> Callable[[_T], _T]:
     """
     Store handler in the `_readline_commands` dictionary.
     """
-    assert isinstance(name, six.text_type)
-
-    def decorator(handler):
+    def decorator(handler: _T) -> _T:
         " `handler` is a callable or _Binding. "
         _readline_commands[name] = handler
         return handler
     return decorator
 
 
-def get_by_name(name):
+def get_by_name(name: str) -> _HandlerOrBinding:
     """
     Return the handler for the (Readline) command with the given name.
     """
@@ -56,35 +59,41 @@ def get_by_name(name):
 
 
 @register('beginning-of-line')
-def beginning_of_line(event):
-    " Move to the start of the current line. "
+def beginning_of_line(event: E) -> None:
+    """
+    Move to the start of the current line.
+    """
     buff = event.current_buffer
     buff.cursor_position += buff.document.get_start_of_line_position(after_whitespace=False)
 
 
 @register('end-of-line')
-def end_of_line(event):
-    " Move to the end of the line. "
+def end_of_line(event: E) -> None:
+    """
+    Move to the end of the line.
+    """
     buff = event.current_buffer
     buff.cursor_position += buff.document.get_end_of_line_position()
 
 
 @register('forward-char')
-def forward_char(event):
-    " Move forward a character. "
+def forward_char(event: E) -> None:
+    """
+    Move forward a character.
+    """
     buff = event.current_buffer
     buff.cursor_position += buff.document.get_cursor_right_position(count=event.arg)
 
 
 @register('backward-char')
-def backward_char(event):
+def backward_char(event: E) -> None:
     " Move back a character. "
     buff = event.current_buffer
     buff.cursor_position += buff.document.get_cursor_left_position(count=event.arg)
 
 
 @register('forward-word')
-def forward_word(event):
+def forward_word(event: E) -> None:
     """
     Move forward to the end of the next word. Words are composed of letters and
     digits.
@@ -97,7 +106,7 @@ def forward_word(event):
 
 
 @register('backward-word')
-def backward_word(event):
+def backward_word(event: E) -> None:
     """
     Move back to the start of the current or previous word. Words are composed
     of letters and digits.
@@ -110,7 +119,7 @@ def backward_word(event):
 
 
 @register('clear-screen')
-def clear_screen(event):
+def clear_screen(event: E) -> None:
     """
     Clear the screen and redraw everything at the top of the screen.
     """
@@ -118,7 +127,7 @@ def clear_screen(event):
 
 
 @register('redraw-current-line')
-def redraw_current_line(event):
+def redraw_current_line(event: E) -> None:
     """
     Refresh the current line.
     (Readline defines this command, but prompt-toolkit doesn't have it.)
@@ -132,31 +141,39 @@ def redraw_current_line(event):
 
 
 @register('accept-line')
-def accept_line(event):
-    " Accept the line regardless of where the cursor is. "
+def accept_line(event: E) -> None:
+    """
+    Accept the line regardless of where the cursor is.
+    """
     event.current_buffer.validate_and_handle()
 
 
 @register('previous-history')
-def previous_history(event):
-    " Move `back` through the history list, fetching the previous command.  "
+def previous_history(event: E) -> None:
+    """
+    Move `back` through the history list, fetching the previous command.
+    """
     event.current_buffer.history_backward(count=event.arg)
 
 
 @register('next-history')
-def next_history(event):
-    " Move `forward` through the history list, fetching the next command. "
+def next_history(event: E) -> None:
+    """
+    Move `forward` through the history list, fetching the next command.
+    """
     event.current_buffer.history_forward(count=event.arg)
 
 
 @register('beginning-of-history')
-def beginning_of_history(event):
-    " Move to the first line in the history. "
+def beginning_of_history(event: E) -> None:
+    """
+    Move to the first line in the history.
+    """
     event.current_buffer.go_to_history(0)
 
 
 @register('end-of-history')
-def end_of_history(event):
+def end_of_history(event: E) -> None:
     """
     Move to the end of the input history, i.e., the line currently being entered.
     """
@@ -166,14 +183,14 @@ def end_of_history(event):
 
 
 @register('reverse-search-history')
-def reverse_search_history(event):
+def reverse_search_history(event: E) -> None:
     """
     Search backward starting at the current line and moving `up` through
     the history as necessary. This is an incremental search.
     """
     control = event.app.layout.current_control
 
-    if control.search_buffer_control:
+    if isinstance(control, BufferControl) and control.search_buffer_control:
         event.app.current_search_state.direction = SearchDirection.BACKWARD
         event.app.layout.current_control = control.search_buffer_control
 
@@ -183,7 +200,7 @@ def reverse_search_history(event):
 #
 
 @register('end-of-file')
-def end_of_file(event):
+def end_of_file(event: E) -> None:
     """
     Exit.
     """
@@ -191,16 +208,20 @@ def end_of_file(event):
 
 
 @register('delete-char')
-def delete_char(event):
-    " Delete character before the cursor. "
+def delete_char(event: E) -> None:
+    """
+    Delete character before the cursor.
+    """
     deleted = event.current_buffer.delete(count=event.arg)
     if not deleted:
         event.app.output.bell()
 
 
 @register('backward-delete-char')
-def backward_delete_char(event):
-    " Delete the character behind the cursor. "
+def backward_delete_char(event: E) -> None:
+    """
+    Delete the character behind the cursor.
+    """
     if event.arg < 0:
         # When a negative argument has been given, this should delete in front
         # of the cursor.
@@ -213,13 +234,15 @@ def backward_delete_char(event):
 
 
 @register('self-insert')
-def self_insert(event):
-    " Insert yourself. "
+def self_insert(event: E) -> None:
+    """
+    Insert yourself.
+    """
     event.current_buffer.insert_text(event.data * event.arg)
 
 
 @register('transpose-chars')
-def transpose_chars(event):
+def transpose_chars(event: E) -> None:
     """
     Emulate Emacs transpose-char behavior: at the beginning of the buffer,
     do nothing.  At the end of a line or buffer, swap the characters before
@@ -238,7 +261,7 @@ def transpose_chars(event):
 
 
 @register('uppercase-word')
-def uppercase_word(event):
+def uppercase_word(event: E) -> None:
     """
     Uppercase the current (or following) word.
     """
@@ -251,7 +274,7 @@ def uppercase_word(event):
 
 
 @register('downcase-word')
-def downcase_word(event):
+def downcase_word(event: E) -> None:
     """
     Lowercase the current (or following) word.
     """
@@ -264,7 +287,7 @@ def downcase_word(event):
 
 
 @register('capitalize-word')
-def capitalize_word(event):
+def capitalize_word(event: E) -> None:
     """
     Capitalize the current (or following) word.
     """
@@ -277,7 +300,7 @@ def capitalize_word(event):
 
 
 @register('quoted-insert')
-def quoted_insert(event):
+def quoted_insert(event: E) -> None:
     """
     Add the next character typed to the line verbatim. This is how to insert
     key sequences like C-q, for example.
@@ -290,7 +313,7 @@ def quoted_insert(event):
 #
 
 @register('kill-line')
-def kill_line(event):
+def kill_line(event: E) -> None:
     """
     Kill the text from the cursor to the end of the line.
 
@@ -310,7 +333,7 @@ def kill_line(event):
 
 
 @register('kill-word')
-def kill_word(event):
+def kill_word(event: E) -> None:
     """
     Kill from point to the end of the current word, or if between words, to the
     end of the next word. Word boundaries are the same as forward-word.
@@ -328,7 +351,7 @@ def kill_word(event):
 
 
 @register('unix-word-rubout')
-def unix_word_rubout(event, WORD=True):
+def unix_word_rubout(event: E, WORD: bool = True) -> None:
     """
     Kill the word behind point, using whitespace as a word boundary.
     Usually bound to ControlW.
@@ -357,7 +380,7 @@ def unix_word_rubout(event, WORD=True):
 
 
 @register('backward-kill-word')
-def backward_kill_word(event):
+def backward_kill_word(event: E) -> None:
     """
     Kills the word before point, using "not a letter nor a digit" as a word boundary.
     Usually bound to M-Del or M-Backspace.
@@ -366,8 +389,10 @@ def backward_kill_word(event):
 
 
 @register('delete-horizontal-space')
-def delete_horizontal_space(event):
-    " Delete all spaces and tabs around point. "
+def delete_horizontal_space(event: E) -> None:
+    """
+    Delete all spaces and tabs around point.
+    """
     buff = event.current_buffer
     text_before_cursor = buff.document.text_before_cursor
     text_after_cursor = buff.document.text_after_cursor
@@ -380,7 +405,7 @@ def delete_horizontal_space(event):
 
 
 @register('unix-line-discard')
-def unix_line_discard(event):
+def unix_line_discard(event: E) -> None:
     """
     Kill backward from the cursor to the beginning of the current line.
     """
@@ -394,7 +419,7 @@ def unix_line_discard(event):
 
 
 @register('yank')
-def yank(event):
+def yank(event: E) -> None:
     """
     Paste before cursor.
     """
@@ -403,7 +428,7 @@ def yank(event):
 
 
 @register('yank-nth-arg')
-def yank_nth_arg(event):
+def yank_nth_arg(event: E) -> None:
     """
     Insert the first argument of the previous command. With an argument, insert
     the nth word from the previous command (start counting at 0).
@@ -413,7 +438,7 @@ def yank_nth_arg(event):
 
 
 @register('yank-last-arg')
-def yank_last_arg(event):
+def yank_last_arg(event: E) -> None:
     """
     Like `yank_nth_arg`, but if no argument has been given, yank the last word
     of each line.
@@ -423,7 +448,7 @@ def yank_last_arg(event):
 
 
 @register('yank-pop')
-def yank_pop(event):
+def yank_pop(event: E) -> None:
     """
     Rotate the kill ring, and yank the new top. Only works following yank or
     yank-pop.
@@ -444,13 +469,15 @@ def yank_pop(event):
 
 
 @register('complete')
-def complete(event):
-    " Attempt to perform completion. "
+def complete(event: E) -> None:
+    """
+    Attempt to perform completion.
+    """
     display_completions_like_readline(event)
 
 
 @register('menu-complete')
-def menu_complete(event):
+def menu_complete(event: E) -> None:
     """
     Generate completions, or go to the next completion. (This is the default
     way of completing input in prompt_toolkit.)
@@ -459,8 +486,10 @@ def menu_complete(event):
 
 
 @register('menu-complete-backward')
-def menu_complete_backward(event):
-    " Move backward through the list of possible completions. "
+def menu_complete_backward(event: E) -> None:
+    """
+    Move backward through the list of possible completions.
+    """
     event.current_buffer.complete_previous()
 
 #
@@ -469,7 +498,7 @@ def menu_complete_backward(event):
 
 
 @register('start-kbd-macro')
-def start_kbd_macro(event):
+def start_kbd_macro(event: E) -> None:
     """
     Begin saving the characters typed into the current keyboard macro.
     """
@@ -477,7 +506,7 @@ def start_kbd_macro(event):
 
 
 @register('end-kbd-macro')
-def end_kbd_macro(event):
+def end_kbd_macro(event: E) -> None:
     """
     Stop saving the characters typed into the current keyboard macro and save
     the definition.
@@ -487,7 +516,7 @@ def end_kbd_macro(event):
 
 @register('call-last-kbd-macro')
 @key_binding(record_in_macro=False)
-def call_last_kbd_macro(event):
+def call_last_kbd_macro(event: E) -> None:
     """
     Re-execute the last keyboard macro defined, by making the characters in the
     macro appear as if typed at the keyboard.
@@ -498,17 +527,23 @@ def call_last_kbd_macro(event):
     be added later on to the macro of their handlers have `record_in_macro=True`.
     """
     # Insert the macro.
-    event.app.key_processor.feed_multiple(
-        event.app.emacs_state.macro, first=True)
+    macro = event.app.emacs_state.macro
+
+    if macro:
+        event.app.key_processor.feed_multiple(macro, first=True)
 
 
 @register('print-last-kbd-macro')
-def print_last_kbd_macro(event):
-    " Print the last keyboard macro. "
+def print_last_kbd_macro(event: E) -> None:
+    """
+    Print the last keyboard macro.
+    """
     # TODO: Make the format suitable for the inputrc file.
-    def print_macro():
-        for k in event.app.key_processor.macro:
-            print(k)
+    def print_macro() -> None:
+        macro = event.app.emacs_state.macro
+        if macro:
+            for k in macro:
+                print(k)
 
     from prompt_toolkit.application.run_in_terminal import run_in_terminal
     run_in_terminal(print_macro)
@@ -519,13 +554,15 @@ def print_last_kbd_macro(event):
 
 
 @register('undo')
-def undo(event):
-    " Incremental undo. "
+def undo(event: E) -> None:
+    """
+    Incremental undo.
+    """
     event.current_buffer.undo()
 
 
 @register('insert-comment')
-def insert_comment(event):
+def insert_comment(event: E) -> None:
     """
     Without numeric argument, comment all lines.
     With numeric argument, uncomment all lines.
@@ -535,10 +572,10 @@ def insert_comment(event):
 
     # Transform all lines.
     if event.arg != 1:
-        def change(line):
+        def change(line: str) -> str:
             return line[1:] if line.startswith('#') else line
     else:
-        def change(line):
+        def change(line: str) -> str:
             return '#' + line
 
     buff.document = Document(
@@ -550,19 +587,23 @@ def insert_comment(event):
 
 
 @register('vi-editing-mode')
-def vi_editing_mode(event):
-    " Switch to Vi editing mode. "
+def vi_editing_mode(event: E) -> None:
+    """
+    Switch to Vi editing mode.
+    """
     event.app.editing_mode = EditingMode.VI
 
 
 @register('emacs-editing-mode')
-def emacs_editing_mode(event):
-    " Switch to Emacs editing mode. "
+def emacs_editing_mode(event: E) -> None:
+    """
+    Switch to Emacs editing mode.
+    """
     event.app.editing_mode = EditingMode.EMACS
 
 
 @register('prefix-meta')
-def prefix_meta(event):
+def prefix_meta(event: E) -> None:
     """
     Metafy the next character typed. This is for keyboards without a meta key.
 
@@ -576,7 +617,7 @@ def prefix_meta(event):
 
 
 @register('operate-and-get-next')
-def operate_and_get_next(event):
+def operate_and_get_next(event: E) -> None:
     """
     Accept the current line for execution and fetch the next line relative to
     the current line from the history for editing.
@@ -589,7 +630,7 @@ def operate_and_get_next(event):
     buff.validate_and_handle()
 
     # Set the new index at the start of the next run.
-    def set_working_index():
+    def set_working_index() -> None:
         if new_index < len(buff._working_lines):
             buff.working_index = new_index
 
@@ -597,7 +638,7 @@ def operate_and_get_next(event):
 
 
 @register('edit-and-execute-command')
-def edit_and_execute(event):
+def edit_and_execute(event: E) -> None:
     """
     Invoke an editor on the current command line, and accept the result.
     """

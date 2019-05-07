@@ -2,8 +2,6 @@
 """
 Demonstration of how to print using the HTML class.
 """
-from __future__ import print_function, unicode_literals
-
 from prompt_toolkit import HTML, print_formatted_text
 
 print = print_formatted_text

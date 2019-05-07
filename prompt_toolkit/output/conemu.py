@@ -1,5 +1,6 @@
-from __future__ import unicode_literals
+from typing import Any, TextIO
 
+from prompt_toolkit.data_structures import Size
 from prompt_toolkit.renderer import Output
 
 from .vt100 import Vt100_Output
@@ -10,7 +11,7 @@ __all__ = [
 ]
 
 
-class ConEmuOutput(object):
+class ConEmuOutput:
     """
     ConEmu (Windows) output abstraction.
 
@@ -25,11 +26,11 @@ class ConEmuOutput(object):
     http://conemu.github.io/
     http://gooseberrycreative.com/cmder/
     """
-    def __init__(self, stdout):
+    def __init__(self, stdout: TextIO) -> None:
         self.win32_output = Win32Output(stdout)
-        self.vt100_output = Vt100_Output(stdout, lambda: None)
+        self.vt100_output = Vt100_Output(stdout, lambda: Size(0, 0))
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         if name in ('get_size', 'get_rows_below_cursor_position',
                     'enable_mouse_support', 'disable_mouse_support',
                     'scroll_buffer_to_prompt', 'get_win32_screen_buffer_info',

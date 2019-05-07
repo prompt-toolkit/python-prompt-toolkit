@@ -2,8 +2,6 @@
 """
 Two progress bars that run in parallel.
 """
-from __future__ import unicode_literals
-
 import threading
 import time
 

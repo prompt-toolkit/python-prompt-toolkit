@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from .base import Clipboard, ClipboardData, DummyClipboard, DynamicClipboard
 from .in_memory import InMemoryClipboard
 

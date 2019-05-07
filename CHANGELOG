@@ -1,6 +1,27 @@
 CHANGELOG
 =========
 
+3.x.x
+-----------------
+
+New features:
+- (almost) 100% type annotated.
+- Native asyncio instead of custom event loops.
+
+Breaking changes:
+- Python 2 support has been dropped. Minimal Python version is now 3.6,
+  although 3.7 is preferred (because of ContextVars).
+- Native asyncio, so some async code becomes slightly different.
+- The active `Application` became a contextvar. Which means that it should be
+  propagated correctly to the code that requires it. However, random other
+  threads or coroutines won't be able to know what the current application is.
+- The dialog shortcuts API changed. All dialog functions now return an
+  `Application`. You still have to call either `run()` or `run_async` on the
+  `Application` object.
+- The way inputhooks work is changed.
+- `patch_stdout` now requires an `Application` as input.
+
+
 2.0.9: 2019-02-19
 -----------------
 

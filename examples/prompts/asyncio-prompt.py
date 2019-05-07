@@ -16,7 +16,6 @@ possible. ::
 
 import asyncio
 
-from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
 from prompt_toolkit.patch_stdout import patch_stdout
 from prompt_toolkit.shortcuts import PromptSession
 
@@ -41,12 +40,6 @@ async def interactive_shell():
     # Create Prompt.
     session = PromptSession('Say something: ')
 
-    # Patch stdout in something that will always print *above* the prompt when
-    # something is written to stdout.
-    # (This is optional, when `patch_stdout=True` has been given before.)
-
-    # sys.stdout = prompt.app.stdout_proxy()
-
     # Run echo loop. Read text from stdin, and reply it back.
     while True:
         try:
@@ -57,9 +50,6 @@ async def interactive_shell():
 
 
 def main():
-    # Tell prompt_toolkit to use the asyncio event loop.
-    use_asyncio_event_loop()
-
     with patch_stdout():
         shell_task = asyncio.ensure_future(interactive_shell())
         background_task = asyncio.gather(print_counter(), return_exceptions=True)

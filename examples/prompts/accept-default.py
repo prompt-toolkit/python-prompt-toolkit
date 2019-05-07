@@ -6,8 +6,6 @@ user typed without allowing him/her to edit it.
 This should display the prompt with all the formatting like usual, but not
 allow any editing.
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit import HTML, prompt
 
 if __name__ == '__main__':

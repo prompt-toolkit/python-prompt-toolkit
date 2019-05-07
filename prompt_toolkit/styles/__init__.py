@@ -1,8 +1,6 @@
 """
 Styling for prompt_toolkit applications.
 """
-from __future__ import absolute_import, unicode_literals
-
 from .base import (
     ANSI_COLOR_NAMES,
     DEFAULT_ATTRS,

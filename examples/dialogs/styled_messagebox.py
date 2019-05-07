@@ -7,8 +7,6 @@ styling.
 This also demonstrates that the `title` argument can be any kind of formatted
 text.
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.shortcuts import message_dialog
 from prompt_toolkit.styles import Style
@@ -27,7 +25,7 @@ def main():
         title=HTML('<style bg="blue" fg="white">Styled</style> '
                    '<style fg="ansired">dialog</style> window'),
         text='Do you want to continue?\nPress ENTER to quit.',
-        style=example_style)
+        style=example_style).run()
 
 
 if __name__ == '__main__':

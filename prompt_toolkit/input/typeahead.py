@@ -31,10 +31,10 @@ To support type ahead, this module will store all the key strokes that were
 read too early, so that they can be feed into to the next `prompt()` call or to
 the next prompt_toolkit `Application`.
 """
-from __future__ import unicode_literals
-
 from collections import defaultdict
+from typing import Dict, List
 
+from ..key_binding import KeyPress
 from .base import Input
 
 __all__ = [
@@ -43,26 +43,22 @@ __all__ = [
     'clear_typeahead',
 ]
 
-_buffer = defaultdict(list)  # input hash -> list of key presses.
+_buffer: Dict[str, List[KeyPress]] = defaultdict(list)
 
 
-def store_typeahead(input_obj, key_presses):
+def store_typeahead(input_obj: Input, key_presses: List[KeyPress]) -> None:
     """
     Insert typeahead key presses for the given input.
     """
-    assert isinstance(input_obj, Input)
-    assert isinstance(key_presses, list)
-
     global _buffer
     key = input_obj.typeahead_hash()
     _buffer[key].extend(key_presses)
 
 
-def get_typeahead(input_obj):
+def get_typeahead(input_obj: Input) -> List[KeyPress]:
     """
     Retrieve typeahead and reset the buffer for this input.
     """
-    assert isinstance(input_obj, Input)
     global _buffer
 
     key = input_obj.typeahead_hash()
@@ -71,11 +67,10 @@ def get_typeahead(input_obj):
     return result
 
 
-def clear_typeahead(input_obj):
+def clear_typeahead(input_obj: Input) -> None:
     """
     Clear typeahead buffer.
     """
-    assert isinstance(input_obj, Input)
     global _buffer
     key = input_obj.typeahead_hash()
     _buffer[key] = []

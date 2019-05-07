@@ -1,14 +1,20 @@
-from __future__ import unicode_literals
-
 import re
-from collections import namedtuple
-
-from six import string_types
+from typing import (
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    NamedTuple,
+    Optional,
+    Tuple,
+    Union,
+)
 
 from prompt_toolkit.document import Document
-from prompt_toolkit.filters import to_filter
+from prompt_toolkit.filters import FilterOrBool, to_filter
+from prompt_toolkit.formatted_text import AnyFormattedText, StyleAndTextTuples
 
-from .base import Completer, Completion
+from .base import CompleteEvent, Completer, Completion
 from .word_completer import WordCompleter
 
 __all__ = [
@@ -45,8 +51,10 @@ class FuzzyCompleter(Completer):
     :param enable_fuzzy: (bool or `Filter`) Enabled the fuzzy behavior. For
         easily turning fuzzyness on or off according to a certain condition.
     """
-    def __init__(self, completer, WORD=False, pattern=None, enable_fuzzy=True):
-        assert isinstance(completer, Completer)
+    def __init__(self, completer: Completer, WORD: bool = False,
+                 pattern: Optional[str] = None,
+                 enable_fuzzy: FilterOrBool = True):
+
         assert pattern is None or pattern.startswith('^')
 
         self.completer = completer
@@ -55,20 +63,23 @@ class FuzzyCompleter(Completer):
         self.pattern = pattern
         self.enable_fuzzy = to_filter(enable_fuzzy)
 
-    def get_completions(self, document, complete_event):
+    def get_completions(self, document: Document,
+                        complete_event: CompleteEvent) -> Iterable[Completion]:
         if self.enable_fuzzy():
             return self._get_fuzzy_completions(document, complete_event)
         else:
             return self.completer.get_completions(document, complete_event)
 
-    def _get_pattern(self):
+    def _get_pattern(self) -> str:
         if self.pattern:
             return self.pattern
         if self.WORD:
             return r'[^\s]+'
         return '^[a-zA-Z0-9_]*'
 
-    def _get_fuzzy_completions(self, document, complete_event):
+    def _get_fuzzy_completions(
+            self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
+
         word_before_cursor = document.get_word_before_cursor(
             pattern=re.compile(self._get_pattern()))
 
@@ -79,7 +90,8 @@ class FuzzyCompleter(Completer):
 
         completions = list(self.completer.get_completions(document2, complete_event))
 
-        fuzzy_matches = []
+        fuzzy_matches: List[_FuzzyMatch] = []
+
         pat = '.*?'.join(map(re.escape, word_before_cursor))
         pat = '(?=({0}))'.format(pat)   # lookahead regex to manage overlapping matches
         regex = re.compile(pat, re.IGNORECASE)
@@ -90,7 +102,7 @@ class FuzzyCompleter(Completer):
                 best = min(matches, key=lambda m: (m.start(), len(m.group(1))))
                 fuzzy_matches.append(_FuzzyMatch(len(best.group(1)), best.start(), compl))
 
-        def sort_key(fuzzy_match):
+        def sort_key(fuzzy_match: '_FuzzyMatch') -> Tuple[int, int]:
             " Sort by start position, then by the length of the match. "
             return fuzzy_match.start_pos, fuzzy_match.match_length
 
@@ -106,7 +118,8 @@ class FuzzyCompleter(Completer):
                 display=self._get_display(match, word_before_cursor),
                 style=match.completion.style)
 
-    def _get_display(self, fuzzy_match, word_before_cursor):
+    def _get_display(self, fuzzy_match: '_FuzzyMatch',
+                     word_before_cursor: str) -> AnyFormattedText:
         """
         Generate formatted text for the display label.
         """
@@ -117,7 +130,7 @@ class FuzzyCompleter(Completer):
             # No highlighting when we have zero length matches (no input text).
             return word
 
-        result = []
+        result: StyleAndTextTuples = []
 
         # Text before match.
         result.append(('class:fuzzymatch.outside', word[:m.start_pos]))
@@ -150,23 +163,30 @@ class FuzzyWordCompleter(Completer):
     :param meta_dict: Optional dict mapping words to their meta-information.
     :param WORD: When True, use WORD characters.
     """
-    def __init__(self, words, meta_dict=None, WORD=False):
-        assert callable(words) or all(isinstance(w, string_types) for w in words)
+    def __init__(self, words: Union[List[str], Callable[[], List[str]]],
+                 meta_dict: Optional[Dict[str, str]] = None,
+                 WORD: bool = False) -> None:
 
         self.words = words
         self.meta_dict = meta_dict or {}
         self.WORD = WORD
 
         self.word_completer = WordCompleter(
-            words=lambda: self.words,
-            WORD=self.WORD)
+            words=self.words,
+            WORD=self.WORD,
+            meta_dict=self.meta_dict)
 
         self.fuzzy_completer = FuzzyCompleter(
             self.word_completer,
             WORD=self.WORD)
 
-    def get_completions(self, document, complete_event):
+    def get_completions(self, document: Document,
+                        complete_event: CompleteEvent) -> Iterable[Completion]:
         return self.fuzzy_completer.get_completions(document, complete_event)
 
 
-_FuzzyMatch = namedtuple('_FuzzyMatch', 'match_length start_pos completion')
+_FuzzyMatch = NamedTuple('_FuzzyMatch', [
+    ('match_length', int),
+    ('start_pos', int),
+    ('completion', Completion)
+])

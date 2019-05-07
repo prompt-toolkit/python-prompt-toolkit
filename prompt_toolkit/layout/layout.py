@@ -1,14 +1,18 @@
 """
 Wrapper for the layout.
 """
-from __future__ import unicode_literals
-
-import six
+from typing import Dict, Generator, Iterable, List, Optional, Union
 
 from prompt_toolkit.buffer import Buffer
 
-from .containers import ConditionalContainer, Container, Window, to_container
-from .controls import BufferControl, UIControl
+from .containers import (
+    AnyContainer,
+    ConditionalContainer,
+    Container,
+    Window,
+    to_container,
+)
+from .controls import BufferControl, SearchBufferControl, UIControl
 
 __all__ = [
     'Layout',
@@ -16,8 +20,10 @@ __all__ = [
     'walk',
 ]
 
+FocusableElement = Union[str, Buffer, UIControl, AnyContainer]
 
-class Layout(object):
+
+class Layout:
     """
     The layout for a prompt_toolkit
     :class:`~prompt_toolkit.application.Application`.
@@ -27,21 +33,25 @@ class Layout(object):
     :param focused_element: element to be focused initially. (Can be anything
         the `focus` function accepts.)
     """
-    def __init__(self, container, focused_element=None):
+    def __init__(
+            self, container: AnyContainer,
+            focused_element: Optional[FocusableElement] = None):
+
         self.container = to_container(container)
-        self._stack = []
+        self._stack: List[Window] = []
 
         # Map search BufferControl back to the original BufferControl.
         # This is used to keep track of when exactly we are searching, and for
         # applying the search.
         # When a link exists in this dictionary, that means the search is
         # currently active.
-        self.search_links = {}  # search_buffer_control -> original buffer control.
+        # Map: search_buffer_control -> original buffer control.
+        self.search_links: Dict[SearchBufferControl, BufferControl] = {}
 
         # Mapping that maps the children in the layout to their parent.
         # This relationship is calculated dynamically, each time when the UI
         # is rendered.  (UI elements have only references to their children.)
-        self._child_to_parent = {}
+        self._child_to_parent: Dict[Container, Container] = {}
 
         if focused_element is None:
             try:
@@ -52,13 +62,13 @@ class Layout(object):
             self.focus(focused_element)
 
         # List of visible windows.
-        self.visible_windows = []  # List of `Window` objects.
+        self.visible_windows: List[Window] = []  # List of `Window` objects.
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'Layout(%r, current_window=%r)' % (
             self.container, self.current_window)
 
-    def find_all_windows(self):
+    def find_all_windows(self) -> Generator[Window, None, None]:
         """
         Find all the :class:`.UIControl` objects in this layout.
         """
@@ -66,11 +76,11 @@ class Layout(object):
             if isinstance(item, Window):
                 yield item
 
-    def find_all_controls(self):
+    def find_all_controls(self) -> Iterable[UIControl]:
         for container in self.find_all_windows():
             yield container.content
 
-    def focus(self, value):
+    def focus(self, value: FocusableElement) -> None:
         """
         Focus the given UI element.
 
@@ -84,7 +94,7 @@ class Layout(object):
           focusable :class:`.Window` of the container.
         """
         # BufferControl by buffer name.
-        if isinstance(value, six.text_type):
+        if isinstance(value, str):
             for control in self.find_all_controls():
                 if isinstance(control, BufferControl) and control.buffer.name == value:
                     self.focus(control)
@@ -143,12 +153,12 @@ class Layout(object):
 
                 raise ValueError('Invalid value. Container cannot be focused: %r' % (value, ))
 
-    def has_focus(self, value):
+    def has_focus(self, value: FocusableElement) -> bool:
         """
         Check whether the given control has the focus.
         :param value: :class:`.UIControl` or :class:`.Window` instance.
         """
-        if isinstance(value, six.text_type):
+        if isinstance(value, str):
             if self.current_buffer is None:
                 return False
             return self.current_buffer.name == value
@@ -169,19 +179,17 @@ class Layout(object):
                 return False
 
     @property
-    def current_control(self):
+    def current_control(self) -> UIControl:
         """
         Get the :class:`.UIControl` to currently has the focus.
         """
         return self._stack[-1].content
 
     @current_control.setter
-    def current_control(self, control):
+    def current_control(self, control: UIControl) -> None:
         """
         Set the :class:`.UIControl` to receive the focus.
         """
-        assert isinstance(control, UIControl)
-
         for window in self.find_all_windows():
             if window.content == control:
                 self.current_window = window
@@ -190,27 +198,35 @@ class Layout(object):
         raise ValueError('Control not found in the user interface.')
 
     @property
-    def current_window(self):
+    def current_window(self) -> Window:
         " Return the :class:`.Window` object that is currently focused. "
         return self._stack[-1]
 
     @current_window.setter
-    def current_window(self, value):
+    def current_window(self, value: Window):
         " Set the :class:`.Window` object to be currently focused. "
-        assert isinstance(value, Window)
         self._stack.append(value)
 
     @property
-    def is_searching(self):
+    def is_searching(self) -> bool:
         " True if we are searching right now. "
         return self.current_control in self.search_links
 
     @property
-    def search_target_buffer_control(self):
-        " Return the :class:`.BufferControl` in which we are searching or `None`. "
-        return self.search_links.get(self.current_control)
+    def search_target_buffer_control(self) -> Optional[BufferControl]:
+        """
+        Return the :class:`.BufferControl` in which we are searching or `None`.
+        """
+        # Not every `UIControl` is a `BufferControl`. This only applies to
+        # `BufferControl`.
+        control = self.current_control
 
-    def get_focusable_windows(self):
+        if isinstance(control, SearchBufferControl):
+            return self.search_links.get(control)
+        else:
+            return None
+
+    def get_focusable_windows(self) -> Iterable[Window]:
         """
         Return all the :class:`.Window` objects which are focusable (in the
         'modal' area).
@@ -219,7 +235,7 @@ class Layout(object):
             if isinstance(w, Window) and w.content.is_focusable():
                 yield w
 
-    def get_visible_focusable_windows(self):
+    def get_visible_focusable_windows(self) -> List[Window]:
         """
         Return a list of :class:`.Window` objects that are focusable.
         """
@@ -229,15 +245,16 @@ class Layout(object):
         return [w for w in self.get_focusable_windows() if w in visible_windows]
 
     @property
-    def current_buffer(self):
+    def current_buffer(self) -> Optional[Buffer]:
         """
         The currently focused :class:`~.Buffer` or `None`.
         """
         ui_control = self.current_control
         if isinstance(ui_control, BufferControl):
             return ui_control.buffer
+        return None
 
-    def get_buffer_by_name(self, buffer_name):
+    def get_buffer_by_name(self, buffer_name: str) -> Optional[Buffer]:
         """
         Look in the layout for a buffer with the given name.
         Return `None` when nothing was found.
@@ -246,9 +263,10 @@ class Layout(object):
             if isinstance(w, Window) and isinstance(w.content, BufferControl):
                 if w.content.buffer.name == buffer_name:
                     return w.content.buffer
+        return None
 
     @property
-    def buffer_has_focus(self):
+    def buffer_has_focus(self) -> bool:
         """
         Return `True` if the currently focused control is a
         :class:`.BufferControl`. (For instance, used to determine whether the
@@ -258,7 +276,7 @@ class Layout(object):
         return isinstance(ui_control, BufferControl)
 
     @property
-    def previous_control(self):
+    def previous_control(self) -> UIControl:
         """
         Get the :class:`.UIControl` to previously had the focus.
         """
@@ -267,14 +285,14 @@ class Layout(object):
         except IndexError:
             return self._stack[-1].content
 
-    def focus_last(self):
+    def focus_last(self) -> None:
         """
         Give the focus to the last focused control.
         """
         if len(self._stack) > 1:
             self._stack = self._stack[:-1]
 
-    def focus_next(self):
+    def focus_next(self) -> None:
         """
         Focus the next visible/focusable Window.
         """
@@ -290,7 +308,7 @@ class Layout(object):
 
             self.focus(windows[index])
 
-    def focus_previous(self):
+    def focus_previous(self) -> None:
         """
         Focus the previous visible/focusable Window.
         """
@@ -306,34 +324,34 @@ class Layout(object):
 
             self.focus(windows[index])
 
-    def walk(self):
+    def walk(self) -> Iterable[Container]:
         """
         Walk through all the layout nodes (and their children) and yield them.
         """
         for i in walk(self.container):
             yield i
 
-    def walk_through_modal_area(self):
+    def walk_through_modal_area(self) -> Iterable[Container]:
         """
         Walk through all the containers which are in the current 'modal' part
         of the layout.
         """
         # Go up in the tree, and find the root. (it will be a part of the
         # layout, if the focus is in a modal part.)
-        root = self.current_window
+        root: Container = self.current_window
         while not root.is_modal() and root in self._child_to_parent:
             root = self._child_to_parent[root]
 
         for container in walk(root):
             yield container
 
-    def update_parents_relations(self):
+    def update_parents_relations(self) -> None:
         """
         Update child->parent relationships mapping.
         """
         parents = {}
 
-        def walk(e):
+        def walk(e: Container) -> None:
             for c in e.get_children():
                 parents[c] = e
                 walk(c)
@@ -342,16 +360,16 @@ class Layout(object):
 
         self._child_to_parent = parents
 
-    def reset(self):
+    def reset(self) -> None:
         # Remove all search links when the UI starts.
         # (Important, for instance when control-c is been pressed while
         #  searching. The prompt cancels, but next `run()` call the search
         #  links are still there.)
         self.search_links.clear()
 
-        return self.container.reset()
+        self.container.reset()
 
-    def get_parent(self, container):
+    def get_parent(self, container: Container) -> Optional[Container]:
         """
         Return the parent container for the given container, or ``None``, if it
         wasn't found.
@@ -359,19 +377,17 @@ class Layout(object):
         try:
             return self._child_to_parent[container]
         except KeyError:
-            return
+            return None
 
 
 class InvalidLayoutError(Exception):
     pass
 
 
-def walk(container, skip_hidden=False):
+def walk(container: Container, skip_hidden: bool = False) -> Iterable[Container]:
     """
     Walk through layout, starting at this container.
     """
-    assert isinstance(container, Container)
-
     # When `skip_hidden` is set, don't go into disabled ConditionalContainer containers.
     if skip_hidden and isinstance(container, ConditionalContainer) and not container.filter():
         return
@@ -380,5 +396,4 @@ def walk(container, skip_hidden=False):
 
     for c in container.get_children():
         # yield from walk(c)
-        for i in walk(c, skip_hidden=skip_hidden):
-            yield i
+        yield from walk(c, skip_hidden=skip_hidden)

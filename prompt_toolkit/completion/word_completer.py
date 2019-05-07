@@ -1,8 +1,7 @@
-from __future__ import unicode_literals
+from typing import Callable, Dict, Iterable, List, Optional, Pattern, Union
 
-from six import string_types
-
-from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.completion import CompleteEvent, Completer, Completion
+from prompt_toolkit.document import Document
 
 __all__ = [
     'WordCompleter',
@@ -27,10 +26,16 @@ class WordCompleter(Completer):
     :param pattern: Optional regex. When given, use this regex
         pattern instead of default one.
     """
-    def __init__(self, words, ignore_case=False, meta_dict=None, WORD=False,
-                 sentence=False, match_middle=False, pattern=None):
+    def __init__(self,
+                 words: Union[List[str], Callable[[], List[str]]],
+                 ignore_case: bool = False,
+                 meta_dict: Optional[Dict[str, str]] = None,
+                 WORD: bool = False,
+                 sentence: bool = False,
+                 match_middle: bool = False,
+                 pattern: Optional[Pattern[str]] = None) -> None:
+
         assert not (WORD and sentence)
-        assert callable(words) or all(isinstance(w, string_types) for w in words)
 
         self.words = words
         self.ignore_case = ignore_case
@@ -40,7 +45,8 @@ class WordCompleter(Completer):
         self.match_middle = match_middle
         self.pattern = pattern
 
-    def get_completions(self, document, complete_event):
+    def get_completions(self, document: Document,
+                        complete_event: CompleteEvent) -> Iterable[Completion]:
         # Get list of words.
         words = self.words
         if callable(words):
@@ -50,12 +56,13 @@ class WordCompleter(Completer):
         if self.sentence:
             word_before_cursor = document.text_before_cursor
         else:
-            word_before_cursor = document.get_word_before_cursor(WORD=self.WORD, pattern=self.pattern)
+            word_before_cursor = document.get_word_before_cursor(
+                WORD=self.WORD, pattern=self.pattern)
 
         if self.ignore_case:
             word_before_cursor = word_before_cursor.lower()
 
-        def word_matches(word):
+        def word_matches(word: str) -> bool:
             """ True when the word before the cursor matches. """
             if self.ignore_case:
                 word = word.lower()

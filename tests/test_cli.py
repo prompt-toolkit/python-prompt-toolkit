@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 from functools import partial
 
 import pytest
+
 from prompt_toolkit.clipboard import ClipboardData, InMemoryClipboard
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.filters import ViInsertMode

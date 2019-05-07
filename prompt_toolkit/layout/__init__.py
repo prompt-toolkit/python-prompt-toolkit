@@ -44,8 +44,6 @@ And one prepared menu:
 - CompletionsMenu
 
 """
-from __future__ import unicode_literals
-
 from .containers import (
     ColorColumn,
     ConditionalContainer,
@@ -74,6 +72,7 @@ from .controls import (
     UIControl,
 )
 from .dimension import (
+    AnyDimension,
     D,
     Dimension,
     is_dimension,
@@ -98,6 +97,7 @@ __all__ = [
     'walk',
 
     # Dimensions.
+    'AnyDimension',
     'Dimension',
     'D',
     'sum_layout_dimensions',

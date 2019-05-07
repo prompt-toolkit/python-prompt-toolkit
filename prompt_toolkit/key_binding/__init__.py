@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from .key_bindings import (
     ConditionalKeyBindings,
     DynamicKeyBindings,
@@ -7,11 +5,14 @@ from .key_bindings import (
     KeyBindingsBase,
     merge_key_bindings,
 )
+from .key_processor import KeyPress
 
 __all__ = [
-    'KeyBindingsBase',
-    'KeyBindings',
     'ConditionalKeyBindings',
-    'merge_key_bindings',
     'DynamicKeyBindings',
+    'KeyBindings',
+    'KeyBindingsBase',
+    'merge_key_bindings',
+
+    'KeyPress',
 ]

@@ -1,8 +1,8 @@
-from __future__ import unicode_literals
-
 import os
+from typing import Callable, Iterable, List, Optional
 
-from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.completion import CompleteEvent, Completer, Completion
+from prompt_toolkit.document import Document
 
 __all__ = [
     'PathCompleter',
@@ -21,12 +21,11 @@ class PathCompleter(Completer):
                         when no filtering has to be done.
     :param min_input_len: Don't do autocompletion when the input string is shorter.
     """
-    def __init__(self, only_directories=False, get_paths=None, file_filter=None,
-                 min_input_len=0, expanduser=False):
-        assert get_paths is None or callable(get_paths)
-        assert file_filter is None or callable(file_filter)
-        assert isinstance(min_input_len, int)
-        assert isinstance(expanduser, bool)
+    def __init__(self, only_directories: bool = False,
+                 get_paths: Optional[Callable[[], List[str]]] = None,
+                 file_filter: Optional[Callable[[str], bool]] = None,
+                 min_input_len: int = 0,
+                 expanduser: bool = False) -> None:
 
         self.only_directories = only_directories
         self.get_paths = get_paths or (lambda: ['.'])
@@ -34,7 +33,8 @@ class PathCompleter(Completer):
         self.min_input_len = min_input_len
         self.expanduser = expanduser
 
-    def get_completions(self, document, complete_event):
+    def get_completions(self, document: Document,
+                        complete_event: CompleteEvent) -> Iterable[Completion]:
         text = document.text_before_cursor
 
         # Complete only when we have at least the minimal input length,
@@ -96,9 +96,8 @@ class ExecutableCompleter(PathCompleter):
     """
     Complete only executable files in the current path.
     """
-    def __init__(self):
-        PathCompleter.__init__(
-            self,
+    def __init__(self) -> None:
+        super().__init__(
             only_directories=False,
             min_input_len=1,
             get_paths=lambda: os.environ.get('PATH', '').split(os.pathsep),

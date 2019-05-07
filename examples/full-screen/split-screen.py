@@ -5,8 +5,6 @@ Simple example of a full screen application with a vertical split.
 This will show a window on the left for user input. When the user types, the
 reversed input is shown on the right. Pressing Ctrl-Q will quit the application.
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.key_binding import KeyBindings

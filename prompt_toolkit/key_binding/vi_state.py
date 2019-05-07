@@ -1,4 +1,11 @@
-from __future__ import unicode_literals
+from enum import Enum
+from typing import TYPE_CHECKING, Callable, Dict, Optional
+
+from prompt_toolkit.clipboard import ClipboardData
+
+if TYPE_CHECKING:
+    from .key_processor import KeyPressEvent
+    from .key_bindings.vi import TextObject
 
 __all__ = [
     'InputMode',
@@ -7,24 +14,26 @@ __all__ = [
 ]
 
 
-class InputMode(object):
+class InputMode(str, Enum):
+    value: str
+
     INSERT = 'vi-insert'
     INSERT_MULTIPLE = 'vi-insert-multiple'
     NAVIGATION = 'vi-navigation'  # Normal mode.
     REPLACE = 'vi-replace'
 
 
-class CharacterFind(object):
-    def __init__(self, character, backwards=False):
+class CharacterFind:
+    def __init__(self, character: str, backwards: bool = False) -> None:
         self.character = character
         self.backwards = backwards
 
 
-class ViState(object):
+class ViState:
     """
     Mutable class to hold the state of the Vi navigation.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         #: None or CharacterFind instance. (This is used to repeat the last
         #: search in Vi mode, by pressing the 'n' or 'N' in navigation mode.)
         self.last_character_find = None
@@ -32,19 +41,19 @@ class ViState(object):
         # When an operator is given and we are waiting for text object,
         # -- e.g. in the case of 'dw', after the 'd' --, an operator callback
         # is set here.
-        self.operator_func = None
-        self.operator_arg = None
+        self.operator_func: Optional[Callable[['KeyPressEvent', 'TextObject'], None]] = None
+        self.operator_arg: Optional[int] = None
 
         #: Named registers. Maps register name (e.g. 'a') to
         #: :class:`ClipboardData` instances.
-        self.named_registers = {}
+        self.named_registers: Dict[str, ClipboardData] = {}
 
         #: The Vi mode we're currently in to.
         self.__input_mode = InputMode.INSERT
 
         #: Waiting for digraph.
         self.waiting_for_digraph = False
-        self.digraph_symbol1 = None  # (None or a symbol.)
+        self.digraph_symbol1: Optional[str] = None  # (None or a symbol.)
 
         #: When true, make ~ act as an operator.
         self.tilde_operator = False
@@ -54,7 +63,7 @@ class ViState(object):
         # Note that the recording is only stored in the register after the
         # recording is stopped. So we record in a separate `current_recording`
         # variable.
-        self.recording_register = None
+        self.recording_register: Optional[str] = None
         self.current_recording = ''
 
         # Temporary navigation (normal) mode.
@@ -64,12 +73,12 @@ class ViState(object):
         self.temporary_navigation_mode = False
 
     @property
-    def input_mode(self):
+    def input_mode(self) -> InputMode:
         " Get `InputMode`. "
         return self.__input_mode
 
     @input_mode.setter
-    def input_mode(self, value):
+    def input_mode(self, value: InputMode) -> None:
         " Set `InputMode`. "
         if value == InputMode.NAVIGATION:
             self.waiting_for_digraph = False
@@ -78,7 +87,7 @@ class ViState(object):
 
         self.__input_mode = value
 
-    def reset(self):
+    def reset(self) -> None:
         """
         Reset state, go back to the given mode. INSERT by default.
         """

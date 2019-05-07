@@ -12,34 +12,37 @@ container object.
     guarantees are made yet). The public API in
     `prompt_toolkit.shortcuts.dialogs` on the other hand is considered stable.
 """
-from __future__ import unicode_literals
-
 from functools import partial
-
-import six
+from typing import Callable, Generic, List, Optional, Tuple, TypeVar, Union
 
 from prompt_toolkit.application.current import get_app
-from prompt_toolkit.auto_suggest import DynamicAutoSuggest
-from prompt_toolkit.buffer import Buffer
-from prompt_toolkit.completion import DynamicCompleter
+from prompt_toolkit.auto_suggest import AutoSuggest, DynamicAutoSuggest
+from prompt_toolkit.buffer import Buffer, BufferAcceptHandler
+from prompt_toolkit.completion import Completer, DynamicCompleter
 from prompt_toolkit.document import Document
 from prompt_toolkit.filters import (
     Condition,
+    FilterOrBool,
     has_focus,
     is_done,
     is_true,
     to_filter,
 )
 from prompt_toolkit.formatted_text import (
+    AnyFormattedText,
+    StyleAndTextTuples,
     Template,
-    is_formatted_text,
     to_formatted_text,
 )
 from prompt_toolkit.formatted_text.utils import fragment_list_to_text
+from prompt_toolkit.history import History
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
+from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout.containers import (
+    AnyContainer,
     ConditionalContainer,
+    Container,
     DynamicContainer,
     Float,
     FloatContainer,
@@ -47,20 +50,25 @@ from prompt_toolkit.layout.containers import (
     VSplit,
     Window,
     WindowAlign,
-    is_container,
 )
-from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
+from prompt_toolkit.layout.controls import (
+    BufferControl,
+    FormattedTextControl,
+    GetLinePrefixCallable,
+)
+from prompt_toolkit.layout.dimension import AnyDimension
 from prompt_toolkit.layout.dimension import Dimension as D
-from prompt_toolkit.layout.dimension import is_dimension, to_dimension
+from prompt_toolkit.layout.dimension import to_dimension
 from prompt_toolkit.layout.margins import NumberedMargin, ScrollbarMargin
 from prompt_toolkit.layout.processors import (
     AppendAutoSuggestion,
     BeforeInput,
     ConditionalProcessor,
     PasswordProcessor,
+    Processor,
 )
-from prompt_toolkit.lexers import DynamicLexer
-from prompt_toolkit.mouse_events import MouseEventType
+from prompt_toolkit.lexers import DynamicLexer, Lexer
+from prompt_toolkit.mouse_events import MouseEvent, MouseEventType
 from prompt_toolkit.utils import get_cwidth
 
 from .toolbars import SearchToolbar
@@ -80,6 +88,8 @@ __all__ = [
     'ProgressBar',
 ]
 
+E = KeyPressEvent
+
 
 class Border:
     " Box drawing characters. (Thin) "
@@ -91,7 +101,7 @@ class Border:
     BOTTOM_RIGHT = '\u2518'
 
 
-class TextArea(object):
+class TextArea:
     """
     A simple input field.
 
@@ -149,17 +159,32 @@ class TextArea(object):
 
     :param search_field: An optional `SearchToolbar` object.
     """
-    def __init__(self, text='', multiline=True, password=False,
-                 lexer=None, auto_suggest=None, completer=None,
-                 complete_while_typing=True, accept_handler=None, history=None,
-                 focusable=True, focus_on_click=False, wrap_lines=True,
-                 read_only=False, width=None, height=None,
-                 dont_extend_height=False, dont_extend_width=False,
-                 line_numbers=False, get_line_prefix=None, scrollbar=False,
-                 style='', search_field=None, preview_search=True, prompt='',
-                 input_processors=None):
-        assert isinstance(text, six.text_type)
-        assert search_field is None or isinstance(search_field, SearchToolbar)
+    def __init__(self,
+                 text: str = '',
+                 multiline: FilterOrBool = True,
+                 password: FilterOrBool = False,
+                 lexer: Optional[Lexer] = None,
+                 auto_suggest: Optional[AutoSuggest] = None,
+                 completer: Optional[Completer] = None,
+                 complete_while_typing: FilterOrBool = True,
+                 accept_handler: Optional[BufferAcceptHandler] = None,
+                 history: Optional[History] = None,
+                 focusable: FilterOrBool = True,
+                 focus_on_click: FilterOrBool = False,
+                 wrap_lines: FilterOrBool = True,
+                 read_only: FilterOrBool = False,
+                 width: AnyDimension = None,
+                 height: AnyDimension = None,
+                 dont_extend_height: FilterOrBool = False,
+                 dont_extend_width: FilterOrBool = False,
+                 line_numbers: bool = False,
+                 get_line_prefix: Optional[GetLinePrefixCallable] = None,
+                 scrollbar: bool = False,
+                 style: str = '',
+                 search_field: Optional[SearchToolbar] = None,
+                 preview_search: FilterOrBool = True,
+                 prompt: AnyFormattedText = '',
+                 input_processors: Optional[List[Processor]] = None) -> None:
 
         if search_field is None:
             search_control = None
@@ -235,43 +260,43 @@ class TextArea(object):
             get_line_prefix=get_line_prefix)
 
     @property
-    def text(self):
+    def text(self) -> str:
         """
         The `Buffer` text.
         """
         return self.buffer.text
 
     @text.setter
-    def text(self, value):
+    def text(self, value: str) -> None:
         self.buffer.set_document(Document(value, 0), bypass_readonly=True)
 
     @property
-    def document(self):
+    def document(self) -> Document:
         """
         The `Buffer` document (text + cursor position).
         """
         return self.buffer.document
 
     @document.setter
-    def document(self, value):
+    def document(self, value: Document) -> None:
         self.buffer.document = value
 
     @property
-    def accept_handler(self):
+    def accept_handler(self) -> Optional[BufferAcceptHandler]:
         """
         The accept handler. Called when the user accepts the input.
         """
         return self.buffer.accept_handler
 
     @accept_handler.setter
-    def accept_handler(self, value):
+    def accept_handler(self, value: BufferAcceptHandler) -> None:
         self.buffer.accept_handler = value
 
-    def __pt_container__(self):
+    def __pt_container__(self) -> Container:
         return self.window
 
 
-class Label(object):
+class Label:
     """
     Widget that displays the given text. It is not editable or focusable.
 
@@ -281,12 +306,16 @@ class Label(object):
     :param width: When given, use this width, rather than calculating it from
         the text size.
     """
-    def __init__(self, text, style='', width=None,
-                 dont_extend_height=True, dont_extend_width=False):
-        assert is_formatted_text(text)
+    def __init__(self,
+                 text: AnyFormattedText,
+                 style: str = '',
+                 width: AnyDimension = None,
+                 dont_extend_height: bool = True,
+                 dont_extend_width: bool = False) -> None:
+
         self.text = text
 
-        def get_width():
+        def get_width() -> AnyDimension:
             if width is None:
                 text_fragments = to_formatted_text(self.text)
                 text = fragment_list_to_text(text_fragments)
@@ -308,11 +337,11 @@ class Label(object):
             dont_extend_height=dont_extend_height,
             dont_extend_width=dont_extend_width)
 
-    def __pt_container__(self):
+    def __pt_container__(self) -> Container:
         return self.window
 
 
-class Button(object):
+class Button:
     """
     Clickable button.
 
@@ -320,10 +349,9 @@ class Button(object):
     :param handler: `None` or callable. Called when the button is clicked.
     :param width: Width of the button.
     """
-    def __init__(self, text, handler=None, width=12):
-        assert isinstance(text, six.text_type)
-        assert handler is None or callable(handler)
-        assert isinstance(width, int)
+    def __init__(self, text: str,
+                 handler: Optional[Callable[[], None]] = None,
+                 width: int = 12) -> None:
 
         self.text = text
         self.handler = handler
@@ -333,7 +361,7 @@ class Button(object):
             key_bindings=self._get_key_bindings(),
             focusable=True)
 
-        def get_style():
+        def get_style() -> str:
             if get_app().layout.has_focus(self):
                 return 'class:button.focused'
             else:
@@ -348,11 +376,12 @@ class Button(object):
             dont_extend_width=True,
             dont_extend_height=True)
 
-    def _get_text_fragments(self):
+    def _get_text_fragments(self) -> StyleAndTextTuples:
         text = ('{:^%s}' % (self.width - 2)).format(self.text)
 
-        def handler(mouse_event):
-            if mouse_event.event_type == MouseEventType.MOUSE_UP:
+        def handler(mouse_event: MouseEvent) -> None:
+            if self.handler is not None and \
+                    mouse_event.event_type == MouseEventType.MOUSE_UP:
                 self.handler()
 
         return [
@@ -362,23 +391,23 @@ class Button(object):
             ('class:button.arrow', '>', handler),
         ]
 
-    def _get_key_bindings(self):
+    def _get_key_bindings(self) -> KeyBindings:
         " Key bindings for the Button. "
         kb = KeyBindings()
 
         @kb.add(' ')
         @kb.add('enter')
-        def _(event):
+        def _(event: E) -> None:
             if self.handler is not None:
                 self.handler()
 
         return kb
 
-    def __pt_container__(self):
+    def __pt_container__(self) -> Container:
         return self.window
 
 
-class Frame(object):
+class Frame:
     """
     Draw a border around any container, optionally with a title text.
 
@@ -389,15 +418,14 @@ class Frame(object):
     :param title: Text to be displayed in the top of the frame (can be formatted text).
     :param style: Style string to be applied to this widget.
     """
-    def __init__(self, body, title='', style='', width=None, height=None,
-                 key_bindings=None, modal=False):
-        assert is_container(body)
-        assert is_formatted_text(title)
-        assert isinstance(style, six.text_type)
-        assert is_dimension(width)
-        assert is_dimension(height)
-        assert key_bindings is None or isinstance(key_bindings, KeyBindings)
-        assert isinstance(modal, bool)
+    def __init__(self,
+                 body: AnyContainer,
+                 title: AnyFormattedText = '',
+                 style: str = '',
+                 width: AnyDimension = None,
+                 height: AnyDimension = None,
+                 key_bindings: Optional[KeyBindings] = None,
+                 modal: bool = False) -> None:
 
         self.title = title
         self.body = body
@@ -426,7 +454,7 @@ class Frame(object):
         ], height=1)
 
         @Condition
-        def has_title():
+        def has_title() -> bool:
             return bool(self.title)
 
         self.container = HSplit([
@@ -451,11 +479,11 @@ class Frame(object):
         ], width=width, height=height, style=style, key_bindings=key_bindings,
         modal=modal)
 
-    def __pt_container__(self):
+    def __pt_container__(self) -> Container:
         return self.container
 
 
-class Shadow(object):
+class Shadow:
     """
     Draw a shadow underneath/behind this container.
     (This applies `class:shadow` the the cells under the shadow. The Style
@@ -463,9 +491,7 @@ class Shadow(object):
 
     :param body: Another container object.
     """
-    def __init__(self, body):
-        assert is_container(body)
-
+    def __init__(self, body: AnyContainer) -> None:
         self.container = FloatContainer(
             content=body,
             floats=[
@@ -478,11 +504,11 @@ class Shadow(object):
                 ]
             )
 
-    def __pt_container__(self):
+    def __pt_container__(self) -> Container:
         return self.container
 
 
-class Box(object):
+class Box:
     """
     Add padding around a container.
 
@@ -500,17 +526,24 @@ class Box(object):
     :param char: Character to be used for filling the space around the body.
         (This is supposed to be a character with a terminal width of 1.)
     """
-    def __init__(self, body, padding=None,
-                 padding_left=None, padding_right=None,
-                 padding_top=None, padding_bottom=None,
-                 width=None, height=None,
-                 style='', char=None, modal=False, key_bindings=None):
-        assert is_container(body)
+    def __init__(self,
+                 body: AnyContainer,
+                 padding: AnyDimension = None,
+                 padding_left: AnyDimension = None,
+                 padding_right: AnyDimension = None,
+                 padding_top: AnyDimension = None,
+                 padding_bottom: AnyDimension = None,
+                 width: AnyDimension = None,
+                 height: AnyDimension = None,
+                 style: str = '',
+                 char: Union[None, str, Callable[[], str]] = None,
+                 modal: bool = False,
+                 key_bindings: Optional[KeyBindings] = None) -> None:
 
         if padding is None:
             padding = D(preferred=0)
 
-        def get(value):
+        def get(value: AnyDimension) -> D:
             if value is None:
                 value = padding
             return to_dimension(value)
@@ -533,21 +566,19 @@ class Box(object):
         width=width, height=height, style=style, modal=modal,
         key_bindings=None)
 
-    def __pt_container__(self):
+    def __pt_container__(self) -> Container:
         return self.container
 
 
-class Checkbox(object):
-    def __init__(self, text=''):
-        assert is_formatted_text(text)
-
+class Checkbox:
+    def __init__(self, text: AnyFormattedText = '') -> None:
         self.checked = True
 
         kb = KeyBindings()
 
         @kb.add(' ')
         @kb.add('enter')
-        def _(event):
+        def _(event: E) -> None:
             self.checked = not self.checked
 
         self.control = FormattedTextControl(
@@ -563,8 +594,8 @@ class Checkbox(object):
             Label(text=Template(' {}').format(text))
         ], style='class:checkbox')
 
-    def _get_text_fragments(self):
-        result = [('', '[')]
+    def _get_text_fragments(self) -> StyleAndTextTuples:
+        result: StyleAndTextTuples = [('', '[')]
         result.append(('[SetCursorPosition]', ''))
 
         if self.checked:
@@ -576,40 +607,40 @@ class Checkbox(object):
 
         return result
 
-    def __pt_container__(self):
+    def __pt_container__(self) -> Container:
         return self.container
 
 
-class RadioList(object):
+_T = TypeVar('_T')
+
+
+class RadioList(Generic[_T]):
     """
     List of radio buttons. Only one can be checked at the same time.
 
     :param values: List of (value, label) tuples.
     """
-    def __init__(self, values):
-        assert isinstance(values, list)
+    def __init__(self, values: List[Tuple[_T, AnyFormattedText]]) -> None:
         assert len(values) > 0
-        assert all(isinstance(i, tuple) and len(i) == 2
-                   for i in values)
 
         self.values = values
-        self.current_value = values[0][0]
+        self.current_value: _T = values[0][0]
         self._selected_index = 0
 
         # Key bindings.
         kb = KeyBindings()
 
         @kb.add('up')
-        def _(event):
+        def _(event: E) -> None:
             self._selected_index = max(0, self._selected_index - 1)
 
         @kb.add('down')
-        def _(event):
+        def _(event: E) -> None:
             self._selected_index = min(
                 len(self.values) - 1, self._selected_index + 1)
 
         @kb.add('pageup')
-        def _(event):
+        def _(event: E) -> None:
             w = event.app.layout.current_window
             self._selected_index = max(
                 0,
@@ -617,7 +648,7 @@ class RadioList(object):
             )
 
         @kb.add('pagedown')
-        def _(event):
+        def _(event: E) -> None:
             w = event.app.layout.current_window
             self._selected_index = min(
                 len(self.values) - 1,
@@ -626,11 +657,11 @@ class RadioList(object):
 
         @kb.add('enter')
         @kb.add(' ')
-        def _(event):
+        def _(event: E) -> None:
             self.current_value = self.values[self._selected_index][0]
 
         @kb.add(Keys.Any)
-        def _(event):
+        def _(event: E) -> None:
             # We first check values after the selected value, then all values.
             for value in self.values[self._selected_index + 1:] + self.values:
                 if value[1].startswith(event.data):
@@ -651,8 +682,8 @@ class RadioList(object):
             ],
             dont_extend_height=True)
 
-    def _get_text_fragments(self):
-        def mouse_handler(mouse_event):
+    def _get_text_fragments(self) -> StyleAndTextTuples:
+        def mouse_handler(mouse_event: MouseEvent) -> None:
             """
             Set `_selected_index` and `current_value` according to the y
             position of the mouse click event.
@@ -661,7 +692,7 @@ class RadioList(object):
                 self._selected_index = mouse_event.position.y
                 self.current_value = self.values[self._selected_index][0]
 
-        result = []
+        result: StyleAndTextTuples = []
         for i, value in enumerate(self.values):
             checked = (value[0] == self.current_value)
             selected = (i == self._selected_index)
@@ -694,40 +725,40 @@ class RadioList(object):
         result.pop()  # Remove last newline.
         return result
 
-    def __pt_container__(self):
+    def __pt_container__(self) -> Container:
         return self.window
 
 
-class VerticalLine(object):
+class VerticalLine:
     """
     A simple vertical line with a width of 1.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         self.window = Window(
             char=Border.VERTICAL,
             style='class:line,vertical-line',
             width=1)
 
-    def __pt_container__(self):
+    def __pt_container__(self) -> Container:
         return self.window
 
 
-class HorizontalLine(object):
+class HorizontalLine:
     """
     A simple horizontal line with a height of 1.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         self.window = Window(
             char=Border.HORIZONTAL,
             style='class:line,horizontal-line',
             height=1)
 
-    def __pt_container__(self):
+    def __pt_container__(self) -> Container:
         return self.window
 
 
-class ProgressBar(object):
-    def __init__(self):
+class ProgressBar:
+    def __init__(self) -> None:
         self._percentage = 60
 
         self.label = Label('60%')
@@ -750,14 +781,13 @@ class ProgressBar(object):
             ])
 
     @property
-    def percentage(self):
+    def percentage(self) -> int:
         return self._percentage
 
     @percentage.setter
-    def percentage(self, value):
-        assert isinstance(value, int)
+    def percentage(self, value: int) -> None:
         self._percentage = value
         self.label.text = '{0}%'.format(value)
 
-    def __pt_container__(self):
+    def __pt_container__(self) -> Container:
         return self.container

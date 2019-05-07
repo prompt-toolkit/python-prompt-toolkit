@@ -2,8 +2,6 @@
 """
 Example of a confirmation prompt.
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit.shortcuts import confirm
 
 if __name__ == '__main__':

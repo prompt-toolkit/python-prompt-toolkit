@@ -2,21 +2,31 @@
 Data structures for the Buffer.
 It holds the text, cursor position, history, etc...
 """
-from __future__ import unicode_literals
-
 import os
 import re
 import shlex
 import subprocess
 import tempfile
+from asyncio import Future, ensure_future
+from enum import Enum
 from functools import wraps
-
-import six
-from six.moves import range
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+)
 
 from .application.current import get_app
 from .application.run_in_terminal import run_in_terminal
-from .auto_suggest import AutoSuggest
+from .auto_suggest import AutoSuggest, Suggestion
 from .cache import FastDictCache
 from .clipboard import ClipboardData
 from .completion import (
@@ -27,17 +37,17 @@ from .completion import (
     get_common_complete_suffix,
 )
 from .document import Document
-from .eventloop import From, Return, consume_async_generator, ensure_future
-from .filters import to_filter
+from .filters import FilterOrBool, to_filter
 from .history import History, InMemoryHistory
 from .search import SearchDirection, SearchState
 from .selection import PasteMode, SelectionState, SelectionType
-from .utils import Event, test_callable_args, to_str
+from .utils import Event, to_str
 from .validation import ValidationError, Validator
 
 __all__ = [
     'EditReadOnlyBuffer',
     'Buffer',
+    'CompletionState',
     'indent',
     'unindent',
     'reshape_text',
@@ -48,18 +58,21 @@ class EditReadOnlyBuffer(Exception):
     " Attempt editing of read-only :class:`.Buffer`. "
 
 
-class ValidationState(object):
+class ValidationState(Enum):
     " The validation state of a buffer. This is set after the validation. "
     VALID = 'VALID'
     INVALID = 'INVALID'
     UNKNOWN = 'UNKNOWN'
 
 
-class CompletionState(object):
+class CompletionState:
     """
     Immutable class that contains a completion state.
     """
-    def __init__(self, original_document, completions=None, complete_index=None):
+    def __init__(self, original_document: 'Document',
+                 completions: Optional[List['Completion']] = None,
+                 complete_index: Optional[int] = None):
+
         #: Document as it was when the completion started.
         self.original_document = original_document
 
@@ -71,12 +84,12 @@ class CompletionState(object):
         #: This can be `None` to indicate "no completion", the original text.
         self.complete_index = complete_index  # Position in the `_completions` array.
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '%s(%r, <%r> completions, index=%r)' % (
             self.__class__.__name__,
             self.original_document, len(self.completions), self.complete_index)
 
-    def go_to_index(self, index):
+    def go_to_index(self, index: Optional[int]) -> None:
         """
         Create a new :class:`.CompletionState` object with the new index.
 
@@ -86,7 +99,7 @@ class CompletionState(object):
             assert index is None or 0 <= index < len(self.completions)
             self.complete_index = index
 
-    def new_text_and_position(self):
+    def new_text_and_position(self) -> Tuple[str, int]:
         """
         Return (new_text, new_cursor_position) for this completion.
         """
@@ -107,34 +120,41 @@ class CompletionState(object):
             return new_text, new_cursor_position
 
     @property
-    def current_completion(self):
+    def current_completion(self) -> Optional['Completion']:
         """
         Return the current completion, or return `None` when no completion is
         selected.
         """
         if self.complete_index is not None:
             return self.completions[self.complete_index]
+        return None
 
 
 _QUOTED_WORDS_RE = re.compile(r"""(\s+|".*?"|'.*?')""")
 
 
-class YankNthArgState(object):
+class YankNthArgState:
     """
     For yank-last-arg/yank-nth-arg: Keep track of where we are in the history.
     """
-    def __init__(self, history_position=0, n=-1, previous_inserted_word=''):
+    def __init__(self, history_position: int = 0, n: int = -1,
+                 previous_inserted_word: str = ''):
+
         self.history_position = history_position
         self.previous_inserted_word = previous_inserted_word
         self.n = n
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '%s(history_position=%r, n=%r, previous_inserted_word=%r)' % (
             self.__class__.__name__, self.history_position, self.n,
             self.previous_inserted_word)
 
 
-class Buffer(object):
+BufferEventHandler = Callable[['Buffer'], None]
+BufferAcceptHandler = Callable[['Buffer'], bool]
+
+
+class Buffer:
     """
     The core data structure that holds the text and cursor position of the
     current input line and implements all text manipulations on top of it. It
@@ -186,14 +206,25 @@ class Buffer(object):
         not set, pressing `Enter` will call the `accept_handler`.  Otherwise,
         pressing `Esc-Enter` is required.
     """
-    def __init__(self, completer=None, auto_suggest=None, history=None,
-                 validator=None, tempfile_suffix='', name='',
-                 complete_while_typing=False, validate_while_typing=False,
-                 enable_history_search=False, document=None,
-                 accept_handler=None, read_only=False, multiline=True,
-                 on_text_changed=None, on_text_insert=None,
-                 on_cursor_position_changed=None, on_completions_changed=None,
-                 on_suggestion_set=None):
+    def __init__(self,
+                 completer: Optional[Completer] = None,
+                 auto_suggest: Optional[AutoSuggest] = None,
+                 history: Optional[History] = None,
+                 validator: Optional[Validator] = None,
+                 tempfile_suffix: Union[str, Callable[[], str]] = '',
+                 name: str = '',
+                 complete_while_typing: FilterOrBool = False,
+                 validate_while_typing: FilterOrBool = False,
+                 enable_history_search: FilterOrBool = False,
+                 document: Optional[Document] = None,
+                 accept_handler: Optional[BufferAcceptHandler] = None,
+                 read_only: FilterOrBool = False,
+                 multiline: FilterOrBool = True,
+                 on_text_changed: BufferEventHandler = None,
+                 on_text_insert: BufferEventHandler = None,
+                 on_cursor_position_changed: BufferEventHandler = None,
+                 on_completions_changed: BufferEventHandler = None,
+                 on_suggestion_set: BufferEventHandler = None):
 
         # Accept both filters and booleans as input.
         enable_history_search = to_filter(enable_history_search)
@@ -201,21 +232,6 @@ class Buffer(object):
         validate_while_typing = to_filter(validate_while_typing)
         read_only = to_filter(read_only)
         multiline = to_filter(multiline)
-
-        # Validate input.
-        assert completer is None or isinstance(completer, Completer)
-        assert auto_suggest is None or isinstance(auto_suggest, AutoSuggest)
-        assert history is None or isinstance(history, History)
-        assert validator is None or isinstance(validator, Validator)
-        assert callable(tempfile_suffix) or isinstance(tempfile_suffix, six.text_type)
-        assert isinstance(name, six.text_type)
-        assert on_text_changed is None or callable(on_text_changed)
-        assert on_text_insert is None or callable(on_text_insert)
-        assert on_cursor_position_changed is None or callable(on_cursor_position_changed)
-        assert on_completions_changed is None or callable(on_completions_changed)
-        assert on_suggestion_set is None or callable(on_suggestion_set)
-        assert document is None or isinstance(document, Document)
-        assert accept_handler is None or (callable(accept_handler) and test_callable_args(accept_handler, [None]))
 
         self.completer = completer or DummyCompleter()
         self.auto_suggest = auto_suggest
@@ -242,14 +258,15 @@ class Buffer(object):
         self.__cursor_position = 0
 
         # Events
-        self.on_text_changed = Event(self, on_text_changed)
-        self.on_text_insert = Event(self, on_text_insert)
-        self.on_cursor_position_changed = Event(self, on_cursor_position_changed)
-        self.on_completions_changed = Event(self, on_completions_changed)
-        self.on_suggestion_set = Event(self, on_suggestion_set)
+        self.on_text_changed: Event['Buffer'] = Event(self, on_text_changed)
+        self.on_text_insert: Event['Buffer'] = Event(self, on_text_insert)
+        self.on_cursor_position_changed: Event['Buffer'] = Event(self, on_cursor_position_changed)
+        self.on_completions_changed: Event['Buffer'] = Event(self, on_completions_changed)
+        self.on_suggestion_set: Event['Buffer'] = Event(self, on_suggestion_set)
 
         # Document cache. (Avoid creating new Document instances.)
-        self._document_cache = FastDictCache(Document, size=10)
+        self._document_cache: FastDictCache[Tuple[str, int, Optional[SelectionState]], Document] = \
+            FastDictCache(Document, size=10)
 
         # Create completer / auto suggestion / validation coroutines.
         self._async_suggester = self._create_auto_suggest_coroutine()
@@ -260,7 +277,7 @@ class Buffer(object):
         self.reset(document=document)
 
         # Attach callback for new history entries.
-        def new_history_item(sender):
+        def new_history_item(sender: History) -> None:
             # Insert the new string into `_working_lines`.
             self._working_lines.insert(0, self.history.get_strings()[0])
             self.__working_index += 1
@@ -268,7 +285,7 @@ class Buffer(object):
         self.history.get_item_loaded_event().add_handler(new_history_item)
         self.history.start_loading()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if len(self.text) < 15:
             text = self.text
         else:
@@ -276,12 +293,11 @@ class Buffer(object):
 
         return '<Buffer(name=%r, text=%r) at %r>' % (self.name, text, id(self))
 
-    def reset(self, document=None, append_to_history=False):
+    def reset(self, document: Optional[Document] = None,
+              append_to_history: bool = False) -> None:
         """
         :param append_to_history: Append current input to history first.
         """
-        assert document is None or isinstance(document, Document)
-
         if append_to_history:
             self.append_to_history()
 
@@ -290,40 +306,41 @@ class Buffer(object):
         self.__cursor_position = document.cursor_position
 
         # `ValidationError` instance. (Will be set when the input is wrong.)
-        self.validation_error = None
-        self.validation_state = ValidationState.UNKNOWN
+        self.validation_error: Optional[ValidationError] = None
+        self.validation_state: Optional[ValidationState] = ValidationState.UNKNOWN
 
         # State of the selection.
-        self.selection_state = None
+        self.selection_state: Optional[SelectionState] = None
 
         # Multiple cursor mode. (When we press 'I' or 'A' in visual-block mode,
         # we can insert text on multiple lines at once. This is implemented by
         # using multiple cursors.)
-        self.multiple_cursor_positions = []
+        self.multiple_cursor_positions: List[int] = []
 
         # When doing consecutive up/down movements, prefer to stay at this column.
-        self.preferred_column = None
+        self.preferred_column: Optional[int] = None
 
         # State of complete browser
-        self.complete_state = None  # For interactive completion through Ctrl-N/Ctrl-P.
+        # For interactive completion through Ctrl-N/Ctrl-P.
+        self.complete_state: Optional[CompletionState] = None
 
         # State of Emacs yank-nth-arg completion.
-        self.yank_nth_arg_state = None  # for yank-nth-arg.
+        self.yank_nth_arg_state: Optional[YankNthArgState] = None  # for yank-nth-arg.
 
         # Remember the document that we had *right before* the last paste
         # operation. This is used for rotating through the kill ring.
-        self.document_before_paste = None
+        self.document_before_paste: Optional[Document] = None
 
         # Current suggestion.
-        self.suggestion = None
+        self.suggestion: Optional[Suggestion] = None
 
         # The history search text. (Used for filtering the history when we
         # browse through it.)
-        self.history_search_text = None
+        self.history_search_text: Optional[str] = None
 
-        # Undo/redo stacks
-        self._undo_stack = []  # Stack of (text, cursor_position)
-        self._redo_stack = []
+        # Undo/redo stacks (stack of `(text, cursor_position)`).
+        self._undo_stack: List[Tuple[str, int]] = []
+        self._redo_stack: List[Tuple[str, int]] = []
 
         #: The working lines. Similar to history, except that this can be
         #: modified. The user can press arrow_up and edit previous entries.
@@ -336,7 +353,7 @@ class Buffer(object):
 
     # <getters/setters>
 
-    def _set_text(self, value):
+    def _set_text(self, value: str) -> bool:
         """ set text at current working_index. Return whether it changed. """
         working_index = self.working_index
         working_lines = self._working_lines
@@ -356,7 +373,7 @@ class Buffer(object):
             return True
         return False
 
-    def _set_cursor_position(self, value):
+    def _set_cursor_position(self, value: int) -> bool:
         """ Set cursor position. Return whether it changed. """
         original_position = self.__cursor_position
         self.__cursor_position = max(0, value)
@@ -364,18 +381,16 @@ class Buffer(object):
         return value != original_position
 
     @property
-    def text(self):
+    def text(self) -> str:
         return self._working_lines[self.working_index]
 
     @text.setter
-    def text(self, value):
+    def text(self, value: str) -> None:
         """
         Setting text. (When doing this, make sure that the cursor_position is
         valid for this text. text/cursor_position should be consistent at any time,
         otherwise set a Document instead.)
         """
-        assert isinstance(value, six.text_type), 'Got %r' % value
-
         # Ensure cursor position remains within the size of the text.
         if self.cursor_position > len(value):
             self.cursor_position = len(value)
@@ -396,11 +411,11 @@ class Buffer(object):
             self.history_search_text = None
 
     @property
-    def cursor_position(self):
+    def cursor_position(self) -> int:
         return self.__cursor_position
 
     @cursor_position.setter
-    def cursor_position(self, value):
+    def cursor_position(self, value: int) -> None:
         """
         Setting cursor position.
         """
@@ -418,11 +433,11 @@ class Buffer(object):
             self._cursor_position_changed()
 
     @property
-    def working_index(self):
+    def working_index(self) -> int:
         return self.__working_index
 
     @working_index.setter
-    def working_index(self, value):
+    def working_index(self, value: int) -> None:
         if self.__working_index != value:
             self.__working_index = value
             # Make sure to reset the cursor position, otherwise we end up in
@@ -431,7 +446,7 @@ class Buffer(object):
             self.cursor_position = 0
             self._text_changed()
 
-    def _text_changed(self):
+    def _text_changed(self) -> None:
         # Remove any validation errors and complete state.
         self.validation_error = None
         self.validation_state = ValidationState.UNKNOWN
@@ -451,7 +466,7 @@ class Buffer(object):
         if self.validator and self.validate_while_typing():
             ensure_future(self._async_validator())
 
-    def _cursor_position_changed(self):
+    def _cursor_position_changed(self) -> None:
         # Remove any complete state.
         # (Input validation should only be undone when the cursor position
         # changes.)
@@ -470,7 +485,7 @@ class Buffer(object):
         self.on_cursor_position_changed.fire()
 
     @property
-    def document(self):
+    def document(self) -> Document:
         """
         Return :class:`~prompt_toolkit.document.Document` instance from the
         current text, cursor position and selection state.
@@ -479,7 +494,7 @@ class Buffer(object):
             self.text, self.cursor_position, self.selection_state]
 
     @document.setter
-    def document(self, value):
+    def document(self, value: Document) -> None:
         """
         Set :class:`~prompt_toolkit.document.Document` instance.
 
@@ -488,7 +503,7 @@ class Buffer(object):
         """
         self.set_document(value)
 
-    def set_document(self, value, bypass_readonly=False):
+    def set_document(self, value: Document, bypass_readonly: bool = False) -> None:
         """
         Set :class:`~prompt_toolkit.document.Document` instance. Like the
         ``document`` property, but accept an ``bypass_readonly`` argument.
@@ -506,8 +521,6 @@ class Buffer(object):
             you expect, and there won't be a stack trace. Use try/finally
             around this function if you need some cleanup code.
         """
-        assert isinstance(value, Document)
-
         # Don't allow editing of read-only buffers.
         if not bypass_readonly and self.read_only():
             raise EditReadOnlyBuffer()
@@ -526,7 +539,7 @@ class Buffer(object):
             self._cursor_position_changed()
 
     @property
-    def is_returnable(self):
+    def is_returnable(self) -> bool:
         """
         True when there is something handling accept.
         """
@@ -534,7 +547,7 @@ class Buffer(object):
 
     # End of <getters/setters>
 
-    def save_to_undo_stack(self, clear_redo_stack=True):
+    def save_to_undo_stack(self, clear_redo_stack: bool = True) -> None:
         """
         Safe current state (input text and cursor position), so that we can
         restore it by calling undo.
@@ -550,7 +563,8 @@ class Buffer(object):
         if clear_redo_stack:
             self._redo_stack = []
 
-    def transform_lines(self, line_index_iterator, transform_callback):
+    def transform_lines(self, line_index_iterator: Iterable[int],
+                        transform_callback: Callable[[str], str]) -> str:
         """
         Transforms the text on a range of lines.
         When the iterator yield an index not in the range of lines that the
@@ -578,7 +592,8 @@ class Buffer(object):
 
         return '\n'.join(lines)
 
-    def transform_current_line(self, transform_callback):
+    def transform_current_line(
+            self, transform_callback: Callable[[str], str]) -> None:
         """
         Apply the given transformation function to the current line.
 
@@ -592,7 +607,8 @@ class Buffer(object):
             transform_callback(document.text[a:b]) +
             document.text[b:])
 
-    def transform_region(self, from_, to, transform_callback):
+    def transform_region(self, from_: int, to: int,
+                         transform_callback: Callable[[str], str]) -> None:
         """
         Transform a part of the input string.
 
@@ -609,13 +625,13 @@ class Buffer(object):
             self.text[to:]
         ])
 
-    def cursor_left(self, count=1):
+    def cursor_left(self, count: int = 1) -> None:
         self.cursor_position += self.document.get_cursor_left_position(count=count)
 
-    def cursor_right(self, count=1):
+    def cursor_right(self, count: int = 1) -> None:
         self.cursor_position += self.document.get_cursor_right_position(count=count)
 
-    def cursor_up(self, count=1):
+    def cursor_up(self, count: int = 1) -> None:
         """ (for multiline edit). Move cursor to the previous line.  """
         original_column = self.preferred_column or self.document.cursor_position_col
         self.cursor_position += self.document.get_cursor_up_position(
@@ -624,7 +640,7 @@ class Buffer(object):
         # Remember the original column for the next up/down movement.
         self.preferred_column = original_column
 
-    def cursor_down(self, count=1):
+    def cursor_down(self, count: int = 1) -> None:
         """ (for multiline edit). Move cursor to the next line.  """
         original_column = self.preferred_column or self.document.cursor_position_col
         self.cursor_position += self.document.get_cursor_down_position(
@@ -633,7 +649,8 @@ class Buffer(object):
         # Remember the original column for the next up/down movement.
         self.preferred_column = original_column
 
-    def auto_up(self, count=1, go_to_start_of_line_if_history_changes=False):
+    def auto_up(self, count: int = 1,
+                go_to_start_of_line_if_history_changes: bool = False) -> None:
         """
         If we're not on the first line (of a multiline input) go a line up,
         otherwise go back in history. (If nothing is selected.)
@@ -649,7 +666,8 @@ class Buffer(object):
             if go_to_start_of_line_if_history_changes:
                 self.cursor_position += self.document.get_start_of_line_position()
 
-    def auto_down(self, count=1, go_to_start_of_line_if_history_changes=False):
+    def auto_down(self, count: int = 1,
+                  go_to_start_of_line_if_history_changes: bool = False) -> None:
         """
         If we're not on the last line (of a multiline input) go a line down,
         otherwise go forward in history. (If nothing is selected.)
@@ -665,7 +683,7 @@ class Buffer(object):
             if go_to_start_of_line_if_history_changes:
                 self.cursor_position += self.document.get_start_of_line_position()
 
-    def delete_before_cursor(self, count=1):
+    def delete_before_cursor(self, count: int = 1) -> str:
         """
         Delete specified number of characters before cursor and return the
         deleted text.
@@ -684,7 +702,7 @@ class Buffer(object):
 
         return deleted
 
-    def delete(self, count=1):
+    def delete(self, count: int = 1) -> str:
         """
         Delete specified number of characters and Return the deleted text.
         """
@@ -696,7 +714,7 @@ class Buffer(object):
         else:
             return ''
 
-    def join_next_line(self, separator=' '):
+    def join_next_line(self, separator: str = ' ') -> None:
         """
         Join the next line to the current one by deleting the line ending after
         the current line.
@@ -709,7 +727,7 @@ class Buffer(object):
             self.text = (self.document.text_before_cursor + separator +
                          self.document.text_after_cursor.lstrip(' '))
 
-    def join_selected_lines(self, separator=' '):
+    def join_selected_lines(self, separator: str = ' ') -> None:
         """
         Join the selected lines.
         """
@@ -729,7 +747,7 @@ class Buffer(object):
         self.document = Document(text=before + ''.join(lines) + after,
                                  cursor_position=len(before + ''.join(lines[:-1])) - 1)
 
-    def swap_characters_before_cursor(self):
+    def swap_characters_before_cursor(self) -> None:
         """
         Swap the last two characters before the cursor.
         """
@@ -741,7 +759,7 @@ class Buffer(object):
 
             self.text = self.text[:pos - 2] + b + a + self.text[pos:]
 
-    def go_to_history(self, index):
+    def go_to_history(self, index: int) -> None:
         """
         Go to this item in the history.
         """
@@ -749,11 +767,14 @@ class Buffer(object):
             self.working_index = index
             self.cursor_position = len(self.text)
 
-    def complete_next(self, count=1, disable_wrap_around=False):
+    def complete_next(self, count: int = 1,
+                      disable_wrap_around: bool = False) -> None:
         """
         Browse to the next completions.
         (Does nothing if there are no completion.)
         """
+        index: Optional[int]
+
         if self.complete_state:
             completions_count = len(self.complete_state.completions)
 
@@ -768,11 +789,14 @@ class Buffer(object):
                 index = min(completions_count - 1, self.complete_state.complete_index + count)
             self.go_to_completion(index)
 
-    def complete_previous(self, count=1, disable_wrap_around=False):
+    def complete_previous(
+            self, count: int = 1, disable_wrap_around: bool = False) -> None:
         """
         Browse to the previous completions.
         (Does nothing if there are no completion.)
         """
+        index: Optional[int]
+
         if self.complete_state:
             if self.complete_state.complete_index == 0:
                 index = None
@@ -786,7 +810,7 @@ class Buffer(object):
 
             self.go_to_completion(index)
 
-    def cancel_completion(self):
+    def cancel_completion(self) -> None:
         """
         Cancel completion, go back to the original text.
         """
@@ -794,14 +818,12 @@ class Buffer(object):
             self.go_to_completion(None)
             self.complete_state = None
 
-    def _set_completions(self, completions):
+    def _set_completions(self, completions: List[Completion]) -> CompletionState:
         """
         Start completions. (Generate list of completions and initialize.)
 
         By default, no completion will be selected.
         """
-        assert isinstance(completions, list)
-
         self.complete_state = CompletionState(
             original_document=self.document,
             completions=completions)
@@ -811,12 +833,12 @@ class Buffer(object):
 
         return self.complete_state
 
-    def start_history_lines_completion(self):
+    def start_history_lines_completion(self) -> None:
         """
         Start a completion based on all the other lines in the document and the
         history.
         """
-        found_completions = set()
+        found_completions: Set[str] = set()
         completions = []
 
         # For every line of the whole history, find matches with the current line.
@@ -844,11 +866,10 @@ class Buffer(object):
         self._set_completions(completions=completions[::-1])
         self.go_to_completion(0)
 
-    def go_to_completion(self, index):
+    def go_to_completion(self, index: Optional[int]) -> None:
         """
         Select a completion from the list of current completions.
         """
-        assert index is None or isinstance(index, int)
         assert self.complete_state
 
         # Set new completion
@@ -862,12 +883,10 @@ class Buffer(object):
         # (changing text/cursor position will unset complete_state.)
         self.complete_state = state
 
-    def apply_completion(self, completion):
+    def apply_completion(self, completion: Completion) -> None:
         """
         Insert a given completion.
         """
-        assert isinstance(completion, Completion)
-
         # If there was already a completion active, cancel that one.
         if self.complete_state:
             self.go_to_completion(None)
@@ -877,7 +896,7 @@ class Buffer(object):
         self.delete_before_cursor(-completion.start_position)
         self.insert_text(completion.text)
 
-    def _set_history_search(self):
+    def _set_history_search(self) -> None:
         """
         Set `history_search_text`.
         (The text before the cursor will be used for filtering the history.)
@@ -888,7 +907,7 @@ class Buffer(object):
         else:
             self.history_search_text = None
 
-    def _history_matches(self, i):
+    def _history_matches(self, i: int) -> bool:
         """
         True when the current entry matches the history search.
         (when we don't have history search, it's also True.)
@@ -896,7 +915,7 @@ class Buffer(object):
         return (self.history_search_text is None or
                 self._working_lines[i].startswith(self.history_search_text))
 
-    def history_forward(self, count=1):
+    def history_forward(self, count: int = 1) -> None:
         """
         Move forwards through the history.
 
@@ -920,7 +939,7 @@ class Buffer(object):
             self.cursor_position = 0
             self.cursor_position += self.document.get_end_of_line_position()
 
-    def history_backward(self, count=1):
+    def history_backward(self, count: int = 1) -> None:
         """
         Move backwards through history.
         """
@@ -941,7 +960,8 @@ class Buffer(object):
         if found_something:
             self.cursor_position = len(self.text)
 
-    def yank_nth_arg(self, n=None, _yank_last_arg=False):
+    def yank_nth_arg(self, n: Optional[int] = None,
+                     _yank_last_arg: bool = False) -> None:
         """
         Pick nth word from previous history entry (depending on current
         `yank_nth_arg_state`) and insert it at current position. Rotate through
@@ -992,20 +1012,22 @@ class Buffer(object):
         state.history_position = new_pos
         self.yank_nth_arg_state = state
 
-    def yank_last_arg(self, n=None):
+    def yank_last_arg(self, n: Optional[int] = None) -> None:
         """
         Like `yank_nth_arg`, but if no argument has been given, yank the last
         word by default.
         """
         self.yank_nth_arg(n=n, _yank_last_arg=True)
 
-    def start_selection(self, selection_type=SelectionType.CHARACTERS):
+    def start_selection(
+            self,
+            selection_type: SelectionType = SelectionType.CHARACTERS) -> None:
         """
         Take the current cursor position as the start of this selection.
         """
         self.selection_state = SelectionState(self.cursor_position, selection_type)
 
-    def copy_selection(self, _cut=False):
+    def copy_selection(self, _cut: bool = False) -> ClipboardData:
         """
         Copy selected text and return :class:`.ClipboardData` instance.
 
@@ -1024,13 +1046,16 @@ class Buffer(object):
         self.selection_state = None
         return clipboard_data
 
-    def cut_selection(self):
+    def cut_selection(self) -> ClipboardData:
         """
         Delete selected text and return :class:`.ClipboardData` instance.
         """
         return self.copy_selection(_cut=True)
 
-    def paste_clipboard_data(self, data, paste_mode=PasteMode.EMACS, count=1):
+    def paste_clipboard_data(
+            self, data: ClipboardData,
+            paste_mode: PasteMode = PasteMode.EMACS,
+            count: int = 1) -> None:
         """
         Insert the data from the clipboard.
         """
@@ -1044,7 +1069,7 @@ class Buffer(object):
         # because assigning to 'document' will erase it.
         self.document_before_paste = original_document
 
-    def newline(self, copy_margin=True):
+    def newline(self, copy_margin: bool = True) -> None:
         """
         Insert a line ending at the current position.
         """
@@ -1053,7 +1078,7 @@ class Buffer(object):
         else:
             self.insert_text('\n')
 
-    def insert_line_above(self, copy_margin=True):
+    def insert_line_above(self, copy_margin: bool = True) -> None:
         """
         Insert a new line above the current one.
         """
@@ -1066,7 +1091,7 @@ class Buffer(object):
         self.insert_text(insert)
         self.cursor_position -= 1
 
-    def insert_line_below(self, copy_margin=True):
+    def insert_line_below(self, copy_margin: bool = True) -> None:
         """
         Insert a new line below the current one.
         """
@@ -1078,7 +1103,8 @@ class Buffer(object):
         self.cursor_position += self.document.get_end_of_line_position()
         self.insert_text(insert)
 
-    def insert_text(self, data, overwrite=False, move_cursor=True, fire_event=True):
+    def insert_text(self, data: str, overwrite: bool = False,
+                    move_cursor: bool = True, fire_event: bool = True) -> None:
         """
         Insert characters at cursor position.
 
@@ -1124,7 +1150,7 @@ class Buffer(object):
             if self.auto_suggest:
                 ensure_future(self._async_suggester())
 
-    def undo(self):
+    def undo(self) -> None:
         # Pop from the undo-stack until we find a text that if different from
         # the current text. (The current logic of `save_to_undo_stack` will
         # cause that the top of the undo stack is usually the same as the
@@ -1140,7 +1166,7 @@ class Buffer(object):
                 self.document = Document(text, cursor_position=pos)
                 break
 
-    def redo(self):
+    def redo(self) -> None:
         if self._redo_stack:
             # Copy current state on undo stack.
             self.save_to_undo_stack(clear_redo_stack=False)
@@ -1149,7 +1175,7 @@ class Buffer(object):
             text, pos = self._redo_stack.pop()
             self.document = Document(text, cursor_position=pos)
 
-    def validate(self, set_cursor=False):
+    def validate(self, set_cursor: bool = False) -> bool:
         """
         Returns `True` if valid.
 
@@ -1178,7 +1204,7 @@ class Buffer(object):
         self.validation_error = None
         return True
 
-    def _validate_async(self):
+    async def _validate_async(self) -> None:
         """
         Asynchronous version of `validate()`.
         This one doesn't set the cursor position.
@@ -1191,11 +1217,11 @@ class Buffer(object):
         An asynchronous version is required if we have `validate_while_typing`
         enabled.
         """
-        def coroutine():
+        while True:
             # Don't call the validator again, if it was already called for the
             # current input.
             if self.validation_state != ValidationState.UNKNOWN:
-                raise Return(self.validation_state == ValidationState.VALID)
+                return
 
             # Call validator.
             error = None
@@ -1203,14 +1229,13 @@ class Buffer(object):
 
             if self.validator:
                 try:
-                    yield self.validator.get_validate_future(self.document)
+                    await self.validator.validate_async(self.document)
                 except ValidationError as e:
                     error = e
 
                 # If the document changed during the validation, try again.
                 if self.document != document:
-                    result = yield From(coroutine())
-                    raise Return(result)
+                    continue
 
             # Handle validation result.
             if error:
@@ -1221,11 +1246,7 @@ class Buffer(object):
             self.validation_error = error
             get_app().invalidate()  # Trigger redraw (display error).
 
-            raise Return(error is None)
-
-        return ensure_future(coroutine())
-
-    def append_to_history(self):
+    def append_to_history(self) -> None:
         """
         Append the current input to the history.
         """
@@ -1236,19 +1257,20 @@ class Buffer(object):
             if not len(history_strings) or history_strings[-1] != self.text:
                 self.history.append_string(self.text)
 
-    def _search(self, search_state, include_current_position=False, count=1):
+    def _search(self, search_state: SearchState,
+                include_current_position: bool = False,
+                count: int = 1) -> Optional[Tuple[int, int]]:
         """
         Execute search. Return (working_index, cursor_position) tuple when this
         search is applied. Returns `None` when this text cannot be found.
         """
-        assert isinstance(search_state, SearchState)
-        assert isinstance(count, int) and count > 0
+        assert count > 0
 
         text = search_state.text
         direction = search_state.direction
         ignore_case = search_state.ignore_case()
 
-        def search_once(working_index, document):
+        def search_once(working_index: int, document: Document) -> Optional[Tuple[int, Document]]:
             """
             Do search one time.
             Return (working_index, document) or `None`
@@ -1292,6 +1314,7 @@ class Buffer(object):
                             text, ignore_case=ignore_case)
                         if new_index is not None:
                             return (i, Document(document.text, len(document.text) + new_index))
+            return None
 
         # Do 'count' search iterations.
         working_index = self.working_index
@@ -1299,13 +1322,13 @@ class Buffer(object):
         for _ in range(count):
             result = search_once(working_index, document)
             if result is None:
-                return  # Nothing found.
+                return None  # Nothing found.
             else:
                 working_index, document = result
 
         return (working_index, document.cursor_position)
 
-    def document_for_search(self, search_state):
+    def document_for_search(self, search_state: SearchState) -> Document:
         """
         Return a :class:`~prompt_toolkit.document.Document` instance that has
         the text/cursor position for this search, if we would apply it. This
@@ -1329,7 +1352,9 @@ class Buffer(object):
             return Document(self._working_lines[working_index],
                             cursor_position, selection=selection)
 
-    def get_search_position(self, search_state, include_current_position=True, count=1):
+    def get_search_position(
+            self, search_state: SearchState,
+            include_current_position: bool = True, count: int = 1) -> int:
         """
         Get the cursor position for this search.
         (This operation won't change the `working_index`. It's won't go through
@@ -1344,7 +1369,9 @@ class Buffer(object):
             working_index, cursor_position = search_result
             return cursor_position
 
-    def apply_search(self, search_state, include_current_position=True, count=1):
+    def apply_search(self, search_state: SearchState,
+                     include_current_position: bool = True,
+                     count: int = 1) -> None:
         """
         Apply search. If something is found, set `working_index` and
         `cursor_position`.
@@ -1357,10 +1384,10 @@ class Buffer(object):
             self.working_index = working_index
             self.cursor_position = cursor_position
 
-    def exit_selection(self):
+    def exit_selection(self) -> None:
         self.selection_state = None
 
-    def open_in_editor(self, validate_and_handle=False):
+    def open_in_editor(self, validate_and_handle: bool = False) -> 'Future[None]':
         """
         Open code in editor.
 
@@ -1374,14 +1401,14 @@ class Buffer(object):
         os.write(descriptor, self.text.encode('utf-8'))
         os.close(descriptor)
 
-        def run():
+        async def run() -> None:
             try:
                 # Open in editor
                 # (We need to use `run_in_terminal`, because not all editors go to
                 # the alternate screen buffer, and some could influence the cursor
                 # position.)
-                succes = yield From(run_in_terminal(
-                    lambda: self._open_file_in_editor(filename), in_executor=True))
+                succes = await run_in_terminal(
+                    lambda: self._open_file_in_editor(filename), in_executor=True)
 
                 # Read content again.
                 if succes:
@@ -1407,7 +1434,7 @@ class Buffer(object):
 
         return ensure_future(run())
 
-    def _open_file_in_editor(self, filename):
+    def _open_file_in_editor(self, filename: str) -> bool:
         """
         Call editor executable.
 
@@ -1444,8 +1471,12 @@ class Buffer(object):
 
         return False
 
-    def start_completion(self, select_first=False, select_last=False,
-                         insert_common_part=False, complete_event=None):
+    def start_completion(
+            self,
+            select_first: bool = False,
+            select_last: bool = False,
+            insert_common_part: bool = False,
+            complete_event: Optional[CompleteEvent] = None) -> None:
         """
         Start asynchronous autocompletion of this buffer.
         (This will do nothing if a previous completion was still in progress.)
@@ -1459,14 +1490,14 @@ class Buffer(object):
             insert_common_part=insert_common_part,
             complete_event=complete_event or CompleteEvent(completion_requested=True)))
 
-    def _create_completer_coroutine(self):
+    def _create_completer_coroutine(self) -> Callable[..., Awaitable[None]]:
         """
         Create function for asynchronous autocompletion.
 
         (This consumes the asynchronous completer generator, which possibly
         runs the completion algorithm in another thread.)
         """
-        def completion_does_nothing(document, completion):
+        def completion_does_nothing(document: Document, completion: Completion) -> bool:
             """
             Return `True` if applying this completion doesn't have any effect.
             (When it doesn't insert any new text.
@@ -1477,8 +1508,12 @@ class Buffer(object):
             return replaced_text == completion.text
 
         @_only_one_at_a_time
-        def async_completer(select_first=False, select_last=False,
-                            insert_common_part=False, complete_event=None):
+        async def async_completer(
+                select_first: bool = False,
+                select_last: bool = False,
+                insert_common_part: bool = False,
+                complete_event: Optional[CompleteEvent] = None) -> None:
+
             document = self.document
             complete_event = complete_event or CompleteEvent(text_inserted=True)
 
@@ -1490,20 +1525,18 @@ class Buffer(object):
             complete_state = CompletionState(original_document=self.document)
             self.complete_state = complete_state
 
-            def proceed():
+            def proceed() -> bool:
                 """ Keep retrieving completions. Input text has not yet changed
                 while generating completions. """
                 return self.complete_state == complete_state
 
-            def add_completion(completion):
-                " Got one completion from the asynchronous completion generator. "
+            async for completion in self.completer.get_completions_async(document, complete_event):
                 complete_state.completions.append(completion)
                 self.on_completions_changed.fire()
 
-            yield From(consume_async_generator(
-                self.completer.get_completions_async(document, complete_event),
-                item_callback=add_completion,
-                cancel=lambda: not proceed()))
+                # If the input text changes, abort.
+                if not proceed():
+                    break
 
             completions = complete_state.completions
 
@@ -1575,21 +1608,20 @@ class Buffer(object):
 
         return async_completer
 
-    def _create_auto_suggest_coroutine(self):
+    def _create_auto_suggest_coroutine(self) -> Callable[[], Awaitable[None]]:
         """
         Create function for asynchronous auto suggestion.
         (This can be in another thread.)
         """
         @_only_one_at_a_time
-        def async_suggestor():
+        async def async_suggestor() -> None:
             document = self.document
 
             # Don't suggest when we already have a suggestion.
             if self.suggestion or not self.auto_suggest:
                 return
 
-            suggestion = yield From(self.auto_suggest.get_suggestion_future(
-                    self, document))
+            suggestion = await self.auto_suggest.get_suggestion_async(self, document)
 
             # Set suggestion only if the text was not yet changed.
             if self.document == document:
@@ -1601,17 +1633,17 @@ class Buffer(object):
                 raise _Retry
         return async_suggestor
 
-    def _create_auto_validate_coroutine(self):
+    def _create_auto_validate_coroutine(self) -> Callable[[], Awaitable[None]]:
         """
         Create a function for asynchronous validation while typing.
         (This can be in another thread.)
         """
         @_only_one_at_a_time
-        def async_validator():
-            yield From(self._validate_async())
+        async def async_validator() -> None:
+            await self._validate_async()
         return async_validator
 
-    def validate_and_handle(self):
+    def validate_and_handle(self) -> None:
         """
         Validate buffer and handle the accept action.
         """
@@ -1630,7 +1662,10 @@ class Buffer(object):
                 self.reset()
 
 
-def _only_one_at_a_time(coroutine):
+_T = TypeVar('_T', bound=Callable[..., Awaitable])
+
+
+def _only_one_at_a_time(coroutine: _T) -> _T:
     """
     Decorator that only starts the coroutine only if the previous call has
     finished. (Used to make sure that we have only one autocompleter, auto
@@ -1638,34 +1673,36 @@ def _only_one_at_a_time(coroutine):
 
     When the coroutine raises `_Retry`, it is restarted.
     """
-    running = [False]
+    running = False
 
     @wraps(coroutine)
-    def new_coroutine(*a, **kw):
+    async def new_coroutine(*a: Any, **kw: Any) -> Any:
+        nonlocal running
+
         # Don't start a new function, if the previous is still in progress.
-        if running[0]:
+        if running:
             return
 
-        running[0] = True
+        running = True
 
         try:
             while True:
                 try:
-                    yield From(coroutine(*a, **kw))
+                    await coroutine(*a, **kw)
                 except _Retry:
                     continue
                 else:
-                    raise Return(None)
+                    return None
         finally:
-            running[0] = False
-    return new_coroutine
+            running = False
+    return cast(_T, new_coroutine)
 
 
 class _Retry(Exception):
     " Retry in `_only_one_at_a_time`. "
 
 
-def indent(buffer, from_row, to_row, count=1):
+def indent(buffer: Buffer, from_row: int, to_row: int, count: int = 1) -> None:
     """
     Indent text of a :class:`.Buffer` object.
     """
@@ -1682,14 +1719,14 @@ def indent(buffer, from_row, to_row, count=1):
     buffer.cursor_position += buffer.document.get_start_of_line_position(after_whitespace=True)
 
 
-def unindent(buffer, from_row, to_row, count=1):
+def unindent(buffer: Buffer, from_row: int, to_row: int, count: int = 1) -> None:
     """
     Unindent text of a :class:`.Buffer` object.
     """
     current_row = buffer.document.cursor_position_row
     line_range = range(from_row, to_row)
 
-    def transform(text):
+    def transform(text: str) -> str:
         remove = '    ' * count
         if text.startswith(remove):
             return text[len(remove):]
@@ -1706,7 +1743,7 @@ def unindent(buffer, from_row, to_row, count=1):
     buffer.cursor_position += buffer.document.get_start_of_line_position(after_whitespace=True)
 
 
-def reshape_text(buffer, from_row, to_row):
+def reshape_text(buffer: Buffer, from_row: int, to_row: int) -> None:
     """
     Reformat text, taking the width into account.
     `to_row` is included.
@@ -1719,7 +1756,9 @@ def reshape_text(buffer, from_row, to_row):
 
     if lines_to_reformat:
         # Take indentation from the first line.
-        length = re.search(r'^\s*', lines_to_reformat[0]).end()
+        match = re.search(r'^\s*', lines_to_reformat[0])
+        length = match.end() if match else 0  # `match` can't be None, actually.
+
         indent = lines_to_reformat[0][:length].replace('\n', '')
 
         # Now, take all the 'words' from the lines to be reshaped.

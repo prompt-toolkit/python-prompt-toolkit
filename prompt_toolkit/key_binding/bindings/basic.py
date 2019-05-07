@@ -1,6 +1,4 @@
 # pylint: disable=function-redefined
-from __future__ import unicode_literals
-
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.filters import (
     Condition,
@@ -10,7 +8,7 @@ from prompt_toolkit.filters import (
     is_multiline,
     vi_insert_mode,
 )
-from prompt_toolkit.key_binding.key_processor import KeyPress
+from prompt_toolkit.key_binding.key_processor import KeyPress, KeyPressEvent
 from prompt_toolkit.keys import Keys
 
 from ..key_bindings import KeyBindings
@@ -20,14 +18,16 @@ __all__ = [
     'load_basic_bindings',
 ]
 
+E = KeyPressEvent
 
-def if_no_repeat(event):
+
+def if_no_repeat(event: E) -> bool:
     """ Callable that returns True when the previous event was delivered to
     another handler. """
     return not event.is_repeat
 
 
-def load_basic_bindings():
+def load_basic_bindings() -> KeyBindings:
     key_bindings = KeyBindings()
     insert_mode = vi_insert_mode | emacs_insert_mode
     handle = key_bindings.add
@@ -107,7 +107,7 @@ def load_basic_bindings():
     @handle('c-down')
     @handle('insert')
     @handle(Keys.Ignore)
-    def _(event):
+    def _(event: E) -> None:
         """
         First, for any of these keys, Don't do anything by default. Also don't
         catch them in the 'Any' handler which will insert them as data.
@@ -150,16 +150,21 @@ def load_basic_bindings():
 
     # CTRL keys.
 
-    text_before_cursor = Condition(lambda: get_app().current_buffer.text)
-    handle('c-d', filter=text_before_cursor & insert_mode)(get_by_name('delete-char'))
+    @Condition
+    def has_text_before_cursor() -> bool:
+        return bool(get_app().current_buffer.text)
+
+    handle('c-d', filter=has_text_before_cursor & insert_mode)(get_by_name('delete-char'))
 
     @handle('enter', filter=insert_mode & is_multiline)
-    def _(event):
-        " Newline (in case of multiline input. "
+    def _(event: E) -> None:
+        """
+        Newline (in case of multiline input.
+        """
         event.current_buffer.newline(copy_margin=not in_paste_mode())
 
     @handle('c-j')
-    def _(event):
+    def _(event: E) -> None:
         r"""
         By default, handle \n as if it were a \r (enter).
         (It appears that some terminals send \n instead of \r when pressing
@@ -171,22 +176,22 @@ def load_basic_bindings():
     # Delete the word before the cursor.
 
     @handle('up')
-    def _(event):
+    def _(event: E) -> None:
         event.current_buffer.auto_up(count=event.arg)
 
     @handle('down')
-    def _(event):
+    def _(event: E) -> None:
         event.current_buffer.auto_down(count=event.arg)
 
     @handle('delete', filter=has_selection)
-    def _(event):
+    def _(event: E) -> None:
         data = event.current_buffer.cut_selection()
         event.app.clipboard.set_data(data)
 
     # Global bindings.
 
     @handle('c-z')
-    def _(event):
+    def _(event: E) -> None:
         """
         By default, control-Z should literally insert Ctrl-Z.
         (Ansi Ctrl-Z, code 26 in MSDOS means End-Of-File.
@@ -199,8 +204,10 @@ def load_basic_bindings():
         event.current_buffer.insert_text(event.data)
 
     @handle(Keys.BracketedPaste)
-    def _(event):
-        " Pasting from clipboard. "
+    def _(event: E) -> None:
+        """
+        Pasting from clipboard.
+        """
         data = event.data
 
         # Be sure to use \n as line ending.
@@ -211,8 +218,12 @@ def load_basic_bindings():
 
         event.current_buffer.insert_text(data)
 
-    @handle(Keys.Any, filter=Condition(lambda: get_app().quoted_insert), eager=True)
-    def _(event):
+    @Condition
+    def in_quoted_insert() -> bool:
+        return get_app().quoted_insert
+
+    @handle(Keys.Any, filter=in_quoted_insert, eager=True)
+    def _(event: E) -> None:
         """
         Handle quoted insert.
         """

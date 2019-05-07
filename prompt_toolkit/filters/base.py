@@ -1,20 +1,16 @@
-from __future__ import unicode_literals
-
 from abc import ABCMeta, abstractmethod
-
-from six import with_metaclass
-
-from prompt_toolkit.utils import test_callable_args
+from typing import Callable, Dict, Iterable, List, Tuple, Union, cast
 
 __all__ = [
     'Filter',
     'Never',
     'Always',
     'Condition',
+    'FilterOrBool'
 ]
 
 
-class Filter(with_metaclass(ABCMeta, object)):
+class Filter(metaclass=ABCMeta):
     """
     Base class for any filter to activate/deactivate a feature, depending on a
     condition.
@@ -22,31 +18,31 @@ class Filter(with_metaclass(ABCMeta, object)):
     The return value of ``__call__`` will tell if the feature should be active.
     """
     @abstractmethod
-    def __call__(self):
+    def __call__(self) -> bool:
         """
         The actual call to evaluate the filter.
         """
         return True
 
-    def __and__(self, other):
+    def __and__(self, other: 'Filter') -> 'Filter':
         """
         Chaining of filters using the & operator.
         """
         return _and_cache[self, other]
 
-    def __or__(self, other):
+    def __or__(self, other: 'Filter') -> 'Filter':
         """
         Chaining of filters using the | operator.
         """
         return _or_cache[self, other]
 
-    def __invert__(self):
+    def __invert__(self) -> 'Filter':
         """
         Inverting of filters using the ~ operator.
         """
         return _invert_cache[self]
 
-    def __bool__(self):
+    def __bool__(self) -> None:
         """
         By purpose, we don't allow bool(...) operations directly on a filter,
         because the meaning is ambiguous.
@@ -58,10 +54,8 @@ class Filter(with_metaclass(ABCMeta, object)):
         raise ValueError('The truth value of a Filter is ambiguous. '
                          'Instead, call it as a function.')
 
-    __nonzero__ = __bool__  # For Python 2.
 
-
-class _AndCache(dict):
+class _AndCache(Dict[Tuple[Filter, Filter], '_AndList']):
     """
     Cache for And operation between filters.
     (Filter classes are stateless, so we can reuse them.)
@@ -71,7 +65,7 @@ class _AndCache(dict):
           filters), and tuples should be removed when one of these filters is
           removed. In practise however, there is a finite amount of filters.
     """
-    def __missing__(self, filters):
+    def __missing__(self, filters: Tuple[Filter, Filter]) -> Filter:
         a, b = filters
         assert isinstance(b, Filter), 'Expecting filter, got %r' % b
 
@@ -85,9 +79,9 @@ class _AndCache(dict):
         return result
 
 
-class _OrCache(dict):
+class _OrCache(Dict[Tuple[Filter, Filter], '_OrList']):
     """ Cache for Or operation between filters. """
-    def __missing__(self, filters):
+    def __missing__(self, filters: Tuple[Filter, Filter]) -> Filter:
         a, b = filters
         assert isinstance(b, Filter), 'Expecting filter, got %r' % b
 
@@ -101,9 +95,9 @@ class _OrCache(dict):
         return result
 
 
-class _InvertCache(dict):
+class _InvertCache(Dict[Filter, '_Invert']):
     """ Cache for inversion operator. """
-    def __missing__(self, filter):
+    def __missing__(self, filter: Filter) -> Filter:
         result = _Invert(filter)
         self[filter] = result
         return result
@@ -118,21 +112,19 @@ class _AndList(Filter):
     """
     Result of &-operation between several filters.
     """
-    def __init__(self, filters):
-        all_filters = []
+    def __init__(self, filters: Iterable[Filter]) -> None:
+        self.filters: List[Filter] = []
 
         for f in filters:
             if isinstance(f, _AndList):  # Turn nested _AndLists into one.
-                all_filters.extend(f.filters)
+                self.filters.extend(cast(_AndList, f).filters)
             else:
-                all_filters.append(f)
+                self.filters.append(f)
 
-        self.filters = all_filters
-
-    def __call__(self):
+    def __call__(self) -> bool:
         return all(f() for f in self.filters)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '&'.join(repr(f) for f in self.filters)
 
 
@@ -140,21 +132,19 @@ class _OrList(Filter):
     """
     Result of |-operation between several filters.
     """
-    def __init__(self, filters):
-        all_filters = []
+    def __init__(self, filters: Iterable[Filter]) -> None:
+        self.filters: List[Filter] = []
 
         for f in filters:
             if isinstance(f, _OrList):  # Turn nested _OrLists into one.
-                all_filters.extend(f.filters)
+                self.filters.extend(cast(_OrList, f).filters)
             else:
-                all_filters.append(f)
+                self.filters.append(f)
 
-        self.filters = all_filters
-
-    def __call__(self):
+    def __call__(self) -> bool:
         return any(f() for f in self.filters)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '|'.join(repr(f) for f in self.filters)
 
 
@@ -162,13 +152,13 @@ class _Invert(Filter):
     """
     Negation of another filter.
     """
-    def __init__(self, filter):
+    def __init__(self, filter: Filter) -> None:
         self.filter = filter
 
-    def __call__(self):
+    def __call__(self) -> bool:
         return not self.filter()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '~%r' % self.filter
 
 
@@ -176,10 +166,10 @@ class Always(Filter):
     """
     Always enable feature.
     """
-    def __call__(self):
+    def __call__(self) -> bool:
         return True
 
-    def __invert__(self):
+    def __invert__(self) -> 'Never':
         return Never()
 
 
@@ -187,10 +177,10 @@ class Never(Filter):
     """
     Never enable feature.
     """
-    def __call__(self):
+    def __call__(self) -> bool:
         return False
 
-    def __invert__(self):
+    def __invert__(self) -> Always:
         return Always()
 
 
@@ -207,13 +197,15 @@ class Condition(Filter):
 
     :param func: Callable which takes no inputs and returns a boolean.
     """
-    def __init__(self, func):
-        assert callable(func)
-        assert test_callable_args(func, [])
+    def __init__(self, func: Callable[[], bool]):
         self.func = func
 
-    def __call__(self):
+    def __call__(self) -> bool:
         return self.func()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'Condition(%r)' % self.func
+
+
+# Often used as type annotation.
+FilterOrBool = Union[Filter, bool]

@@ -7,8 +7,6 @@ Notice that this doesn't swap foreground and background like "reverse" does. It
 turns light green into dark green and the other way around. Foreground and
 background are independent of each other.
 """
-from __future__ import unicode_literals
-
 from pygments.lexers.html import HtmlLexer
 
 from prompt_toolkit import prompt

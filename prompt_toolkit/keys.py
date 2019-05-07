@@ -1,4 +1,5 @@
-from __future__ import unicode_literals
+from enum import Enum
+from typing import Dict, List
 
 __all__ = [
     'Keys',
@@ -6,10 +7,15 @@ __all__ = [
 ]
 
 
-class Keys(object):
+class Keys(str, Enum):
     """
     List of keys for use in key bindings.
+
+    Note that this is an "StrEnum", all values can be compared against
+    strings.
     """
+    value: str
+
     Escape = 'escape'  # Also Control-[
 
     ControlAt = 'c-@'  # Also Control-Space.
@@ -112,22 +118,20 @@ class Keys(object):
     # (The key binding for this key should not do anything.)
     Ignore = '<ignore>'
 
+    # Some 'Key' aliases (for backwards-compatibility).
+    ControlSpace = ControlAt
+    Tab          = ControlI
+    Enter        = ControlM
+    Backspace    = ControlH
 
-ALL_KEYS = [getattr(Keys, k) for k in dir(Keys) if not k.startswith('_')]
+
+ALL_KEYS: List[str] = [k.value for k in Keys]
 
 
 # Aliases.
-KEY_ALIASES = {
+KEY_ALIASES: Dict[str, str] = {
     'backspace': 'c-h',
     'c-space': 'c-@',
     'enter': 'c-m',
     'tab': 'c-i',
 }
-
-
-# The following should not end up in ALL_KEYS, but we still want them in Keys
-# for backwards-compatibility.
-Keys.ControlSpace = Keys.ControlAt
-Keys.Tab          = Keys.ControlI
-Keys.Enter        = Keys.ControlM
-Keys.Backspace    = Keys.ControlH

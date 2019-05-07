@@ -4,13 +4,11 @@ A simple chat application over telnet.
 Everyone that connects is asked for his name, and then people can chat with
 each other.
 """
-from __future__ import unicode_literals
-
 import logging
 import random
+from asyncio import get_event_loop
 
 from prompt_toolkit.contrib.telnet.server import TelnetServer
-from prompt_toolkit.eventloop import From, get_event_loop
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.shortcuts import clear, prompt
 
@@ -29,7 +27,7 @@ COLORS = [
     'ansidarkgreen', 'ansibrown', 'ansidarkblue', 'ansipurple', 'ansiteal']
 
 
-def interact(connection):
+async def interact(connection):
     write = connection.send
 
     # When a client is connected, erase the screen from the client and say
@@ -38,7 +36,7 @@ def interact(connection):
     write('Welcome to our chat application!\n')
     write('All connected clients will receive what you say.\n')
 
-    name = yield From(prompt(message='Type your name: ', async_=True))
+    name = await prompt(message='Type your name: ', async_=True)
 
     # Random color.
     color = random.choice(COLORS)
@@ -55,7 +53,7 @@ def interact(connection):
         # Set Application.
         while True:
             try:
-                result = yield From(prompt(message=prompt_msg, async_=True))
+                result = await prompt(message=prompt_msg, async_=True)
                 _send_to_everyone(connection, name, result, color)
             except KeyboardInterrupt:
                 pass

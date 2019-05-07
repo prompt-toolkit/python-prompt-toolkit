@@ -2,15 +2,13 @@
 """
 Example of an input box dialog.
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit.shortcuts import input_dialog
 
 
 def main():
     result = input_dialog(
         title='Input dialog example',
-        text='Please type your name:')
+        text='Please type your name:').run()
 
     print('Result = {}'.format(result))
 

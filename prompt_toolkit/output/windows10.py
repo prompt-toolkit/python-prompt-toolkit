@@ -1,8 +1,8 @@
-from __future__ import unicode_literals
-
 from ctypes import byref, windll
 from ctypes.wintypes import DWORD
+from typing import Any, TextIO
 
+from prompt_toolkit.data_structures import Size
 from prompt_toolkit.renderer import Output
 from prompt_toolkit.utils import is_windows
 from prompt_toolkit.win32_types import STD_OUTPUT_HANDLE
@@ -19,16 +19,16 @@ ENABLE_PROCESSED_INPUT = 0x0001
 ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
 
 
-class Windows10_Output(object):
+class Windows10_Output:
     """
     Windows 10 output abstraction. This enables and uses vt100 escape sequences.
     """
-    def __init__(self, stdout):
+    def __init__(self, stdout: TextIO) -> None:
         self.win32_output = Win32Output(stdout)
-        self.vt100_output = Vt100_Output(stdout, lambda: None)
+        self.vt100_output = Vt100_Output(stdout, lambda: Size(0, 0))
         self._hconsole = windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
 
-    def flush(self):
+    def flush(self) -> None:
         """
         Write to output stream and flush.
         """
@@ -47,7 +47,7 @@ class Windows10_Output(object):
             # Restore console mode.
             windll.kernel32.SetConsoleMode(self._hconsole, original_mode)
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         if name in ('get_size', 'get_rows_below_cursor_position',
                     'enable_mouse_support', 'disable_mouse_support',
                     'scroll_buffer_to_prompt', 'get_win32_screen_buffer_info',
@@ -60,7 +60,7 @@ class Windows10_Output(object):
 Output.register(Windows10_Output)
 
 
-def is_win_vt100_enabled():
+def is_win_vt100_enabled() -> bool:
     """
     Returns True when we're running Windows and VT100 escape sequences are
     supported.

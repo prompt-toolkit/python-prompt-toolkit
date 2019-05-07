@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from .dialogs import (
     button_dialog,
     input_dialog,

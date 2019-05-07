@@ -34,17 +34,31 @@ been assigned, through the `key_binding` decorator.::
     # Later, add it to the key bindings.
     kb.add(Keys.A, my_key_binding)
 """
-from __future__ import unicode_literals
-
 from abc import ABCMeta, abstractmethod, abstractproperty
-
-from six import text_type, with_metaclass
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Hashable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+)
 
 from prompt_toolkit.cache import SimpleCache
-from prompt_toolkit.filters import Never, to_filter
-from prompt_toolkit.keys import ALL_KEYS, KEY_ALIASES, Keys
+from prompt_toolkit.filters import FilterOrBool, Never, to_filter
+from prompt_toolkit.keys import KEY_ALIASES, Keys
+
+# Avoid circular imports.
+if TYPE_CHECKING:
+    from .key_processor import KeyPressEvent
+
 
 __all__ = [
+    'Binding',
     'KeyBindingsBase',
     'KeyBindings',
     'ConditionalKeyBindings',
@@ -53,20 +67,26 @@ __all__ = [
     'GlobalOnlyKeyBindings',
 ]
 
+KeyHandlerCallable = Callable[['KeyPressEvent'], None]
 
-class _Binding(object):
+
+class Binding:
     """
+    Key binding: (key sequence + handler + filter).
     (Immutable binding class.)
 
     :param record_in_macro: When True, don't record this key binding when a
         macro is recorded.
     """
-    def __init__(self, keys, handler, filter=True, eager=False,
-                 is_global=False, save_before=None, record_in_macro=True):
-        assert isinstance(keys, tuple)
-        assert callable(handler)
-        assert callable(save_before)
-
+    def __init__(
+            self, keys: Tuple[Union[Keys, str], ...],
+            handler: KeyHandlerCallable,
+            filter: FilterOrBool = True,
+            eager: FilterOrBool = False,
+            is_global: FilterOrBool = False,
+            save_before: Callable[['KeyPressEvent'], bool] = (lambda e: True),
+            record_in_macro: FilterOrBool = True
+    ) -> None:
         self.keys = keys
         self.handler = handler
         self.filter = to_filter(filter)
@@ -75,20 +95,24 @@ class _Binding(object):
         self.save_before = save_before
         self.record_in_macro = to_filter(record_in_macro)
 
-    def call(self, event):
-        return self.handler(event)
+    def call(self, event: 'KeyPressEvent') -> None:
+        self.handler(event)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '%s(keys=%r, handler=%r)' % (
             self.__class__.__name__, self.keys, self.handler)
 
 
-class KeyBindingsBase(with_metaclass(ABCMeta, object)):
+# Sequence of keys presses.
+KeysTuple = Tuple[Union[Keys, str], ...]
+
+
+class KeyBindingsBase(metaclass=ABCMeta):
     """
     Interface for a KeyBindings.
     """
     @abstractproperty
-    def _version(self):
+    def _version(self) -> Hashable:
         """
         For cache invalidation. - This should increase every time that
         something changes.
@@ -96,7 +120,7 @@ class KeyBindingsBase(with_metaclass(ABCMeta, object)):
         return 0
 
     @abstractmethod
-    def get_bindings_for_keys(self, keys):
+    def get_bindings_for_keys(self, keys: KeysTuple) -> List[Binding]:
         """
         Return a list of key bindings that can handle these keys.
         (This return also inactive bindings, so the `filter` still has to be
@@ -107,7 +131,7 @@ class KeyBindingsBase(with_metaclass(ABCMeta, object)):
         return []
 
     @abstractmethod
-    def get_bindings_starting_with_keys(self, keys):
+    def get_bindings_starting_with_keys(self, keys: KeysTuple) -> List[Binding]:
         """
         Return a list of key bindings that handle a key sequence starting with
         `keys`. (It does only return bindings for which the sequences are
@@ -118,7 +142,19 @@ class KeyBindingsBase(with_metaclass(ABCMeta, object)):
         """
         return []
 
+    @abstractproperty
+    def bindings(self) -> List[Binding]:
+        """
+        List of `Binding` objects.
+        (These need to be exposed, so that `KeyBindings` objects can be merged
+        together.)
+        """
+        return []
+
     # `add` and `remove` don't have to be part of this interface.
+
+
+T = TypeVar('T', bound=Union[KeyHandlerCallable, Binding])
 
 
 class KeyBindings(KeyBindingsBase):
@@ -142,22 +178,34 @@ class KeyBindings(KeyBindingsBase):
             print('Control-X pressed')  # Works only if we are searching.
 
     """
-    def __init__(self):
-        self.bindings = []
-        self._get_bindings_for_keys_cache = SimpleCache(maxsize=10000)
-        self._get_bindings_starting_with_keys_cache = SimpleCache(maxsize=1000)
+    def __init__(self) -> None:
+        self._bindings: List[Binding] = []
+        self._get_bindings_for_keys_cache: SimpleCache[KeysTuple, List[Binding]] = \
+            SimpleCache(maxsize=10000)
+        self._get_bindings_starting_with_keys_cache: SimpleCache[KeysTuple, List[Binding]] = \
+            SimpleCache(maxsize=1000)
         self.__version = 0  # For cache invalidation.
 
-    def _clear_cache(self):
+    def _clear_cache(self) -> None:
         self.__version += 1
         self._get_bindings_for_keys_cache.clear()
         self._get_bindings_starting_with_keys_cache.clear()
 
     @property
-    def _version(self):
+    def bindings(self) -> List[Binding]:
+        return self._bindings
+
+    @property
+    def _version(self) -> Hashable:
         return self.__version
 
-    def add(self, *keys, **kwargs):
+    def add(self,
+            *keys: Union[Keys, str],
+            filter: FilterOrBool = True,
+            eager: FilterOrBool = False,
+            is_global: FilterOrBool = False,
+            save_before: Callable[['KeyPressEvent'], bool] = (lambda e: True),
+            record_in_macro: FilterOrBool = True) -> Callable[[T], T]:
         """
         Decorator for adding a key bindings.
 
@@ -176,47 +224,40 @@ class KeyBindings(KeyBindingsBase):
         :param record_in_macro: Record these key bindings when a macro is
             being recorded. (True by default.)
         """
-        filter = to_filter(kwargs.pop('filter', True))
-        eager = to_filter(kwargs.pop('eager', False))
-        is_global = to_filter(kwargs.pop('is_global', False))
-        save_before = kwargs.pop('save_before', lambda e: True)
-        record_in_macro = to_filter(kwargs.pop('record_in_macro', True))
-
-        assert not kwargs
         assert keys
-        assert callable(save_before)
 
-        keys = tuple(_check_and_expand_key(k) for k in keys)
+        keys = tuple(_parse_key(k) for k in keys)
 
         if isinstance(filter, Never):
             # When a filter is Never, it will always stay disabled, so in that
             # case don't bother putting it in the key bindings. It will slow
             # down every key press otherwise.
-            def decorator(func):
+            def decorator(func: T) -> T:
                 return func
         else:
-            def decorator(func):
-                if isinstance(func, _Binding):
-                    # We're adding an existing _Binding object.
+            def decorator(func: T) -> T:
+                if isinstance(func, Binding):
+                    # We're adding an existing Binding object.
                     self.bindings.append(
-                        _Binding(
+                        Binding(
                             keys, func.handler,
-                            filter=func.filter & filter,
-                            eager=eager | func.eager,
-                            is_global = is_global | func.is_global,
+                            filter=func.filter & to_filter(filter),
+                            eager=to_filter(eager) | func.eager,
+                            is_global = to_filter(is_global) | func.is_global,
                             save_before=func.save_before,
                             record_in_macro=func.record_in_macro))
                 else:
                     self.bindings.append(
-                        _Binding(keys, func, filter=filter, eager=eager,
-                                 is_global=is_global, save_before=save_before,
-                                 record_in_macro=record_in_macro))
+                        Binding(keys, cast(KeyHandlerCallable, func),
+                                filter=filter, eager=eager, is_global=is_global,
+                                save_before=save_before,
+                                record_in_macro=record_in_macro))
                 self._clear_cache()
 
                 return func
         return decorator
 
-    def remove(self, *args):
+    def remove(self, *args: Union[Keys, str, KeyHandlerCallable]) -> None:
         """
         Remove a key binding.
 
@@ -244,9 +285,10 @@ class KeyBindings(KeyBindingsBase):
 
         else:
             assert len(args) > 0
+            args = cast(Tuple[Union[Keys, str]], args)
 
             # Remove this sequence of key bindings.
-            keys = tuple(_check_and_expand_key(k) for k in args)
+            keys = tuple(_parse_key(k) for k in args)
 
             for b in self.bindings:
                 if b.keys == keys:
@@ -263,7 +305,7 @@ class KeyBindings(KeyBindingsBase):
     add_binding = add
     remove_binding = remove
 
-    def get_bindings_for_keys(self, keys):
+    def get_bindings_for_keys(self, keys: KeysTuple) -> List[Binding]:
         """
         Return a list of key bindings that can handle this key.
         (This return also inactive bindings, so the `filter` still has to be
@@ -271,8 +313,9 @@ class KeyBindings(KeyBindingsBase):
 
         :param keys: tuple of keys.
         """
-        def get():
-            result = []
+        def get() -> List[Binding]:
+            result: List[Tuple[int, Binding]] = []
+
             for b in self.bindings:
                 if len(keys) == len(b.keys):
                     match = True
@@ -296,7 +339,7 @@ class KeyBindings(KeyBindingsBase):
 
         return self._get_bindings_for_keys_cache.get(keys, get)
 
-    def get_bindings_starting_with_keys(self, keys):
+    def get_bindings_starting_with_keys(self, keys: KeysTuple) -> List[Binding]:
         """
         Return a list of key bindings that handle a key sequence starting with
         `keys`. (It does only return bindings for which the sequences are
@@ -305,7 +348,7 @@ class KeyBindings(KeyBindingsBase):
 
         :param keys: tuple of keys.
         """
-        def get():
+        def get() -> List[Binding]:
             result = []
             for b in self.bindings:
                 if len(keys) < len(b.keys):
@@ -321,10 +364,14 @@ class KeyBindings(KeyBindingsBase):
         return self._get_bindings_starting_with_keys_cache.get(keys, get)
 
 
-def _check_and_expand_key(key):
+def _parse_key(key: Union[Keys, str]) -> Union[str, Keys]:
     """
     Replace key by alias and verify whether it's a valid one.
     """
+    # Already a parse key? -> Return it.
+    if isinstance(key, Keys):
+        return key
+
     # Lookup aliases.
     key = KEY_ALIASES.get(key, key)
 
@@ -332,18 +379,27 @@ def _check_and_expand_key(key):
     if key == 'space':
         key = ' '
 
+    # Return as `Key` object when it's a special key.
+    try:
+        return Keys(key)
+    except ValueError:
+        pass
+
     # Final validation.
-    assert isinstance(key, text_type), 'Got %r' % (key, )
-    if len(key) != 1 and key not in ALL_KEYS:
+    if len(key) != 1:
         raise ValueError('Invalid key: %s' % (key, ))
 
     return key
 
 
-def key_binding(filter=True, eager=False, is_global=False, save_before=None,
-                record_in_macro=True):
+def key_binding(
+        filter: FilterOrBool = True,
+        eager: FilterOrBool = False,
+        is_global: FilterOrBool = False,
+        save_before: Callable[['KeyPressEvent'], bool] = (lambda event: True),
+        record_in_macro: FilterOrBool = True) -> Callable[[KeyHandlerCallable], Binding]:
     """
-    Decorator that turn a function into a `_Binding` object. This can be added
+    Decorator that turn a function into a `Binding` object. This can be added
     to a `KeyBindings` object when a key binding is assigned.
     """
     assert save_before is None or callable(save_before)
@@ -351,12 +407,12 @@ def key_binding(filter=True, eager=False, is_global=False, save_before=None,
     filter = to_filter(filter)
     eager = to_filter(eager)
     is_global = to_filter(is_global)
-    save_before = save_before or (lambda event: True)
+    save_before = save_before
     record_in_macro = to_filter(record_in_macro)
     keys = ()
 
-    def decorator(function):
-        return _Binding(keys, function, filter=filter, eager=eager,
+    def decorator(function: KeyHandlerCallable) -> Binding:
+        return Binding(keys, function, filter=filter, eager=eager,
                         is_global=is_global, save_before=save_before,
                         record_in_macro=record_in_macro)
 
@@ -367,12 +423,12 @@ class _Proxy(KeyBindingsBase):
     """
     Common part for ConditionalKeyBindings and _MergedKeyBindings.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         # `KeyBindings` to be synchronized with all the others.
-        self._bindings2 = KeyBindings()
-        self._last_version = None
+        self._bindings2: KeyBindingsBase = KeyBindings()
+        self._last_version: Hashable = ()
 
-    def _update_cache(self):
+    def _update_cache(self) -> None:
         """
         If `self._last_version` is outdated, then this should update
         the version and `self._bindings2`.
@@ -382,12 +438,12 @@ class _Proxy(KeyBindingsBase):
     # Proxy methods to self._bindings2.
 
     @property
-    def bindings(self):
+    def bindings(self) -> List[Binding]:
         self._update_cache()
         return self._bindings2.bindings
 
     @property
-    def _version(self):
+    def _version(self) -> Hashable:
         self._update_cache()
         return self._last_version
 
@@ -417,14 +473,15 @@ class ConditionalKeyBindings(_Proxy):
     :param registries: List of :class:`.KeyBindings` objects.
     :param filter: :class:`~prompt_toolkit.filters.Filter` object.
     """
-    def __init__(self, key_bindings, filter=True):
-        assert isinstance(key_bindings, KeyBindingsBase)
+    def __init__(self, key_bindings: KeyBindingsBase,
+                 filter: FilterOrBool = True) -> None:
+
         _Proxy.__init__(self)
 
         self.key_bindings = key_bindings
         self.filter = to_filter(filter)
 
-    def _update_cache(self):
+    def _update_cache(self) -> None:
         " If the original key bindings was changed. Update our copy version. "
         expected_version = self.key_bindings._version
 
@@ -434,7 +491,7 @@ class ConditionalKeyBindings(_Proxy):
             # Copy all bindings from `self.key_bindings`, adding our condition.
             for b in self.key_bindings.bindings:
                 bindings2.bindings.append(
-                    _Binding(
+                    Binding(
                         keys=b.keys,
                         handler=b.handler,
                         filter=self.filter & b.filter,
@@ -456,12 +513,11 @@ class _MergedKeyBindings(_Proxy):
 
     :param registries: List of :class:`.KeyBindings` objects.
     """
-    def __init__(self, registries):
-        assert all(isinstance(r, KeyBindingsBase) for r in registries)
+    def __init__(self, registries: Sequence[KeyBindingsBase]) -> None:
         _Proxy.__init__(self)
         self.registries = registries
 
-    def _update_cache(self):
+    def _update_cache(self) -> None:
         """
         If one of the original registries was changed. Update our merged
         version.
@@ -478,7 +534,7 @@ class _MergedKeyBindings(_Proxy):
             self._last_version = expected_version
 
 
-def merge_key_bindings(bindings):
+def merge_key_bindings(bindings: Sequence[KeyBindingsBase]) -> _MergedKeyBindings:
     """
     Merge multiple :class:`.Keybinding` objects together.
 
@@ -495,14 +551,13 @@ class DynamicKeyBindings(_Proxy):
 
     :param get_key_bindings: Callable that returns a :class:`.KeyBindings` instance.
     """
-    def __init__(self, get_key_bindings):
-        assert callable(get_key_bindings)
+    def __init__(self, get_key_bindings: Callable[[], Optional[KeyBindingsBase]]) -> None:
         self.get_key_bindings = get_key_bindings
         self.__version = 0
         self._last_child_version = None
         self._dummy = KeyBindings()  # Empty key bindings.
 
-    def _update_cache(self):
+    def _update_cache(self) -> None:
         key_bindings = self.get_key_bindings() or self._dummy
         assert isinstance(key_bindings, KeyBindingsBase)
         version = id(key_bindings), key_bindings._version
@@ -516,12 +571,11 @@ class GlobalOnlyKeyBindings(_Proxy):
     Wrapper around a :class:`.KeyBindings` object that only exposes the global
     key bindings.
     """
-    def __init__(self, key_bindings):
-        assert isinstance(key_bindings, KeyBindingsBase)
+    def __init__(self, key_bindings: KeyBindingsBase) -> None:
         _Proxy.__init__(self)
         self.key_bindings = key_bindings
 
-    def _update_cache(self):
+    def _update_cache(self) -> None:
         """
         If one of the original registries was changed. Update our merged
         version.

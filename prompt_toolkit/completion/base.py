@@ -1,15 +1,11 @@
 """
 """
-from __future__ import unicode_literals
-
 from abc import ABCMeta, abstractmethod
+from typing import AsyncGenerator, Callable, Iterable, Optional, Sequence
 
-from six import text_type, with_metaclass
-
-from prompt_toolkit.eventloop import (
-    AsyncGeneratorItem,
-    generator_to_async_generator,
-)
+from prompt_toolkit.document import Document
+from prompt_toolkit.eventloop import generator_to_async_generator
+from prompt_toolkit.formatted_text import AnyFormattedText, StyleAndTextTuples
 
 __all__ = [
     'Completion',
@@ -23,7 +19,7 @@ __all__ = [
 ]
 
 
-class Completion(object):
+class Completion:
     """
     :param text: The new string that will be inserted into the document.
     :param start_position: Position relative to the cursor_position where the
@@ -38,12 +34,10 @@ class Completion(object):
     :param selected_style: Style string, used for a selected completion.
         This can override the `style` parameter.
     """
-    def __init__(self, text, start_position=0, display=None, display_meta=None,
-                 style='', selected_style=''):
-        assert isinstance(text, text_type)
-        assert isinstance(start_position, int)
-        assert isinstance(style, text_type)
-        assert isinstance(selected_style, text_type)
+    def __init__(self, text: str, start_position: int = 0,
+                 display: Optional[AnyFormattedText] = None,
+                 display_meta: Optional[AnyFormattedText] = None,
+                 style: str = '', selected_style: str = '') -> None:
 
         from prompt_toolkit.formatted_text import to_formatted_text
         self.text = text
@@ -60,7 +54,7 @@ class Completion(object):
 
         assert self.start_position <= 0
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if self.display == self.text:
             return '%s(text=%r, start_position=%r)' % (
                 self.__class__.__name__, self.text, self.start_position)
@@ -69,42 +63,44 @@ class Completion(object):
                 self.__class__.__name__, self.text, self.start_position,
                 self.display)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Completion):
+            return False
         return (
             self.text == other.text and
             self.start_position == other.start_position and
             self.display == other.display and
             self._display_meta == other._display_meta)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.text, self.start_position, self.display, self._display_meta))
 
     @property
-    def display_text(self):
+    def display_text(self) -> str:
         " The 'display' field as plain text. "
         from prompt_toolkit.formatted_text import fragment_list_to_text
         return fragment_list_to_text(self.display)
 
     @property
-    def display_meta(self):
+    def display_meta(self) -> StyleAndTextTuples:
         " Return meta-text. (This is lazy when using a callable). "
         from prompt_toolkit.formatted_text import to_formatted_text
-        return to_formatted_text(self._display_meta)
+        return to_formatted_text(self._display_meta or '')
 
     @property
-    def display_meta_text(self):
+    def display_meta_text(self) -> str:
         " The 'meta' field as plain text. "
         from prompt_toolkit.formatted_text import fragment_list_to_text
         return fragment_list_to_text(self.display_meta)
 
-    def new_completion_from_position(self, position):
+    def new_completion_from_position(self, position: int) -> 'Completion':
         """
         (Only for internal use!)
         Get a new completion by splitting this one. Used by `Application` when
         it needs to have a list of new completions after inserting the common
         prefix.
         """
-        assert isinstance(position, int) and position - self.start_position >= 0
+        assert position - self.start_position >= 0
 
         return Completion(
             text=self.text[position - self.start_position:],
@@ -112,7 +108,7 @@ class Completion(object):
             display_meta=self._display_meta)
 
 
-class CompleteEvent(object):
+class CompleteEvent:
     """
     Event that called the completer.
 
@@ -126,7 +122,8 @@ class CompleteEvent(object):
     automatically when the user presses a space. (Because of
     `complete_while_typing`.)
     """
-    def __init__(self, text_inserted=False, completion_requested=False):
+    def __init__(self, text_inserted: bool = False,
+                 completion_requested: bool = False) -> None:
         assert not (text_inserted and completion_requested)
 
         #: Automatic completion while typing.
@@ -135,17 +132,17 @@ class CompleteEvent(object):
         #: Used explicitly requested completion by pressing 'tab'.
         self.completion_requested = completion_requested
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '%s(text_inserted=%r, completion_requested=%r)' % (
             self.__class__.__name__, self.text_inserted, self.completion_requested)
 
 
-class Completer(with_metaclass(ABCMeta, object)):
+class Completer(metaclass=ABCMeta):
     """
     Base class for completer implementations.
     """
     @abstractmethod
-    def get_completions(self, document, complete_event):
+    def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
         """
         This should be a generator that yields :class:`.Completion` instances.
 
@@ -161,21 +158,16 @@ class Completer(with_metaclass(ABCMeta, object)):
         while False:
             yield
 
-    def get_completions_async(self, document, complete_event):
+    async def get_completions_async(
+            self, document: Document, complete_event: CompleteEvent) -> AsyncGenerator[Completion, None]:
         """
         Asynchronous generator for completions. (Probably, you won't have to
         override this.)
 
-        This should return an iterable that can yield both :class:`.Completion`
-        and `Future` objects. The :class:`.Completion` objects have to be
-        wrapped in a `AsyncGeneratorItem` object.
-
-        If we drop Python 2 support in the future, this could become a true
-        asynchronous generator.
+        Asynchronous generator of :class:`.Completion` objects.
         """
         for item in self.get_completions(document, complete_event):
-            assert isinstance(item, Completion)
-            yield AsyncGeneratorItem(item)
+            yield item
 
 
 class ThreadedCompleter(Completer):
@@ -188,22 +180,25 @@ class ThreadedCompleter(Completer):
     The completions will be displayed as soon as they are produced. The user
     can already select a completion, even if not all completions are displayed.
     """
-    def __init__(self, completer=None):
+    def __init__(self, completer: Completer) -> None:
         assert isinstance(completer, Completer), 'Got %r' % (completer, )
         self.completer = completer
 
-    def get_completions(self, document, complete_event):
+    def get_completions(
+            self, document: Document,
+            complete_event: CompleteEvent) -> Iterable[Completion]:
         return self.completer.get_completions(document, complete_event)
 
-    def get_completions_async(self, document, complete_event):
+    async def get_completions_async(
+            self, document: Document, complete_event: CompleteEvent) -> AsyncGenerator[Completion, None]:
         """
         Asynchronous generator of completions.
-        This yields both Future and Completion objects.
         """
-        return generator_to_async_generator(
-            lambda: self.completer.get_completions(document, complete_event))
+        async for completion in generator_to_async_generator(
+                lambda: self.completer.get_completions(document, complete_event)):
+            yield completion
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'ThreadedCompleter(%r)' % (self.completer, )
 
 
@@ -211,10 +206,11 @@ class DummyCompleter(Completer):
     """
     A completer that doesn't return any completion.
     """
-    def get_completions(self, document, complete_event):
+    def get_completions(
+            self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
         return []
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'DummyCompleter()'
 
 
@@ -224,19 +220,21 @@ class DynamicCompleter(Completer):
 
     :param get_completer: Callable that returns a :class:`.Completer` instance.
     """
-    def __init__(self, get_completer):
-        assert callable(get_completer)
+    def __init__(self, get_completer: Callable[[], Optional[Completer]]) -> None:
         self.get_completer = get_completer
 
-    def get_completions(self, document, complete_event):
+    def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
         completer = self.get_completer() or DummyCompleter()
         return completer.get_completions(document, complete_event)
 
-    def get_completions_async(self, document, complete_event):
+    async def get_completions_async(
+            self, document: Document, complete_event: CompleteEvent) -> AsyncGenerator[Completion, None]:
         completer = self.get_completer() or DummyCompleter()
-        return completer.get_completions_async(document, complete_event)
 
-    def __repr__(self):
+        async for completion in completer.get_completions_async(document, complete_event):
+            yield completion
+
+    def __repr__(self) -> str:
         return 'DynamicCompleter(%r -> %r)' % (
             self.get_completer, self.get_completer())
 
@@ -245,38 +243,41 @@ class _MergedCompleter(Completer):
     """
     Combine several completers into one.
     """
-    def __init__(self, completers):
-        assert all(isinstance(c, Completer) for c in completers)
+    def __init__(self, completers: Sequence[Completer]) -> None:
         self.completers = completers
 
-    def get_completions(self, document, complete_event):
+    def get_completions(
+            self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
         # Get all completions from the other completers in a blocking way.
         for completer in self.completers:
             for c in completer.get_completions(document, complete_event):
                 yield c
 
-    def get_completions_async(self, document, complete_event):
+    async def get_completions_async(
+            self, document: Document, complete_event: CompleteEvent) -> AsyncGenerator[Completion, None]:
+
         # Get all completions from the other completers in a blocking way.
         for completer in self.completers:
             # Consume async generator -> item can be `AsyncGeneratorItem` or
             # `Future`.
-            for item in completer.get_completions_async(document, complete_event):
+            async for item in completer.get_completions_async(document, complete_event):
                 yield item
 
 
-def merge_completers(completers):
+def merge_completers(completers: Sequence[Completer]) -> _MergedCompleter:
     """
     Combine several completers into one.
     """
     return _MergedCompleter(completers)
 
 
-def get_common_complete_suffix(document, completions):
+def get_common_complete_suffix(
+        document: Document, completions: Sequence[Completion]) -> str:
     """
     Return the common prefix for all completions.
     """
     # Take only completions that don't change the text before the cursor.
-    def doesnt_change_before_cursor(completion):
+    def doesnt_change_before_cursor(completion: Completion) -> bool:
         end = completion.text[:-completion.start_position]
         return document.text_before_cursor.endswith(end)
 
@@ -288,13 +289,13 @@ def get_common_complete_suffix(document, completions):
         return ''
 
     # Return the common prefix.
-    def get_suffix(completion):
+    def get_suffix(completion: Completion) -> str:
         return completion.text[-completion.start_position:]
 
     return _commonprefix([get_suffix(c) for c in completions2])
 
 
-def _commonprefix(strings):
+def _commonprefix(strings: Iterable[str]) -> str:
     # Similar to os.path.commonprefix
     if not strings:
         return ''

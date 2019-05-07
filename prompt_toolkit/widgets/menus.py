@@ -1,17 +1,28 @@
-from __future__ import unicode_literals
+from typing import Callable, Iterable, List, Optional, Sequence, Union
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.filters import Condition
-from prompt_toolkit.key_binding.key_bindings import KeyBindings
+from prompt_toolkit.formatted_text.base import (
+    OneStyleAndTextTuple,
+    StyleAndTextTuples,
+)
+from prompt_toolkit.key_binding.key_bindings import (
+    KeyBindings,
+    KeyBindingsBase,
+)
+from prompt_toolkit.key_binding.key_processor import KeyPressEvent
+from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout.containers import (
+    AnyContainer,
     ConditionalContainer,
+    Container,
     Float,
     FloatContainer,
     HSplit,
     Window,
 )
 from prompt_toolkit.layout.controls import FormattedTextControl
-from prompt_toolkit.mouse_events import MouseEventType
+from prompt_toolkit.mouse_events import MouseEvent, MouseEventType
 from prompt_toolkit.utils import get_cwidth
 from prompt_toolkit.widgets import Shadow
 
@@ -22,16 +33,17 @@ __all__ = [
     'MenuItem',
 ]
 
+E = KeyPressEvent
 
-class MenuContainer(object):
+
+class MenuContainer:
     """
     :param floats: List of extra Float objects to display.
     :param menu_items: List of `MenuItem` objects.
     """
-    def __init__(self, body, menu_items=None, floats=None, key_bindings=None):
-        assert isinstance(menu_items, list) and \
-            all(isinstance(i, MenuItem) for i in menu_items)
-        assert floats is None or all(isinstance(f, Float) for f in floats)
+    def __init__(self, body: AnyContainer, menu_items: List['MenuItem'],
+                 floats: Optional[List[Float]] = None,
+                 key_bindings: Optional[KeyBindingsBase] = None) -> None:
 
         self.body = body
         self.menu_items = menu_items
@@ -41,31 +53,31 @@ class MenuContainer(object):
         kb = KeyBindings()
 
         @Condition
-        def in_main_menu():
+        def in_main_menu() -> bool:
             return len(self.selected_menu) == 1
 
         @Condition
-        def in_sub_menu():
+        def in_sub_menu() -> bool:
             return len(self.selected_menu) > 1
 
         # Navigation through the main menu.
 
         @kb.add('left', filter=in_main_menu)
-        def _(event):
+        def _(event: E) -> None:
             self.selected_menu[0] = max(0, self.selected_menu[0] - 1)
 
         @kb.add('right', filter=in_main_menu)
-        def _(event):
+        def _(event: E) -> None:
             self.selected_menu[0] = min(
                 len(self.menu_items) - 1, self.selected_menu[0] + 1)
 
         @kb.add('down', filter=in_main_menu)
-        def _(event):
+        def _(event: E) -> None:
             self.selected_menu.append(0)
 
         @kb.add('c-c', filter=in_main_menu)
         @kb.add('c-g', filter=in_main_menu)
-        def _(event):
+        def _(event: E) -> None:
             " Leave menu. "
             event.app.layout.focus_last()
 
@@ -74,13 +86,13 @@ class MenuContainer(object):
         @kb.add('left', filter=in_sub_menu)
         @kb.add('c-g', filter=in_sub_menu)
         @kb.add('c-c', filter=in_sub_menu)
-        def _(event):
+        def _(event: E) -> None:
             " Go back to parent menu. "
             if len(self.selected_menu) > 1:
                 self.selected_menu.pop()
 
         @kb.add('right', filter=in_sub_menu)
-        def _(event):
+        def _(event: E) -> None:
             " go into sub menu. "
             if self._get_menu(len(self.selected_menu) - 1).children:
                 self.selected_menu.append(0)
@@ -93,7 +105,7 @@ class MenuContainer(object):
                     self.selected_menu.append(0)
 
         @kb.add('up', filter=in_sub_menu)
-        def _(event):
+        def _(event: E) -> None:
             " Select previous (enabled) menu item or return to main menu. "
             # Look for previous enabled items in this sub menu.
             menu = self._get_menu(len(self.selected_menu) - 2)
@@ -109,7 +121,7 @@ class MenuContainer(object):
                 self.selected_menu.pop()
 
         @kb.add('down', filter=in_sub_menu)
-        def _(event):
+        def _(event: E) -> None:
             " Select next (enabled) menu item. "
             menu = self._get_menu(len(self.selected_menu) - 2)
             index = self.selected_menu[-1]
@@ -121,7 +133,7 @@ class MenuContainer(object):
                 self.selected_menu[-1] = next_indexes[0]
 
         @kb.add('enter')
-        def _(event):
+        def _(event: E) -> None:
             " Click the selected menu item. "
             item = self._get_menu(len(self.selected_menu) - 1)
             if item.handler:
@@ -145,7 +157,7 @@ class MenuContainer(object):
         submenu3 = self._submenu(2)
 
         @Condition
-        def has_focus():
+        def has_focus() -> bool:
             return get_app().layout.current_window == self.window
 
         self.container = FloatContainer(
@@ -157,7 +169,7 @@ class MenuContainer(object):
                 body,
             ]),
             floats=[
-                Float(xcursor=self.window, ycursor=self.window,
+                Float(xcursor=True, ycursor=True,
                       content=ConditionalContainer(
                           content=Shadow(body=submenu),
                           filter=has_focus)),
@@ -179,7 +191,7 @@ class MenuContainer(object):
             key_bindings=key_bindings,
         )
 
-    def _get_menu(self, level):
+    def _get_menu(self, level: int) -> 'MenuItem':
         menu = self.menu_items[self.selected_menu[0]]
 
         for i, index in enumerate(self.selected_menu[1:]):
@@ -191,7 +203,7 @@ class MenuContainer(object):
 
         return menu
 
-    def _get_menu_fragments(self):
+    def _get_menu_fragments(self) -> StyleAndTextTuples:
         focused = get_app().layout.has_focus(self.window)
 
         # This is called during the rendering. When we discover that this
@@ -200,8 +212,8 @@ class MenuContainer(object):
             self.selected_menu = [0]
 
         # Generate text fragments for the main menu.
-        def one_item(i, item):
-            def mouse_handler(mouse_event):
+        def one_item(i: int, item: MenuItem) -> Iterable[OneStyleAndTextTuple]:
+            def mouse_handler(mouse_event: MouseEvent) -> None:
                 if mouse_event.event_type == MouseEventType.MOUSE_UP:
                     # Toggle focus.
                     app = get_app()
@@ -220,15 +232,15 @@ class MenuContainer(object):
                 style = 'class:menu-bar'
             yield style, item.text, mouse_handler
 
-        result = []
+        result: StyleAndTextTuples = []
         for i, item in enumerate(self.menu_items):
             result.extend(one_item(i, item))
 
         return result
 
-    def _submenu(self, level=0):
-        def get_text_fragments():
-            result = []
+    def _submenu(self, level: int = 0) -> Window:
+        def get_text_fragments() -> StyleAndTextTuples:
+            result: StyleAndTextTuples = []
             if level < len(self.selected_menu):
                 menu = self._get_menu(level)
                 if menu.children:
@@ -241,8 +253,8 @@ class MenuContainer(object):
                     except IndexError:
                         selected_item = -1
 
-                    def one_item(i, item):
-                        def mouse_handler(mouse_event):
+                    def one_item(i: int, item: MenuItem) -> Iterable[OneStyleAndTextTuple]:
+                        def mouse_handler(mouse_event: MouseEvent) -> None:
                             if mouse_event.event_type == MouseEventType.MOUSE_UP:
                                 app = get_app()
                                 if item.handler:
@@ -290,16 +302,20 @@ class MenuContainer(object):
             style='class:menu')
 
     @property
-    def floats(self):
+    def floats(self) -> Optional[List[Float]]:
         return self.container.floats
 
-    def __pt_container__(self):
+    def __pt_container__(self) -> Container:
         return self.container
 
 
-class MenuItem(object):
-    def __init__(self, text='', handler=None, children=None, shortcut=None,
-                 disabled=False):
+class MenuItem:
+    def __init__(self, text: str = '',
+                 handler: Optional[Callable[[], None]] = None,
+                 children: Optional[List['MenuItem']] = None,
+                 shortcut: Optional[Sequence[Union[Keys, str]]] = None,
+                 disabled: bool = False) -> None:
+
         self.text = text
         self.handler = handler
         self.children = children or []
@@ -308,7 +324,7 @@ class MenuItem(object):
         self.selected_item = 0
 
     @property
-    def width(self):
+    def width(self) -> int:
         if self.children:
             return max(get_cwidth(c.text) for c in self.children)
         else:

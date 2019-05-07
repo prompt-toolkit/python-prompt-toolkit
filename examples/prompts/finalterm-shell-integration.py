@@ -3,8 +3,6 @@
 Mark the start and end of the prompt with Final term (iterm2) escape sequences.
 See: https://iterm2.com/finalterm.html
 """
-from __future__ import unicode_literals
-
 import sys
 
 from prompt_toolkit import prompt

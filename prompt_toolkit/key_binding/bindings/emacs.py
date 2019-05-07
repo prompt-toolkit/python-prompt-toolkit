@@ -1,8 +1,6 @@
 # pylint: disable=function-redefined
-from __future__ import unicode_literals
-
 from prompt_toolkit.application.current import get_app
-from prompt_toolkit.buffer import SelectionType, indent, unindent
+from prompt_toolkit.buffer import Buffer, SelectionType, indent, unindent
 from prompt_toolkit.completion import CompleteEvent
 from prompt_toolkit.filters import (
     Condition,
@@ -14,9 +12,10 @@ from prompt_toolkit.filters import (
     is_read_only,
     vi_search_direction_reversed,
 )
+from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.keys import Keys
 
-from ..key_bindings import ConditionalKeyBindings, KeyBindings
+from ..key_bindings import ConditionalKeyBindings, KeyBindings, KeyBindingsBase
 from .named_commands import get_by_name
 
 __all__ = [
@@ -24,8 +23,10 @@ __all__ = [
     'load_emacs_search_bindings',
 ]
 
+E = KeyPressEvent
 
-def load_emacs_bindings():
+
+def load_emacs_bindings() -> KeyBindingsBase:
     """
     Some e-macs extensions.
     """
@@ -37,7 +38,7 @@ def load_emacs_bindings():
     insert_mode = emacs_insert_mode
 
     @handle('escape')
-    def _(event):
+    def _(event: E) -> None:
         """
         By default, ignore escape key.
 
@@ -92,37 +93,37 @@ def load_emacs_bindings():
     handle('c-x', 'e')(get_by_name('call-last-kbd-macro'))
 
     @handle('c-n')
-    def _(event):
+    def _(event: E) -> None:
         " Next line. "
         event.current_buffer.auto_down()
 
     @handle('c-p')
-    def _(event):
+    def _(event: E) -> None:
         " Previous line. "
         event.current_buffer.auto_up(count=event.arg)
 
-    def handle_digit(c):
+    def handle_digit(c: str) -> None:
         """
         Handle input of arguments.
         The first number needs to be preceded by escape.
         """
         @handle(c, filter=has_arg)
         @handle('escape', c)
-        def _(event):
+        def _(event: E) -> None:
             event.append_to_arg_count(c)
 
     for c in '0123456789':
         handle_digit(c)
 
     @handle('escape', '-', filter=~has_arg)
-    def _(event):
+    def _(event: E) -> None:
         """
         """
         if event._arg is None:
             event.append_to_arg_count('-')
 
     @handle('-', filter=Condition(lambda: get_app().key_processor.arg == '-'))
-    def _(event):
+    def _(event: E) -> None:
         """
         When '-' is typed again, after exactly '-' has been given as an
         argument, ignore this.
@@ -130,7 +131,7 @@ def load_emacs_bindings():
         event.app.key_processor.arg = '-'
 
     @Condition
-    def is_returnable():
+    def is_returnable() -> bool:
         return get_app().current_buffer.is_returnable
 
     # Meta + Enter: always accept input.
@@ -141,7 +142,7 @@ def load_emacs_bindings():
     handle('enter', filter=insert_mode & is_returnable & ~is_multiline)(
         get_by_name('accept-line'))
 
-    def character_search(buff, char, count):
+    def character_search(buff: Buffer, char: str, count: int) -> None:
         if count < 0:
             match = buff.document.find_backwards(char, in_current_line=True, count=-count)
         else:
@@ -151,36 +152,36 @@ def load_emacs_bindings():
             buff.cursor_position += match
 
     @handle('c-]', Keys.Any)
-    def _(event):
+    def _(event: E) -> None:
         " When Ctl-] + a character is pressed. go to that character. "
         # Also named 'character-search'
         character_search(event.current_buffer, event.data, event.arg)
 
     @handle('escape', 'c-]', Keys.Any)
-    def _(event):
+    def _(event: E) -> None:
         " Like Ctl-], but backwards. "
         # Also named 'character-search-backward'
         character_search(event.current_buffer, event.data, -event.arg)
 
     @handle('escape', 'a')
-    def _(event):
+    def _(event: E) -> None:
         " Previous sentence. "
         # TODO:
 
     @handle('escape', 'e')
-    def _(event):
+    def _(event: E) -> None:
         " Move to end of sentence. "
         # TODO:
 
     @handle('escape', 't', filter=insert_mode)
-    def _(event):
+    def _(event: E) -> None:
         """
         Swap the last two words before the cursor.
         """
         # TODO
 
     @handle('escape', '*', filter=insert_mode)
-    def _(event):
+    def _(event: E) -> None:
         """
         `meta-*`: Insert all possible completions of the preceding text.
         """
@@ -195,7 +196,7 @@ def load_emacs_bindings():
         buff.insert_text(text_to_insert)
 
     @handle('c-x', 'c-x')
-    def _(event):
+    def _(event: E) -> None:
         """
         Move cursor back and forth between the start and end of the current
         line.
@@ -208,7 +209,7 @@ def load_emacs_bindings():
             buffer.cursor_position += buffer.document.get_end_of_line_position()
 
     @handle('c-@')  # Control-space or Control-@
-    def _(event):
+    def _(event: E) -> None:
         """
         Start of the selection (if the current buffer is not empty).
         """
@@ -218,7 +219,7 @@ def load_emacs_bindings():
             buff.start_selection(selection_type=SelectionType.CHARACTERS)
 
     @handle('c-g', filter= ~has_selection)
-    def _(event):
+    def _(event: E) -> None:
         """
         Control + G: Cancel completion menu and validation state.
         """
@@ -226,7 +227,7 @@ def load_emacs_bindings():
         event.current_buffer.validation_error = None
 
     @handle('c-g', filter=has_selection)
-    def _(event):
+    def _(event: E) -> None:
         """
         Cancel selection.
         """
@@ -234,7 +235,7 @@ def load_emacs_bindings():
 
     @handle('c-w', filter=has_selection)
     @handle('c-x', 'r', 'k', filter=has_selection)
-    def _(event):
+    def _(event: E) -> None:
         """
         Cut selected text.
         """
@@ -242,7 +243,7 @@ def load_emacs_bindings():
         event.app.clipboard.set_data(data)
 
     @handle('escape', 'w', filter=has_selection)
-    def _(event):
+    def _(event: E) -> None:
         """
         Copy selected text.
         """
@@ -250,7 +251,7 @@ def load_emacs_bindings():
         event.app.clipboard.set_data(data)
 
     @handle('escape', 'left')
-    def _(event):
+    def _(event: E) -> None:
         """
         Cursor to start of previous word.
         """
@@ -258,7 +259,7 @@ def load_emacs_bindings():
         buffer.cursor_position += buffer.document.find_previous_word_beginning(count=event.arg) or 0
 
     @handle('escape', 'right')
-    def _(event):
+    def _(event: E) -> None:
         """
         Cursor to start of next word.
         """
@@ -267,7 +268,7 @@ def load_emacs_bindings():
             buffer.document.get_end_of_document_position()
 
     @handle('escape', '/', filter=insert_mode)
-    def _(event):
+    def _(event: E) -> None:
         """
         M-/: Complete.
         """
@@ -278,7 +279,7 @@ def load_emacs_bindings():
             b.start_completion(select_first=True)
 
     @handle('c-c', '>', filter=has_selection)
-    def _(event):
+    def _(event: E) -> None:
         """
         Indent selected text.
         """
@@ -293,7 +294,7 @@ def load_emacs_bindings():
         indent(buffer, from_, to + 1, count=event.arg)
 
     @handle('c-c', '<', filter=has_selection)
-    def _(event):
+    def _(event: E) -> None:
         """
         Unindent selected text.
         """
@@ -308,7 +309,7 @@ def load_emacs_bindings():
     return ConditionalKeyBindings(key_bindings, emacs_mode)
 
 
-def load_emacs_search_bindings():
+def load_emacs_search_bindings() -> KeyBindingsBase:
     key_bindings = KeyBindings()
     handle = key_bindings.add
     from . import search
@@ -346,7 +347,7 @@ def load_emacs_search_bindings():
     handle('/', filter=is_read_only & vi_search_direction_reversed)(search.start_reverse_incremental_search)
 
     @handle('n', filter=is_read_only)
-    def _(event):
+    def _(event: E) -> None:
         " Jump to next match. "
         event.current_buffer.apply_search(
             event.app.current_search_state,
@@ -354,7 +355,7 @@ def load_emacs_search_bindings():
             count=event.arg)
 
     @handle('N', filter=is_read_only)
-    def _(event):
+    def _(event: E) -> None:
         " Jump to previous match. "
         event.current_buffer.apply_search(
             ~event.app.current_search_state,

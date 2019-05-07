@@ -1,17 +1,13 @@
-from __future__ import unicode_literals
-
 import os
 import select
 from codecs import getincrementaldecoder
-
-import six
 
 __all__ = [
     'PosixStdinReader',
 ]
 
 
-class PosixStdinReader(object):
+class PosixStdinReader:
     """
     Wrapper around stdin which reads (nonblocking) the next available 1024
     bytes and decodes it.
@@ -36,9 +32,7 @@ class PosixStdinReader(object):
     # of junk.  One occurrence of this that I had was when using iTerm2 on OS X,
     # with "Option as Meta" checked (You should choose "Option as +Esc".)
 
-    def __init__(self, stdin_fd,
-                 errors=('ignore' if six.PY2 else 'surrogateescape')):
-        assert isinstance(stdin_fd, int)
+    def __init__(self, stdin_fd: int, errors: str = 'surrogateescape') -> None:
         self.stdin_fd = stdin_fd
         self.errors = errors
 
@@ -51,7 +45,7 @@ class PosixStdinReader(object):
         #: True when there is nothing anymore to read.
         self.closed = False
 
-    def read(self, count=1024):
+    def read(self, count: int = 1024) -> str:
             # By default we choose a rather small chunk size, because reading
             # big amounts of input at once, causes the event loop to process
             # all these key bindings also at once without going back to the

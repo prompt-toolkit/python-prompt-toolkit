@@ -1,13 +1,11 @@
 """
 The default styling.
 """
-from __future__ import absolute_import, unicode_literals
-
 from prompt_toolkit.cache import memoized
 
 from .base import ANSI_COLOR_NAMES
 from .named_colors import NAMED_COLORS
-from .style import Style, merge_styles
+from .style import BaseStyle, Style, merge_styles
 
 __all__ = [
     'default_ui_style',
@@ -248,7 +246,7 @@ PYGMENTS_DEFAULT_STYLE = {
 
 
 @memoized()
-def default_ui_style():
+def default_ui_style() -> BaseStyle:
     """
     Create a default `Style` object.
     """
@@ -260,7 +258,7 @@ def default_ui_style():
 
 
 @memoized()
-def default_pygments_style():
+def default_pygments_style() -> Style:
     """
     Create a `Style` object that contains the default Pygments style.
     """

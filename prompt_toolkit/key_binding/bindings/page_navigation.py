@@ -2,12 +2,11 @@
 Key bindings for extra page navigation: bindings for up/down scrolling through
 long pages, like in Emacs or Vi.
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit.filters import buffer_has_focus, emacs_mode, vi_mode
 from prompt_toolkit.key_binding.key_bindings import (
     ConditionalKeyBindings,
     KeyBindings,
+    KeyBindingsBase,
     merge_key_bindings,
 )
 
@@ -29,7 +28,7 @@ __all__ = [
 ]
 
 
-def load_page_navigation_bindings():
+def load_page_navigation_bindings() -> KeyBindingsBase:
     """
     Load both the Vi and Emacs bindings for page navigation.
     """
@@ -43,7 +42,7 @@ def load_page_navigation_bindings():
         ]), buffer_has_focus)
 
 
-def load_emacs_page_navigation_bindings():
+def load_emacs_page_navigation_bindings() -> KeyBindingsBase:
     """
     Key bindings, for scrolling up and down through pages.
     This are separate bindings, because GNU readline doesn't have them.
@@ -59,7 +58,7 @@ def load_emacs_page_navigation_bindings():
     return ConditionalKeyBindings(key_bindings, emacs_mode)
 
 
-def load_vi_page_navigation_bindings():
+def load_vi_page_navigation_bindings() -> KeyBindingsBase:
     """
     Key bindings, for scrolling up and down through pages.
     This are separate bindings, because GNU readline doesn't have them.

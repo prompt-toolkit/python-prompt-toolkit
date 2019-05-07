@@ -1,10 +1,11 @@
-from __future__ import unicode_literals
+from typing import Optional
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.enums import SYSTEM_BUFFER
 from prompt_toolkit.filters import (
     Condition,
+    FilterOrBool,
     emacs_mode,
     has_arg,
     has_completions,
@@ -14,15 +15,26 @@ from prompt_toolkit.filters import (
     vi_mode,
     vi_navigation_mode,
 )
-from prompt_toolkit.formatted_text import fragment_list_len, to_formatted_text
+from prompt_toolkit.formatted_text import (
+    AnyFormattedText,
+    StyleAndTextTuples,
+    fragment_list_len,
+    to_formatted_text,
+)
 from prompt_toolkit.key_binding.key_bindings import (
     ConditionalKeyBindings,
     KeyBindings,
+    KeyBindingsBase,
     merge_key_bindings,
 )
+from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.key_binding.vi_state import InputMode
 from prompt_toolkit.keys import Keys
-from prompt_toolkit.layout.containers import ConditionalContainer, Window
+from prompt_toolkit.layout.containers import (
+    ConditionalContainer,
+    Container,
+    Window,
+)
 from prompt_toolkit.layout.controls import (
     BufferControl,
     FormattedTextControl,
@@ -44,27 +56,29 @@ __all__ = [
     'ValidationToolbar',
 ]
 
+E = KeyPressEvent
+
 
 class FormattedTextToolbar(Window):
-    def __init__(self, text, **kw):
-        # The style needs to be applied to the toolbar as a whole, not just the
-        # `FormattedTextControl`.
-        style = kw.pop('style', '')
-
-        super(FormattedTextToolbar, self).__init__(
+    def __init__(self, text: AnyFormattedText, style: str = '', **kw) -> None:
+        # Note: The style needs to be applied to the toolbar as a whole, not
+        #       just the `FormattedTextControl`.
+        super().__init__(
             FormattedTextControl(text, **kw),
             style=style,
             dont_extend_height=True,
             height=Dimension(min=1))
 
 
-class SystemToolbar(object):
+class SystemToolbar:
     """
     Toolbar for a system prompt.
 
     :param prompt: Prompt to be displayed to the user.
     """
-    def __init__(self, prompt='Shell command: ', enable_global_bindings=True):
+    def __init__(self, prompt: AnyFormattedText = 'Shell command: ',
+                 enable_global_bindings: FilterOrBool = True) -> None:
+
         self.prompt = prompt
         self.enable_global_bindings = to_filter(enable_global_bindings)
 
@@ -87,14 +101,14 @@ class SystemToolbar(object):
             content=self.window,
             filter=has_focus(self.system_buffer))
 
-    def _get_display_before_text(self):
+    def _get_display_before_text(self) -> StyleAndTextTuples:
         return [
             ('class:system-toolbar', 'Shell command: '),
             ('class:system-toolbar.text', self.system_buffer.text),
             ('', '\n'),
         ]
 
-    def _build_key_bindings(self):
+    def _build_key_bindings(self) -> KeyBindingsBase:
         focused = has_focus(self.system_buffer)
 
         # Emacs
@@ -104,13 +118,13 @@ class SystemToolbar(object):
         @handle('escape', filter=focused)
         @handle('c-g', filter=focused)
         @handle('c-c', filter=focused)
-        def _(event):
+        def _(event: E) -> None:
             " Hide system prompt. "
             self.system_buffer.reset()
             event.app.layout.focus_last()
 
         @handle('enter', filter=focused)
-        def _(event):
+        def _(event: E) -> None:
             " Run system command. "
             event.app.run_system_command(
                 self.system_buffer.text,
@@ -124,14 +138,14 @@ class SystemToolbar(object):
 
         @handle('escape', filter=focused)
         @handle('c-c', filter=focused)
-        def _(event):
+        def _(event: E) -> None:
             " Hide system prompt. "
             event.app.vi_state.input_mode = InputMode.NAVIGATION
             self.system_buffer.reset()
             event.app.layout.focus_last()
 
         @handle('enter', filter=focused)
-        def _(event):
+        def _(event: E) -> None:
             " Run system command. "
             event.app.vi_state.input_mode = InputMode.NAVIGATION
             event.app.run_system_command(
@@ -146,12 +160,12 @@ class SystemToolbar(object):
         handle = global_bindings.add
 
         @handle(Keys.Escape, '!', filter= ~focused & emacs_mode, is_global=True)
-        def _(event):
+        def _(event: E) -> None:
             " M-'!' will focus this user control. "
             event.app.layout.focus(self.window)
 
         @handle('!', filter=~focused & vi_mode & vi_navigation_mode, is_global=True)
-        def _(event):
+        def _(event: E) -> None:
             " Focus. "
             event.app.vi_state.input_mode = InputMode.INSERT
             event.app.layout.focus(self.window)
@@ -162,13 +176,13 @@ class SystemToolbar(object):
             ConditionalKeyBindings(global_bindings, self.enable_global_bindings),
         ])
 
-    def __pt_container__(self):
+    def __pt_container__(self) -> Container:
         return self.container
 
 
-class ArgToolbar(object):
-    def __init__(self):
-        def get_formatted_text():
+class ArgToolbar:
+    def __init__(self) -> None:
+        def get_formatted_text() -> StyleAndTextTuples:
             arg = get_app().key_processor.arg or ''
             if arg == '-':
                 arg = '-1'
@@ -186,28 +200,30 @@ class ArgToolbar(object):
             content=self.window,
             filter=has_arg)
 
-    def __pt_container__(self):
+    def __pt_container__(self) -> Container:
         return self.container
 
 
-class SearchToolbar(object):
+class SearchToolbar:
     """
     :param vi_mode: Display '/' and '?' instead of I-search.
     :param ignore_case: Search case insensitive.
     """
-    def __init__(self, search_buffer=None, vi_mode=False,
-                 text_if_not_searching='', forward_search_prompt='I-search: ',
-                 backward_search_prompt='I-search backward: ', ignore_case=False):
-        assert search_buffer is None or isinstance(search_buffer, Buffer)
+    def __init__(self, search_buffer: Optional[Buffer] = None,
+                 vi_mode: bool = False,
+                 text_if_not_searching: AnyFormattedText = '',
+                 forward_search_prompt: AnyFormattedText = 'I-search: ',
+                 backward_search_prompt: AnyFormattedText = 'I-search backward: ',
+                 ignore_case: FilterOrBool = False) -> None:
 
         if search_buffer is None:
             search_buffer = Buffer()
 
         @Condition
-        def is_searching():
+        def is_searching() -> bool:
             return self.control in get_app().layout.search_links
 
-        def get_before_input():
+        def get_before_input() -> AnyFormattedText:
             if not is_searching():
                 return text_if_not_searching
             elif self.control.searcher_search_state.direction == SearchDirection.BACKWARD:
@@ -233,12 +249,14 @@ class SearchToolbar(object):
                 style='class:search-toolbar'),
             filter=is_searching)
 
-    def __pt_container__(self):
+    def __pt_container__(self) -> Container:
         return self.container
 
 
 class _CompletionsToolbarControl(UIControl):
-    def create_content(self, width, height):
+    def create_content(self, width: int, height: int) -> UIContent:
+        all_fragments: StyleAndTextTuples = []
+
         complete_state = get_app().current_buffer.complete_state
         if complete_state:
             completions = complete_state.completions
@@ -252,7 +270,7 @@ class _CompletionsToolbarControl(UIControl):
             cut_right = False
 
             # Create Menu content.
-            fragments = []
+            fragments: StyleAndTextTuples = []
 
             for i, c in enumerate(completions):
                 # When there is no more place for the next completion
@@ -278,26 +296,24 @@ class _CompletionsToolbarControl(UIControl):
             fragments = fragments[:content_width]
 
             # Return fragments
-            all_fragments = [
-                ('', ' '),
-                ('class:completion-toolbar.arrow', '<' if cut_left else ' '),
-                ('', ' '),
-            ] + fragments + [
-                ('', ' '),
-                ('class:completion-toolbar.arrow', '>' if cut_right else ' '),
-                ('', ' '),
-            ]
-        else:
-            all_fragments = []
+            all_fragments.append(('', ' '))
+            all_fragments.append(('class:completion-toolbar.arrow', '<' if cut_left else ' '))
+            all_fragments.append(('', ' '))
 
-        def get_line(i):
+            all_fragments.extend(fragments)
+
+            all_fragments.append(('', ' '))
+            all_fragments.append(('class:completion-toolbar.arrow', '>' if cut_right else ' '))
+            all_fragments.append(('', ' '))
+
+        def get_line(i: int) -> StyleAndTextTuples:
             return all_fragments
 
         return UIContent(get_line=get_line, line_count=1)
 
 
-class CompletionsToolbar(object):
-    def __init__(self):
+class CompletionsToolbar:
+    def __init__(self) -> None:
         self.container = ConditionalContainer(
             content=Window(
                 _CompletionsToolbarControl(),
@@ -305,13 +321,13 @@ class CompletionsToolbar(object):
                 style='class:completion-toolbar'),
             filter=has_completions)
 
-    def __pt_container__(self):
+    def __pt_container__(self) -> Container:
         return self.container
 
 
-class ValidationToolbar(object):
-    def __init__(self, show_position=False):
-        def get_formatted_text():
+class ValidationToolbar:
+    def __init__(self, show_position: bool = False) -> None:
+        def get_formatted_text() -> StyleAndTextTuples:
             buff = get_app().current_buffer
 
             if buff.validation_error:
@@ -334,5 +350,5 @@ class ValidationToolbar(object):
             content=Window(self.control, height=1),
             filter=has_validation_error)
 
-    def __pt_container__(self):
+    def __pt_container__(self) -> Container:
         return self.container

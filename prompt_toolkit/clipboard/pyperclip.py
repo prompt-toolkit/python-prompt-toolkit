@@ -1,4 +1,4 @@
-from __future__ import absolute_import, unicode_literals
+from typing import Optional
 
 import pyperclip
 from prompt_toolkit.selection import SelectionType
@@ -15,15 +15,14 @@ class PyperclipClipboard(Clipboard):
     Clipboard that synchronizes with the Windows/Mac/Linux system clipboard,
     using the pyperclip module.
     """
-    def __init__(self):
-        self._data = None
+    def __init__(self) -> None:
+        self._data: Optional[ClipboardData] = None
 
-    def set_data(self, data):
-        assert isinstance(data, ClipboardData)
+    def set_data(self, data: ClipboardData) -> None:
         self._data = data
         pyperclip.copy(data.text)
 
-    def get_data(self):
+    def get_data(self) -> ClipboardData:
         text = pyperclip.paste()
 
         # When the clipboard data is equal to what we copied last time, reuse
