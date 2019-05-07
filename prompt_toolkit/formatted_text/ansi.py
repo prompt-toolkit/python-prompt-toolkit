@@ -219,14 +219,14 @@ class ANSI:
         """
         # Escape all the arguments.
         args = tuple(ansi_escape(a) for a in args)
-        kwargs = dict((k, ansi_escape(v)) for k, v in kwargs.items())
+        kwargs = {k: ansi_escape(v) for k, v in kwargs.items()}
 
         return ANSI(self.value.format(*args, **kwargs))
 
 
 # Mapping of the ANSI color codes to their names.
-_fg_colors = dict((v, k) for k, v in FG_ANSI_COLORS.items())
-_bg_colors = dict((v, k) for k, v in BG_ANSI_COLORS.items())
+_fg_colors = {v: k for k, v in FG_ANSI_COLORS.items()}
+_bg_colors = {v: k for k, v in BG_ANSI_COLORS.items()}
 
 # Mapping of the escape codes for 256colors to their 'ffffff' value.
 _256_colors = {}

@@ -1043,9 +1043,10 @@ class WindowRenderInfo:
 
     @property
     def visible_line_to_input_line(self) -> Dict[int, int]:
-        return dict(
-            (visible_line, rowcol[0])
-            for visible_line, rowcol in self.visible_line_to_row_col.items())
+        return {
+            visible_line: rowcol[0]
+            for visible_line, rowcol in self.visible_line_to_row_col.items()
+        }
 
     @property
     def cursor_position(self) -> Point:
@@ -1626,7 +1627,7 @@ class Window(Container):
                 return
 
             # Find row/col position first.
-            yx_to_rowcol = dict((v, k) for k, v in rowcol_to_yx.items())
+            yx_to_rowcol = {v: k for k, v in rowcol_to_yx.items()}
             y = mouse_event.position.y
             x = mouse_event.position.x
 

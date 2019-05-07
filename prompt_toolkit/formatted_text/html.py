@@ -94,7 +94,7 @@ class HTML:
         """
         # Escape all the arguments.
         escaped_args = [html_escape(a) for a in args]
-        escaped_kwargs = dict((k, html_escape(v)) for k, v in kwargs.items())
+        escaped_kwargs = {k: html_escape(v) for k, v in kwargs.items()}
 
         return HTML(self.value.format(*escaped_args, **escaped_kwargs))
 

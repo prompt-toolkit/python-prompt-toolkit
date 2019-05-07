@@ -660,7 +660,7 @@ class TabsProcessor(Processor):
 
         def display_to_source(display_pos: int) -> int:
             " Maps display cursor position to the original one. "
-            position_mappings_reversed = dict((v, k) for k, v in position_mappings.items())
+            position_mappings_reversed = {v: k for k, v in position_mappings.items()}
 
             while display_pos >= 0:
                 try:

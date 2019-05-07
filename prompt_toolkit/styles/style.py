@@ -25,8 +25,8 @@ __all__ = [
     'merge_styles',
 ]
 
-_named_colors_lowercase = dict(
-    (k.lower(), v.lstrip('#')) for k, v in NAMED_COLORS.items())
+_named_colors_lowercase = {
+    k.lower(): v.lstrip('#') for k, v in NAMED_COLORS.items()}
 
 
 def parse_color(text: str) -> str:
