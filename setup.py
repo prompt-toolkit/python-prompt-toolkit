@@ -30,6 +30,7 @@ setup(
     install_requires=[
         'wcwidth',
     ],
+    python_requires='>=3.6',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
