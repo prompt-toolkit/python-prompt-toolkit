@@ -19,7 +19,7 @@ simple message box. For instance:
 
     message_dialog(
         title='Example dialog window',
-        text='Do you want to continue?\nPress ENTER to quit.')
+        text='Do you want to continue?\nPress ENTER to quit.').run()
 
 .. image:: ../images/dialogs/messagebox.png
 
@@ -36,7 +36,7 @@ input box. It will return the user input as a string.
 
     text = input_dialog(
         title='Input dialog example',
-        text='Please type your name:')
+        text='Please type your name:').run()
 
 .. image:: ../images/dialogs/inputbox.png
 
@@ -58,7 +58,7 @@ confirmation dialog. It will return a boolean according to the selection.
 
     result = yes_no_dialog(
         title='Yes/No dialog example',
-        text='Do you want to confirm?')
+        text='Do you want to confirm?').run()
 
 .. image:: ../images/dialogs/confirm.png
 
@@ -82,7 +82,7 @@ each providing the label (first) and return value if clicked (second).
             ('No', False),
             ('Maybe...', None)
         ],
-    )
+    ).run()
 
 .. image:: ../images/dialogs/button.png
 
@@ -106,7 +106,7 @@ each providing the return value (first element) and the displayed value (second 
             ("breakfast2", "French breakfast"), 
             ("breakfast3", "Equestrian breakfast") 
         ] 
-    )
+    ).run()
 
 
 Checkbox list dialog
@@ -127,7 +127,7 @@ The :func:`~prompt_toolkit.shortcuts.checkboxlist_dialog` has the same usage and
             ("croissants", "20 Croissants"),
             ("daily", "The breakfast of the day")
         ] 
-    )
+    ).run()
 
 
 Styling of dialogs
@@ -155,7 +155,7 @@ dialogs to override the default style. Also, text can be styled by passing an
         title=HTML('<style bg="blue" fg="white">Styled</style> '
                    '<style fg="ansired">dialog</style> window'),
         text='Do you want to continue?\nPress ENTER to quit.',
-        style=example_style)
+        style=example_style).run()
 
 .. image:: ../images/dialogs/styled.png
 
@@ -267,4 +267,4 @@ Threfore we can customize each of these elements separately, using for instance:
             'frame.label': '#fcaca3',
             'dialog.body label': '#fd8bb6',
         })
-    )
+    ).run()
