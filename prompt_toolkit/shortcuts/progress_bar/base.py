@@ -26,6 +26,7 @@ from typing import (
     Generator,
     Generic,
     Iterable,
+    TextIO,
     List,
     Optional,
     Sequence,
@@ -118,7 +119,7 @@ class ProgressBar:
                  bottom_toolbar: AnyFormattedText = None,
                  style: Optional[BaseStyle] = None,
                  key_bindings: Optional[KeyBindings] = None,
-                 file=None,
+                 file: Optional[TextIO] = None,
                  color_depth: Optional[ColorDepth] = None,
                  output: Optional[Output] = None,
                  input: Optional[Input] = None) -> None:
@@ -126,7 +127,7 @@ class ProgressBar:
         self.title = title
         self.formatters = formatters or create_default_formatters()
         self.bottom_toolbar = bottom_toolbar
-        self.counters: List[ProgressBarCounter] = []
+        self.counters: List[ProgressBarCounter[object]] = []
         self.style = style
         self.key_bindings = key_bindings
 
@@ -208,7 +209,7 @@ class ProgressBar:
 
         return self
 
-    def __exit__(self, *a) -> None:
+    def __exit__(self, *a: object) -> None:
         # Quit UI application.
         if self.app.is_running:
             self.app.exit()
@@ -280,12 +281,15 @@ class _ProgressControl(UIControl):
         return self._key_bindings
 
 
-class ProgressBarCounter(Generic[_T]):
+_CounterItem = TypeVar('_CounterItem', covariant=True)
+
+
+class ProgressBarCounter(Generic[_CounterItem]):
     """
     An individual counter (A progress bar can have multiple counters).
     """
     def __init__(self, progress_bar: ProgressBar,
-                 data: Optional[Iterable[_T]] = None,
+                 data: Optional[Iterable[_CounterItem]] = None,
                  label: AnyFormattedText = '',
                  remove_when_done: bool = False,
                  total: Optional[int] = None) -> None:
@@ -307,7 +311,7 @@ class ProgressBarCounter(Generic[_T]):
         else:
             self.total = total
 
-    def __iter__(self) -> Iterable[_T]:
+    def __iter__(self) -> Iterable[_CounterItem]:
         try:
             if self.data is not None:
                 for item in self.data:

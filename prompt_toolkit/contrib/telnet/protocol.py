@@ -5,6 +5,7 @@ specification, but sufficient for a command line interface.)
 Inspired by `Twisted.conch.telnet`.
 """
 import struct
+from typing import Callable, Generator
 
 from .log import logger
 
@@ -59,33 +60,35 @@ class TelnetProtocolParser:
         p = TelnetProtocolParser(data_received, size_received)
         p.feed(binary_data)
     """
-    def __init__(self, data_received_callback, size_received_callback):
+    def __init__(self, data_received_callback: Callable[[bytes], None],
+                 size_received_callback: Callable[[int, int], None]) -> None:
+
         self.data_received_callback = data_received_callback
         self.size_received_callback = size_received_callback
 
         self._parser = self._parse_coroutine()
-        self._parser.send(None)
+        self._parser.send(None)  # type: ignore
 
-    def received_data(self, data):
+    def received_data(self, data: bytes) -> None:
         self.data_received_callback(data)
 
-    def do_received(self, data):
+    def do_received(self, data: bytes) -> None:
         """ Received telnet DO command. """
         logger.info('DO %r', data)
 
-    def dont_received(self, data):
+    def dont_received(self, data: bytes) -> None:
         """ Received telnet DONT command. """
         logger.info('DONT %r', data)
 
-    def will_received(self, data):
+    def will_received(self, data: bytes) -> None:
         """ Received telnet WILL command. """
         logger.info('WILL %r', data)
 
-    def wont_received(self, data):
+    def wont_received(self, data: bytes) -> None:
         """ Received telnet WONT command. """
         logger.info('WONT %r', data)
 
-    def command_received(self, command, data):
+    def command_received(self, command: bytes, data: bytes) -> None:
         if command == DO:
             self.do_received(data)
 
@@ -101,7 +104,7 @@ class TelnetProtocolParser:
         else:
             logger.info('command received %r %r', command, data)
 
-    def naws(self, data):
+    def naws(self, data: bytes) -> None:
         """
         Received NAWS. (Window dimensions.)
         """
@@ -114,19 +117,18 @@ class TelnetProtocolParser:
         else:
             logger.warning('Wrong number of NAWS bytes')
 
-    def negotiate(self, data):
+    def negotiate(self, data: bytes) -> None:
         """
         Got negotiate data.
         """
         command, payload = data[0:1], data[1:]
-        assert isinstance(command, bytes)
 
         if command == NAWS:
             self.naws(payload)
         else:
             logger.info('Negotiate (%r got bytes)', len(data))
 
-    def _parse_coroutine(self):
+    def _parse_coroutine(self) -> Generator[None, bytes, None]:
         """
         Parser state machine.
         Every 'yield' expression returns the next byte.
@@ -146,7 +148,7 @@ class TelnetProtocolParser:
 
                 # Handle simple commands.
                 elif d2 in (NOP, DM, BRK, IP, AO, AYT, EC, EL, GA):
-                    self.command_received(d2, None)
+                    self.command_received(d2, b'')
 
                 # Handle IAC-[DO/DONT/WILL/WONT] commands.
                 elif d2 in (DO, DONT, WILL, WONT):
@@ -174,7 +176,7 @@ class TelnetProtocolParser:
             else:
                 self.received_data(d)
 
-    def feed(self, data: bytes):
+    def feed(self, data: bytes) -> None:
         """
         Feed data to the parser.
         """

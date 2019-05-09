@@ -37,6 +37,7 @@ from typing import (
     Optional,
     Tuple,
     Union,
+    cast,
 )
 
 from prompt_toolkit.application import Application
@@ -436,7 +437,7 @@ class PromptSession:
         """
         @Condition
         def dynamic() -> bool:
-            value = getattr(self, attr_name)
+            value = cast(FilterOrBool, getattr(self, attr_name))
             return to_filter(value)()
         return dynamic
 

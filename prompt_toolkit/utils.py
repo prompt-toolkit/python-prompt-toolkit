@@ -108,7 +108,7 @@ class DummyContext:
     def __enter__(self) -> None:
         pass
 
-    def __exit__(self, *a) -> None:
+    def __exit__(self, *a: object) -> None:
         pass
 
 

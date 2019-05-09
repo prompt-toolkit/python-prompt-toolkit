@@ -532,7 +532,7 @@ class raw_mode:
             self.handle, self.original_mode.value &
             ~(ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT))
 
-    def __exit__(self, *a, **kw):
+    def __exit__(self, *a: object) -> None:
         # Restore original mode
         windll.kernel32.SetConsoleMode(self.handle, self.original_mode)
 

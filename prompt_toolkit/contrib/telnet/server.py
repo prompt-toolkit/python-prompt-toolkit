@@ -4,17 +4,17 @@ Telnet server.
 import contextvars
 import socket
 from asyncio import ensure_future, get_event_loop
-from typing import Callable, List, Optional, Set, TextIO, Tuple, cast
+from typing import Callable, List, Optional, Set, TextIO, Tuple, cast, Awaitable
 
 from prompt_toolkit.application.current import create_app_session, get_app
 from prompt_toolkit.application.run_in_terminal import run_in_terminal
 from prompt_toolkit.data_structures import Size
-from prompt_toolkit.formatted_text import to_formatted_text
+from prompt_toolkit.formatted_text import to_formatted_text, AnyFormattedText
 from prompt_toolkit.input.posix_pipe import PosixPipeInput
 from prompt_toolkit.output.vt100 import Vt100_Output
 from prompt_toolkit.renderer import \
     print_formatted_text as print_formatted_text
-from prompt_toolkit.styles import DummyStyle
+from prompt_toolkit.styles import DummyStyle, BaseStyle
 
 from .log import logger
 from .protocol import (
@@ -40,7 +40,7 @@ def int2byte(number: int) -> bytes:
     return bytes((number, ))
 
 
-def _initialize_telnet(connection):
+def _initialize_telnet(connection: socket.socket) -> None:
     logger.info('Initializing telnet connection')
 
     # Iac Do Linemode
@@ -65,7 +65,7 @@ class _ConnectionStdout:
     Wrapper around socket which provides `write` and `flush` methods for the
     Vt100_Output output.
     """
-    def __init__(self, connection: 'TelnetConnection', encoding: str) -> None:
+    def __init__(self, connection: socket.socket, encoding: str) -> None:
         self._encoding = encoding
         self._connection = connection
         self._errors = 'strict'
@@ -96,8 +96,10 @@ class TelnetConnection:
     """
     Class that represents one Telnet connection.
     """
-    def __init__(self, conn, addr: Tuple[str, int], interact: Callable,
-                 server: 'TelnetServer', encoding: str, style) -> None:
+    def __init__(self, conn: socket.socket, addr: Tuple[str, int],
+                 interact: Callable[['TelnetConnection'], Awaitable[None]],
+                 server: 'TelnetServer', encoding: str,
+                 style: Optional[BaseStyle]) -> None:
 
         self.conn = conn
         self.addr = addr
@@ -117,7 +119,7 @@ class TelnetConnection:
         self.vt100_input = PosixPipeInput()
 
         # Create output.
-        def get_size():
+        def get_size() -> Size:
             return self.size
         self.stdout = cast(TextIO, _ConnectionStdout(conn, encoding=encoding))
         self.vt100_output = Vt100_Output(
@@ -127,7 +129,7 @@ class TelnetConnection:
             """ TelnetProtocolParser 'data_received' callback """
             self.vt100_input.send_bytes(data)
 
-        def size_received(rows, columns):
+        def size_received(rows: int, columns: int) -> None:
             """ TelnetProtocolParser 'size_received' callback """
             self.size = Size(rows=rows, columns=columns)
             get_app()._on_resize()
@@ -135,11 +137,11 @@ class TelnetConnection:
         self.parser = TelnetProtocolParser(data_received, size_received)
         self.context: Optional[contextvars.Context] = None
 
-    async def run_application(self):
+    async def run_application(self) -> None:
         """
         Run application.
         """
-        def handle_incoming_data():
+        def handle_incoming_data() -> None:
             data = self.conn.recv(1024)
             if data:
                 self.feed(data)
@@ -148,7 +150,7 @@ class TelnetConnection:
                 logger.info('Connection closed by client. %r %r' % self.addr)
                 self.close()
 
-        async def run():
+        async def run() -> None:
             # Add reader.
             loop = get_event_loop()
             loop.add_reader(self.conn, handle_incoming_data)
@@ -164,7 +166,7 @@ class TelnetConnection:
 
         with create_app_session(input=self.vt100_input, output=self.vt100_output):
             self.context = contextvars.copy_context()
-            return await run()
+            await run()
 
     def feed(self, data: bytes) -> None:
         """
@@ -172,7 +174,7 @@ class TelnetConnection:
         """
         self.parser.feed(data)
 
-    def close(self):
+    def close(self) -> None:
         """
         Closed by client.
         """
@@ -183,14 +185,14 @@ class TelnetConnection:
             get_event_loop().remove_reader(self.conn)
             self.conn.close()
 
-    def send(self, formatted_text):
+    def send(self, formatted_text: AnyFormattedText) -> None:
         """
         Send text to the client.
         """
         formatted_text = to_formatted_text(formatted_text)
         print_formatted_text(self.vt100_output, formatted_text, self.style or DummyStyle())
 
-    def send_above_prompt(self, formatted_text):
+    def send_above_prompt(self, formatted_text: AnyFormattedText) -> None:
         """
         Send text to the client.
         This is asynchronous, returns a `Future`.
@@ -198,10 +200,13 @@ class TelnetConnection:
         formatted_text = to_formatted_text(formatted_text)
         return self._run_in_terminal(lambda: self.send(formatted_text))
 
-    def _run_in_terminal(self, func):
+    def _run_in_terminal(self, func: Callable[[], None]) -> None:
         # Make sure that when an application was active for this connection,
         # that we print the text above the application.
-        self.context.run(run_in_terminal, func)
+        if self.context:
+            self.context.run(run_in_terminal, func)
+        else:
+            raise RuntimeError('Called _run_in_terminal outside `run_application`.')
 
     def erase_screen(self) -> None:
         """
@@ -212,13 +217,18 @@ class TelnetConnection:
         self.vt100_output.flush()
 
 
+async def _dummy_interact(connection: TelnetConnection) -> None:
+    pass
+
+
 class TelnetServer:
     """
     Telnet server implementation.
     """
     def __init__(self, host: str = '127.0.0.1', port: int = 23,
-                 interact: Optional[Callable] = None,
-                 encoding: str = 'utf-8', style=None) -> None:
+                 interact: Callable[[TelnetConnection], Awaitable[None]] = _dummy_interact,
+                 encoding: str = 'utf-8',
+                 style: Optional[BaseStyle] = None) -> None:
 
         self.host = host
         self.port = port
@@ -227,10 +237,10 @@ class TelnetServer:
         self.style = style
 
         self.connections: Set[TelnetConnection] = set()
-        self._listen_socket = None
+        self._listen_socket: Optional[socket.socket] = None
 
     @classmethod
-    def _create_socket(cls, host, port):
+    def _create_socket(cls, host: str, port: int) -> socket.socket:
         # Create and bind socket
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -239,7 +249,7 @@ class TelnetServer:
         s.listen(4)
         return s
 
-    def start(self):
+    def start(self) -> None:
         """
         Start the telnet server.
         Don't forget to call `loop.run_forever()` after doing this.
@@ -249,14 +259,18 @@ class TelnetServer:
 
         get_event_loop().add_reader(self._listen_socket, self._accept)
 
-    def stop(self):
+    def stop(self) -> None:
         if self._listen_socket:
+            get_event_loop().remove_reader(self._listen_socket)
             self._listen_socket.close()
 
-    def _accept(self):
+    def _accept(self) -> None:
         """
         Accept new incoming connection.
         """
+        if self._listen_socket is None:
+            return  # Should not happen. `_accept` is called after `start`.
+
         conn, addr = self._listen_socket.accept()
         logger.info('New connection %r %r', *addr)
 
@@ -266,7 +280,7 @@ class TelnetServer:
         self.connections.add(connection)
 
         # Run application for this connection.
-        async def run():
+        async def run() -> None:
             logger.info('Starting interaction %r %r', *addr)
             try:
                 await connection.run_application()

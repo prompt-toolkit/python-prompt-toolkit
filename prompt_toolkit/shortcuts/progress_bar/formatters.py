@@ -43,7 +43,7 @@ class Formatter(metaclass=ABCMeta):
     """
     @abstractmethod
     def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter',
+               progress: 'ProgressBarCounter[object]',
                width: int) -> AnyFormattedText:
         pass
 
@@ -59,7 +59,7 @@ class Text(Formatter):
         self.text = to_formatted_text(text, style=style)
 
     def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter',
+               progress: 'ProgressBarCounter[object]',
                width: int) -> AnyFormattedText:
         return self.text
 
@@ -85,7 +85,7 @@ class Label(Formatter):
         return label + [('', self.suffix)]
 
     def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter',
+               progress: 'ProgressBarCounter[object]',
                width: int) -> AnyFormattedText:
 
         label = self._add_suffix(progress.label)
@@ -119,7 +119,7 @@ class Percentage(Formatter):
     template = '<percentage>{percentage:>5}%</percentage>'
 
     def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter',
+               progress: 'ProgressBarCounter[object]',
                width: int) -> AnyFormattedText:
 
         return HTML(self.template).format(
@@ -149,7 +149,7 @@ class Bar(Formatter):
         self.unknown = unknown
 
     def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter',
+               progress: 'ProgressBarCounter[object]',
                width: int) -> AnyFormattedText:
 
         # Subtract left, bar_b and right.
@@ -185,7 +185,7 @@ class Progress(Formatter):
     template = '<current>{current:>3}</current>/<total>{total:>3}</total>'
 
     def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter',
+               progress: 'ProgressBarCounter[object]',
                width: int) -> AnyFormattedText:
 
         return HTML(self.template).format(
@@ -213,7 +213,7 @@ class TimeElapsed(Formatter):
     Display the elapsed time.
     """
     def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter',
+               progress: 'ProgressBarCounter[object]',
                width: int) -> AnyFormattedText:
 
         text = _format_timedelta(progress.time_elapsed).rjust(width)
@@ -234,7 +234,7 @@ class TimeLeft(Formatter):
     unknown = '?:??:??'
 
     def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter',
+               progress: 'ProgressBarCounter[object]',
                width: int) -> AnyFormattedText:
 
         time_left = progress.time_left
@@ -260,7 +260,7 @@ class IterationsPerSecond(Formatter):
     template = '<iterations-per-second>{iterations_per_second:.2f}</iterations-per-second>'
 
     def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter',
+               progress: 'ProgressBarCounter[object]',
                width: int) -> AnyFormattedText:
 
         value = progress.current / progress.time_elapsed.total_seconds()
@@ -281,7 +281,7 @@ class SpinningWheel(Formatter):
     characters = r'/-\|'
 
     def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter',
+               progress: 'ProgressBarCounter[object]',
                width: int) -> AnyFormattedText:
 
         index = int(time.time() * 3) % len(self.characters)
@@ -323,7 +323,7 @@ class Rainbow(Formatter):
         self.formatter = formatter
 
     def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter',
+               progress: 'ProgressBarCounter[object]',
                width: int) -> AnyFormattedText:
 
         # Get formatted text from nested formatter, and explode it in

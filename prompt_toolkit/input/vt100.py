@@ -262,7 +262,7 @@ class raw_mode:
             termios.ICRNL | termios.INLCR | termios.IGNCR
         )
 
-    def __exit__(self, *a, **kw):
+    def __exit__(self, *a: object) -> None:
         if self.attrs_before is not None:
             try:
                 termios.tcsetattr(self.fileno, termios.TCSANOW, self.attrs_before)

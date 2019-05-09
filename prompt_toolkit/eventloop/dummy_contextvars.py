@@ -15,7 +15,7 @@ _T = TypeVar('_T')
 
 
 class Context:
-    def run(self, callable: Callable[..., _T], *args: Any, **kwargs: Any):
+    def run(self, callable: Callable[..., _T], *args: Any, **kwargs: Any) -> _T:
         return callable(*args, **kwargs)
 
 
