@@ -254,7 +254,7 @@ def _create_app(dialog: AnyContainer, style: Optional[BaseStyle]) -> Application
         ]),
         mouse_support=True,
         style=style,
-        full_screen=False)
+        full_screen=True)
 
 
 def _return_none() -> None:
