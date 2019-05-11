@@ -1,12 +1,13 @@
-Python Prompt Toolkit 2.0
+Python Prompt Toolkit 3.0
 =========================
 
 .. warning::
 
-    Notice that this is the prompt_toolkit 2.0 documentation. It is
-    incompatible with the 1.0 branch, but much better in many regards. Please
-    read :ref:`Upgrading to prompt_toolkit 2.0 <upgrading_2_0>` for more
-    information.
+    Notice that this is the prompt_toolkit 3.0 documentation. Prompt_toolkit
+    3.0 is still in beta. It is mostly compatible with the 2.0 branch. The
+    difference is that prompt_toolkit 3.0 requires at least Python 3.6. On the
+    plus side, it uses asyncio natively (rather than it's own event loop), and
+    we have type annotations everywhere.
 
 `prompt_toolkit` is a library for building powerful interactive command line
 and terminal applications in Python.
