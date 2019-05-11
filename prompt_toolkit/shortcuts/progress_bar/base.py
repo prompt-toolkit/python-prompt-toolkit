@@ -26,11 +26,11 @@ from typing import (
     Generator,
     Generic,
     Iterable,
-    TextIO,
     List,
     Optional,
     Sequence,
     Sized,
+    TextIO,
     TypeVar,
     cast,
 )
