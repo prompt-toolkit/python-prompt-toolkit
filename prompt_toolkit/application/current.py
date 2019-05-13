@@ -129,12 +129,13 @@ def set_app(app: 'Application[Any]') -> Generator[None, None, None]:
 @contextmanager
 def create_app_session(
         input: Optional['Input'] = None,
-        output: Optional['Output'] = None) -> Generator[None, None, None]:
+        output: Optional['Output'] = None) -> Generator[AppSession, None, None]:
     """
     Create a separate AppSession.
 
     This is useful if there can be multiple individual `AppSession`s going on.
-    Like in the case of an Telnet/SSH server.
+    Like in the case of an Telnet/SSH server. This functionality uses
+    contextvars and requires at least Python 3.7.
     """
     if sys.version_info <= (3, 6):
         raise RuntimeError('Application sessions require Python 3.7.')
@@ -143,6 +144,6 @@ def create_app_session(
 
     token = _current_app_session.set(session)
     try:
-        yield
+        yield session
     finally:
         _current_app_session.reset(token)
