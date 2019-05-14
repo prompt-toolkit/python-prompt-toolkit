@@ -69,7 +69,7 @@ text_field = TextArea(
 )
 
 
-class TextInputDialog(object):
+class TextInputDialog:
     def __init__(self, title='', label_text='', completer=None):
         self.future = Future()
 
@@ -107,7 +107,7 @@ class TextInputDialog(object):
         return self.dialog
 
 
-class MessageDialog(object):
+class MessageDialog:
     def __init__(self, title, text):
         self.future = Future()
 

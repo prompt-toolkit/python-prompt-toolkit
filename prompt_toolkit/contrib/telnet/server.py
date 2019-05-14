@@ -1,7 +1,7 @@
 """
 Telnet server.
 """
-import contextvars
+import contextvars  # Requires Python3.7!
 import socket
 from asyncio import ensure_future, get_event_loop
 from typing import (
