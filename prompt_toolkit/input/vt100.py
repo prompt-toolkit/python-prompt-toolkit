@@ -69,6 +69,8 @@ class Vt100Input(Input):
     def responds_to_cpr(self):
         # When the input is a tty, we assume that CPR is supported.
         # It's not when the input is piped from Pexpect.
+        if os.environ.get('PROMPT_TOOLKIT_NO_CPR', '') == '1':
+            return False
         return self.stdin.isatty()
 
     def attach(self, input_ready_callback):
