@@ -41,7 +41,7 @@ from typing import (
 )
 
 from prompt_toolkit.application import Application
-from prompt_toolkit.application.current import get_app
+from prompt_toolkit.application.current import get_app, get_app_session
 from prompt_toolkit.auto_suggest import AutoSuggest, DynamicAutoSuggest
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.clipboard import (
@@ -367,9 +367,7 @@ class PromptSession:
             erase_when_done: bool = False,
             tempfile_suffix: str = '.txt',
 
-            refresh_interval: float = 0,
-            input: Optional[Input] = None,
-            output: Optional[Output] = None) -> None:
+            refresh_interval: float = 0) -> None:
 
         history = history or InMemoryHistory()
         clipboard = clipboard or InMemoryClipboard()
@@ -377,10 +375,6 @@ class PromptSession:
         # Ensure backwards-compatibility, when `vi_mode` is passed.
         if vi_mode:
             editing_mode = EditingMode.VI
-
-        # Store all settings in this class.
-        self.input = input
-        self.output = output
 
         # Store all settings in this class.
 
@@ -660,10 +654,7 @@ class PromptSession:
             erase_when_done=erase_when_done,
             reverse_vi_search_direction=True,
             color_depth=lambda: self.color_depth,
-
-            # I/O.
-            input=self.input,
-            output=self.output)
+        )
 
         # During render time, make sure that we focus the right search control
         # (if we are searching). - This could be useful if people make the
@@ -952,17 +943,26 @@ class PromptSession:
                 ('class:prompt.arg', ') '),
             ]
 
+    # Expose the Input and Output objects as attributes, mainly for
+    # backward-compatibility.
+
+    @property
+    def input(self) -> Input:
+        return get_app_session().input
+
+    @property
+    def output(self) -> Output:
+        return get_app_session().output
+
 
 def prompt(*a, **kw):
     """ The global `prompt` function. This will create a new `PromptSession`
     instance for every call.  """
-    # Input and output arguments have to be passed to the 'PromptSession'
-    # class, not its method.
-    input = kw.pop('input', None)
-    output = kw.pop('output', None)
+    # History has to be passed to the `PromptSession`, it can't be passed into
+    # the `prompt()` method.
     history = kw.pop('history', None)
 
-    session = PromptSession(input=input, output=output, history=history)
+    session = PromptSession(history=history)
     return session.prompt(*a, **kw)
 
 

@@ -107,7 +107,7 @@ def print_formatted_text(
         if file:
             output = create_output(stdout=file)
         else:
-            output = get_app_session().default_output
+            output = get_app_session().output
 
     assert isinstance(output, Output)
 
@@ -154,7 +154,7 @@ def print_container(container: 'Container', file: Optional[TextIO] = None) -> No
     if file:
         output = create_output(stdout=file)
     else:
-        output = get_app_session().default_output
+        output = get_app_session().output
 
     def exit_immediately() -> None:
         # Use `call_from_executor` to exit "soon", so that we still render one
@@ -172,7 +172,7 @@ def clear() -> None:
     """
     Clear the screen.
     """
-    output = get_app_session().default_output
+    output = get_app_session().output
     output.erase_screen()
     output.cursor_goto(0, 0)
     output.flush()
@@ -182,7 +182,7 @@ def set_title(text: str) -> None:
     """
     Set the terminal title.
     """
-    output = get_app_session().default_output
+    output = get_app_session().output
     output.set_title(text)
 
 

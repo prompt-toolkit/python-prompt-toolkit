@@ -27,16 +27,18 @@ class AppSession:
     Within one such session, interaction with many applications can happen, one
     after the other.
 
-    :param default_input: Use this as a default input for all applications
+    The input/output device is not supposed to change during one session.
+
+    :param input: Use this as a default input for all applications
         running in this session, unless an input is passed to the `Application`
         explicitely.
-    :param default_output: Use this as a default output.
+    :param output: Use this as a default output.
     """
-    def __init__(self, default_input: Optional['Input'] = None,
-                 default_output: Optional['Output'] = None) -> None:
+    def __init__(self, input: Optional['Input'] = None,
+                 output: Optional['Output'] = None) -> None:
 
-        self._default_input = default_input
-        self._default_output = default_output
+        self._input = input
+        self._output = output
 
         # The application will be set dynamically by the `set_app` context
         # manager. This is called in the application itself.
@@ -46,18 +48,18 @@ class AppSession:
         return 'AppSession(app=%r)' % (self.app, )
 
     @property
-    def default_input(self) -> 'Input':
-        if self._default_input is None:
+    def input(self) -> 'Input':
+        if self._input is None:
             from prompt_toolkit.input.defaults import create_input
-            self._default_input = create_input()
-        return self._default_input
+            self._input = create_input()
+        return self._input
 
     @property
-    def default_output(self) -> 'Output':
-        if self._default_output is None:
+    def output(self) -> 'Output':
+        if self._output is None:
             from prompt_toolkit.output.defaults import create_output
-            self._default_output = create_output()
-        return self._default_output
+            self._output = create_output()
+        return self._output
 
 
 _current_app_session: ContextVar['AppSession'] = ContextVar(
@@ -140,7 +142,7 @@ def create_app_session(
     if sys.version_info <= (3, 6):
         raise RuntimeError('Application sessions require Python 3.7.')
 
-    session = AppSession(default_input=input, default_output=output)
+    session = AppSession(input=input, output=output)
 
     token = _current_app_session.set(session)
     try:

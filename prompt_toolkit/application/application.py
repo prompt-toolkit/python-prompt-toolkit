@@ -157,6 +157,10 @@ class Application(Generic[_AppResult]):
     :param after_render: Called right after rendering.
 
     I/O:
+    (Note that the preferred way to change the input/output is by creating an
+    `AppSession` with the required input/output objects. If you need multiple
+    applications running at the same time, you have to create a separate
+    `AppSession` using a `with create_app_session():` block.
 
     :param input: :class:`~prompt_toolkit.input.Input` instance.
     :param output: :class:`~prompt_toolkit.output.Output` instance. (Probably
@@ -243,8 +247,8 @@ class Application(Generic[_AppResult]):
 
         # I/O.
         session = get_app_session()
-        self.output = output or session.default_output
-        self.input = input or session.default_input
+        self.output = output or session.output
+        self.input = input or session.input
 
         # List of 'extra' functions to execute before a Application.run.
         self.pre_run_callables: List[Callable[[], None]] = []
