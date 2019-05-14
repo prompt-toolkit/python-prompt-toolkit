@@ -41,7 +41,7 @@ from typing import (
 )
 
 from prompt_toolkit.application import Application
-from prompt_toolkit.application.current import get_app, get_app_session
+from prompt_toolkit.application.current import get_app
 from prompt_toolkit.auto_suggest import AutoSuggest, DynamicAutoSuggest
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.clipboard import (
@@ -316,6 +316,9 @@ class PromptSession:
         to enable mouse support.
     :param refresh_interval: (number; in seconds) When given, refresh the UI
         every so many seconds.
+    :param input: `Input` object. (Note that the preferred way to change the
+        input/output is by creating an `AppSession`.)
+    :param output: `Output` object.
     """
     _fields = (
         'message', 'lexer', 'completer', 'complete_in_thread', 'is_password',
@@ -367,7 +370,10 @@ class PromptSession:
             erase_when_done: bool = False,
             tempfile_suffix: str = '.txt',
 
-            refresh_interval: float = 0) -> None:
+            refresh_interval: float = 0,
+
+            input: Optional[Input] = None,
+            output: Optional[Output] = None) -> None:
 
         history = history or InMemoryHistory()
         clipboard = clipboard or InMemoryClipboard()
@@ -377,6 +383,8 @@ class PromptSession:
             editing_mode = EditingMode.VI
 
         # Store all settings in this class.
+        self._input = input
+        self._output = output
 
         # Store attributes.
         # (All except 'editing_mode'.)
@@ -654,6 +662,8 @@ class PromptSession:
             erase_when_done=erase_when_done,
             reverse_vi_search_direction=True,
             color_depth=lambda: self.color_depth,
+            input=self._input,
+            output=self._output
         )
 
         # During render time, make sure that we focus the right search control
@@ -948,11 +958,11 @@ class PromptSession:
 
     @property
     def input(self) -> Input:
-        return get_app_session().input
+        return self.app.input
 
     @property
     def output(self) -> Output:
-        return get_app_session().output
+        return self.app.output
 
 
 def prompt(*a, **kw):
