@@ -21,7 +21,15 @@ def create_output(stdout: Optional[TextIO] = None) -> Output:
 
     :param stdout: The stdout object
     """
-    stdout = stdout or sys.__stdout__
+    if stdout is None:
+        # By default, render to stdout. If the output is piped somewhere else,
+        # render to stderr. The prompt_toolkit render output is not meant to be
+        # consumed by something other then a terminal, so this is a reasonable
+        # default.
+        if sys.stdout.isatty():
+            stdout = sys.stdout
+        else:
+            stdout = sys.stderr
 
     if is_windows():
         from .conemu import ConEmuOutput
