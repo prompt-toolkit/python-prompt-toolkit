@@ -33,9 +33,11 @@ from typing import (
     Any,
     Callable,
     Generator,
+    Generic,
     List,
     Optional,
     Tuple,
+    TypeVar,
     Union,
     cast,
 )
@@ -222,8 +224,10 @@ PromptContinuationText = Union[
     Callable[[int, int, int], AnyFormattedText],
 ]
 
+_T = TypeVar('_T')
 
-class PromptSession:
+
+class PromptSession(Generic[_T]):
     """
     PromptSession for a prompt application, which can be used as a GNU Readline
     replacement.
@@ -335,6 +339,7 @@ class PromptSession:
     def __init__(
             self,
             message: AnyFormattedText = '',
+            *,
             multiline: FilterOrBool = False,
             wrap_lines: FilterOrBool = True,
             is_password: FilterOrBool = False,
@@ -453,7 +458,7 @@ class PromptSession:
         def accept(buff: Buffer) -> bool:
             """ Accept the content of the default buffer. This is called when
             the validation succeeds. """
-            self.app.exit(result=buff.document.text)
+            cast(Application[str], self.app).exit(result=buff.document.text)
             return True  # Keep text, we call 'reset' later on.
 
         return Buffer(
@@ -623,7 +628,7 @@ class PromptSession:
         return Layout(layout, default_buffer_window)
 
     def _create_application(
-            self, editing_mode: EditingMode, erase_when_done: bool) -> Application[str]:
+            self, editing_mode: EditingMode, erase_when_done: bool) -> Application[_T]:
         """
         Create the `Application` object.
         """
@@ -635,7 +640,7 @@ class PromptSession:
         prompt_bindings = self._create_prompt_bindings()
 
         # Create application
-        application: Application[str] = Application(
+        application: Application[_T] = Application(
             layout=self.layout,
             style=DynamicStyle(lambda: self.style),
             style_transformation=merge_style_transformations([
@@ -773,24 +778,49 @@ class PromptSession:
             self,
             # When any of these arguments are passed, this value is overwritten
             # in this PromptSession.
-            message=None,  # `message` should go first, because people call it
-                           # as positional argument.
-            editing_mode=None, refresh_interval=None, vi_mode=None, lexer=None,
-            completer=None, complete_in_thread=None, is_password=None,
-            key_bindings=None, bottom_toolbar=None, style=None,
-            color_depth=None, include_default_pygments_style=None,
-            style_transformation=None, swap_light_and_dark_colors=None,
-            rprompt=None, multiline=None, prompt_continuation=None,
-            wrap_lines=None, enable_history_search=None,
-            search_ignore_case=None, complete_while_typing=None,
-            validate_while_typing=None, complete_style=None, auto_suggest=None,
-            validator=None, clipboard=None, mouse_support=None,
-            input_processors=None, reserve_space_for_menu=None,
-            enable_system_prompt=None, enable_suspend=None,
-            enable_open_in_editor=None, tempfile_suffix=None,
+            message: Optional[AnyFormattedText] = None,
+                # `message` should go first, because people call it as
+                # positional argument.
+            *,
+
+            editing_mode: Optional[EditingMode] = None,
+            refresh_interval: Optional[float] = None,
+            vi_mode: Optional[bool] = None,
+            lexer: Optional[Lexer] = None,
+            completer: Optional[Completer] = None,
+            complete_in_thread: Optional[bool] = None,
+            is_password: Optional[bool] = None,
+            key_bindings: Optional[KeyBindingsBase] = None,
+            bottom_toolbar: Optional[AnyFormattedText] = None,
+            style: Optional[BaseStyle] = None,
+            color_depth: Optional[ColorDepth] = None,
+            include_default_pygments_style: Optional[FilterOrBool] = None,
+            style_transformation: Optional[StyleTransformation] = None,
+            swap_light_and_dark_colors: Optional[FilterOrBool] = None,
+            rprompt: Optional[AnyFormattedText] = None,
+            multiline: Optional[FilterOrBool] = None,
+            prompt_continuation: Optional[PromptContinuationText] = None,
+            wrap_lines: Optional[FilterOrBool] = None,
+            enable_history_search: Optional[FilterOrBool] = None,
+            search_ignore_case: Optional[FilterOrBool] = None,
+            complete_while_typing: Optional[FilterOrBool] = None,
+            validate_while_typing: Optional[FilterOrBool] = None,
+            complete_style: Optional[CompleteStyle] = None,
+            auto_suggest: Optional[AutoSuggest] = None,
+            validator: Optional[Validator] = None,
+            clipboard: Optional[Clipboard] = None,
+            mouse_support: Optional[FilterOrBool] = None,
+            input_processors: Optional[List[Processor]] = None,
+            reserve_space_for_menu: Optional[int] = None,
+            enable_system_prompt: Optional[FilterOrBool] = None,
+            enable_suspend: Optional[FilterOrBool] = None,
+            enable_open_in_editor: Optional[FilterOrBool] = None,
+            tempfile_suffix: Optional[str] = None,
 
             # Following arguments are specific to the current `prompt()` call.
-            async_=False, default: str = '', accept_default=False, pre_run=None):
+            default: str = '',
+            accept_default: bool = False,
+            pre_run: Optional[Callable[[], None]] = None) -> _T:
         """
         Display the prompt. All the arguments are a subset of the
         :class:`~.PromptSession` class itself.
@@ -801,8 +831,9 @@ class PromptSession:
 
         Additional arguments, specific for this prompt:
 
-        :param async_: When `True` return a `Future` instead of waiting for the
-            prompt to finish.
+        :param _async: (internal, please call `prompt_async` instead). When
+            `True` return a `Future` instead of waiting for the prompt to
+            finish.
         :param default: The default input text to be shown. (This can be edited
             by the user).
         :param accept_default: When `True`, automatically accept the default
@@ -815,14 +846,210 @@ class PromptSession:
         #       case. (People were changing `Application.editing_mode`
         #       dynamically and surprised that it was reset after every call.)
 
-        # Take settings from 'prompt'-arguments.
-        for name in self._fields:
-            value = locals()[name]
-            if value is not None:
-                setattr(self, name, value)
-
+        # NOTE 2: YES, this is a lot of repeation below...
+        #         However, it is a very convenient for a user to accept all
+        #         these parameters in this `prompt` method as well. We could
+        #         use `locals()` and `setattr` to avoid the repetition, but
+        #         then we loose the advantage of mypy and pyflakes to be able
+        #         to verify the code.
+        if message is not None:
+            self.message = message
+        if editing_mode is not None:
+            self.editing_mode = editing_mode
+        if refresh_interval is not None:
+            self.refresh_interval = refresh_interval
         if vi_mode:
             self.editing_mode = EditingMode.VI
+        if lexer is not None:
+            self.lexer = lexer
+        if completer is not None:
+            self.completer = completer
+        if complete_in_thread is not None:
+            self.complete_in_thread = complete_in_thread
+        if is_password is not None:
+            self.is_password = is_password
+        if key_bindings is not None:
+            self.key_bindings = key_bindings
+        if bottom_toolbar is not None:
+            self.bottom_toolbar = bottom_toolbar
+        if style is not None:
+            self.style = style
+        if color_depth is not None:
+            self.color_depth = color_depth
+        if include_default_pygments_style is not None:
+            self.include_default_pygments_style = include_default_pygments_style
+        if style_transformation is not None:
+            self.style_transformation = style_transformation
+        if swap_light_and_dark_colors is not None:
+            self.swap_light_and_dark_colors = swap_light_and_dark_colors
+        if rprompt is not None:
+            self.rprompt = rprompt
+        if multiline is not None:
+            self.multiline = multiline
+        if prompt_continuation is not None:
+            self.prompt_continuation = prompt_continuation
+        if wrap_lines is not None:
+            self.wrap_lines = wrap_lines
+        if enable_history_search is not None:
+            self.enable_history_search = enable_history_search
+        if search_ignore_case is not None:
+            self.search_ignore_case = search_ignore_case
+        if complete_while_typing is not None:
+            self.complete_while_typing = complete_while_typing
+        if validate_while_typing is not None:
+            self.validate_while_typing = validate_while_typing
+        if complete_style is not None:
+            self.complete_style = complete_style
+        if auto_suggest is not None:
+            self.auto_suggest = auto_suggest
+        if validator is not None:
+            self.validator = validator
+        if clipboard is not None:
+            self.clipboard = clipboard
+        if mouse_support is not None:
+            self.mouse_support = mouse_support
+        if input_processors is not None:
+            self.input_processors = input_processors
+        if reserve_space_for_menu is not None:
+            self.reserve_space_for_menu = reserve_space_for_menu
+        if enable_system_prompt is not None:
+            self.enable_system_prompt = enable_system_prompt
+        if enable_suspend is not None:
+            self.enable_suspend = enable_suspend
+        if enable_open_in_editor is not None:
+            self.enable_open_in_editor = enable_open_in_editor
+        if tempfile_suffix is not None:
+            self.tempfile_suffix = tempfile_suffix
+
+        self._add_pre_run_callables(pre_run, accept_default)
+
+        with self._auto_refresh_context():
+            self.default_buffer.reset(Document(default))
+            return self.app.run()
+
+    async def prompt_async(
+            self,
+            # When any of these arguments are passed, this value is overwritten
+            # in this PromptSession.
+            message: Optional[AnyFormattedText] = None,
+                # `message` should go first, because people call it as
+                # positional argument.
+            *,
+
+            editing_mode: Optional[EditingMode] = None,
+            refresh_interval: Optional[float] = None,
+            vi_mode: Optional[bool] = None,
+            lexer: Optional[Lexer] = None,
+            completer: Optional[Completer] = None,
+            complete_in_thread: Optional[bool] = None,
+            is_password: Optional[bool] = None,
+            key_bindings: Optional[KeyBindingsBase] = None,
+            bottom_toolbar: Optional[AnyFormattedText] = None,
+            style: Optional[BaseStyle] = None,
+            color_depth: Optional[ColorDepth] = None,
+            include_default_pygments_style: Optional[FilterOrBool] = None,
+            style_transformation: Optional[StyleTransformation] = None,
+            swap_light_and_dark_colors: Optional[FilterOrBool] = None,
+            rprompt: Optional[AnyFormattedText] = None,
+            multiline: Optional[FilterOrBool] = None,
+            prompt_continuation: Optional[PromptContinuationText] = None,
+            wrap_lines: Optional[FilterOrBool] = None,
+            enable_history_search: Optional[FilterOrBool] = None,
+            search_ignore_case: Optional[FilterOrBool] = None,
+            complete_while_typing: Optional[FilterOrBool] = None,
+            validate_while_typing: Optional[FilterOrBool] = None,
+            complete_style: Optional[CompleteStyle] = None,
+            auto_suggest: Optional[AutoSuggest] = None,
+            validator: Optional[Validator] = None,
+            clipboard: Optional[Clipboard] = None,
+            mouse_support: Optional[FilterOrBool] = None,
+            input_processors: Optional[List[Processor]] = None,
+            reserve_space_for_menu: Optional[int] = None,
+            enable_system_prompt: Optional[FilterOrBool] = None,
+            enable_suspend: Optional[FilterOrBool] = None,
+            enable_open_in_editor: Optional[FilterOrBool] = None,
+            tempfile_suffix: Optional[str] = None,
+
+            # Following arguments are specific to the current `prompt()` call.
+            default: str = '',
+            accept_default: bool = False,
+            pre_run: Optional[Callable[[], None]] = None) -> _T:
+
+        if editing_mode is not None:
+            self.editing_mode = editing_mode
+        if refresh_interval is not None:
+            self.refresh_interval = refresh_interval
+        if vi_mode:
+            self.editing_mode = EditingMode.VI
+        if lexer is not None:
+            self.lexer = lexer
+        if completer is not None:
+            self.completer = completer
+        if complete_in_thread is not None:
+            self.complete_in_thread = complete_in_thread
+        if is_password is not None:
+            self.is_password = is_password
+        if key_bindings is not None:
+            self.key_bindings = key_bindings
+        if bottom_toolbar is not None:
+            self.bottom_toolbar = bottom_toolbar
+        if style is not None:
+            self.style = style
+        if color_depth is not None:
+            self.color_depth = color_depth
+        if include_default_pygments_style is not None:
+            self.include_default_pygments_style = include_default_pygments_style
+        if style_transformation is not None:
+            self.style_transformation = style_transformation
+        if swap_light_and_dark_colors is not None:
+            self.swap_light_and_dark_colors = swap_light_and_dark_colors
+        if rprompt is not None:
+            self.rprompt = rprompt
+        if multiline is not None:
+            self.multiline = multiline
+        if prompt_continuation is not None:
+            self.prompt_continuation = prompt_continuation
+        if wrap_lines is not None:
+            self.wrap_lines = wrap_lines
+        if enable_history_search is not None:
+            self.enable_history_search = enable_history_search
+        if search_ignore_case is not None:
+            self.search_ignore_case = search_ignore_case
+        if complete_while_typing is not None:
+            self.complete_while_typing = complete_while_typing
+        if validate_while_typing is not None:
+            self.validate_while_typing = validate_while_typing
+        if complete_style is not None:
+            self.complete_style = complete_style
+        if auto_suggest is not None:
+            self.auto_suggest = auto_suggest
+        if validator is not None:
+            self.validator = validator
+        if clipboard is not None:
+            self.clipboard = clipboard
+        if mouse_support is not None:
+            self.mouse_support = mouse_support
+        if input_processors is not None:
+            self.input_processors = input_processors
+        if reserve_space_for_menu is not None:
+            self.reserve_space_for_menu = reserve_space_for_menu
+        if enable_system_prompt is not None:
+            self.enable_system_prompt = enable_system_prompt
+        if enable_suspend is not None:
+            self.enable_suspend = enable_suspend
+        if enable_open_in_editor is not None:
+            self.enable_open_in_editor = enable_open_in_editor
+        if tempfile_suffix is not None:
+            self.tempfile_suffix = tempfile_suffix
+
+        self._add_pre_run_callables(pre_run, accept_default)
+
+        with self._auto_refresh_context():
+            self.default_buffer.reset(Document(default))
+            return await self.app.run_async()
+
+    def _add_pre_run_callables(self, pre_run: Optional[Callable[[], None]],
+                               accept_default: bool) -> None:
 
         def pre_run2() -> None:
             if pre_run:
@@ -836,20 +1063,7 @@ class PromptSession:
                 get_event_loop().call_soon(
                     self.default_buffer.validate_and_handle)
 
-        def run_sync() -> Any:
-            with self._auto_refresh_context():
-                self.default_buffer.reset(Document(default))
-                return self.app.run(pre_run=pre_run2)
-
-        async def run_async() -> Any:
-            with self._auto_refresh_context():
-                self.default_buffer.reset(Document(default))
-                return await self.app.run_async(pre_run=pre_run2)
-
-        if async_:
-            return ensure_future(run_async())
-        else:
-            return run_sync()
+        self.app.pre_run_callables.append(pre_run2)
 
     @property
     def editing_mode(self) -> EditingMode:
@@ -965,21 +1179,99 @@ class PromptSession:
         return self.app.output
 
 
-def prompt(*a, **kw):
-    """ The global `prompt` function. This will create a new `PromptSession`
-    instance for every call.  """
-    # History has to be passed to the `PromptSession`, it can't be passed into
-    # the `prompt()` method.
-    history = kw.pop('history', None)
+def prompt(
+        message: Optional[AnyFormattedText] = None, *,
+        history: Optional[History] = None,
 
-    session = PromptSession(history=history)
-    return session.prompt(*a, **kw)
+        editing_mode: Optional[EditingMode] = None,
+        refresh_interval: Optional[float] = None,
+        vi_mode: Optional[bool] = None,
+        lexer: Optional[Lexer] = None,
+        completer: Optional[Completer] = None,
+        complete_in_thread: Optional[bool] = None,
+        is_password: Optional[bool] = None,
+        key_bindings: Optional[KeyBindingsBase] = None,
+        bottom_toolbar: Optional[AnyFormattedText] = None,
+        style: Optional[BaseStyle] = None,
+        color_depth: Optional[ColorDepth] = None,
+        include_default_pygments_style: Optional[FilterOrBool] = None,
+        style_transformation: Optional[StyleTransformation] = None,
+        swap_light_and_dark_colors: Optional[FilterOrBool] = None,
+        rprompt: Optional[AnyFormattedText] = None,
+        multiline: Optional[FilterOrBool] = None,
+        prompt_continuation: Optional[PromptContinuationText] = None,
+        wrap_lines: Optional[FilterOrBool] = None,
+        enable_history_search: Optional[FilterOrBool] = None,
+        search_ignore_case: Optional[FilterOrBool] = None,
+        complete_while_typing: Optional[FilterOrBool] = None,
+        validate_while_typing: Optional[FilterOrBool] = None,
+        complete_style: Optional[CompleteStyle] = None,
+        auto_suggest: Optional[AutoSuggest] = None,
+        validator: Optional[Validator] = None,
+        clipboard: Optional[Clipboard] = None,
+        mouse_support: Optional[FilterOrBool] = None,
+        input_processors: Optional[List[Processor]] = None,
+        reserve_space_for_menu: Optional[int] = None,
+        enable_system_prompt: Optional[FilterOrBool] = None,
+        enable_suspend: Optional[FilterOrBool] = None,
+        enable_open_in_editor: Optional[FilterOrBool] = None,
+        tempfile_suffix: Optional[str] = None,
+
+        # Following arguments are specific to the current `prompt()` call.
+        default: str = '',
+        accept_default: bool = False,
+        pre_run: Optional[Callable[[], None]] = None) -> str:
+    """
+    The global `prompt` function. This will create a new `PromptSession`
+    instance for every call.
+    """
+    # The history is the only attribute that has to be passed to the
+    # `PromptSession`, it can't be passed into the `prompt()` method.
+    session: PromptSession[str] = PromptSession(history=history)
+
+    return session.prompt(message,
+        editing_mode=editing_mode,
+        refresh_interval=refresh_interval,
+        vi_mode=vi_mode,
+        lexer=lexer,
+        completer=completer,
+        complete_in_thread=complete_in_thread,
+        is_password=is_password,
+        key_bindings=key_bindings,
+        bottom_toolbar=bottom_toolbar,
+        style=style,
+        color_depth=color_depth,
+        include_default_pygments_style=include_default_pygments_style,
+        style_transformation=style_transformation,
+        swap_light_and_dark_colors=swap_light_and_dark_colors,
+        rprompt=rprompt,
+        multiline=multiline,
+        prompt_continuation=prompt_continuation,
+        wrap_lines=wrap_lines,
+        enable_history_search=enable_history_search,
+        search_ignore_case=search_ignore_case,
+        complete_while_typing=complete_while_typing,
+        validate_while_typing=validate_while_typing,
+        complete_style=complete_style,
+        auto_suggest=auto_suggest,
+        validator=validator,
+        clipboard=clipboard,
+        mouse_support=mouse_support,
+        input_processors=input_processors,
+        reserve_space_for_menu=reserve_space_for_menu,
+        enable_system_prompt=enable_system_prompt,
+        enable_suspend=enable_suspend,
+        enable_open_in_editor=enable_open_in_editor,
+        tempfile_suffix=tempfile_suffix,
+        default=default,
+        accept_default=accept_default,
+        pre_run=pre_run)
 
 
 prompt.__doc__ = PromptSession.prompt.__doc__
 
 
-def create_confirm_session(message: str, suffix: str = ' (y/n) ') -> PromptSession:
+def create_confirm_session(message: str, suffix: str = ' (y/n) ') -> PromptSession[bool]:
     """
     Create a `PromptSession` object for the 'confirm' function.
     """
@@ -1003,7 +1295,7 @@ def create_confirm_session(message: str, suffix: str = ' (y/n) ') -> PromptSessi
         pass
 
     complete_message = merge_formatted_text([message, suffix])
-    session = PromptSession(complete_message, key_bindings=bindings)
+    session: PromptSession[bool] = PromptSession(complete_message, key_bindings=bindings)
     return session
 
 
