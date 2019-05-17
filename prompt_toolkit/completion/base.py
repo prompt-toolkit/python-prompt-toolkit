@@ -258,8 +258,6 @@ class _MergedCompleter(Completer):
 
         # Get all completions from the other completers in a blocking way.
         for completer in self.completers:
-            # Consume async generator -> item can be `AsyncGeneratorItem` or
-            # `Future`.
             async for item in completer.get_completions_async(document, complete_event):
                 yield item
 
