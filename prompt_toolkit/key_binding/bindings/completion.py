@@ -140,7 +140,7 @@ def _display_completions_like_readline(
                 # Ask confirmation if it doesn't fit on the screen.
                 confirm = await create_confirm_session(
                     'Display all {} possibilities?'.format(len(completions)),
-                    ).prompt(async_=True)
+                    ).prompt_async()
 
                 if confirm:
                     # Display pages.
@@ -149,7 +149,7 @@ def _display_completions_like_readline(
 
                         if page != page_count - 1:
                             # Display --MORE-- and go to the next page.
-                            show_more = await _create_more_session('--MORE--').prompt(async_=True)
+                            show_more = await _create_more_session('--MORE--').prompt_async()
 
                             if not show_more:
                                 return
