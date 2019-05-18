@@ -14,9 +14,11 @@ from typing import (
     Callable,
     Dict,
     Iterable,
+    Hashable,
     List,
     Optional,
     Set,
+    Sequence,
     TextIO,
     Tuple,
 )
@@ -111,7 +113,7 @@ assert set(BG_ANSI_COLORS) == set(ANSI_COLOR_NAMES)
 assert set(ANSI_COLORS_TO_RGB) == set(ANSI_COLOR_NAMES)
 
 
-def _get_closest_ansi_color(r, g, b, exclude=()):
+def _get_closest_ansi_color(r: int, g: int, b: int, exclude: Sequence[str] = ()) -> str:
     """
     Find closest ANSI color. Return it by name.
 
@@ -120,14 +122,14 @@ def _get_closest_ansi_color(r, g, b, exclude=()):
     :param b: Blue (Between 0 and 255.)
     :param exclude: A tuple of color names to exclude. (E.g. ``('ansired', )``.)
     """
-    assert isinstance(exclude, tuple)
+    exclude = list(exclude)
 
     # When we have a bit of saturation, avoid the gray-like colors, otherwise,
     # too often the distance to the gray color is less.
     saturation = abs(r - g) + abs(g - b) + abs(b - r)  # Between 0..510
 
     if saturation > 30:
-        exclude += ('ansilightgray', 'ansidarkgray', 'ansiwhite', 'ansiblack')
+        exclude.extend(['ansilightgray', 'ansidarkgray', 'ansiwhite', 'ansiblack'])
 
     # Take the closest color.
     # (Thanks to Pygments for this part.)
@@ -145,27 +147,36 @@ def _get_closest_ansi_color(r, g, b, exclude=()):
     return match
 
 
-class _16ColorCache(dict):
+_ColorCodeAndName = Tuple[int, str]
+
+
+class _16ColorCache:
     """
     Cache which maps (r, g, b) tuples to 16 ansi colors.
 
     :param bg: Cache for background colors, instead of foreground.
     """
-    def __init__(self, bg=False):
-        assert isinstance(bg, bool)
+    def __init__(self, bg: bool = False) -> None:
         self.bg = bg
+        self._cache: Dict[Hashable, _ColorCodeAndName] = {}
 
-    def get_code(self, value, exclude=()):
+    def get_code(self, value: Tuple[int, int, int],
+                 exclude: Sequence[str] = ()) -> _ColorCodeAndName:
         """
         Return a (ansi_code, ansi_name) tuple. (E.g. ``(44, 'ansiblue')``.) for
         a given (r,g,b) value.
         """
-        key = (value, exclude)
-        if key not in self:
-            self[key] = self._get(value, exclude)
-        return self[key]
+        key = (value, tuple(exclude))
+        cache = self._cache
 
-    def _get(self, value, exclude=()):
+        if key not in cache:
+            cache[key] = self._get(value, exclude)
+
+        return cache[key]
+
+    def _get(self, value: Tuple[int, int, int],
+             exclude: Sequence[str] = ()) -> _ColorCodeAndName:
+
         r, g, b = value
         match = _get_closest_ansi_color(r, g, b, exclude=exclude)
 
@@ -175,7 +186,6 @@ class _16ColorCache(dict):
         else:
             code = FG_ANSI_COLORS[match]
 
-        self[value] = code
         return code, match
 
 
@@ -307,7 +317,7 @@ class _EscapeCodeCache(Dict[Attrs, str]):
         # same. (Unless they were explicitly defined to be the same color.)
         fg_ansi = [()]
 
-        def get(color, bg):
+        def get(color: str, bg: bool) -> Tuple[int, ...]:
             table = BG_ANSI_COLORS if bg else FG_ANSI_COLORS
 
             if not color or self.color_depth == ColorDepth.DEPTH_1_BIT:
@@ -419,7 +429,7 @@ class Vt100_Output(Output):
         }
 
     @classmethod
-    def from_pty(cls, stdout, term: Optional[str] = None) -> 'Vt100_Output':
+    def from_pty(cls, stdout: TextIO, term: Optional[str] = None) -> 'Vt100_Output':
         """
         Create an Output class from a pseudo terminal.
         (This will take the dimensions by reading the pseudo
