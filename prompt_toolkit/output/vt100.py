@@ -166,7 +166,7 @@ class _16ColorCache:
         Return a (ansi_code, ansi_name) tuple. (E.g. ``(44, 'ansiblue')``.) for
         a given (r,g,b) value.
         """
-        key = (value, tuple(exclude))
+        key: Hashable = (value, tuple(exclude))
         cache = self._cache
 
         if key not in cache:
@@ -315,47 +315,49 @@ class _EscapeCodeCache(Dict[Attrs, str]):
         # When requesting ANSI colors only, and both fg/bg color were converted
         # to ANSI, ensure that the foreground and background color are not the
         # same. (Unless they were explicitly defined to be the same color.)
-        fg_ansi = [()]
+        fg_ansi = ''
 
-        def get(color: str, bg: bool) -> Tuple[int, ...]:
+        def get(color: str, bg: bool) -> List[int]:
+            nonlocal fg_ansi
+
             table = BG_ANSI_COLORS if bg else FG_ANSI_COLORS
 
             if not color or self.color_depth == ColorDepth.DEPTH_1_BIT:
-                return ()
+                return []
 
             # 16 ANSI colors. (Given by name.)
             elif color in table:
-                return (table[color], )
+                return [table[color]]
 
             # RGB colors. (Defined as 'ffffff'.)
             else:
                 try:
                     rgb = self._color_name_to_rgb(color)
                 except ValueError:
-                    return ()
+                    return []
 
                 # When only 16 colors are supported, use that.
                 if self.color_depth == ColorDepth.DEPTH_4_BIT:
                     if bg:  # Background.
                         if fg_color != bg_color:
-                            exclude = (fg_ansi[0], )
+                            exclude = [fg_ansi]
                         else:
-                            exclude = ()
+                            exclude = []
                         code, name = _16_bg_colors.get_code(rgb, exclude=exclude)
-                        return (code, )
+                        return [code]
                     else:  # Foreground.
                         code, name = _16_fg_colors.get_code(rgb)
-                        fg_ansi[0] = name
-                        return (code, )
+                        fg_ansi = name
+                        return [code]
 
                 # True colors. (Only when this feature is enabled.)
                 elif self.color_depth == ColorDepth.DEPTH_24_BIT:
                     r, g, b = rgb
-                    return (48 if bg else 38, 2, r, g, b)
+                    return [(48 if bg else 38), 2, r, g, b]
 
                 # 256 RGB colors.
                 else:
-                    return (48 if bg else 38, 5, _256_colors[rgb])
+                    return [(48 if bg else 38), 5, _256_colors[rgb]]
 
         result: List[int] = []
         result.extend(get(fg_color, False))
