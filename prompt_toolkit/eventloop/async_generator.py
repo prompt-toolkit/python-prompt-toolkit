@@ -1,7 +1,7 @@
 """
 Implementation for async generators.
 """
-from asyncio import Queue
+from asyncio import Queue, get_event_loop
 from typing import AsyncGenerator, Callable, Iterable, TypeVar, Union
 
 from .utils import run_in_executor_with_context
@@ -31,6 +31,7 @@ async def generator_to_async_generator(
     quitting = False
     _done = _Done()
     q: Queue[Union[_T, _Done]] = Queue()
+    loop = get_event_loop()
 
     def runner() -> None:
         """
@@ -39,7 +40,7 @@ async def generator_to_async_generator(
         """
         try:
             for item in get_iterable():
-                q.put_nowait(item)
+                loop.call_soon_threadsafe(q.put_nowait, item)
 
                 # When this async generator was cancelled (closed), stop this
                 # thread.
