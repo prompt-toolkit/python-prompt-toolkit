@@ -1035,7 +1035,7 @@ async def _do_wait_for_enter(wait_text: AnyFormattedText) -> None:
         " Disallow typing. "
         pass
 
-    session = PromptSession(
+    session: PromptSession[None] = PromptSession(
         message=wait_text,
         key_bindings=key_bindings)
     await session.app.run_async()

@@ -181,7 +181,6 @@ class ThreadedCompleter(Completer):
     can already select a completion, even if not all completions are displayed.
     """
     def __init__(self, completer: Completer) -> None:
-        assert isinstance(completer, Completer), 'Got %r' % (completer, )
         self.completer = completer
 
     def get_completions(
