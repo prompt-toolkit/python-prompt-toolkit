@@ -48,7 +48,7 @@ async def generator_to_async_generator(
                     break
 
         finally:
-            q.put_nowait(_done)
+            loop.call_soon_threadsafe(q.put_nowait, _done)
 
     # Start background thread.
     run_in_executor_with_context(runner)
