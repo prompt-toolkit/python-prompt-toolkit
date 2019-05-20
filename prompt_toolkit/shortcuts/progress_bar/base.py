@@ -8,6 +8,7 @@ Progress bar implementation on top of prompt_toolkit.
             ...
 """
 import contextlib
+import contextvars
 import datetime
 import functools
 import os
@@ -36,6 +37,7 @@ from typing import (
 )
 
 from prompt_toolkit.application import Application
+from prompt_toolkit.application.current import get_app_session
 from prompt_toolkit.filters import Condition, is_done, renderer_height_is_known
 from prompt_toolkit.formatted_text import (
     AnyFormattedText,
@@ -134,8 +136,8 @@ class ProgressBar:
         # Note that we use __stderr__ as default error output, because that
         # works best with `patch_stdout`.
         self.color_depth = color_depth
-        self.output = output or create_output(stdout=file or sys.__stderr__)
-        self.input = input
+        self.output = output or get_app_session().output
+        self.input = input or get_app_session().input
 
         self._thread: Optional[threading.Thread] = None
 
@@ -197,7 +199,9 @@ class ProgressBar:
                     traceback.print_exc()
                     print(e)
 
-        self._thread = threading.Thread(target=run)
+        ctx: contextvars.Context = contextvars.copy_context()
+
+        self._thread = threading.Thread(target=ctx.run, args=(run, ))
         self._thread.start()
 
         # Attach WINCH signal handler in main thread.
