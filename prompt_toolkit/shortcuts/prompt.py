@@ -975,6 +975,8 @@ class PromptSession(Generic[_T]):
             accept_default: bool = False,
             pre_run: Optional[Callable[[], None]] = None) -> _T:
 
+        if message is not None:
+            self.message = message
         if editing_mode is not None:
             self.editing_mode = editing_mode
         if refresh_interval is not None:
