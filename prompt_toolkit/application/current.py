@@ -142,6 +142,14 @@ def create_app_session(
     if sys.version_info <= (3, 6):
         raise RuntimeError('Application sessions require Python 3.7.')
 
+    # If no input/output is specified, fall back to the current input/output,
+    # whatever that is.
+    if input is None:
+        input = get_app_session().input
+    if output is None:
+        output = get_app_session().output
+
+    # Create new `AppSession` and activate.
     session = AppSession(input=input, output=output)
 
     token = _current_app_session.set(session)
