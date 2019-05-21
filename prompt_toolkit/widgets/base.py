@@ -575,11 +575,13 @@ _T = TypeVar('_T')
 
 
 class _DialogList(Generic[_T]):
-    class_style_container = None
-    class_style = None
-    class_style_selected = None
-    class_style_checked = None
-    multiple_selection = False
+    open_character: str = ""
+    close_character: str = ""
+    container_style: str = ""
+    default_style: str = ""
+    selected_style: str = ""
+    checked_style: str = ""
+    multiple_selection: bool = False
 
     def _handle_enter(self) -> None:
         if self.multiple_selection:
@@ -592,17 +594,13 @@ class _DialogList(Generic[_T]):
             self.current_value = self.values[self._selected_index][0]
 
     def __init__(self, values: List[Tuple[_T, AnyFormattedText]]) -> None:
-        assert self.class_style_container is not None
-        assert self.class_style is not None
-        assert self.class_style_selected is not None
-        assert self.class_style_checked is not None
         assert len(values) > 0
 
         self.values = values
-        if self.multiple_selection:
-            self.current_values = []
-        else:
-            self.current_value: _T = values[0][0]
+        # current_values will be used in multiple_selection,
+        # current_value will be used otherwise.
+        self.current_values: List[_T] = []
+        self.current_value: _T = values[0][0]
         self._selected_index = 0
 
         # Key bindings.
@@ -654,7 +652,7 @@ class _DialogList(Generic[_T]):
 
         self.window = Window(
             content=self.control,
-            style=self.class_style_container,
+            style=self.container_style,
             right_margins=[
                 ScrollbarMargin(display_arrows=True),
             ],
@@ -680,11 +678,11 @@ class _DialogList(Generic[_T]):
 
             style = ''
             if checked:
-                style += ' %s' % self.class_style_checked
+                style += ' ' + self.checked_style
             if selected:
-                style += ' %s' % self.class_style_selected
+                style += ' ' + self.selected_style
 
-            result.append((style, self.class_style_open))
+            result.append((style, self.open_character))
 
             if selected:
                 result.append(('[SetCursorPosition]', ''))
@@ -694,9 +692,9 @@ class _DialogList(Generic[_T]):
             else:
                 result.append((style, ' '))
 
-            result.append((style, self.class_style_close))
-            result.append((self.class_style, ' '))
-            result.extend(to_formatted_text(value[1], style=self.class_style))
+            result.append((style, self.close_character))
+            result.append((self.default_style, ' '))
+            result.extend(to_formatted_text(value[1], style=self.default_style))
             result.append(('', '\n'))
 
         # Add mouse handler to all fragments.
@@ -716,12 +714,12 @@ class RadioList(_DialogList):
 
     :param values: List of (value, label) tuples.
     """
-    class_style_open = "("
-    class_style_close = ")"
-    class_style_container = "class:radio-list"
-    class_style = "class:radio"
-    class_style_selected = "class:radio-selected"
-    class_style_checked = "class:radio-checked"
+    open_character = "("
+    close_character = ")"
+    container_style = "class:radio-list"
+    default_style = "class:radio"
+    selected_style = "class:radio-selected"
+    checked_style = "class:radio-checked"
     multiple_selection = False
 
 
@@ -731,12 +729,12 @@ class CheckboxList(_DialogList):
 
     :param values: List of (value, label) tuples.
     """
-    class_style_open = "["
-    class_style_close = "]"
-    class_style_container = "class:checkbox-list"
-    class_style = "class:checkbox"
-    class_style_selected = "class:checkbox-selected"
-    class_style_checked = "class:checkbox-checked"
+    open_character = "["
+    close_character = "]"
+    container_style = "class:checkbox-list"
+    default_style = "class:checkbox"
+    selected_style = "class:checkbox-selected"
+    checked_style = "class:checkbox-checked"
     multiple_selection = True
 
 
