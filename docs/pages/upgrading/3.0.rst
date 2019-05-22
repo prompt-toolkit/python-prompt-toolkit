@@ -58,6 +58,36 @@ There are some changes to the eventloop API:
 +-----------------------------------+--------------------------------------+
 
 
+Running on top of asyncio
+-------------------------
+
+For 2.0, you had tell prompt_toolkit to run on top of the asyncio event loop.
+Now it's the default. So, you can simply remove the following two lines:
+
+.. code::
+
+    from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
+    use_asyncio_event_loop()
+
+There is a few little breaking changes though. The following:
+
+.. code::
+
+    # For 2.0
+    result = await PromptSession().prompt('Say something: ', async_=True)
+
+has to be changed into:
+
+.. code::
+
+    # For 3.0
+    result = await PromptSession().prompt_async('Say something: ')
+
+Further, it's impossible to call the `prompt()` function within an asyncio
+application (within a coroutine), because it will try to run the event loop
+again. In that case, always use `prompt_async()`.
+
+
 Changes to the the dialog functions
 -----------------------------------
 

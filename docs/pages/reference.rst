@@ -227,9 +227,8 @@ Eventloop
 .. automodule:: prompt_toolkit.eventloop
     :members: EventLoop, get_traceback_from_context, From, Return,
         ensure_future, create_event_loop, create_asyncio_event_loop,
-        use_asyncio_event_loop, get_event_loop, set_event_loop,
-        run_in_executor, call_from_executor, run_until_complete, Future,
-        InvalidStateError
+        get_event_loop, set_event_loop, run_in_executor, call_from_executor,
+        run_until_complete, Future, InvalidStateError
 
 .. automodule:: prompt_toolkit.eventloop.posix
     :members:
