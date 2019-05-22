@@ -220,11 +220,11 @@ class Buffer:
                  accept_handler: Optional[BufferAcceptHandler] = None,
                  read_only: FilterOrBool = False,
                  multiline: FilterOrBool = True,
-                 on_text_changed: BufferEventHandler = None,
-                 on_text_insert: BufferEventHandler = None,
-                 on_cursor_position_changed: BufferEventHandler = None,
-                 on_completions_changed: BufferEventHandler = None,
-                 on_suggestion_set: BufferEventHandler = None):
+                 on_text_changed: Optional[BufferEventHandler] = None,
+                 on_text_insert: Optional[BufferEventHandler] = None,
+                 on_cursor_position_changed: Optional[BufferEventHandler] = None,
+                 on_completions_changed: Optional[BufferEventHandler] = None,
+                 on_suggestion_set: Optional[BufferEventHandler] = None):
 
         # Accept both filters and booleans as input.
         enable_history_search = to_filter(enable_history_search)

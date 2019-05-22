@@ -55,7 +55,7 @@ class Completion:
         assert self.start_position <= 0
 
     def __repr__(self) -> str:
-        if self.display == self.text:
+        if isinstance(self.display, str) and self.display == self.text:
             return '%s(text=%r, start_position=%r)' % (
                 self.__class__.__name__, self.text, self.start_position)
         else:

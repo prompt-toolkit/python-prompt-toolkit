@@ -80,7 +80,7 @@ def display_completions_like_readline(event: E) -> None:
 
 
 def _display_completions_like_readline(
-        app: 'Application', completions: List[Completion]) -> Future:
+        app: 'Application', completions: List[Completion]) -> 'Future[None]':
     """
     Display the list of completions in columns above the prompt.
     This will ask for a confirmation if there are too many completions to fit

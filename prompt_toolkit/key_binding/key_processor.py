@@ -98,7 +98,7 @@ class KeyProcessor:
 
     def reset(self) -> None:
         self._previous_key_sequence: List[KeyPress] = []
-        self._previous_handler = None
+        self._previous_handler: Optional[Binding] = None
 
         # The queue of keys not yet send to our _process generator/state machine.
         self.input_queue: Deque[KeyPress] = deque()
@@ -304,7 +304,7 @@ class KeyProcessor:
         key_presses = [k for k in key_presses if k.key != Keys.CPRResponse]
         return key_presses
 
-    def _call_handler(self, handler, key_sequence: List[KeyPress]) -> None:
+    def _call_handler(self, handler: Binding, key_sequence: List[KeyPress]) -> None:
         app = get_app()
         was_recording_emacs = app.emacs_state.is_recording
         was_recording_vi = bool(app.vi_state.recording_register)

@@ -50,7 +50,8 @@ AnyFormattedText = Union[
     'MagicFormattedText',
     StyleAndTextTuples,
     # Callable[[], 'AnyFormattedText']  # Recursive definition not supported by mypy.
-    Callable[[], Any]
+    Callable[[], Any],
+    None
 ]
 
 

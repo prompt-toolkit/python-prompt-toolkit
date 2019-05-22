@@ -190,7 +190,7 @@ class _Split(Container):
     def __init__(self, children: Sequence[AnyContainer],
                  window_too_small: Optional[Container] = None,
                  padding: AnyDimension = Dimension.exact(0),
-                 padding_char: str = None,
+                 padding_char: Optional[str] = None,
                  padding_style: str = '',
                  width: AnyDimension = None,
                  height: AnyDimension = None,
@@ -267,7 +267,7 @@ class HSplit(_Split):
                  height: AnyDimension = None,
                  z_index: Optional[int] = None,
                  modal: bool = False,
-                 key_bindings: KeyBindingsBase = None,
+                 key_bindings: Optional[KeyBindingsBase] = None,
                  style: Union[str, Callable[[], str]] = '') -> None:
 
         super().__init__(
@@ -478,7 +478,7 @@ class VSplit(_Split):
                  height: AnyDimension = None,
                  z_index: Optional[int] = None,
                  modal: bool = False,
-                 key_bindings: KeyBindingsBase = None,
+                 key_bindings: Optional[KeyBindingsBase] = None,
                  style: Union[str, Callable[[], str]] = '') -> None:
 
         super().__init__(

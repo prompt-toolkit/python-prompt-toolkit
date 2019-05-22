@@ -6,7 +6,7 @@ from asyncio import get_event_loop
 from contextlib import contextmanager
 from ctypes import pointer, windll
 from ctypes.wintypes import DWORD
-from typing import Callable, ContextManager, Dict, Iterable
+from typing import Callable, ContextManager, Dict, Iterable, Optional
 
 from prompt_toolkit.eventloop import run_in_executor_with_context
 from prompt_toolkit.eventloop.win32 import wait_for_handles
@@ -239,6 +239,8 @@ class ConsoleInputReader:
 
         if self.recognize_paste and self._is_paste(all_keys):
             gen = iter(all_keys)
+            k: Optional[KeyPress]
+
             for k in gen:
                 # Pasting: if the current key consists of text or \n, turn it
                 # into a BracketedPaste.

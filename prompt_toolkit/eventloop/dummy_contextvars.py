@@ -4,7 +4,7 @@ Dummy contextvars implementation, to make prompt_toolkit work on Python 3.6.
 As long as there is only one application running at a time, we don't need the
 real contextvars. So, stuff like the telnet-server and so on requires 3.7.
 """
-from typing import Any, Callable, Generic, TypeVar
+from typing import Any, Callable, Generic, Optional, TypeVar
 
 
 def copy_context() -> 'Context':
@@ -24,7 +24,7 @@ class Token(Generic[_T]):
 
 
 class ContextVar(Generic[_T]):
-    def __init__(self, name: str, *, default: _T = None) -> None:
+    def __init__(self, name: str, *, default: Optional[_T] = None) -> None:
         self._name = name
         self._value = default
 
@@ -32,7 +32,7 @@ class ContextVar(Generic[_T]):
     def name(self) -> str:
         return self._name
 
-    def get(self, default: _T = None) -> _T:
+    def get(self, default: Optional[_T] = None) -> _T:
         result = self._value or default
         if result is None:
             raise LookupError
