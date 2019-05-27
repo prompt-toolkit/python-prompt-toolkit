@@ -25,6 +25,7 @@ from prompt_toolkit.styles import BaseStyle
 from prompt_toolkit.widgets import (
     Box,
     Button,
+    CheckboxList,
     Dialog,
     Label,
     ProgressBar,
@@ -38,6 +39,7 @@ __all__ = [
     'input_dialog',
     'message_dialog',
     'radiolist_dialog',
+    'checkboxlist_dialog',
     'progress_dialog',
 ]
 
@@ -179,6 +181,42 @@ def radiolist_dialog(
         body=HSplit([
             Label(text=text, dont_extend_height=True),
             radio_list,
+        ], padding=1),
+        buttons=[
+            Button(text=ok_text, handler=ok_handler),
+            Button(text=cancel_text, handler=_return_none),
+        ],
+        with_background=True)
+
+    return _create_app(dialog, style)
+
+
+def checkboxlist_dialog(
+        title: AnyFormattedText = '',
+        text: AnyFormattedText = '',
+        ok_text: str = 'Ok',
+        cancel_text: str = 'Cancel',
+        values: Optional[List[Tuple[_T, AnyFormattedText]]] = None,
+        style: Optional[BaseStyle] = None) -> Application[_T]:
+    """
+    Display a simple list of element the user can choose multiple values amongst.
+
+    Several elements can be selected at a time using Arrow keys and Enter.
+    The focus can be moved between the list and the Ok/Cancel button with tab.
+    """
+    if values is None:
+        values = []
+
+    def ok_handler() -> None:
+        get_app().exit(result=cb_list.current_values)
+
+    cb_list = CheckboxList(values)
+
+    dialog = Dialog(
+        title=title,
+        body=HSplit([
+            Label(text=text, dont_extend_height=True),
+            cb_list,
         ], padding=1),
         buttons=[
             Button(text=ok_text, handler=ok_handler),

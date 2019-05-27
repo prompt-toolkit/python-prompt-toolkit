@@ -1,5 +1,6 @@
 from .dialogs import (
     button_dialog,
+    checkboxlist_dialog,
     input_dialog,
     message_dialog,
     progress_dialog,
@@ -27,6 +28,7 @@ __all__ = [
     'input_dialog',
     'message_dialog',
     'progress_dialog',
+    'checkboxlist_dialog',
     'radiolist_dialog',
     'yes_no_dialog',
     'button_dialog',
