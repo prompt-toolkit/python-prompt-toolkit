@@ -13,7 +13,16 @@ container object.
     `prompt_toolkit.shortcuts.dialogs` on the other hand is considered stable.
 """
 from functools import partial
-from typing import Callable, Generic, List, Optional, Tuple, TypeVar, Union
+from typing import (
+    Callable,
+    Generic,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.auto_suggest import AutoSuggest, DynamicAutoSuggest
@@ -583,17 +592,7 @@ class _DialogList(Generic[_T]):
     checked_style: str = ""
     multiple_selection: bool = False
 
-    def _handle_enter(self) -> None:
-        if self.multiple_selection:
-            val = self.values[self._selected_index][0]
-            if val in self.current_values:
-                self.current_values.remove(val)
-            else:
-                self.current_values.append(val)
-        else:
-            self.current_value = self.values[self._selected_index][0]
-
-    def __init__(self, values: List[Tuple[_T, AnyFormattedText]]) -> None:
+    def __init__(self, values: Sequence[Tuple[_T, AnyFormattedText]]) -> None:
         assert len(values) > 0
 
         self.values = values
@@ -658,6 +657,16 @@ class _DialogList(Generic[_T]):
             ],
             dont_extend_height=True)
 
+    def _handle_enter(self) -> None:
+        if self.multiple_selection:
+            val = self.values[self._selected_index][0]
+            if val in self.current_values:
+                self.current_values.remove(val)
+            else:
+                self.current_values.append(val)
+        else:
+            self.current_value = self.values[self._selected_index][0]
+
     def _get_text_fragments(self) -> StyleAndTextTuples:
         def mouse_handler(mouse_event: MouseEvent) -> None:
             """
@@ -708,7 +717,7 @@ class _DialogList(Generic[_T]):
         return self.window
 
 
-class RadioList(_DialogList):
+class RadioList(_DialogList[_T]):
     """
     List of radio buttons. Only one can be checked at the same time.
 
@@ -723,7 +732,7 @@ class RadioList(_DialogList):
     multiple_selection = False
 
 
-class CheckboxList(_DialogList):
+class CheckboxList(_DialogList[_T]):
     """
     List of checkbox buttons. Several can be checked at the same time.
 
@@ -738,7 +747,7 @@ class CheckboxList(_DialogList):
     multiple_selection = True
 
 
-class Checkbox(CheckboxList):
+class Checkbox(CheckboxList[str]):
     """Backward compatibility util: creates a 1-sized CheckboxList
 
     :param text: the text
