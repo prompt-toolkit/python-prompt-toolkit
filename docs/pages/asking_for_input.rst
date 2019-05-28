@@ -902,32 +902,32 @@ asterisks (``*`` characters).
 Prompt in an `asyncio` application
 ----------------------------------
 
+.. note::
+
+    New in prompt_toolkit 3.0. (In prompt_toolkit 2.0 this was possible using a
+    work-around).
+
 For `asyncio <https://docs.python.org/3/library/asyncio.html>`_ applications,
 it's very important to never block the eventloop. However,
 :func:`~prompt_toolkit.shortcuts.prompt` is blocking, and calling this would
-freeze the whole application. A quick fix is to call this function via
-the asyncio ``eventloop.run_in_executor``, but that would cause the user
-interface to run in another thread. (If we have custom key bindings for
-instance, it would be better to run them in the same thread as the other code.)
+freeze the whole application. Asyncio actually won't even allow us to run that
+function within a coroutine.
 
-The answer is to run the prompt_toolkit interface on top of the asyncio event
-loop. First we have to tell prompt_toolkit to use the asyncio event loop. Then
-prompting the user for input is as simple as calling
-:func:`~prompt_toolkit.shortcuts.prompt` with the `async_=True` argument.
+The answer is to call
+:meth:`~prompt_toolkit.shortcuts.PromptSession.prompt_async` instead of
+:meth:`~prompt_toolkit.shortcuts.PromptSession.prompt`. The async variation
+returns a coroutines and is awaitable.
 
 .. code:: python
 
-    from prompt_toolkit import prompt
-    from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
+    from prompt_toolkit import PromptSession
     from prompt_toolkit.patch_stdout import patch_stdout
 
-    # Tell prompt_toolkit to use the asyncio event loop.
-    use_asyncio_event_loop()
-
     async def my_coroutine():
+        session = PromptSession()
         while True:
             with patch_stdout():
-                result = await prompt('Say something: ', async_=True)
+                result = await session.prompt_async('Say something: ')
             print('You said: %s' % result)
 
 The :func:`~prompt_toolkit.patch_stdout.patch_stdout` context manager is
