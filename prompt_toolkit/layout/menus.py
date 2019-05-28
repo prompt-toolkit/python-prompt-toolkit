@@ -39,6 +39,7 @@ from .margins import ScrollbarMargin
 
 if TYPE_CHECKING:
     from prompt_toolkit.key_binding.key_bindings import KeyBindings
+    NotImplementedOrNone = object
 
 __all__ = [
     'CompletionsMenu',
@@ -163,7 +164,7 @@ class CompletionsMenuControl(UIControl):
             [('', padding)],
             style=style_str)
 
-    def mouse_handler(self, mouse_event: MouseEvent) -> Optional['NotImplemented']:
+    def mouse_handler(self, mouse_event: MouseEvent) -> 'NotImplementedOrNone':
         """
         Handle mouse events: clicking and scrolling.
         """

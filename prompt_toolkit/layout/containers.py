@@ -60,6 +60,7 @@ from .utils import explode_text_fragments
 
 if TYPE_CHECKING:
     from typing_extensions import Protocol
+    NotImplementedOrNone = object
 
 __all__ = [
     'Container',
@@ -1635,6 +1636,7 @@ class Window(Container):
             # last line instead.
             max_y = write_position.ypos + len(visible_line_to_row_col) - 1
             y = min(max_y, y)
+            result: NotImplementedOrNone
 
             while x >= 0:
                 try:

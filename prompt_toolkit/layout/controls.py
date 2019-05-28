@@ -51,6 +51,20 @@ if TYPE_CHECKING:
     from prompt_toolkit.key_binding.key_bindings import KeyBindingsBase
     from prompt_toolkit.utils import Event
 
+    # The only two return values for a mouse hander are `None` and
+    # `NotImplemented`. For the type checker it's best to annotate this as
+    # `object`. (The consumer never expects a more specific instance: checking
+    # for NotImplemented can be done using `is NotImplemented`.)
+    NotImplementedOrNone = object
+    # Other non-working options are:
+    # * Optional[Literal[NotImplemented]]
+    #      --> Doesn't work, Literal can't take an Any.
+    # * None
+    #      --> Doesn't work. We can't assign the result of a function that
+    #          returns `None` to a variable.
+    # * Any
+    #      --> Works, but too broad.
+
 
 __all__ = [
     'BufferControl',
@@ -94,7 +108,7 @@ class UIControl(metaclass=ABCMeta):
         Returns a :class:`.UIContent` instance.
         """
 
-    def mouse_handler(self, mouse_event: MouseEvent) -> Optional['NotImplemented']:
+    def mouse_handler(self, mouse_event: MouseEvent) -> 'NotImplementedOrNone':
         """
         Handle mouse events.
 
@@ -389,7 +403,7 @@ class FormattedTextControl(UIControl):
 
         return self._content_cache.get(key, get_content)
 
-    def mouse_handler(self, mouse_event: MouseEvent) -> Optional['NotImplemented']:
+    def mouse_handler(self, mouse_event: MouseEvent) -> 'NotImplementedOrNone':
         """
         Handle mouse events.
 
@@ -747,7 +761,7 @@ class BufferControl(UIControl):
 
         return content
 
-    def mouse_handler(self, mouse_event: MouseEvent) -> Optional['NotImplemented']:
+    def mouse_handler(self, mouse_event: MouseEvent) -> 'NotImplementedOrNone':
         """
         Mouse handler for this control.
         """
