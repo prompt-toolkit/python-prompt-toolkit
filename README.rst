@@ -5,8 +5,7 @@ Python Prompt Toolkit
 
 .. image :: https://github.com/prompt-toolkit/python-prompt-toolkit/raw/master/docs/images/logo_400px.png
 
-*``prompt_toolkit`` is a library for building powerful interactive command line
-applications in Python.*
+``prompt_toolkit`` *is a library for building powerful interactive command line applications in Python.*
 
 Read the `documentation on readthedocs
 <http://python-prompt-toolkit.readthedocs.io/en/stable/>`_.
@@ -14,20 +13,22 @@ Read the `documentation on readthedocs
 NOTICE: prompt_toolkit 3.0
 **************************
 
-Please notice that this branch is the prompt_toolkit 3.0 branch. For most
-users, it should be compatible with prompt_toolkit 2.0, but it requires at
-least Python 3.6. On the plus side, prompt_toolkit 3.0 is completly type
+Please notice that this branch is the ``prompt_toolkit`` **3.0** branch. For most
+users, it should be compatible with ``prompt_toolkit`` **2.0**, but it requires at
+least **Python 3.6**. On the plus side, ``prompt_toolkit`` **3.0** is completly type
 annotated and uses asyncio natively.
 
 
-Ptpython
-********
+Gallery
+*******
 
 `ptpython <http://github.com/prompt-toolkit/ptpython/>`_ is an interactive
-Python Shell, build on top of prompt_toolkit.
+Python Shell, build on top of ``prompt_toolkit``.
 
 .. image :: https://github.com/prompt-toolkit/python-prompt-toolkit/raw/master/docs/images/ptpython.png
 
+`More examples <https://python-prompt-toolkit.readthedocs.io/en/stable/pages/gallery.html>`_
+^^^^
 
 prompt_toolkit features
 ***********************
@@ -38,14 +39,13 @@ more than that.
 
 Some features:
 
-- Pure Python.
+- **Pure Python**.
 - Syntax highlighting of the input while typing. (For instance, with a Pygments lexer.)
 - Multi-line input editing.
 - Advanced code completion.
 - Both Emacs and Vi key bindings. (Similar to readline.)
 - Even some advanced Vi functionality, like named registers and digraphs.
 - Reverse and forward incremental search.
-- Runs on all Python versions from 2.6 up to 3.7.
 - Works well with Unicode double width characters. (Chinese input.)
 - Selecting text for copy/paste. (Both Emacs and Vi style.)
 - Support for `bracketed paste <https://cirw.in/blog/bracketed-paste>`_.
@@ -59,6 +59,20 @@ Some features:
 
 Feel free to create tickets for bugs and feature requests, and create pull
 requests if you have nice patches that you would like to share with others.
+
+
+Installation
+************
+
+::
+
+    pip install prompt_toolkit
+
+For Conda, do:
+
+::
+
+    conda install -c https://conda.anaconda.org/conda-forge prompt_toolkit
 
 
 About Windows support
@@ -76,21 +90,6 @@ general, the Unix experience will still be a little better.
 
 For Windows, it's recommended to use either `cmder
 <http://cmder.net/>`_ or `conemu <https://conemu.github.io/>`_.
-
-
-Installation
-************
-
-::
-
-    pip install prompt_toolkit
-
-For Conda, do:
-
-::
-
-    conda install -c https://conda.anaconda.org/conda-forge prompt_toolkit
-
 
 Getting started
 ***************
@@ -114,71 +113,11 @@ Note for Python 2: all strings are expected to be unicode strings. So, either
 put a small ``u`` in front of every string or put ``from __future__ import
 unicode_literals`` at the start of the above example.
 
-
-Projects using prompt_toolkit
-*****************************
-
-Shells:
-
-- `ptpython <http://github.com/prompt-toolkit/ptpython/>`_: Python REPL
-- `ptpdb <http://github.com/jonathanslenders/ptpdb/>`_: Python debugger (pdb replacement)
-- `pgcli <https://www.pgcli.com/>`_: Postgres client.
-- `mycli <https://www.mycli.net/>`_: MySql client.
-- `litecli <https://litecli.com/>`_: SQLite client.
-- `wharfee <http://wharfee.com/>`_: A Docker command line.
-- `xonsh <http://xon.sh/>`_: A Python-ish, BASHwards-compatible shell.
-- `saws <https://github.com/donnemartin/saws>`_: A Supercharged AWS Command Line Interface.
-- `cycli <https://github.com/nicolewhite/cycli>`_:  A Command Line Interface for Cypher.
-- `crash <https://github.com/crate/crash>`_:  Crate command line client.
-- `vcli <https://github.com/dbcli/vcli>`_: Vertica client.
-- `aws-shell <https://github.com/awslabs/aws-shell>`_: An integrated shell for working with the AWS CLI.
-- `softlayer-python <https://github.com/softlayer/softlayer-python>`_: A command-line interface to manage various SoftLayer products and services.
-- `ipython <http://github.com/ipython/ipython/>`_: The IPython REPL
-- `click-repl <https://github.com/click-contrib/click-repl>`_: Subcommand REPL for click apps.
-- `haxor-news <https://github.com/donnemartin/haxor-news>`_: A Hacker News CLI.
-- `gitsome <https://github.com/donnemartin/gitsome>`_: A Git/Shell Autocompleter with GitHub Integration.
-- `http-prompt <https://github.com/eliangcs/http-prompt>`_: An interactive command-line HTTP client.
-- `coconut <http://coconut-lang.org/>`_: Functional programming in Python.
-- `Ergonomica <https://github.com/ergonomica/ergonomica>`_: A Bash alternative written in Python.
-- `Kube-shell <https://github.com/cloudnativelabs/kube-shell>`_: Kubernetes shell: An integrated shell for working with the Kubernetes CLI
-- `mssql-cli <https://github.com/dbcli/mssql-cli>`_: A command-line client for Microsoft SQL Server.
-- `robotframework-debuglibrary <https://github.com/xyb/robotframework-debuglibrary>`_: A debug library and REPL for RobotFramework.
-- `ptrepl <https://github.com/imomaliev/ptrepl>`_: Run any command as REPL
-- `clipwdmgr <https://github.com/samisalkosuo/clipasswordmgr>`_: Command Line Password Manager.
-- `slacker <https://github.com/netromdk/slacker>`_: Easy access to the Slack API and admin of workspaces via REPL.
-- `EdgeDB <https://edgedb.com/>`_: The next generation object-relational database.
-- `pywit <https://github.com/wit-ai/pywit>`_: Python library for Wit.ai.
-- `objection <https://github.com/sensepost/objection>`_: Runtime Mobile Exploration.
-- `habu <https://github.com/portantier/habu>`_: Python Network Hacking Toolkit.
-- `nawano <https://github.com/rbw/nawano>`_: Nano cryptocurrency wallet
-- `athenacli <https://github.com/dbcli/athenacli>`_: A CLI for AWS Athena.
-- `vulcano <https://github.com/dgarana/vulcano>`_: A framework for creating command-line applications that also runs in REPL mode.
-- `kafka-shell <https://github.com/devshawn/kafka-shell>`_: A supercharged shell for Apache Kafka.
-
-Full screen applications:
-
-- `pymux <http://github.com/prompt-toolkit/pymux/>`_: A terminal multiplexer (like tmux) in pure Python.
-- `pyvim <http://github.com/prompt-toolkit/pyvim/>`_: A Vim clone in pure Python.
-- `freud <http://github.com/stloma/freud/>`_: REST client backed by SQLite for storing servers
-- `pypager <https://github.com/prompt-toolkit/pypager>`_: A $PAGER in pure Python (like "less").
-- `kubeterminal <https://github.com/samisalkosuo/kubeterminal>`_: Kubectl helper tool.
-
-Libraries:
-
-- `ptterm <https://github.com/prompt-toolkit/ptterm>`_: A terminal emulator
-  widget for prompt_toolkit.
-- `PyInquirer <https://github.com/CITGuru/PyInquirer/>`_: A Python library that
-  wants to make it easy for existing Inquirer.js users to write immersive
-  command line applications in Python.
-
-(Want your own project to be listed here? Please create a GitHub issue.)
-
-
 Philosophy
 **********
 
-The source code of ``prompt_toolkit`` should be readable, concise and
-efficient. We prefer short functions focusing each on one task and for which
+The source code of ``prompt_toolkit`` should be **readable**, **concise** and
+**efficient**. We prefer short functions focusing each on one task and for which
 the input and output types are clearly specified. We mostly prefer composition
 over inheritance, because inheritance can result in too much functionality in
 the same object. We prefer immutable objects where possible (objects don't
@@ -191,6 +130,9 @@ while at the higher level, there should be a simpler API, ready-to-use and
 sufficient for most use cases. Thinking about algorithms and efficiency is
 important, but avoid premature optimization.
 
+
+`Projects using prompt_toolkit <PROJECTS.rst>`_
+***********************************************
 
 Special thanks to
 *****************
@@ -217,10 +159,3 @@ Special thanks to
 .. |Codecov| image:: https://codecov.io/gh/prompt-toolkit/python-prompt-toolkit/branch/master/graphs/badge.svg?style=flat
     :target: https://codecov.io/gh/prompt-toolkit/python-prompt-toolkit/
 
-
-Other libraries and implementations in other languages
-******************************************************
-
-- `go-prompt <https://github.com/c-bata/go-prompt>`_: building a powerful
-  interactive prompt in Go, inspired by python-prompt-toolkit.
-- `urwid <http://urwid.org/>`_: Console user interface library for Python.
