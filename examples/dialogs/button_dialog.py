@@ -14,7 +14,7 @@ def main():
             ('No', False),
             ('Maybe...', None),
         ],
-    ).run()
+    )
 
     print('Result = {}'.format(result))
 
