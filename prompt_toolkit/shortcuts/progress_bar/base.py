@@ -306,10 +306,10 @@ class ProgressBarCounter(Generic[_CounterItem]):
         self.start_time = datetime.datetime.now()
         self.progress_bar = progress_bar
         self.data = data
-        self.current = 0
+        self.items_completed = 0
         self.label = label
         self.remove_when_done = remove_when_done
-        self.done = False
+        self._done = False
         self.total: Optional[int]
 
         if total is None:
@@ -324,21 +324,37 @@ class ProgressBarCounter(Generic[_CounterItem]):
         try:
             if self.data is not None:
                 for item in self.data:
-                    self.current += 1
-                    self.progress_bar.invalidate()
                     yield item
+                    self.item_completed()
         finally:
             self.done = True
 
-            if self.remove_when_done:
-                self.progress_bar.counters.remove(self)
+    def item_completed(self) -> None:
+        """
+        Start handling the next item.
+
+        (Can be called manually in case we don't have a collection to loop through.)
+        """
+        self.items_completed += 1
+        self.progress_bar.invalidate()
+
+    @property
+    def done(self) -> bool:
+        return self._done
+
+    @done.setter
+    def done(self, value: bool) -> None:
+        self._done = value
+
+        if value and self.remove_when_done:
+            self.progress_bar.counters.remove(self)
 
     @property
     def percentage(self) -> float:
         if self.total is None:
             return 0
         else:
-            return self.current * 100 / max(self.total, 1)
+            return self.items_completed * 100 / max(self.total, 1)
 
     @property
     def time_elapsed(self) -> datetime.timedelta:

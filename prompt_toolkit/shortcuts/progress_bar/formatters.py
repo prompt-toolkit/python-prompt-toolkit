@@ -189,11 +189,11 @@ class Progress(Formatter):
                width: int) -> AnyFormattedText:
 
         return HTML(self.template).format(
-            current=progress.current,
+            current=progress.items_completed,
             total=progress.total or '?')
 
     def get_width(self, progress_bar: 'ProgressBar') -> AnyDimension:
-        all_lengths = [len('{0:>3}'.format(c.total)) for c in progress_bar.counters]
+        all_lengths = [len('{0:>3}'.format(c.total or '?')) for c in progress_bar.counters]
         all_lengths.append(1)
         return D.exact(max(all_lengths) * 2 + 1)
 
@@ -263,11 +263,11 @@ class IterationsPerSecond(Formatter):
                progress: 'ProgressBarCounter[object]',
                width: int) -> AnyFormattedText:
 
-        value = progress.current / progress.time_elapsed.total_seconds()
+        value = progress.items_completed / progress.time_elapsed.total_seconds()
         return HTML(self.template.format(iterations_per_second=value))
 
     def get_width(self, progress_bar: 'ProgressBar') -> AnyDimension:
-        all_values = [len('{0:.2f}'.format(c.current / c.time_elapsed.total_seconds()))
+        all_values = [len('{0:.2f}'.format(c.items_completed / c.time_elapsed.total_seconds()))
                       for c in progress_bar.counters]
         if all_values:
             return max(all_values)
