@@ -19,8 +19,8 @@ script:
   - flake8 prompt_toolkit
   - coverage run -m pytest
 
-  # Run type checker
-  - mypy prompt_toolkit --ignore-missing-imports --platform win32 | grep -v 'already defined' | true
+  # Run type checker.
+  - mypy prompt_toolkit | grep -v "Name '_' already defined" | true
 
   # Check wheather the imports were sorted correctly.
   # When this fails, please run ./tools/sort-imports.sh

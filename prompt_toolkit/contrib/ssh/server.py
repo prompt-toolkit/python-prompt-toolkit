@@ -58,7 +58,7 @@ class PromptToolkitSession(asyncssh.SSHServerSession):
         return True
 
     def session_started(self) -> None:
-        asyncio.create_task(self._interact())
+        asyncio.ensure_future(self._interact())
 
     async def _interact(self) -> None:
         if self._chan is None:

@@ -258,8 +258,8 @@ class ConsoleInputReader:
                 if k is not None:
                     yield k
         else:
-            for k in all_keys:
-                yield k
+            for k2 in all_keys:
+                yield k2
 
     def _insert_key_data(self, key_press: KeyPress) -> KeyPress:
         """

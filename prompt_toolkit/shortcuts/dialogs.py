@@ -197,7 +197,7 @@ def checkboxlist_dialog(
         ok_text: str = 'Ok',
         cancel_text: str = 'Cancel',
         values: Optional[List[Tuple[_T, AnyFormattedText]]] = None,
-        style: Optional[BaseStyle] = None) -> Application[_T]:
+        style: Optional[BaseStyle] = None) -> Application[List[_T]]:
     """
     Display a simple list of element the user can choose multiple values amongst.
 
