@@ -5,7 +5,9 @@ import sys
 import time
 from asyncio import (
     AbstractEventLoop,
+    CancelledError,
     Future,
+    Task,
     ensure_future,
     get_event_loop,
     sleep,
@@ -14,6 +16,7 @@ from subprocess import Popen
 from traceback import format_tb
 from typing import (
     Any,
+    Awaitable,
     Callable,
     Dict,
     FrozenSet,
@@ -134,6 +137,10 @@ class Application(Generic[_AppResult]):
         scheduled calls), postpone the rendering max x seconds.  '0' means:
         don't postpone. '.5' means: try to draw at least twice a second.
 
+    :param refresh_interval: Automatically invalidate the UI every so many
+        seconds. When `None` (the default), only invalidate when `invalidate`
+        has been called.
+
     Filters:
 
     :param mouse_support: (:class:`~prompt_toolkit.filters.Filter` or
@@ -190,6 +197,7 @@ class Application(Generic[_AppResult]):
                  reverse_vi_search_direction: FilterOrBool = False,
                  min_redraw_interval: Union[float, int, None] = None,
                  max_render_postpone_time: Union[float, int, None] = .01,
+                 refresh_interval: Optional[float] = None,
 
                  on_reset: Optional[ApplicationEventHandler] = None,
                  on_invalidate: Optional[ApplicationEventHandler] = None,
@@ -238,6 +246,7 @@ class Application(Generic[_AppResult]):
         self.enable_page_navigation_bindings = enable_page_navigation_bindings
         self.min_redraw_interval = min_redraw_interval
         self.max_render_postpone_time = max_render_postpone_time
+        self.refresh_interval = refresh_interval
 
         # Events.
         self.on_invalidate = Event(self, on_invalidate)
@@ -386,6 +395,8 @@ class Application(Generic[_AppResult]):
 
         self.exit_style = ''
 
+        self.background_tasks: List[Task] = []
+
         self.renderer.reset()
         self.key_processor.reset()
         self.layout.reset()
@@ -437,7 +448,7 @@ class Application(Generic[_AppResult]):
                 async def redraw_in_future() -> None:
                     await sleep(cast(float, self.min_redraw_interval) - diff)
                     schedule_redraw()
-                ensure_future(redraw_in_future())
+                self.create_background_task(redraw_in_future())
             else:
                 schedule_redraw()
         else:
@@ -487,6 +498,19 @@ class Application(Generic[_AppResult]):
         #       `PromptSession._auto_refresh_context`).
         if self.context is not None:
             self.context.run(run_in_context)
+
+    def _start_auto_refresh_task(self) -> None:
+        """
+        Start a while/true loop in the background for automatic invalidation of
+        the UI.
+        """
+        async def auto_refresh():
+            while True:
+                await sleep(self.refresh_interval)
+                self.invalidate()
+
+        if self.refresh_interval:
+            self.create_background_task(auto_refresh())
 
     def _update_invalidate_events(self) -> None:
         """
@@ -612,7 +636,7 @@ class Application(Generic[_AppResult]):
                     counter = flush_counter
 
                     # Automatically flush keys.
-                    ensure_future(auto_flush_input(counter))
+                    self.create_background_task(auto_flush_input(counter))
 
             async def auto_flush_input(counter: int) -> None:
                 # Flush input after timeout.
@@ -638,6 +662,7 @@ class Application(Generic[_AppResult]):
                     # Draw UI.
                     self._request_absolute_cursor_position()
                     self._redraw()
+                    self._start_auto_refresh_task()
 
                     has_sigwinch = hasattr(signal, 'SIGWINCH') and in_main_thread()
                     if has_sigwinch:
@@ -696,6 +721,12 @@ class Application(Generic[_AppResult]):
                 try:
                     result = await _run_async()
                 finally:
+                    # Wait for the background tasks to be done. This needs to
+                    # go in the finally! If `_run_async` raises
+                    # `KeyboardInterrupt`, we still want to wait for the
+                    # background tasks.
+                    await self.cancel_and_wait_for_background_tasks()
+
                     # Set the `_is_running` flag to `False`. Normally this
                     # happened already in the finally block in `run_async`
                     # above, but in case of exceptions, that's not always the
@@ -717,9 +748,8 @@ class Application(Generic[_AppResult]):
         loop = get_event_loop()
 
         def run() -> _AppResult:
-            f = ensure_future(self.run_async(pre_run=pre_run))
-            get_event_loop().run_until_complete(f)
-            return f.result()
+            coro = self.run_async(pre_run=pre_run)
+            return get_event_loop().run_until_complete(coro)
 
         def handle_exception(loop, context: Dict[str, Any]) -> None:
             " Print the exception, using run_in_terminal. "
@@ -751,6 +781,32 @@ class Application(Generic[_AppResult]):
                 loop.set_exception_handler(previous_exc_handler)
         else:
             return run()
+
+    def create_background_task(self, coroutine: Awaitable[None]) -> None:
+        """
+        Start a background task (coroutine) for the running application.
+        If asyncio had nurseries like Trio, we would create a nursery in
+        `Application.run_async`, and run the given coroutine in that nursery.
+        """
+        self.background_tasks.append(get_event_loop().create_task(coroutine))
+
+    async def cancel_and_wait_for_background_tasks(self) -> None:
+        """
+        Cancel all background tasks, and wait for the cancellation to be done.
+        If any of the background tasks raised an exception, this will also
+        propagate the exception.
+
+        (If we had nurseries like Trio, this would be the `__aexit__` of a
+        nursery.)
+        """
+        for task in self.background_tasks:
+            task.cancel()
+
+        for task in self.background_tasks:
+            try:
+                await task
+            except CancelledError:
+                pass
 
     def cpr_not_supported_callback(self) -> None:
         """

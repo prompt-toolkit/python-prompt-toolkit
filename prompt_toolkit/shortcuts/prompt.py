@@ -24,7 +24,6 @@ Example::
         s = PromptSession()
         result = s.prompt('Say something: ')
 """
-import contextlib
 from asyncio import ensure_future, get_event_loop, sleep
 from enum import Enum
 from functools import partial
@@ -667,6 +666,7 @@ class PromptSession(Generic[_T]):
             erase_when_done=erase_when_done,
             reverse_vi_search_direction=True,
             color_depth=lambda: self.color_depth,
+            refresh_interval=self.refresh_interval,
             input=self._input,
             output=self._output
         )
@@ -752,27 +752,6 @@ class PromptSession(Generic[_T]):
             event.app.suspend_to_background()
 
         return kb
-
-    @contextlib.contextmanager
-    def _auto_refresh_context(self) -> Generator[None, None, None]:
-        " Return a context manager for the auto-refresh loop. "
-        done = False
-
-        # Enter.
-
-        async def run() -> None:
-            while not done:
-                await sleep(self.refresh_interval)
-                self.app.invalidate()
-
-        if self.refresh_interval:
-            ensure_future(run())
-
-        try:
-            yield
-        finally:
-            # Exit.
-            done = True
 
     def prompt(
             self,
@@ -922,10 +901,10 @@ class PromptSession(Generic[_T]):
             self.tempfile_suffix = tempfile_suffix
 
         self._add_pre_run_callables(pre_run, accept_default)
+        self.default_buffer.reset(Document(default))
+        self.app.refresh_interval = self.refresh_interval  # This is not reactive.
 
-        with self._auto_refresh_context():
-            self.default_buffer.reset(Document(default))
-            return self.app.run()
+        return self.app.run()
 
     async def prompt_async(
             self,
@@ -1045,10 +1024,10 @@ class PromptSession(Generic[_T]):
             self.tempfile_suffix = tempfile_suffix
 
         self._add_pre_run_callables(pre_run, accept_default)
+        self.default_buffer.reset(Document(default))
+        self.app.refresh_interval = self.refresh_interval  # This is not reactive.
 
-        with self._auto_refresh_context():
-            self.default_buffer.reset(Document(default))
-            return await self.app.run_async()
+        return await self.app.run_async()
 
     def _add_pre_run_callables(self, pre_run: Optional[Callable[[], None]],
                                accept_default: bool) -> None:
