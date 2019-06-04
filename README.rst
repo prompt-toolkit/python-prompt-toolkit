@@ -79,10 +79,10 @@ About Windows support
 *********************
 
 ``prompt_toolkit`` is cross platform, and everything that you build on top
-should run fine on both Unix and Windows systems. On Windows, it uses a
-different event loop (``WaitForMultipleObjects`` instead of ``select``), and
-another input and output system. (Win32 APIs instead of pseudo-terminals and
-VT100.)
+should run fine on both Unix and Windows systems. Windows support is best on
+recent Windows 10 builds, for which the command line window supports vt100
+escape sequences. (If not supported, we fall back to using Win32 APIs for color
+and cursor movements).
 
 It's worth noting that the implementation is a "best effort of what is
 possible". Both Unix and Windows terminals have their limitations. But in
