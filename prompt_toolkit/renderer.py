@@ -2,7 +2,7 @@
 Renders the command line on the console.
 (Redraws parts of the input line that were changed.)
 """
-from asyncio import FIRST_COMPLETED, Future, ensure_future, sleep, wait
+from asyncio import FIRST_COMPLETED, Future, sleep, wait
 from collections import deque
 from enum import Enum
 from typing import (
@@ -16,6 +16,7 @@ from typing import (
     Tuple,
 )
 
+from prompt_toolkit.application.current import get_app
 from prompt_toolkit.data_structures import Point, Size
 from prompt_toolkit.filters import FilterOrBool, to_filter
 from prompt_toolkit.formatted_text import AnyFormattedText, to_formatted_text
@@ -452,7 +453,7 @@ class Renderer:
                             # Make sure to call this callback in the main thread.
                             self.cpr_not_supported_callback()
 
-                ensure_future(timer())
+                get_app().create_background_task(timer())
 
     def report_absolute_cursor_row(self, row: int) -> None:
         """
@@ -505,11 +506,11 @@ class Renderer:
             # Got timeout, erase queue.
             self._waiting_for_cpr_futures = deque()
 
-        futures = [
-            ensure_future(wait_for_responses()),
-            ensure_future(wait_for_timeout()),
+        coroutines = [
+            wait_for_responses(),
+            wait_for_timeout(),
         ]
-        await wait(futures, return_when=FIRST_COMPLETED)
+        await wait(coroutines, return_when=FIRST_COMPLETED)
 
     def render(self, app: 'Application[Any]', layout: 'Layout',
                is_done: bool = False) -> None:

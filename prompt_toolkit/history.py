@@ -9,8 +9,9 @@ NOTE: Notice that there is no `DynamicHistory`. This doesn't work well, because
 import datetime
 import os
 from abc import ABCMeta, abstractmethod
-from asyncio import ensure_future
 from typing import AsyncGenerator, Iterable, List
+
+from prompt_toolkit.application.current import get_app
 
 from .eventloop import generator_to_async_generator
 from .utils import Event
@@ -59,7 +60,7 @@ class History(metaclass=ABCMeta):
         " Start loading the history. "
         if not self._loading:
             self._loading = True
-            ensure_future(self._start_loading())
+            get_app().create_background_task(self._start_loading())
 
     def get_item_loaded_event(self) -> Event['History']:
         " Event which is triggered when a new item is loaded. "

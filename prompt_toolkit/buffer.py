@@ -464,7 +464,7 @@ class Buffer:
         # (This happens on all change events, unlike auto completion, also when
         # deleting text.)
         if self.validator and self.validate_while_typing():
-            ensure_future(self._async_validator())
+            get_app().create_background_task(self._async_validator())
 
     def _cursor_position_changed(self) -> None:
         # Remove any complete state.
@@ -1144,11 +1144,11 @@ class Buffer:
 
             # Only complete when "complete_while_typing" is enabled.
             if self.completer and self.complete_while_typing():
-                ensure_future(self._async_completer())
+                get_app().create_background_task(self._async_completer())
 
             # Call auto_suggest.
             if self.auto_suggest:
-                ensure_future(self._async_suggester())
+                get_app().create_background_task(self._async_suggester())
 
     def undo(self) -> None:
         # Pop from the undo-stack until we find a text that if different from
@@ -1484,7 +1484,7 @@ class Buffer:
         # Only one of these options can be selected.
         assert select_first + select_last + insert_common_part <= 1
 
-        ensure_future(self._async_completer(
+        get_app().create_background_task(self._async_completer(
             select_first=select_first,
             select_last=select_last,
             insert_common_part=insert_common_part,

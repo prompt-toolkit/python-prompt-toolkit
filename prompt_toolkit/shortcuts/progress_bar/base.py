@@ -7,7 +7,6 @@ Progress bar implementation on top of prompt_toolkit.
         for item in pb(data):
             ...
 """
-import contextlib
 import datetime
 import functools
 import os
@@ -16,7 +15,7 @@ import sys
 import threading
 import traceback
 from asyncio import (
-    ensure_future,
+    CancelledError,
     get_event_loop,
     new_event_loop,
     set_event_loop,
@@ -190,6 +189,7 @@ class ProgressBar:
             ])),
             style=self.style,
             key_bindings=self.key_bindings,
+            refresh_interval=.3,
             color_depth=self.color_depth,
             output=self.output,
             input=self.input)
@@ -197,12 +197,11 @@ class ProgressBar:
         # Run application in different thread.
         def run() -> None:
             set_event_loop(self._app_loop)
-            with _auto_refresh_context(self.app, .3):
-                try:
-                    self.app.run()
-                except BaseException as e:
-                    traceback.print_exc()
-                    print(e)
+            try:
+                self.app.run()
+            except BaseException as e:
+                traceback.print_exc()
+                print(e)
 
         ctx: contextvars.Context = contextvars.copy_context()
 
@@ -230,6 +229,7 @@ class ProgressBar:
 
         if self._thread is not None:
             self._thread.join()
+        self._app_loop.close()
 
     def __call__(self,
                  data: Optional[Iterable[_T]] = None,
@@ -372,28 +372,3 @@ class ProgressBarCounter(Generic[_CounterItem]):
             return None
         else:
             return self.time_elapsed * (100 - self.percentage) / self.percentage
-
-
-@contextlib.contextmanager
-def _auto_refresh_context(
-        app: 'Application', refresh_interval: Optional[float] = None
-) -> Generator[None, None, None]:
-    """
-    Return a context manager for the auto-refresh loop.
-    """
-    done = False
-
-    async def run() -> None:
-        if refresh_interval:
-            while not done:
-                await sleep(refresh_interval)
-                app.invalidate()
-
-    if refresh_interval:
-        ensure_future(run())
-
-    try:
-        yield
-    finally:
-        # Exit.
-        done = True

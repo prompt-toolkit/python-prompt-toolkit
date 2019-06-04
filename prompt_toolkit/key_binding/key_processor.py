@@ -7,7 +7,7 @@ The `KeyProcessor` will according to the implemented keybindings call the
 correct callbacks when new key presses are feed through `feed`.
 """
 import weakref
-from asyncio import ensure_future, sleep
+from asyncio import sleep
 from collections import deque
 from typing import TYPE_CHECKING, Any, Deque, Generator, List, Optional, Union
 
@@ -392,7 +392,8 @@ class KeyProcessor:
         no key was pressed in the meantime, we flush all data in the queue and
         call the appropriate key binding handlers.
         """
-        timeout = get_app().timeoutlen
+        app = get_app()
+        timeout = app.timeoutlen
 
         if timeout is None:
             return
@@ -415,7 +416,7 @@ class KeyProcessor:
         # Automatically flush keys.
         # (_daemon needs to be set, otherwise, this will hang the
         # application for .5 seconds before exiting.)
-        ensure_future(wait())
+        app.create_background_task(wait())
 
 
 class KeyPressEvent:
