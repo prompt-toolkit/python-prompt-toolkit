@@ -6,6 +6,7 @@ import traceback
 from typing import Awaitable, Callable, Optional, TextIO, cast
 
 import asyncssh
+
 from prompt_toolkit.application.current import AppSession, create_app_session
 from prompt_toolkit.data_structures import Size
 from prompt_toolkit.input.posix_pipe import PosixPipeInput
