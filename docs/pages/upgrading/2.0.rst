@@ -204,7 +204,7 @@ rather then inheriting from `Filter`. For instance:
 
 .. code:: python
 
-    from prompt_toolkit.filter import Condition
+    from prompt_toolkit.filters import Condition
 
     @Condition
     def my_filter();
