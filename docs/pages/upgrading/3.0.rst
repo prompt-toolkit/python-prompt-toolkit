@@ -89,7 +89,7 @@ again. In that case, always use `prompt_async()`.
 
 
 Changes to the dialog functions
------------------------------------
+-------------------------------
 
 The original way of using dialog boxes looked like this:
 
