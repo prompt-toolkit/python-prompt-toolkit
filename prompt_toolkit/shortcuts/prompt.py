@@ -797,7 +797,7 @@ class PromptSession(Generic[_T]):
             tempfile_suffix: Optional[str] = None,
 
             # Following arguments are specific to the current `prompt()` call.
-            default: str = '',
+            default: Union[str, Document] = '',
             accept_default: bool = False,
             pre_run: Optional[Callable[[], None]] = None) -> _T:
         """
@@ -901,7 +901,7 @@ class PromptSession(Generic[_T]):
             self.tempfile_suffix = tempfile_suffix
 
         self._add_pre_run_callables(pre_run, accept_default)
-        self.default_buffer.reset(Document(default))
+        self.default_buffer.reset(default if isinstance(default, Document) else Document(default))
         self.app.refresh_interval = self.refresh_interval  # This is not reactive.
 
         return self.app.run()
@@ -950,7 +950,7 @@ class PromptSession(Generic[_T]):
             tempfile_suffix: Optional[str] = None,
 
             # Following arguments are specific to the current `prompt()` call.
-            default: str = '',
+            default: Union[str, Document] = '',
             accept_default: bool = False,
             pre_run: Optional[Callable[[], None]] = None) -> _T:
 
@@ -1024,7 +1024,7 @@ class PromptSession(Generic[_T]):
             self.tempfile_suffix = tempfile_suffix
 
         self._add_pre_run_callables(pre_run, accept_default)
-        self.default_buffer.reset(Document(default))
+        self.default_buffer.reset(default if isinstance(default, Document) else Document(default))
         self.app.refresh_interval = self.refresh_interval  # This is not reactive.
 
         return await self.app.run_async()
