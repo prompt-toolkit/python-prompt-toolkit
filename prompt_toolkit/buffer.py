@@ -2,12 +2,13 @@
 Data structures for the Buffer.
 It holds the text, cursor position, history, etc...
 """
+import asyncio
 import os
 import re
 import shlex
 import subprocess
 import tempfile
-from asyncio import Future, ensure_future
+from asyncio import Task, ensure_future
 from enum import Enum
 from functools import wraps
 from typing import (
@@ -1387,7 +1388,7 @@ class Buffer:
     def exit_selection(self) -> None:
         self.selection_state = None
 
-    def open_in_editor(self, validate_and_handle: bool = False) -> 'Future[None]':
+    def open_in_editor(self, validate_and_handle: bool = False) -> 'asyncio.Task[None]':
         """
         Open code in editor.
 
@@ -1432,7 +1433,7 @@ class Buffer:
                 # Clean up temp file.
                 os.remove(filename)
 
-        return ensure_future(run())
+        return get_app().create_background_task(run())
 
     def _open_file_in_editor(self, filename: str) -> bool:
         """
