@@ -10,7 +10,7 @@ from asyncio import get_event_loop
 
 from prompt_toolkit.contrib.telnet.server import TelnetServer
 from prompt_toolkit.formatted_text import HTML
-from prompt_toolkit.shortcuts import clear, prompt
+from prompt_toolkit.shortcuts import clear, prompt, PromptSession
 
 # Set up logging
 logging.basicConfig()
@@ -29,6 +29,7 @@ COLORS = [
 
 async def interact(connection):
     write = connection.send
+    prompt_session = PromptSession()
 
     # When a client is connected, erase the screen from the client and say
     # Hello.
@@ -36,7 +37,7 @@ async def interact(connection):
     write('Welcome to our chat application!\n')
     write('All connected clients will receive what you say.\n')
 
-    name = await prompt(message='Type your name: ', async_=True)
+    name = await prompt_session.prompt_async(message='Type your name: ')
 
     # Random color.
     color = random.choice(COLORS)
@@ -53,7 +54,7 @@ async def interact(connection):
         # Set Application.
         while True:
             try:
-                result = await prompt(message=prompt_msg, async_=True)
+                result = await prompt_session.prompt_async(message=prompt_msg)
                 _send_to_everyone(connection, name, result, color)
             except KeyboardInterrupt:
                 pass

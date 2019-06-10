@@ -8,7 +8,7 @@ from asyncio import get_event_loop
 
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.contrib.telnet.server import TelnetServer
-from prompt_toolkit.shortcuts import prompt
+from prompt_toolkit.shortcuts import PromptSession
 
 # Set up logging
 logging.basicConfig()
@@ -26,11 +26,11 @@ async def interact(connection):
     def get_toolbar():
         return 'Bottom toolbar...'
 
-    result = await prompt(
+    session = PromptSession()
+    result = await session.prompt_async(
         'Say something: ',
         bottom_toolbar=get_toolbar,
-        completer=animal_completer,
-        async_=True)
+        completer=animal_completer)
 
     connection.send('You said: {}\n'.format(result))
     connection.send('Bye.\n')
