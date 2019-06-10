@@ -1,9 +1,10 @@
 """
 Telnet server.
 """
+import asyncio
 import contextvars  # Requires Python3.7!
 import socket
-from asyncio import ensure_future, get_event_loop
+from asyncio import get_event_loop
 from typing import (
     Awaitable,
     Callable,
@@ -244,6 +245,7 @@ class TelnetServer:
         self.interact = interact
         self.encoding = encoding
         self.style = style
+        self._application_tasks: List[asyncio.Task] = []
 
         self.connections: Set[TelnetConnection] = set()
         self._listen_socket: Optional[socket.socket] = None
@@ -268,10 +270,17 @@ class TelnetServer:
 
         get_event_loop().add_reader(self._listen_socket, self._accept)
 
-    def stop(self) -> None:
+    async def stop(self) -> None:
         if self._listen_socket:
             get_event_loop().remove_reader(self._listen_socket)
             self._listen_socket.close()
+
+        # Wait for all applications to finish.
+        for t in self._application_tasks:
+            t.cancel()
+
+        for t in self._application_tasks:
+            await t
 
     def _accept(self) -> None:
         """
@@ -297,6 +306,8 @@ class TelnetServer:
                 print(e)
             finally:
                 self.connections.remove(connection)
+                self._application_tasks.remove(task)
                 logger.info('Stopping interaction %r %r', *addr)
 
-        ensure_future(run())
+        task = get_event_loop().create_task(run())
+        self._application_tasks.append(task)

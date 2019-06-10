@@ -1,8 +1,8 @@
 """
 Key binding handlers for displaying completions.
 """
+import asyncio
 import math
-from asyncio import Future, ensure_future
 from typing import TYPE_CHECKING, List
 
 from prompt_toolkit.application.run_in_terminal import in_terminal
@@ -80,7 +80,7 @@ def display_completions_like_readline(event: E) -> None:
 
 
 def _display_completions_like_readline(
-        app: 'Application', completions: List[Completion]) -> 'Future[None]':
+        app: 'Application', completions: List[Completion]) -> 'asyncio.Task[None]':
     """
     Display the list of completions in columns above the prompt.
     This will ask for a confirmation if there are too many completions to fit
@@ -159,7 +159,7 @@ def _display_completions_like_readline(
                 # Display all completions.
                 display(0)
 
-    return ensure_future(run_compl())
+    return app.create_background_task(run_compl())
 
 
 def _create_more_session(message: str = '--MORE--') -> 'PromptSession':

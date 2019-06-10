@@ -24,7 +24,7 @@ Example::
         s = PromptSession()
         result = s.prompt('Say something: ')
 """
-from asyncio import ensure_future, get_event_loop, sleep
+from asyncio import get_event_loop, sleep
 from enum import Enum
 from functools import partial
 from typing import (
