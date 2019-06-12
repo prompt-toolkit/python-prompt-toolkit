@@ -88,8 +88,8 @@ application (within a coroutine), because it will try to run the event loop
 again. In that case, always use `prompt_async()`.
 
 
-Changes to the the dialog functions
------------------------------------
+Changes to the dialog functions
+-------------------------------
 
 The original way of using dialog boxes looked like this:
 
