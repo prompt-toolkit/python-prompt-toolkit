@@ -684,9 +684,11 @@ def print_formatted_text(
         else:
             output.reset_attributes()
 
+        # Eliminate newlines
+        text = text.replace('\r', '')
+
         # Assume that the output is raw, and insert a carriage return before
         # every newline. (Also important when the front-end is a telnet client.)
-        assert '\r' not in text
         output.write(text.replace('\n', '\r\n'))
 
     # Reset again.
