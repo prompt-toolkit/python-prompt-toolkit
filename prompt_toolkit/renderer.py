@@ -684,7 +684,7 @@ def print_formatted_text(
         else:
             output.reset_attributes()
 
-        # Eliminate newlines
+        # Eliminate carriage returns
         text = text.replace('\r', '')
 
         # Assume that the output is raw, and insert a carriage return before
