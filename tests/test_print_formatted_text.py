@@ -48,6 +48,12 @@ def test_print_formatted_text():
     assert b'hello' in f.data
     assert b'world' in f.data
 
+@pytest.mark.skipif(
+    is_windows(), reason="Doesn't run on Windows yet.")
+def test_print_formatted_text_backslash_r():
+    f = _Capture()
+    pt_print('hello\r\n', file=f)
+    assert b'hello' in f.data
 
 @pytest.mark.skipif(
     is_windows(), reason="Doesn't run on Windows yet.")
