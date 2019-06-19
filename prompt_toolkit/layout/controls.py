@@ -5,9 +5,9 @@ import time
 from abc import ABCMeta, abstractmethod
 from typing import (
     TYPE_CHECKING,
-    Any,
     Callable,
     Dict,
+    Hashable,
     Iterable,
     List,
     NamedTuple,
@@ -175,7 +175,7 @@ class UIContent:
         self.show_cursor = show_cursor
 
         # Cache for line heights. Maps cache key -> height
-        self._line_heights_cache: Dict[Any, int] = {}
+        self._line_heights_cache: Dict[Hashable, int] = {}
 
     def __getitem__(self, lineno: int) -> StyleAndTextTuples:
         " Make it iterable (iterate line by line). "
@@ -317,7 +317,7 @@ class FormattedTextControl(UIControl):
         self.get_cursor_position = get_cursor_position
 
         #: Cache for the content.
-        self._content_cache: SimpleCache[Any, UIContent] = SimpleCache(maxsize=18)
+        self._content_cache: SimpleCache[Hashable, UIContent] = SimpleCache(maxsize=18)
         self._fragment_cache: SimpleCache[int, StyleAndTextTuples] = SimpleCache(maxsize=1)
             # Only cache one fragment list. We don't need the previous item.
 
@@ -533,7 +533,7 @@ class BufferControl(UIControl):
         #: Often, due to cursor movement, undo/redo and window resizing
         #: operations, it happens that a short time, the same document has to be
         #: lexed. This is a fairly easy way to cache such an expensive operation.
-        self._fragment_cache: SimpleCache[Any, Callable[[int], StyleAndTextTuples]] = \
+        self._fragment_cache: SimpleCache[Hashable, Callable[[int], StyleAndTextTuples]] = \
             SimpleCache(maxsize=8)
 
         self._last_click_timestamp: Optional[float] = None
