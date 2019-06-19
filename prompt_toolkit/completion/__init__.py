@@ -10,6 +10,7 @@ from .base import (
 )
 from .filesystem import ExecutableCompleter, PathCompleter
 from .fuzzy_completer import FuzzyCompleter, FuzzyWordCompleter
+from .nested import NestedCompleter
 from .word_completer import WordCompleter
 
 __all__ = [
@@ -27,8 +28,13 @@ __all__ = [
     'PathCompleter',
     'ExecutableCompleter',
 
-    # Word completer.
-    'WordCompleter',
+    # Fuzzy
     'FuzzyCompleter',
     'FuzzyWordCompleter',
+
+    # Nested.
+    'NestedCompleter',
+
+    # Word completer.
+    'WordCompleter',
 ]

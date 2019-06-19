@@ -11,6 +11,7 @@ from six import text_type
 from prompt_toolkit.completion import (
     CompleteEvent,
     FuzzyWordCompleter,
+    NestedCompleter,
     PathCompleter,
     WordCompleter,
 )
@@ -377,3 +378,41 @@ def test_fuzzy_completer():
     # Multiple words. (Check last only.)
     completions = completer.get_completions(Document('test txt'), CompleteEvent())
     assert [c.text for c in completions] == ['users.txt', 'accounts.txt']
+
+
+def test_nested_completer():
+    completer = NestedCompleter.from_nested_dict({
+        'show': {
+            'version': None,
+            'clock': None,
+            'interfaces': None,
+            'ip': {
+                'interface': {'brief'}
+            }
+        },
+        'exit': None,
+    })
+
+    # Empty input.
+    completions = completer.get_completions(Document(''), CompleteEvent())
+    assert {c.text for c in completions} == {'show', 'exit'}
+
+    # One character.
+    completions = completer.get_completions(Document('s'), CompleteEvent())
+    assert {c.text for c in completions} == {'show'}
+
+    # One word.
+    completions = completer.get_completions(Document('show'), CompleteEvent())
+    assert {c.text for c in completions} == {'show'}
+
+    # One word + space.
+    completions = completer.get_completions(Document('show '), CompleteEvent())
+    assert {c.text for c in completions} == {'version', 'clock', 'interfaces', 'ip'}
+
+    # One word + space + one character.
+    completions = completer.get_completions(Document('show i'), CompleteEvent())
+    assert {c.text for c in completions} == {'ip', 'interfaces'}
+
+    # Test nested set.
+    completions = completer.get_completions(Document('show ip interface br'), CompleteEvent())
+    assert {c.text for c in completions} == {'brief'}
