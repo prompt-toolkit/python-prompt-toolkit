@@ -1,4 +1,4 @@
-from typing import Any, Callable, Optional
+from typing import Callable, Optional
 
 from prompt_toolkit.input import DummyInput
 from prompt_toolkit.output import DummyOutput
@@ -10,7 +10,7 @@ __all__ = [
 ]
 
 
-class DummyApplication(Application):
+class DummyApplication(Application[None]):
     """
     When no :class:`.Application` is running,
     :func:`.get_app` will run an instance of this :class:`.DummyApplication` instead.
@@ -19,10 +19,10 @@ class DummyApplication(Application):
         super().__init__(output=DummyOutput(), input=DummyInput())
 
     def run(self, pre_run: Optional[Callable[[], None]] = None,
-            set_exception_handler: bool = True) -> Any:
+            set_exception_handler: bool = True) -> None:
         raise NotImplementedError('A DummyApplication is not supposed to run.')
 
-    async def run_async(self, pre_run: Optional[Callable[[], None]] = None) -> Any:
+    async def run_async(self, pre_run: Optional[Callable[[], None]] = None) -> None:
         raise NotImplementedError('A DummyApplication is not supposed to run.')
 
     async def run_system_command(

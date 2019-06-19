@@ -311,7 +311,7 @@ class Renderer:
         self._bracketed_paste_enabled = False
 
         # Future set when we are waiting for a CPR flag.
-        self._waiting_for_cpr_futures: Deque[Future] = deque()
+        self._waiting_for_cpr_futures: Deque[Future[None]] = deque()
         self.cpr_support = CPR_Support.UNKNOWN
         if not input.responds_to_cpr:
             self.cpr_support = CPR_Support.NOT_SUPPORTED
