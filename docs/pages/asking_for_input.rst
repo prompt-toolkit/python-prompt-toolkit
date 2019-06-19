@@ -276,6 +276,39 @@ completes the last word before the cursor with any of the given words.
     in a background thread.
 
 
+Nested completion
+^^^^^^^^^^^^^^^^^
+
+Sometimes you have a command line interface where the completion depends on the
+previous words from the input. Examples are the CLIs from routers and switches.
+A simple :class:`~prompt_toolkit.completion.WordCompleter` is not enough in
+that case. We want to to be able to define completions at multiple hierarchical
+levels. :class:`~prompt_toolkit.completion.NestedCompleter` solves this issue:
+
+.. code:: python
+
+    from prompt_toolkit import prompt
+    from prompt_toolkit.completion import NestedCompleter
+
+    completer = NestedCompleter.from_nested_dict({
+        'show': {
+            'version': None,
+            'clock': None,
+            'ip': {
+                'interface': {'brief'}
+            }
+        },
+        'exit': None,
+    })
+
+    text = prompt('# ', completer=completer)
+    print('You said: %s' % text)
+
+Whenever there is a ``None`` value in the dictionary, it means that there is no
+further nested completion at that point. When all values of a dictionary would
+be ``None``, it can also be replaced with a set.
+
+
 A custom completer
 ^^^^^^^^^^^^^^^^^^
 
