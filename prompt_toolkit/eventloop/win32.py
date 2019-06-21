@@ -36,7 +36,7 @@ class Win32EventLoop(EventLoop):
     def __init__(self, inputhook=None, recognize_paste=True):
         assert inputhook is None or callable(inputhook)
 
-        self._event = _create_event()
+        self._event = HANDLE(_create_event())
         self._console_input_reader = ConsoleInputReader(recognize_paste=recognize_paste)
         self._calls_from_executor = []
 
@@ -74,14 +74,14 @@ class Win32EventLoop(EventLoop):
             # Wait for the next event.
             handle = self._ready_for_reading(remaining_timeout)
 
-            if handle == self._console_input_reader.handle:
+            if handle == self._console_input_reader.handle.value:
                 # When stdin is ready, read input and reset timeout timer.
                 keys = self._console_input_reader.read()
                 for k in keys:
                     callbacks.feed_key(k)
                 current_timeout = INPUT_TIMEOUT_MS
 
-            elif handle == self._event:
+            elif handle == self._event.value:
                 # When the Windows Event has been trigger, process the messages in the queue.
                 windll.kernel32.ResetEvent(self._event)
                 self._process_queued_calls_from_executor()

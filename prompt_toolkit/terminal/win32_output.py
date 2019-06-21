@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 from ctypes import windll, byref, ArgumentError, c_char, c_long, c_ulong, c_uint, pointer
-from ctypes.wintypes import DWORD
+from ctypes.wintypes import DWORD, HANDLE
 
 from prompt_toolkit.renderer import Output
 from prompt_toolkit.styles import ANSI_COLOR_NAMES
@@ -70,7 +70,7 @@ class Win32Output(Output):
 
         self._buffer = []
         self.stdout = stdout
-        self.hconsole = windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
+        self.hconsole = HANDLE(windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE))
 
         self._in_alternate_screen = False
 
@@ -346,8 +346,8 @@ class Win32Output(Output):
             GENERIC_WRITE = 0x40000000
 
             # Create a new console buffer and activate that one.
-            handle = self._winapi(windll.kernel32.CreateConsoleScreenBuffer, GENERIC_READ|GENERIC_WRITE,
-                                  DWORD(0), None, DWORD(1), None)
+            handle = HANDLE(self._winapi(windll.kernel32.CreateConsoleScreenBuffer, GENERIC_READ|GENERIC_WRITE,
+                                         DWORD(0), None, DWORD(1), None))
 
             self._winapi(windll.kernel32.SetConsoleActiveScreenBuffer, handle)
             self.hconsole = handle
@@ -358,7 +358,7 @@ class Win32Output(Output):
         Make stdout again the active buffer.
         """
         if self._in_alternate_screen:
-            stdout = self._winapi(windll.kernel32.GetStdHandle, STD_OUTPUT_HANDLE)
+            stdout = HANDLE(self._winapi(windll.kernel32.GetStdHandle, STD_OUTPUT_HANDLE))
             self._winapi(windll.kernel32.SetConsoleActiveScreenBuffer, stdout)
             self._winapi(windll.kernel32.CloseHandle, self.hconsole)
             self.hconsole = stdout
@@ -366,7 +366,7 @@ class Win32Output(Output):
 
     def enable_mouse_support(self):
         ENABLE_MOUSE_INPUT = 0x10
-        handle = windll.kernel32.GetStdHandle(STD_INPUT_HANDLE)
+        handle = HANDLE(windll.kernel32.GetStdHandle(STD_INPUT_HANDLE))
 
         original_mode = DWORD()
         self._winapi(windll.kernel32.GetConsoleMode, handle, pointer(original_mode))
@@ -374,7 +374,7 @@ class Win32Output(Output):
 
     def disable_mouse_support(self):
         ENABLE_MOUSE_INPUT = 0x10
-        handle = windll.kernel32.GetStdHandle(STD_INPUT_HANDLE)
+        handle = HANDLE(windll.kernel32.GetStdHandle(STD_INPUT_HANDLE))
 
         original_mode = DWORD()
         self._winapi(windll.kernel32.GetConsoleMode, handle, pointer(original_mode))
@@ -396,7 +396,7 @@ class Win32Output(Output):
         to a bug in the Windows Console. Sending a repaint request solves it.
         """
         # Get console handle
-        handle = windll.kernel32.GetConsoleWindow()
+        handle = HANDLE(windll.kernel32.GetConsoleWindow())
 
         RDW_INVALIDATE = 0x0001
         windll.user32.RedrawWindow(handle, None, None, c_uint(RDW_INVALIDATE))
