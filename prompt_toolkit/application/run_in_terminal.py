@@ -33,6 +33,10 @@ def run_in_terminal(
     prompt which causes the output of this function to scroll above the
     prompt.
 
+    ``func`` is supposed to be a synchronous function. If you need an
+    asynchronous version of this function, use the ``in_terminal`` context
+    manager directly.
+
     :param func: The callable to execute.
     :param render_cli_done: When True, render the interface in the
             'Done' state first, then execute the function. If False,
@@ -55,8 +59,15 @@ def run_in_terminal(
 @asynccontextmanager
 async def in_terminal(render_cli_done: bool = False) -> AsyncGenerator[None, None]:
     """
-    Context manager that suspends the current application and runs the body in
-    the terminal.
+    Asynchronous context manager that suspends the current application and runs
+    the body in the terminal.
+
+    .. code::
+
+        async def f():
+            async with in_terminal():
+                call_some_function()
+                await call_some_async_function()
     """
     app = get_app_or_none()
     if app is None or not app._is_running:

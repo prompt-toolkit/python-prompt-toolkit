@@ -23,7 +23,7 @@ setup(
     author='Jonathan Slenders',
     version=get_version('prompt_toolkit'),
     license='BSD-3-Clause',
-    url='https://github.com/jonathanslenders/python-prompt-toolkit',
+    url='https://github.com/prompt-toolkit/python-prompt-toolkit',
     description='Library for building powerful interactive command lines in Python',
     long_description=long_description,
     packages=find_packages('.'),
