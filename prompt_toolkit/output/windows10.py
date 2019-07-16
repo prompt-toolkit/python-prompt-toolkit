@@ -1,5 +1,5 @@
 from ctypes import byref, windll
-from ctypes.wintypes import DWORD
+from ctypes.wintypes import DWORD, HANDLE
 from typing import Any, TextIO
 
 from prompt_toolkit.data_structures import Size
@@ -26,7 +26,7 @@ class Windows10_Output:
     def __init__(self, stdout: TextIO) -> None:
         self.win32_output = Win32Output(stdout)
         self.vt100_output = Vt100_Output(stdout, lambda: Size(0, 0))
-        self._hconsole = windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
+        self._hconsole = HANDLE(windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE))
 
     def flush(self) -> None:
         """
@@ -68,7 +68,7 @@ def is_win_vt100_enabled() -> bool:
     if not is_windows():
         return False
 
-    hconsole = windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
+    hconsole = HANDLE(windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE))
 
     # Get original console mode.
     original_mode = DWORD(0)

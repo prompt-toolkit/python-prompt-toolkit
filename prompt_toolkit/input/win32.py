@@ -5,7 +5,7 @@ from abc import abstractmethod
 from asyncio import get_event_loop
 from contextlib import contextmanager
 from ctypes import pointer, windll
-from ctypes.wintypes import DWORD
+from ctypes.wintypes import DWORD, HANDLE
 from typing import Callable, ContextManager, Dict, Iterable, Optional
 
 from prompt_toolkit.eventloop import run_in_executor_with_context
@@ -43,7 +43,7 @@ class _Win32InputBase(Input):
 
     @property
     @abstractmethod
-    def handle(self) -> int:
+    def handle(self) -> HANDLE:
         pass
 
 
@@ -100,7 +100,7 @@ class Win32Input(_Win32InputBase):
         self.console_input_reader.close()
 
     @property
-    def handle(self) -> int:
+    def handle(self) -> HANDLE:
         return self.console_input_reader.handle
 
 
@@ -192,12 +192,12 @@ class ConsoleInputReader:
 
         # When stdin is a tty, use that handle, otherwise, create a handle from
         # CONIN$.
-        self.handle: int
+        self.handle: HANDLE
         if sys.stdin.isatty():
-            self.handle = windll.kernel32.GetStdHandle(STD_INPUT_HANDLE)
+            self.handle = HANDLE(windll.kernel32.GetStdHandle(STD_INPUT_HANDLE))
         else:
             self._fdcon = os.open('CONIN$', os.O_RDWR | os.O_BINARY)
-            self.handle = msvcrt.get_osfhandle(self._fdcon)
+            self.handle = HANDLE(msvcrt.get_osfhandle(self._fdcon))
 
     def close(self) -> None:
         " Close fdcon. "
@@ -428,12 +428,12 @@ class _Win32Handles:
     def __init__(self) -> None:
         self._handle_callbacks: Dict[int, Callable[[], None]] = {}
 
-    def add_win32_handle(self, handle: int, callback: Callable[[], None]) -> None:
+    def add_win32_handle(self, handle: HANDLE, callback: Callable[[], None]) -> None:
         """
         Add a Win32 handle to the event loop.
         """
         loop = get_event_loop()
-        self._handle_callbacks[handle] = callback
+        self._handle_callbacks[handle.value] = callback
 
         # Add reader.
         def ready() -> None:
@@ -447,7 +447,7 @@ class _Win32Handles:
         # (Use an executor for this, the Windows asyncio event loop doesn't
         # allow us to wait for handles like stdin.)
         def wait() -> None:
-            if self._handle_callbacks.get(handle) != callback:
+            if self._handle_callbacks.get(handle.value) != callback:
                 return
 
             wait_for_handles([handle])
@@ -455,12 +455,12 @@ class _Win32Handles:
 
         run_in_executor_with_context(wait, loop=loop)
 
-    def remove_win32_handle(self, handle: int) -> None:
+    def remove_win32_handle(self, handle: HANDLE) -> None:
         """
         Remove a Win32 handle from the event loop.
         """
-        if handle in self._handle_callbacks:
-            del self._handle_callbacks[handle]
+        if handle.value in self._handle_callbacks:
+            del self._handle_callbacks[handle.value]
 
 
 @contextmanager
@@ -475,7 +475,7 @@ def attach_win32_input(input: _Win32InputBase, callback: Callable[[], None]):
     handle = input.handle
 
     # Add reader.
-    previous_callback = win32_handles._handle_callbacks.get(handle)
+    previous_callback = win32_handles._handle_callbacks.get(handle.value)
     win32_handles.add_win32_handle(handle, callback)
 
     try:
@@ -492,7 +492,7 @@ def detach_win32_input(input: _Win32InputBase):
     win32_handles = input.win32_handles
     handle = input.handle
 
-    previous = win32_handles._handle_callbacks.get(handle)
+    previous = win32_handles._handle_callbacks.get(handle.value)
     if previous:
         win32_handles.remove_win32_handle(handle)
 
@@ -514,7 +514,7 @@ class raw_mode:
     `raw_input` method of `.vt100_input`.
     """
     def __init__(self, fileno=None):
-        self.handle = windll.kernel32.GetStdHandle(STD_INPUT_HANDLE)
+        self.handle = HANDLE(windll.kernel32.GetStdHandle(STD_INPUT_HANDLE))
 
     def __enter__(self):
         # Remember original mode.
