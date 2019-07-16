@@ -5,7 +5,7 @@ import os
 import sys
 from contextlib import contextmanager
 from ctypes import pointer, windll
-from ctypes.wintypes import DWORD
+from ctypes.wintypes import DWORD, HANDLE
 
 import six
 from six.moves import range
@@ -181,10 +181,10 @@ class ConsoleInputReader(object):
         # When stdin is a tty, use that handle, otherwise, create a handle from
         # CONIN$.
         if sys.stdin.isatty():
-            self.handle = windll.kernel32.GetStdHandle(STD_INPUT_HANDLE)
+            self.handle = HANDLE(windll.kernel32.GetStdHandle(STD_INPUT_HANDLE))
         else:
             self._fdcon = os.open('CONIN$', os.O_RDWR | os.O_BINARY)
-            self.handle = msvcrt.get_osfhandle(self._fdcon)
+            self.handle = HANDLE(msvcrt.get_osfhandle(self._fdcon))
 
     def close(self):
         " Close fdcon. "
@@ -465,7 +465,7 @@ class raw_mode(object):
     `raw_input` method of `.vt100_input`.
     """
     def __init__(self, fileno=None):
-        self.handle = windll.kernel32.GetStdHandle(STD_INPUT_HANDLE)
+        self.handle = HANDLE(windll.kernel32.GetStdHandle(STD_INPUT_HANDLE))
 
     def __enter__(self):
         # Remember original mode.
