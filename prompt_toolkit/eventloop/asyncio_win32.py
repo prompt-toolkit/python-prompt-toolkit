@@ -30,7 +30,7 @@ class Win32AsyncioEventLoop(EventLoop):
         self.closed = False
 
         # Maps win32 handles to their callbacks.
-        self._handle_callbacks = {}
+        self._handle_callbacks = {}  # HANDLE fd to callback.
 
     def close(self):
         # Note: we should not close the asyncio loop itself, because that one
@@ -90,7 +90,7 @@ class Win32AsyncioEventLoop(EventLoop):
     def add_win32_handle(self, handle, callback):
         " Add a Win32 handle to the event loop. "
         callback = wrap_in_current_context(callback)
-        self._handle_callbacks[handle] = callback
+        self._handle_callbacks[handle.value] = callback
 
         # Add reader.
         def ready():
@@ -104,7 +104,7 @@ class Win32AsyncioEventLoop(EventLoop):
         # (Use an executor for this, the Windows asyncio event loop doesn't
         # allow us to wait for handles like stdin.)
         def wait():
-            if self._handle_callbacks.get(handle) != callback:
+            if self._handle_callbacks.get(handle.value) != callback:
                 return
 
             wait_for_handles([handle])
@@ -114,5 +114,5 @@ class Win32AsyncioEventLoop(EventLoop):
 
     def remove_win32_handle(self, handle):
         " Remove a Win32 handle from the event loop. "
-        if handle in self._handle_callbacks:
-            del self._handle_callbacks[handle]
+        if handle.value in self._handle_callbacks:
+            del self._handle_callbacks[handle.value]

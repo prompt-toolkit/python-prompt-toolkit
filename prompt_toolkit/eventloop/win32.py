@@ -41,7 +41,7 @@ class Win32EventLoop(EventLoop):
         self._running = False
 
         # Additional readers.
-        self._read_fds = {}  # Maps fd to handler.
+        self._read_fds = {}  # Maps HANDLE value to handler.
 
         # Create inputhook context.
         self._inputhook_context = None
@@ -86,9 +86,9 @@ class Win32EventLoop(EventLoop):
             self._inputhook_context.call_inputhook(ready, inputhook)
 
         # Wait for the next event.
-        handle = self._ready_for_reading(INFINITE)
+        handle = self._ready_for_reading(INFINITE).value
 
-        if handle == self._event:
+        if handle == self._event.value:
             # When the Windows Event has been trigger, process the messages in the queue.
             windll.kernel32.ResetEvent(self._event)
             self._process_queued_calls_from_executor()
@@ -110,7 +110,7 @@ class Win32EventLoop(EventLoop):
         Return the handle that is ready for reading or `None` on timeout.
         """
         handles = [self._event]
-        handles.extend(self._read_fds.keys())
+        handles.extend(HANDLE(fd) for fd in self._read_fds.keys())
         return wait_for_handles(handles, timeout)
 
     def close(self):
@@ -161,23 +161,23 @@ class Win32EventLoop(EventLoop):
         " Start watching the file descriptor for read availability. "
         callback = wrap_in_current_context(callback)
 
-        h = msvcrt.get_osfhandle(fd)
+        h = HANDLE(msvcrt.get_osfhandle(fd))
         self.add_win32_handle(h, callback)
 
     def remove_reader(self, fd):
         " Stop watching the file descriptor for read availability. "
-        h = msvcrt.get_osfhandle(fd)
+        h = HANDLE(msvcrt.get_osfhandle(fd))
         self.remove_win32_handle(h)
 
     def add_win32_handle(self, handle, callback):
         " Add a Win32 handle to the event loop. "
         callback = wrap_in_current_context(callback)
-        self._read_fds[handle] = callback
+        self._read_fds[handle.value] = callback
 
     def remove_win32_handle(self, handle):
         " Remove a Win32 handle from the event loop. "
-        if handle in self._read_fds:
-            del self._read_fds[handle]
+        if handle.value in self._read_fds:
+            del self._read_fds[handle.value]
 
 
 def wait_for_handles(handles, timeout=INFINITE):
@@ -187,7 +187,7 @@ def wait_for_handles(handles, timeout=INFINITE):
 
     http://msdn.microsoft.com/en-us/library/windows/desktop/ms687025(v=vs.85).aspx
     """
-    assert isinstance(handles, list)
+    assert isinstance(handles, list)  # List of `HANDLE` objects.
     assert isinstance(timeout, int)
 
     arrtype = HANDLE * len(handles)
@@ -200,7 +200,7 @@ def wait_for_handles(handles, timeout=INFINITE):
         return None
     else:
         h = handle_array[ret]
-        return h
+        return HANDLE(h)
 
 
 def create_win32_event():
@@ -209,9 +209,9 @@ def create_win32_event():
 
     http://msdn.microsoft.com/en-us/library/windows/desktop/ms682396(v=vs.85).aspx
     """
-    return windll.kernel32.CreateEventA(
+    return HANDLE(windll.kernel32.CreateEventA(
         pointer(SECURITY_ATTRIBUTES()),
         BOOL(True),  # Manual reset event.
         BOOL(False),  # Initial state.
         None  # Unnamed event object.
-    )
+    ))
