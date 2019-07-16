@@ -11,7 +11,6 @@ matrix:
     - python: 3.5
     - python: 3.4
     - python: 2.7
-    - python: 2.6
     - python: nightly
     - python: pypy
     - python: pypy3
