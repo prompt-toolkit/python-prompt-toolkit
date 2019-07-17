@@ -147,7 +147,9 @@ class ProgressBar:
 
         self._loop = get_event_loop()
         self._app_loop = new_event_loop()
-        self._previous_winch_handler = signal.getsignal(signal.SIGWINCH)
+        self._previous_winch_handler = (
+            signal.getsignal(signal.SIGWINCH) if hasattr(signal, 'SIGWINCH') else None
+        )
         self._has_sigwinch = False
 
     def __enter__(self) -> 'ProgressBar':
