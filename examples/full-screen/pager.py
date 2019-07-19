@@ -16,13 +16,16 @@ from prompt_toolkit.widgets import SearchToolbar, TextArea
 
 # Create one text buffer for the main content.
 
-with open('./pager.py', 'rb') as f:
+_pager_py_path = __file__
+
+
+with open(_pager_py_path, 'rb') as f:
     text = f.read().decode('utf-8')
 
 
 def get_statusbar_text():
     return [
-        ('class:status', './pager.py - '),
+        ('class:status', _pager_py_path + ' - '),
         ('class:status.position', '{}:{}'.format(
             text_area.document.cursor_position_row + 1,
             text_area.document.cursor_position_col + 1)),
