@@ -45,7 +45,7 @@ instance:
   key in prompts.
 
 Given that we were going to break compatibility anyway, we changed a couple of
-other important things that both effect both simple prompt applications and
+other important things that effect both simple prompt applications and
 full screen applications. These are the most important:
 
 - We no longer depend on Pygments for styling. While we like Pygments, it was
