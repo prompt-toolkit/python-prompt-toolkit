@@ -173,6 +173,15 @@ adaptor to make it compatible with the native prompt_toolkit objects.
   Multiple styles can be merged together using
   :func:`~prompt_toolkit.styles.merge_styles`.
 
+
+Wordcompleter
+^^^^^^^^^^^^^
+
+`WordCompleter` was moved from
+:class:`prompt_toolkit.contrib.completers.base.WordCompleter` to
+:class:`prompt_toolkit.completion.word_completer.WordCompleter`.
+
+
 Asynchronous autocompletion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
