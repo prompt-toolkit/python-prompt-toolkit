@@ -223,17 +223,23 @@ def _trim_formatted_text(
     if width > max_width:
         result = []  # Text fragments.
         remaining_width = max_width - 3
+        current_width = 0
 
         for style_and_ch in explode_text_fragments(formatted_text):
             ch_width = get_cwidth(style_and_ch[1])
 
+            # Add '...' somewhere in the middle of the text
+            if current_width == max_width - 6:
+                result.append(('', '...'))
+
             if ch_width <= remaining_width:
                 result.append(style_and_ch)
                 remaining_width -= ch_width
+                current_width += ch_width
             else:
                 break
 
-        result.append(('', '...'))
+        # result.append(('', '...'))
 
         return result, max_width - remaining_width
     else:
