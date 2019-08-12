@@ -218,11 +218,11 @@ def _trim_formatted_text(
     Returns (text, width) tuple.
     """
     width = fragment_list_width(formatted_text)
+
     # When the text is too wide, trim it.
     if width > max_width:
         result = []  # Text fragments.
         remaining_width = max_width - 3
-        current_width = 0
 
         for style_and_ch in explode_text_fragments(formatted_text)[::-1]:
             ch_width = get_cwidth(style_and_ch[1])
@@ -230,7 +230,6 @@ def _trim_formatted_text(
             if ch_width <= remaining_width:
                 result.append(style_and_ch)
                 remaining_width -= ch_width
-                current_width += ch_width
             else:
                 break
 
