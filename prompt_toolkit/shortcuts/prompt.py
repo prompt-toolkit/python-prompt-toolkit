@@ -801,12 +801,18 @@ class PromptSession(Generic[_T]):
             accept_default: bool = False,
             pre_run: Optional[Callable[[], None]] = None) -> _T:
         """
-        Display the prompt. All the arguments are a subset of the
-        :class:`~.PromptSession` class itself.
+        Display the prompt.
 
-        This will raise ``KeyboardInterrupt`` when control-c has been pressed
-        (for abort) and ``EOFError`` when control-d has been pressed (for
-        exit).
+        The first set of arguments is a subset of the :class:`~.PromptSession`
+        class itself. For these, passing in ``None`` will keep the current
+        values that are active in the session. Passing in a value will set the
+        attribute for the session, which means that it applies to the current,
+        but also to the next prompts.
+
+        Note that in order to erase a ``Completer``, ``Validator`` or
+        ``AutoSuggest``, you can't use ``None``. Instead pass in a
+        ``DummyCompleter``, ``DummyValidator`` or ``DummyAutoSuggest`` instance
+        respectively. For a ``Lexer`` you can pass in an empty ``SimpleLexer``.
 
         Additional arguments, specific for this prompt:
 
@@ -818,6 +824,10 @@ class PromptSession(Generic[_T]):
         :param accept_default: When `True`, automatically accept the default
             value without allowing the user to edit the input.
         :param pre_run: Callable, called at the start of `Application.run`.
+
+        This method will raise ``KeyboardInterrupt`` when control-c has been
+        pressed (for abort) and ``EOFError`` when control-d has been pressed
+        (for exit).
         """
         # NOTE: We used to create a backup of the PromptSession attributes and
         #       restore them after exiting the prompt. This code has been
