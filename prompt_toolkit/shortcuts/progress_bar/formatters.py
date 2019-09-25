@@ -83,9 +83,14 @@ class Label(Formatter):
         doesn't fit in this width.
     :param suffix: String suffix to be added after the task name, e.g. ': '.
         If no task name was given, no suffix will be added.
+    :param name: The name of the label to display, e.g. `name="action"` will
+        display the `counter.labels["action"]`.
     """
 
-    def __init__(self, width: AnyDimension = None, suffix: str = "") -> None:
+    def __init__(
+        self, width: AnyDimension = None, suffix: str = "", *, name: str = "label"
+    ) -> None:
+        self.name = name
         self.width = width
         self.suffix = suffix
 
@@ -100,7 +105,7 @@ class Label(Formatter):
         width: int,
     ) -> AnyFormattedText:
 
-        label = self._add_suffix(progress.label)
+        label = self._add_suffix(progress.labels.get(self.name, ""))
         cwidth = fragment_list_width(label)
 
         if cwidth > width:
@@ -116,7 +121,9 @@ class Label(Formatter):
         if self.width:
             return self.width
 
-        all_labels = [self._add_suffix(c.label) for c in progress_bar.counters]
+        all_labels = [
+            self._add_suffix(c.labels.get(self.name, "")) for c in progress_bar.counters
+        ]
         if all_labels:
             max_widths = max(fragment_list_width(l) for l in all_labels)
             return D(preferred=max_widths, max=max_widths)

@@ -15,6 +15,7 @@ import threading
 import traceback
 from asyncio import get_event_loop, new_event_loop, set_event_loop
 from typing import (
+    Dict,
     Generic,
     Iterable,
     List,
@@ -252,6 +253,7 @@ class ProgressBar:
         label: AnyFormattedText = "",
         remove_when_done: bool = False,
         total: Optional[int] = None,
+        labels: Optional[Dict[str, AnyFormattedText]] = None,
     ) -> "ProgressBarCounter[_T]":
         """
         Start a new counter.
@@ -261,9 +263,17 @@ class ProgressBar:
         :param remove_when_done: When `True`, hide this progress bar.
         :param total: Specify the maximum value if it can't be calculated by
             calling ``len``.
+        :param labels: A `dict` mapping label names to their values (which can be
+            formatted text as well). See the `Label` formatter for how to use
+            multiple labels.
         """
         counter = ProgressBarCounter(
-            self, data, label=label, remove_when_done=remove_when_done, total=total
+            self,
+            data,
+            label=label,
+            remove_when_done=remove_when_done,
+            total=total,
+            labels=labels,
         )
         self.counters.append(counter)
         return counter
@@ -321,14 +331,14 @@ class ProgressBarCounter(Generic[_CounterItem]):
         label: AnyFormattedText = "",
         remove_when_done: bool = False,
         total: Optional[int] = None,
+        labels: Optional[Dict[str, AnyFormattedText]] = None,
     ) -> None:
-
         self.start_time = datetime.datetime.now()
         self.stop_time: Optional[datetime.datetime] = None
         self.progress_bar = progress_bar
         self.data = data
         self.items_completed = 0
-        self.label = label
+        self.labels = {"label": label, **(labels or {})}
         self.remove_when_done = remove_when_done
         self._done = False
         self.total: Optional[int]
@@ -365,6 +375,14 @@ class ProgressBarCounter(Generic[_CounterItem]):
         """
         self.items_completed += 1
         self.progress_bar.invalidate()
+
+    @property
+    def label(self):
+        return self.labels["label"]
+
+    @label.setter
+    def label(self, value):
+        self.labels["label"] = value
 
     @property
     def done(self) -> bool:
