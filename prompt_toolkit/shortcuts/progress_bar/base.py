@@ -1,3 +1,4 @@
+# type: ignore[no-redef]
 """
 Progress bar implementation on top of prompt_toolkit.
 
@@ -64,7 +65,7 @@ from .formatters import Formatter, create_default_formatters
 try:
     import contextvars
 except ImportError:
-    from prompt_toolkit.eventloop import dummy_contextvars as contextvars  # type: ignore
+    from prompt_toolkit.eventloop import dummy_contextvars as contextvars
 
 
 __all__ = [

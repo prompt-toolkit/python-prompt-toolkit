@@ -1,3 +1,4 @@
+# type: ignore[no-redef]
 """
 Key binding handlers for displaying completions.
 """

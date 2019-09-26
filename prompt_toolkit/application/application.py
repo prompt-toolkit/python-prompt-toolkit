@@ -1,3 +1,4 @@
+# type: ignore[no-redef]
 import asyncio
 import os
 import re
@@ -91,7 +92,7 @@ from .run_in_terminal import in_terminal, run_in_terminal
 try:
     import contextvars
 except ImportError:
-    import prompt_toolkit.eventloop.dummy_contextvars as contextvars  # type: ignore
+    import prompt_toolkit.eventloop.dummy_contextvars as contextvars
 
 
 __all__ = [
