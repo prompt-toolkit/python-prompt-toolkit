@@ -432,8 +432,12 @@ class _Win32Handles:
         """
         Add a Win32 handle to the event loop.
         """
+        if handle.value is None:
+            raise ValueError('Invalid handle.')
+        handle_value = handle.value
+
         loop = get_event_loop()
-        self._handle_callbacks[handle.value] = callback
+        self._handle_callbacks[handle_value] = callback
 
         # Add reader.
         def ready() -> None:
@@ -447,7 +451,7 @@ class _Win32Handles:
         # (Use an executor for this, the Windows asyncio event loop doesn't
         # allow us to wait for handles like stdin.)
         def wait() -> None:
-            if self._handle_callbacks.get(handle.value) != callback:
+            if self._handle_callbacks.get(handle_value) != callback:
                 return
 
             wait_for_handles([handle])
@@ -474,6 +478,9 @@ def attach_win32_input(input: _Win32InputBase, callback: Callable[[], None]):
     win32_handles = input.win32_handles
     handle = input.handle
 
+    if handle.value is None:
+        raise ValueError('Invalid handle.')
+
     # Add reader.
     previous_callback = win32_handles._handle_callbacks.get(handle.value)
     win32_handles.add_win32_handle(handle, callback)
@@ -491,6 +498,9 @@ def attach_win32_input(input: _Win32InputBase, callback: Callable[[], None]):
 def detach_win32_input(input: _Win32InputBase):
     win32_handles = input.win32_handles
     handle = input.handle
+
+    if handle.value is None:
+        raise ValueError('Invalid handle.')
 
     previous = win32_handles._handle_callbacks.get(handle.value)
     if previous:

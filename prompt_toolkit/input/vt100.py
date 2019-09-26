@@ -222,7 +222,7 @@ class raw_mode:
         self.attrs_before: Optional[List[Union[int, List[bytes]]]]
         try:
             self.attrs_before = termios.tcgetattr(fileno)
-        except termios.error:  # type: ignore
+        except termios.error:
             # Ignore attribute errors.
             self.attrs_before = None
 
@@ -230,7 +230,7 @@ class raw_mode:
         # NOTE: On os X systems, using pty.setraw() fails. Therefor we are using this:
         try:
             newattr = termios.tcgetattr(self.fileno)
-        except termios.error:  # type: ignore
+        except termios.error:
             pass
         else:
             newattr[tty.LFLAG] = self._patch_lflag(newattr[tty.LFLAG])
@@ -268,7 +268,7 @@ class raw_mode:
         if self.attrs_before is not None:
             try:
                 termios.tcsetattr(self.fileno, termios.TCSANOW, self.attrs_before)
-            except termios.error:  # type: ignore
+            except termios.error:
                 pass
 
             # # Put the terminal in application mode.

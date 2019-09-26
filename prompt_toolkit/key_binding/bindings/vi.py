@@ -1,4 +1,5 @@
 # pylint: disable=function-redefined
+# type: ignore[no-redef]
 import codecs
 import string
 from enum import Enum

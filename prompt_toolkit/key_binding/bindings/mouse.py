@@ -1,3 +1,4 @@
+# type: ignore[no-redef]
 from prompt_toolkit.data_structures import Point
 from prompt_toolkit.key_binding.key_processor import KeyPress, KeyPressEvent
 from prompt_toolkit.keys import Keys

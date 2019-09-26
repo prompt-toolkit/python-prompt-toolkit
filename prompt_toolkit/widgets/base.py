@@ -1,3 +1,4 @@
+# type: ignore[no-redef]
 """
 Collection of reusable components for building full screen applications.
 

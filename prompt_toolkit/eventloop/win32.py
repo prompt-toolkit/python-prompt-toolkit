@@ -44,7 +44,7 @@ def wait_for_handles(handles: List[HANDLE], timeout: int = INFINITE) -> Optional
         return HANDLE(h)
 
 
-def create_win32_event():
+def create_win32_event() -> HANDLE:
     """
     Creates a Win32 unnamed Event .
     http://msdn.microsoft.com/en-us/library/windows/desktop/ms682396(v=vs.85).aspx
