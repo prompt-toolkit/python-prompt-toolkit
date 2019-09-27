@@ -32,6 +32,7 @@ from typing import (
     Sized,
     TextIO,
     TypeVar,
+    Union,
     cast,
 )
 
@@ -237,14 +238,15 @@ class ProgressBar:
     def __call__(self,
                  data: Optional[Iterable[_T]] = None,
                  label: AnyFormattedText = '',
-                 remove_when_done: bool = False,
+                 remove_when_done: Union[bool, int] = False,
                  total: Optional[int] = None) -> 'ProgressBarCounter[_T]':
         """
         Start a new counter.
 
         :param label: Title text or description for this progress. (This can be
             formatted text as well).
-        :param remove_when_done: When `True`, hide this progress bar.
+        :param remove_when_done: When `True`, hide this progress bar. When
+            `int`, hide this progress bar after that many seconds.
         :param total: Specify the maximum value if it can't be calculated by
             calling ``len``.
         """
@@ -276,7 +278,12 @@ class _ProgressControl(UIControl):
                 traceback.print_exc()
                 text = 'ERROR'
 
-            items.append(to_formatted_text(text))
+            # Check whether it is time to remove the counter or to keep
+            # displaying counter.
+            if pr.done and pr.remove_when_done:
+                self.progress_bar.counters.remove(pr)
+            else:
+                items.append(to_formatted_text(text))
 
         def get_line(i: int) -> StyleAndTextTuples:
             return items[i]
@@ -303,7 +310,7 @@ class ProgressBarCounter(Generic[_CounterItem]):
     def __init__(self, progress_bar: ProgressBar,
                  data: Optional[Iterable[_CounterItem]] = None,
                  label: AnyFormattedText = '',
-                 remove_when_done: bool = False,
+                 remove_when_done: Union[bool, int] = False,
                  total: Optional[int] = None) -> None:
 
         self.start_time = datetime.datetime.now()
@@ -343,6 +350,29 @@ class ProgressBarCounter(Generic[_CounterItem]):
         self.progress_bar.invalidate()
 
     @property
+    def remove_when_done(self) -> bool:
+        if self._remove_when_done is False:
+            return False
+
+        # Whether enough time has passed since done to remove.
+        delta: datetime.timedelta = datetime.datetime.now() - self.stop_time
+        return delta.total_seconds() >= self._remove_when_done
+
+    @remove_when_done.setter
+    def remove_when_done(self, value: Union[bool, int]):
+        self._remove_when_done: Union[bool, int]
+
+        # don't remove
+        if value is False or value < 0:
+            self._remove_when_done = False
+        # remove immediately
+        elif value is True or value == 0:
+            self._remove_when_done = 0
+        # remove after time
+        else:
+            self._remove_when_done = int(value)
+
+    @property
     def done(self) -> bool:
         return self._done
 
@@ -352,9 +382,6 @@ class ProgressBarCounter(Generic[_CounterItem]):
 
         # If done then store the stop_time, otherwise clear.
         self.stop_time = datetime.datetime.now() if value else None
-
-        if value and self.remove_when_done:
-            self.progress_bar.counters.remove(self)
 
     @property
     def percentage(self) -> float:
