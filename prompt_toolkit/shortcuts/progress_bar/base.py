@@ -307,7 +307,7 @@ class ProgressBarCounter(Generic[_CounterItem]):
                  total: Optional[int] = None) -> None:
 
         self.start_time = datetime.datetime.now()
-        self.stop_time = None
+        self.stop_time: Optional[datetime.datetime] = None
         self.progress_bar = progress_bar
         self.data = data
         self.items_completed = 0
@@ -350,8 +350,7 @@ class ProgressBarCounter(Generic[_CounterItem]):
     def done(self, value: bool) -> None:
         self._done = value
 
-        # if declared done then store the stop_time
-        # otherwise clear the stop_time
+        # If done then store the stop_time, otherwise clear.
         self.stop_time = datetime.datetime.now() if value else None
 
         if value and self.remove_when_done:
@@ -367,7 +366,7 @@ class ProgressBarCounter(Generic[_CounterItem]):
     @property
     def time_elapsed(self) -> datetime.timedelta:
         """
-        return how much time has been elapsed since the start.
+        Return how much time has been elapsed since the start.
         """
         if self.stop_time is None:
             return datetime.datetime.now() - self.start_time
