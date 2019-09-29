@@ -30,7 +30,7 @@ def load_auto_suggest_bindings() -> KeyBindings:
     @Condition
     def suggestion_available() -> bool:
         app = get_app()
-        return (app.current_buffer.suggestion is not None and
+        return (app.current_buffer.suggestion and
                 app.current_buffer.document.is_cursor_at_the_end)
 
     @handle('c-f', filter=suggestion_available)

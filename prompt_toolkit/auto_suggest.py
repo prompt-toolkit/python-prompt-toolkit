@@ -45,6 +45,9 @@ class Suggestion:
     def __repr__(self) -> str:
         return 'Suggestion(%s)' % self.text
 
+    def __len__(self) -> int:
+        return len(self.text)
+
 
 class AutoSuggest(metaclass=ABCMeta):
     """
