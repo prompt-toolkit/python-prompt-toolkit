@@ -4,17 +4,28 @@ Utilities for manipulating formatted text.
 When ``to_formatted_text`` has been called, we get a list of ``(style, text)``
 tuples. This file contains functions for manipulating such a list.
 """
-from typing import Iterable, cast
+from typing import (
+    cast,
+    Callable,
+    Iterable,
+    Union
+)
 
 from prompt_toolkit.utils import get_cwidth
 
-from .base import OneStyleAndTextTuple, StyleAndTextTuples
+from .base import (
+    AnyFormattedText,
+    OneStyleAndTextTuple,
+    StyleAndTextTuples,
+    to_formatted_text,
+)
 
 __all__ = [
     "fragment_list_len",
     "fragment_list_width",
     "fragment_list_to_text",
     "split_lines",
+    "to_str",
 ]
 
 
@@ -83,3 +94,19 @@ def split_lines(fragments: StyleAndTextTuples) -> Iterable[StyleAndTextTuples]:
     # line is yielded. (Otherwise, there's no way to differentiate between the
     # cases where `fragments` does and doesn't end with a newline.)
     yield line
+
+
+def to_str(value: Union[Callable[[], str], AnyFormattedText]) -> str:
+    """
+    Converts a formatted (or not) string to string.
+
+    This is useful when the input type is unknown, and
+    may or not be formatted.
+
+    :param value: the object to convert
+    """
+    if callable(value):
+        return to_str(value())
+    return fragment_list_to_text(
+        to_formatted_text(value)
+    )

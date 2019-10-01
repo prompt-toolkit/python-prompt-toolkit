@@ -272,11 +272,13 @@ def take_using_weights(
 
 
 def to_str(value: Union[Callable[[], str], str]) -> str:
-    " Turn callable or string into string. "
-    if callable(value):
-        return to_str(value())
-    else:
-        return str(value)
+    """
+    Turn callable, formatted text or string into string
+.
+    :param value: the value to convert
+    """
+    from prompt_toolkit.formatted_text.utils import to_str as t
+    return t(value)
 
 
 def to_int(value: Union[Callable[[], int], int]) -> int:

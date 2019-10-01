@@ -2,6 +2,7 @@
 """
 Example of a checkbox-list-based dialog.
 """
+from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.shortcuts import checkboxlist_dialog, message_dialog
 from prompt_toolkit.styles import Style
 
@@ -13,6 +14,7 @@ results = checkboxlist_dialog(
         ("bacon", "Bacon"),
         ("croissants", "20 Croissants"),
         ("daily", "The breakfast of the day"),
+        ("horse", HTML("<style fg='red'>Equestrian</style>")),
     ],
     style=Style.from_dict(
         {

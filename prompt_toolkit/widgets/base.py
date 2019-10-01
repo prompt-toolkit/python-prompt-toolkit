@@ -33,6 +33,7 @@ from prompt_toolkit.formatted_text import (
     StyleAndTextTuples,
     Template,
     to_formatted_text,
+    to_str,
 )
 from prompt_toolkit.formatted_text.utils import fragment_list_to_text
 from prompt_toolkit.history import History
@@ -681,7 +682,7 @@ class _DialogList(Generic[_T]):
         def _(event: E) -> None:
             # We first check values after the selected value, then all values.
             for value in self.values[self._selected_index + 1 :] + self.values:
-                if value[1].startswith(event.data):
+                if to_str(value[1]).startswith(event.data):
                     self._selected_index = self.values.index(value)
                     return
 
@@ -804,7 +805,7 @@ class Checkbox(CheckboxList[str]):
         return "value" in self.current_values
 
 
-class VerticalLine(object):
+class VerticalLine:
     """
     A simple vertical line with a width of 1.
     """
