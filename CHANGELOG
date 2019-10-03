@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+1.0.17: 2019-10-03
+------------------
+
+Bug fixes:
+- Handle HANDLE sizes correctly on windows. This made things break randomly on
+  64 bit systems.
+
+
 1.0.16: 2019-04-12
 ------------------
 
