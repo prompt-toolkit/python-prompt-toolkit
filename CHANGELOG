@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+1.0.18: 2019-10-03
+------------------
+
+Fixes:
+- The 1.0.17 build contained files from the 2.0 branch and was broken because
+  of this.
+
+
 1.0.17: 2019-10-03
 ------------------
 
