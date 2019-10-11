@@ -158,14 +158,13 @@ def _(event):
 
 def do_open_file():
     async def coroutine():
-        global current_path
         open_dialog = TextInputDialog(
             title='Open file',
             label_text='Enter the path of a file:',
             completer=PathCompleter())
 
         path = await show_dialog_as_float(open_dialog)
-        current_path = path
+        ApplicationState.current_path = path
 
         if path is not None:
             try:
