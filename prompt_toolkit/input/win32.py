@@ -412,7 +412,7 @@ class ConsoleInputReader:
             # On a key press, generate both the mouse down and up event.
             for event_type in [MouseEventType.MOUSE_DOWN, MouseEventType.MOUSE_UP]:
                 data = ';'.join([
-                   event_type,
+                   str(event_type),
                    str(ev.MousePosition.X),
                    str(ev.MousePosition.Y)
                 ])
