@@ -58,6 +58,24 @@ def get_by_name(name: str) -> _HandlerOrBinding:
 #
 
 
+@register('beginning-of-buffer')
+def beginning_of_buffer(event: E) -> None:
+    """
+    Move to the start of the buffer.
+    """
+    buff = event.current_buffer
+    buff.cursor_position = 0
+
+
+@register('end-of-buffer')
+def end_of_buffer(event: E) -> None:
+    """
+    Move to the end of the buffer.
+    """
+    buff = event.current_buffer
+    buff.cursor_position = len(buff.text)
+
+
 @register('beginning-of-line')
 def beginning_of_line(event: E) -> None:
     """

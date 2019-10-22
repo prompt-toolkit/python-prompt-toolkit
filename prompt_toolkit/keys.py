@@ -56,6 +56,14 @@ class Keys(str, Enum):
     ControlRight       = 'c-right'
     ControlUp          = 'c-up'
     ControlDown        = 'c-down'
+    ControlHome        = 'c-home'
+    ControlEnd         = 'c-end'
+    ControlInsert      = 'c-insert'
+
+    ShiftControlLeft   = 's-c-left'
+    ShiftControlRight  = 's-c-right'
+    ShiftControlHome   = 's-c-home'
+    ShiftControlEnd    = 's-c-end'
 
     Up          = 'up'
     Down        = 'down'
@@ -68,6 +76,9 @@ class Keys(str, Enum):
     ShiftRight  = 's-right'
     ShiftDelete = 's-delete'
     BackTab     = 's-tab'  # shift + tab
+    ShiftHome   = 's-home'
+    ShiftEnd    = 's-end'
+    ShiftInsert = 's-insert'
 
     Home        = 'home'
     End         = 'end'

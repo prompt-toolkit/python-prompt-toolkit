@@ -42,6 +42,10 @@ class SelectionState:
 
         self.original_cursor_position = original_cursor_position
         self.type = type
+        self.shift_mode = False
+
+    def enter_shift_mode(self) -> None:
+        self.shift_mode = True
 
     def __repr__(self) -> str:
         return '%s(original_cursor_position=%r, type=%r)' % (
