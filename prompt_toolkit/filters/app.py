@@ -41,6 +41,7 @@ __all__ = [
     'emacs_mode',
     'emacs_insert_mode',
     'emacs_selection_mode',
+    'shift_selection_mode',
 
     'is_searching',
     'control_is_searchable',
@@ -321,6 +322,13 @@ def emacs_selection_mode() -> bool:
     app = get_app()
     return bool(app.editing_mode == EditingMode.EMACS
             and app.current_buffer.selection_state)
+
+
+@Condition
+def shift_selection_mode() -> bool:
+    app = get_app()
+    return bool(app.current_buffer.selection_state
+            and app.current_buffer.selection_state.shift_mode)
 
 
 @Condition

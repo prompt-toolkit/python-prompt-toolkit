@@ -348,7 +348,23 @@ class ConsoleInputReader:
             else:
                 result = KeyPress(u_char, u_char)
 
-        # Correctly handle Control-Arrow keys.
+        # First we handle Shift-Control-Arrow/Home/End (need to do this first)
+        if (ev.ControlKeyState & self.LEFT_CTRL_PRESSED or
+                ev.ControlKeyState & self.RIGHT_CTRL_PRESSED) and \
+                ev.ControlKeyState & self.SHIFT_PRESSED and result:
+            if result.key == Keys.Left:
+                result.key = Keys.ShiftControlLeft
+
+            if result.key == Keys.Right:
+                result.key = Keys.ShiftControlRight
+
+            if result.key == Keys.Home:
+                result.key = Keys.ShiftControlHome
+
+            if result.key == Keys.End:
+                result.key = Keys.ShiftControlEnd
+
+        # Correctly handle Control-Arrow/Home/End and Control-Insert keys.
         if (ev.ControlKeyState & self.LEFT_CTRL_PRESSED or
                 ev.ControlKeyState & self.RIGHT_CTRL_PRESSED) and result:
             if result.key == Keys.Left:
@@ -363,10 +379,41 @@ class ConsoleInputReader:
             if result.key == Keys.Down:
                 result.key = Keys.ControlDown
 
+            if result.key == Keys.Home:
+                result.key = Keys.ControlHome
+
+            if result.key == Keys.End:
+                result.key = Keys.ControlEnd
+
+            if result.key == Keys.Insert:
+                result.key = Keys.ControlInsert
+
         # Turn 'Tab' into 'BackTab' when shift was pressed.
+        # Also handle other shift-key combination
         if ev.ControlKeyState & self.SHIFT_PRESSED and result:
             if result.key == Keys.Tab:
                 result.key = Keys.BackTab
+
+            if result.key == Keys.Left:
+                result.key = Keys.ShiftLeft
+
+            if result.key == Keys.Right:
+                result.key = Keys.ShiftRight
+
+            if result.key == Keys.Up:
+                result.key = Keys.ShiftUp
+
+            if result.key == Keys.Down:
+                result.key = Keys.ShiftDown
+
+            if result.key == Keys.Home:
+                result.key = Keys.ShiftHome
+
+            if result.key == Keys.End:
+                result.key = Keys.ShiftEnd
+
+            if result.key == Keys.Insert:
+                result.key = Keys.ShiftInsert
 
         # Turn 'Space' into 'ControlSpace' when control was pressed.
         if (ev.ControlKeyState & self.LEFT_CTRL_PRESSED or

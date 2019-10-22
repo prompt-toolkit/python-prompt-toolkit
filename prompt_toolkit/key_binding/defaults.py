@@ -10,6 +10,7 @@ from prompt_toolkit.key_binding.bindings.cpr import load_cpr_bindings
 from prompt_toolkit.key_binding.bindings.emacs import (
     load_emacs_bindings,
     load_emacs_search_bindings,
+    load_emacs_shift_selection_bindings,
 )
 from prompt_toolkit.key_binding.bindings.mouse import load_mouse_bindings
 from prompt_toolkit.key_binding.bindings.vi import (
@@ -38,6 +39,7 @@ def load_key_bindings() -> KeyBindingsBase:
         # Load emacs bindings.
         load_emacs_bindings(),
         load_emacs_search_bindings(),
+        load_emacs_shift_selection_bindings(),
 
         # Load Vi bindings.
         load_vi_bindings(),

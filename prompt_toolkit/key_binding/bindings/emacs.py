@@ -9,8 +9,10 @@ from prompt_toolkit.filters import (
     emacs_mode,
     has_arg,
     has_selection,
+    in_paste_mode,
     is_multiline,
     is_read_only,
+    shift_selection_mode,
     vi_search_direction_reversed,
 )
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
@@ -22,6 +24,7 @@ from .named_commands import get_by_name
 __all__ = [
     'load_emacs_bindings',
     'load_emacs_search_bindings',
+    'load_emacs_shift_selection_bindings',
 ]
 
 E = KeyPressEvent
@@ -68,6 +71,9 @@ def load_emacs_bindings() -> KeyBindingsBase:
     handle('escape', 'y', filter=insert_mode)(get_by_name('yank-pop'))
     handle('escape', 'backspace', filter=insert_mode)(get_by_name('backward-kill-word'))
     handle('escape', '\\', filter=insert_mode)(get_by_name('delete-horizontal-space'))
+
+    handle('c-home')(get_by_name('beginning-of-buffer'))
+    handle('c-end')(get_by_name('end-of-buffer'))
 
     handle('c-_', save_before=(lambda e: False), filter=insert_mode)(
         get_by_name('undo'))
@@ -362,5 +368,152 @@ def load_emacs_search_bindings() -> KeyBindingsBase:
             ~event.app.current_search_state,
             include_current_position=False,
             count=event.arg)
+
+    return ConditionalKeyBindings(key_bindings, emacs_mode)
+
+
+def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
+    """
+    Bindings to select text with shift + cursor movements
+    """
+
+    key_bindings = KeyBindings()
+    handle = key_bindings.add
+
+    def unshift_move(event: E) -> None:
+        """
+        Used for the shift selection mode. When called with
+        a shift + movement key press event, moves the cursor
+        as if shift is not pressed.
+        """
+        key = event.key_sequence[0].key
+
+        if key == Keys.ShiftUp:
+            event.current_buffer.auto_up(count=event.arg)
+            return
+        if key == Keys.ShiftDown:
+            event.current_buffer.auto_down(count=event.arg)
+            return
+
+        # the other keys are handled through their readline command
+        key_to_command = {
+            Keys.ShiftLeft:         'backward-char',
+            Keys.ShiftRight:        'forward-char',
+            Keys.ShiftHome:         'beginning-of-line',
+            Keys.ShiftEnd:          'end-of-line',
+            Keys.ShiftControlLeft:  'backward-word',
+            Keys.ShiftControlRight: 'forward-word',
+            Keys.ShiftControlHome:  'beginning-of-buffer',
+            Keys.ShiftControlEnd:   'end-of-buffer'
+        }
+
+        try:
+            # Both the dict lookup and `get_by_name` can raise KeyError.
+            handler = get_by_name(key_to_command[key])
+        except KeyError:
+            pass
+        else:  # (`else` is not really needed here.)
+            handler(event)
+
+    @handle('s-left', filter= ~has_selection)
+    @handle('s-right', filter= ~has_selection)
+    @handle('s-up', filter= ~has_selection)
+    @handle('s-down', filter= ~has_selection)
+    @handle('s-home', filter= ~has_selection)
+    @handle('s-end', filter= ~has_selection)
+    @handle('s-c-left', filter= ~has_selection)
+    @handle('s-c-right', filter= ~has_selection)
+    @handle('s-c-home', filter= ~has_selection)
+    @handle('s-c-end', filter= ~has_selection)
+    def _(event: E) -> None:
+        """
+        Start selection with shift + movement.
+        """
+        # Take the current cursor position as the start of this selection.
+        buff = event.current_buffer
+        if buff.text:
+            buff.start_selection(selection_type=SelectionType.CHARACTERS)
+            buff.selection_state.enter_shift_mode()
+            # Then move the cursor
+            original_position = buff.cursor_position
+            unshift_move(event)
+            if buff.cursor_position == original_position:
+                # Cursor didn't actually move - so cancel selection
+                # to avoid having an empty selection
+                buff.exit_selection()
+
+    @handle('s-left', filter=shift_selection_mode)
+    @handle('s-right', filter=shift_selection_mode)
+    @handle('s-up', filter=shift_selection_mode)
+    @handle('s-down', filter=shift_selection_mode)
+    @handle('s-home', filter=shift_selection_mode)
+    @handle('s-end', filter=shift_selection_mode)
+    @handle('s-c-left', filter=shift_selection_mode)
+    @handle('s-c-right', filter=shift_selection_mode)
+    @handle('s-c-home', filter=shift_selection_mode)
+    @handle('s-c-end', filter=shift_selection_mode)
+    def _(event: E) -> None:
+        """
+        Extend the selection
+        """
+        # Just move the cursor, like shift was not pressed
+        unshift_move(event)
+        buff = event.current_buffer
+        if buff.cursor_position == buff.selection_state.original_cursor_position:
+            # selection is now empty, so cancel selection
+            buff.exit_selection()
+
+    @handle(Keys.Any, filter=shift_selection_mode)
+    def _(event: E) -> None:
+        """
+        Replace selection by what is typed
+        """
+        event.current_buffer.cut_selection()
+        get_by_name('self-insert')(event)
+
+    @handle('enter', filter=shift_selection_mode & is_multiline)
+    def _(event: E) -> None:
+        """
+        A newline replaces the selection
+        """
+        event.current_buffer.cut_selection()
+        event.current_buffer.newline(copy_margin=not in_paste_mode())
+
+    @handle('backspace', filter=shift_selection_mode)
+    def _(event: E) -> None:
+        """
+        Delete selection.
+        """
+        event.current_buffer.cut_selection()
+
+    @handle('c-y', filter=shift_selection_mode)
+    def _(event: E) -> None:
+        """
+        In shift selection mode, yanking (pasting) replace the selection.
+        """
+        buff = event.current_buffer
+        if buff.selection_state:
+            buff.cut_selection()
+        get_by_name('yank')(event)
+
+    # moving the cursor in shift selection mode cancels the selection
+    @handle('left', filter=shift_selection_mode)
+    @handle('right', filter=shift_selection_mode)
+    @handle('up', filter=shift_selection_mode)
+    @handle('down', filter=shift_selection_mode)
+    @handle('home', filter=shift_selection_mode)
+    @handle('end', filter=shift_selection_mode)
+    @handle('c-left', filter=shift_selection_mode)
+    @handle('c-right', filter=shift_selection_mode)
+    @handle('c-home', filter=shift_selection_mode)
+    @handle('c-end', filter=shift_selection_mode)
+    def _(event: E) -> None:
+        """
+        Cancel selection.
+        """
+        event.current_buffer.exit_selection()
+        # we then process the cursor movement
+        key_press = event.key_sequence[0]
+        event.key_processor.feed(key_press, first=True)
 
     return ConditionalKeyBindings(key_bindings, emacs_mode)
