@@ -102,7 +102,7 @@ class StdoutProxy:
         def write_and_flush_in_loop() -> None:
             # If an application is running, use `run_in_terminal`, otherwise
             # call it directly.
-            run_in_terminal(write_and_flush, in_executor=False)
+            run_in_terminal.run_in_terminal(write_and_flush, in_executor=False)
 
         # Make sure `write_and_flush` is executed *in* the event loop, not in
         # another thread.
@@ -155,3 +155,6 @@ class StdoutProxy:
         """
         # This is important for code that expects sys.stdout.fileno() to work.
         return self.original_stdout.fileno()
+
+    def isatty(self) -> bool:
+        return self.original_stdout.isatty()

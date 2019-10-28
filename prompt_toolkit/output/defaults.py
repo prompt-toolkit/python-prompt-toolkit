@@ -1,6 +1,7 @@
 import sys
 from typing import Optional, TextIO, cast
 
+from prompt_toolkit.patch_stdout import StdoutProxy
 from prompt_toolkit.utils import (
     get_term_environment_variable,
     is_conemu_ansi,
@@ -30,6 +31,12 @@ def create_output(stdout: Optional[TextIO] = None) -> Output:
             stdout = sys.stdout
         else:
             stdout = sys.stderr
+
+    # If the patch_stdout context manager has been used, then sys.stdout is
+    # replaced by this proxy. For prompt_toolkit applications, we want to use
+    # the real stdout.
+    while isinstance(stdout, StdoutProxy):
+        stdout = stdout.original_stdout
 
     if is_windows():
         from .conemu import ConEmuOutput
