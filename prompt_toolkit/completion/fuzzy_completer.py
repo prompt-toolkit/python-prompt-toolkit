@@ -159,6 +159,7 @@ class FuzzyWordCompleter(Completer):
 
         self.word_completer = WordCompleter(
             words=lambda: self.words,
+            meta_dict=self.meta_dict,
             WORD=self.WORD)
 
         self.fuzzy_completer = FuzzyCompleter(
