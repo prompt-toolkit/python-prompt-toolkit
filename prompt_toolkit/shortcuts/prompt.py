@@ -313,7 +313,8 @@ class PromptSession(Generic[_T]):
     :param prompt_continuation: Text that needs to be displayed for a multiline
         prompt continuation. This can either be formatted text or a callable
         that takes a `prompt_width`, `line_number` and `wrap_count` as input
-        and returns formatted text.
+        and returns formatted text. When this is `None` (the default), then
+        `prompt_width` spaces will be used.
     :param complete_style: ``CompleteStyle.COLUMN``,
         ``CompleteStyle.MULTI_COLUMN`` or ``CompleteStyle.READLINE_LIKE``.
     :param mouse_support: `bool` or :class:`~prompt_toolkit.filters.Filter`
@@ -367,7 +368,7 @@ class PromptSession(Generic[_T]):
             include_default_pygments_style: FilterOrBool = True,
             history: Optional[History] = None,
             clipboard: Optional[Clipboard] = None,
-            prompt_continuation: PromptContinuationText = '',
+            prompt_continuation: Optional[PromptContinuationText] = None,
             rprompt: AnyFormattedText = None,
             bottom_toolbar: AnyFormattedText = None,
             mouse_support: FilterOrBool = False,
@@ -1117,7 +1118,7 @@ class PromptSession(Generic[_T]):
 
         # When the continuation prompt is not given, choose the same width as
         # the actual prompt.
-        if not continuation and is_true(self.multiline):
+        if continuation is None and is_true(self.multiline):
             continuation = ' ' * width
 
         return to_formatted_text(
