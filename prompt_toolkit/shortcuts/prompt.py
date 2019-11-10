@@ -1117,7 +1117,7 @@ class PromptSession(Generic[_T]):
 
         # When the continuation prompt is not given, choose the same width as
         # the actual prompt.
-        if not continuation and is_true(self.multiline):
+        if not continuation and continuation != '' and is_true(self.multiline):
             continuation = ' ' * width
 
         return to_formatted_text(
