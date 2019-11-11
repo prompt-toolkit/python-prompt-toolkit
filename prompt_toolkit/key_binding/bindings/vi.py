@@ -1979,8 +1979,10 @@ def load_vi_search_bindings() -> KeyBindingsBase:
     handle('c-g')(search.abort_search)
     handle('backspace', filter=search_buffer_is_empty)(search.abort_search)
 
-    # Handle escape. This should accept the search, just like readline.
-    # `abort_search` would be a meaningful alternative.
-    handle('escape')(search.accept_search)
+    # Handle escape and escape+enter.
+    # We can support both of following bindings, thanks to `Application.timeoutlen` parameter.
+    # (Unlike readline, we abort the search when escape is pressed.)
+    handle('escape', filter=is_searching)(search.abort_search)
+    handle('escape', 'enter', filter=is_searching)(search.accept_search_and_accept_input)
 
     return ConditionalKeyBindings(key_bindings, vi_mode)
