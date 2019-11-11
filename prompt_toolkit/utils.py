@@ -26,6 +26,7 @@ __all__ = [
     'is_windows',
     'in_main_thread',
     'take_using_weights',
+    'to_type',
     'to_str',
     'to_int',
     'to_float',
@@ -259,6 +260,14 @@ def take_using_weights(
                     adding = True
 
         i += 1
+
+
+def to_type(value: Union[Callable[[], _T], _T]) -> _T:
+    " Turn callable or type into type. "
+    if callable(value):
+        return to_type(value())
+    else:
+        return value
 
 
 def to_str(value: Union[Callable[[], str], str]) -> str:

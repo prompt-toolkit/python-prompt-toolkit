@@ -43,7 +43,7 @@ from .filters import FilterOrBool, to_filter
 from .history import History, InMemoryHistory
 from .search import SearchDirection, SearchState
 from .selection import PasteMode, SelectionState, SelectionType
-from .utils import Event, to_str
+from .utils import Event, to_str, to_type
 from .validation import ValidationError, Validator
 
 __all__ = [
@@ -1405,14 +1405,40 @@ class Buffer:
             raise EditReadOnlyBuffer()
 
         # Write to temporary file
-        if self.tempfile:
+        try:
+            if not self.tempfile:
+                raise ValueError
+
+            headtail = to_type(self.tempfile)
+            if not headtail:
+                raise ValueError
+            headtail = str(headtail)
+        except ValueError:
+            simple = True
+
+            # Fallback to tempfile_suffix logic.
+            try:
+                if not self.tempfile_suffix:
+                    raise ValueError
+
+                suffix = to_type(self.tempfile_suffix)
+                if not suffix:
+                    raise ValueError
+                suffix = str(suffix)
+            except ValueError:
+                suffix = None
+
+            descriptor, filename = tempfile.mkstemp(suffix)
+            remove = filename
+        else:
+            simple = False
+
             # Try to make according to tempfile logic.
-            head, tail = os.path.split(to_str(self.tempfile))
+            head, tail = os.path.split(headtail)
             if os.path.isabs(head):
                 head = head[1:]
 
-            dirpath = tempfile.mkdtemp()
-            remove = dirpath
+            remove = dirpath = tempfile.mkdtemp()
             if head:
                 dirpath = os.path.join(dirpath, head)
             # Assume there is no issue creating dirs in this temp dir.
@@ -1421,13 +1447,6 @@ class Buffer:
             # Open the filename of interest.
             filename = os.path.join(dirpath, tail)
             descriptor = os.open(filename, os.O_WRONLY|os.O_CREAT)
-        else:
-            # Fallback to tempfile_suffix logic.
-            suffix = None
-            if self.tempfile_suffix:
-                suffix = to_str(self.tempfile_suffix)
-            descriptor, filename = tempfile.mkstemp(suffix)
-            remove = filename
 
         os.write(descriptor, self.text.encode('utf-8'))
         os.close(descriptor)
@@ -1461,7 +1480,10 @@ class Buffer:
 
             finally:
                 # Clean up temp dir/file.
-                shutil.rmtree(remove)
+                if simple:
+                    os.unlink(remove)
+                else:
+                    shutil.rmtree(remove)
 
         return get_app().create_background_task(run())
 
