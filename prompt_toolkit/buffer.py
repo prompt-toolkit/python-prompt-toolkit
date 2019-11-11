@@ -43,7 +43,7 @@ from .filters import FilterOrBool, to_filter
 from .history import History, InMemoryHistory
 from .search import SearchDirection, SearchState
 from .selection import PasteMode, SelectionState, SelectionType
-from .utils import Event, to_str
+from .utils import Event, call_if_callable, to_str
 from .validation import ValidationError, Validator
 
 __all__ = [
@@ -1395,6 +1395,45 @@ class Buffer:
     def exit_selection(self) -> None:
         self.selection_state = None
 
+    def _editor_simple_tempfile(self) -> Tuple[bool, str, str]:
+        # Simple (file) tempfile implementation.
+        suffix = call_if_callable(self.tempfile_suffix)
+        suffix = str(suffix) if suffix else None
+        descriptor, filename = tempfile.mkstemp(suffix)
+
+        os.write(descriptor, self.text.encode('utf-8'))
+        os.close(descriptor)
+
+        # Returning (simple, filename to open, path to remove).
+        return True, filename, filename
+
+    def _editor_complex_tempfile(self) -> Tuple[bool, str, str]:
+        # Complex (directory) tempfile implementation.
+        headtail = call_if_callable(self.tempfile)
+        if not headtail:
+            # Revert to simple case.
+            return self._editor_simple_tempfile()
+        headtail = str(headtail)
+
+        # Try to make according to tempfile logic.
+        head, tail = os.path.split(headtail)
+        if os.path.isabs(head):
+            head = head[1:]
+
+        dirpath = tempfile.mkdtemp()
+        if head:
+            dirpath = os.path.join(dirpath, head)
+        # Assume there is no issue creating dirs in this temp dir.
+        os.makedirs(dirpath)
+
+        # Open the filename and write current text.
+        filename = os.path.join(dirpath, tail)
+        with open(filename, "w", encoding="utf-8") as fh:
+            fh.write(self.text)
+
+        # Returning (complex, filename to open, path to remove).
+        return False, filename, dirpath
+
     def open_in_editor(self, validate_and_handle: bool = False) -> 'asyncio.Task[None]':
         """
         Open code in editor.
@@ -1404,33 +1443,11 @@ class Buffer:
         if self.read_only():
             raise EditReadOnlyBuffer()
 
-        # Write to temporary file
-        if self.tempfile:
-            # Try to make according to tempfile logic.
-            head, tail = os.path.split(to_str(self.tempfile))
-            if os.path.isabs(head):
-                head = head[1:]
-
-            dirpath = tempfile.mkdtemp()
-            remove = dirpath
-            if head:
-                dirpath = os.path.join(dirpath, head)
-            # Assume there is no issue creating dirs in this temp dir.
-            os.makedirs(dirpath)
-
-            # Open the filename of interest.
-            filename = os.path.join(dirpath, tail)
-            descriptor = os.open(filename, os.O_WRONLY|os.O_CREAT)
+        # Write current text to temporary file
+        if not self.tempfile:
+            simple, filename, remove = self._editor_simple_tempfile()
         else:
-            # Fallback to tempfile_suffix logic.
-            suffix = None
-            if self.tempfile_suffix:
-                suffix = to_str(self.tempfile_suffix)
-            descriptor, filename = tempfile.mkstemp(suffix)
-            remove = filename
-
-        os.write(descriptor, self.text.encode('utf-8'))
-        os.close(descriptor)
+            simple, filename, remove = self._editor_complex_tempfile()
 
         async def run() -> None:
             try:
@@ -1461,7 +1478,10 @@ class Buffer:
 
             finally:
                 # Clean up temp dir/file.
-                shutil.rmtree(remove)
+                if simple:
+                    os.unlink(remove)
+                else:
+                    shutil.rmtree(remove)
 
         return get_app().create_background_task(run())
 

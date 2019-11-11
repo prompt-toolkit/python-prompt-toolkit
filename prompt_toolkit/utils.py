@@ -26,6 +26,7 @@ __all__ = [
     'is_windows',
     'in_main_thread',
     'take_using_weights',
+    'call_if_callable',
     'to_str',
     'to_int',
     'to_float',
@@ -259,6 +260,14 @@ def take_using_weights(
                     adding = True
 
         i += 1
+
+
+def call_if_callable(value: Union[Callable[[], _T], _T]) -> _T:
+    " Call if callable, otherwise return as is.. "
+    if callable(value):
+        return call_if_callable(value())
+    else:
+        return value
 
 
 def to_str(value: Union[Callable[[], str], str]) -> str:
