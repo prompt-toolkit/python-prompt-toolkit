@@ -494,6 +494,14 @@ class Application(Generic[_AppResult]):
 
                 self._update_invalidate_events()
 
+                # Ensure that the history is loaded or starts loading.
+                # We do this during a repaint, because new Buffer/History
+                # objects can be added at any point in time. We can't do
+                # however during the creation of the buffer, because at that
+                # point, we don't have an event loop yet.
+                for buff in self.layout.find_all_buffers():
+                    buff.history.start_loading()
+
         # NOTE: We want to make sure this Application is the active one. The
         #       invalidate function is often called from a context where this
         #       application is not the active one. (Like the
@@ -568,7 +576,7 @@ class Application(Generic[_AppResult]):
             c()
         del self.pre_run_callables[:]
 
-    async def run_async(self, pre_run: Optional[Callable[[], None]] = None) -> _AppResult:
+    async def run_async(self, pre_run: Optional[Callable[[], None]] = None, set_exception_handler: bool = True) -> _AppResult:
         """
         Run asynchronous. Return a prompt_toolkit
         :class:`~prompt_toolkit.eventloop.Future` object.
@@ -736,7 +744,8 @@ class Application(Generic[_AppResult]):
                     self._is_running = False
                 return result
 
-        return await _run_async2()
+        return await _run_with_exception_handler(
+            _run_async2, set_exception_handler=set_exception_handler)
 
     def run(self, pre_run: Optional[Callable[[], None]] = None,
             set_exception_handler: bool = True) -> _AppResult:
@@ -747,42 +756,13 @@ class Application(Generic[_AppResult]):
             of the alternate screen and hide the application, display the
             exception, and wait for the user to press ENTER.
         """
-        loop = get_event_loop()
-
-        def run() -> _AppResult:
-            coro = self.run_async(pre_run=pre_run)
+        coro = self.run_async(pre_run=pre_run, set_exception_handler=set_exception_handler)
+        try:
+            from asyncio import run
+        except ImportError:
             return get_event_loop().run_until_complete(coro)
-
-        def handle_exception(loop, context: Dict[str, Any]) -> None:
-            " Print the exception, using run_in_terminal. "
-            # For Python 2: we have to get traceback at this point, because
-            # we're still in the 'except:' block of the event loop where the
-            # traceback is still available. Moving this code in the
-            # 'print_exception' coroutine will loose the exception.
-            tb = get_traceback_from_context(context)
-            formatted_tb = ''.join(format_tb(tb))
-
-            async def in_term() -> None:
-                async with in_terminal():
-                    # Print output. Similar to 'loop.default_exception_handler',
-                    # but don't use logger. (This works better on Python 2.)
-                    print('\nUnhandled exception in event loop:')
-                    print(formatted_tb)
-                    print('Exception %s' % (context.get('exception'), ))
-
-                    await _do_wait_for_enter('Press ENTER to continue...')
-            ensure_future(in_term())
-
-        if set_exception_handler:
-            # Run with patched exception handler.
-            previous_exc_handler = loop.get_exception_handler()
-            loop.set_exception_handler(handle_exception)
-            try:
-                return run()
-            finally:
-                loop.set_exception_handler(previous_exc_handler)
         else:
-            return run()
+            return run(coro)
 
     def create_background_task(self, coroutine: Awaitable[None]) -> 'asyncio.Task[None]':
         """
@@ -1099,3 +1079,45 @@ async def _do_wait_for_enter(wait_text: AnyFormattedText) -> None:
         message=wait_text,
         key_bindings=key_bindings)
     await session.app.run_async()
+
+
+_T = TypeVar('_T')
+
+
+async def _run_with_exception_handler(coro: Callable[[], Awaitable[_T]], set_exception_handler: bool = True) -> _T:
+
+    if set_exception_handler:
+        # Run with patched exception handler.
+        loop = get_event_loop()
+        previous_exc_handler = loop.get_exception_handler()
+        loop.set_exception_handler(_handle_exception)
+        try:
+            return await coro()
+        finally:
+            loop.set_exception_handler(previous_exc_handler)
+    else:
+        return coro()
+
+
+def _handle_exception(loop, context: Dict[str, Any]) -> None:
+    """
+    Print an event loop exception, using run_in_terminal.
+    Pass this function to `loop.set_exception_handler`.
+    """
+    # For Python 2: we have to get traceback at this point, because
+    # we're still in the 'except:' block of the event loop where the
+    # traceback is still available. Moving this code in the
+    # 'print_exception' coroutine will loose the exception.
+    tb = get_traceback_from_context(context)
+    formatted_tb = ''.join(format_tb(tb))
+
+    async def in_term() -> None:
+        async with in_terminal():
+            # Print output. Similar to 'loop.default_exception_handler',
+            # but don't use logger. (This works better on Python 2.)
+            print('\nUnhandled exception in event loop:')
+            print(formatted_tb)
+            print('Exception %s' % (context.get('exception'), ))
+
+            await _do_wait_for_enter('Press ENTER to continue...')
+    ensure_future(in_term())

@@ -49,16 +49,17 @@ async def interactive_shell():
             return
 
 
-def main():
+async def main():
     with patch_stdout():
-        shell_task = asyncio.ensure_future(interactive_shell())
-        background_task = asyncio.gather(print_counter(), return_exceptions=True)
-
-        loop.run_until_complete(shell_task)
+        background_task = asyncio.ensure_future(print_counter())
+        await interactive_shell()
         background_task.cancel()
-        loop.run_until_complete(background_task)
-        print('Quitting event loop. Bye.')
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        from asyncio import run
+    except ImportError:
+        asyncio.get_event_loop().run_until_complete(main())
+    else:
+        run(main())

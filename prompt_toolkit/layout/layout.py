@@ -80,6 +80,11 @@ class Layout:
         for container in self.find_all_windows():
             yield container.content
 
+    def find_all_buffers(self) -> Iterable[Buffer]:
+        for control in self.find_all_controls():
+            if isinstance(control, BufferControl):
+                yield control.buffer
+
     def focus(self, value: FocusableElement) -> None:
         """
         Focus the given UI element.

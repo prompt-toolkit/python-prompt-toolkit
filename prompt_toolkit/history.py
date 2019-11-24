@@ -62,6 +62,7 @@ class History(metaclass=ABCMeta):
             self._loading = True
             get_app().create_background_task(self._start_loading())
 
+
     def get_item_loaded_event(self) -> Event['History']:
         " Event which is triggered when a new item is loaded. "
         return self._item_loaded

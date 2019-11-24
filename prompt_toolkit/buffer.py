@@ -290,8 +290,8 @@ class Buffer:
             self._working_lines.insert(0, self.history.get_strings()[0])
             self.__working_index += 1
 
+        # The history is loaded in Application.run_async. Handle loading here.
         self.history.get_item_loaded_event().add_handler(new_history_item)
-        self.history.start_loading()
 
     def __repr__(self) -> str:
         if len(self.text) < 15:
