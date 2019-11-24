@@ -28,7 +28,7 @@ Python Shell, build on top of ``prompt_toolkit``.
 .. image :: https://github.com/prompt-toolkit/python-prompt-toolkit/raw/master/docs/images/ptpython.png
 
 `More examples <https://python-prompt-toolkit.readthedocs.io/en/stable/pages/gallery.html>`_
-^^^^
+
 
 prompt_toolkit features
 ***********************

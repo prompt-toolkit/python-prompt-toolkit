@@ -25,6 +25,7 @@ setup(
     url='https://github.com/prompt-toolkit/python-prompt-toolkit',
     description='Library for building powerful interactive command lines in Python',
     long_description=long_description,
+    long_description_content_type='text/x-rst',
     packages=find_packages('.'),
     install_requires=[
         'wcwidth',
