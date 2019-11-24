@@ -1,12 +1,13 @@
 CHANGELOG
 =========
 
-3.x.x
+3.0.0: 2019-11-24
 -----------------
 
 New features:
 - (almost) 100% type annotated.
 - Native asyncio instead of custom event loops.
+- Added shift-based text selection (use shift+arrows to start selecting text).
 
 Breaking changes:
 - Python 2 support has been dropped. Minimal Python version is now 3.6,
