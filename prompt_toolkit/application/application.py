@@ -179,6 +179,9 @@ class Application(Generic[_AppResult]):
 
         app = Application(...)
         app.run()
+
+        # Or
+        await app.run_async()
     """
     def __init__(self,
                  layout: Optional[Layout] = None,
@@ -570,23 +573,10 @@ class Application(Generic[_AppResult]):
 
     async def run_async(self, pre_run: Optional[Callable[[], None]] = None) -> _AppResult:
         """
-        Run asynchronous. Return a prompt_toolkit
-        :class:`~prompt_toolkit.eventloop.Future` object.
-
-        If you wish to run on top of asyncio, remember that a prompt_toolkit
-        `Future` needs to be converted to an asyncio `Future`. The cleanest way
-        is to call :meth:`~prompt_toolkit.eventloop.Future.to_asyncio_future`.
-        Also make sure to tell prompt_toolkit to use the asyncio event loop.
-
-        .. code:: python
-
-            from prompt_toolkit.eventloop import use_asyncio_event_loop
-            from asyncio import get_event_loop
-
-            use_asyncio_event_loop()
-            get_event_loop().run_until_complete(
-                application.run_async().to_asyncio_future())
-
+        Run the prompt_toolkit :class:`~prompt_toolkit.application.Application`
+        until :meth:`~prompt_toolkit.application.Application.exit` has been
+        called. Return the value that was passed to
+        :meth:`~prompt_toolkit.application.Application.exit`.
         """
         assert not self._is_running, 'Application is already running.'
 
