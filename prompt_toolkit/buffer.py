@@ -1395,8 +1395,11 @@ class Buffer:
     def exit_selection(self) -> None:
         self.selection_state = None
 
-    def _editor_simple_tempfile(self) -> Tuple[bool, str, str]:
-        # Simple (file) tempfile implementation.
+    def _editor_simple_tempfile(self) -> Tuple[str, Callable[[], None]]:
+        """
+        Simple (file) tempfile implementation.
+        Return (tempfile, cleanup_func).
+        """
         suffix = call_if_callable(self.tempfile_suffix)
         suffix = str(suffix) if suffix else None
         descriptor, filename = tempfile.mkstemp(suffix)
@@ -1404,10 +1407,12 @@ class Buffer:
         os.write(descriptor, self.text.encode('utf-8'))
         os.close(descriptor)
 
-        # Returning (simple, filename to open, path to remove).
-        return True, filename, filename
+        def cleanup() -> None:
+            os.unlink(filename)
 
-    def _editor_complex_tempfile(self) -> Tuple[bool, str, str]:
+        return filename, cleanup
+
+    def _editor_complex_tempfile(self) -> Tuple[str, Callable[[], None]]:
         # Complex (directory) tempfile implementation.
         headtail = call_if_callable(self.tempfile)
         if not headtail:
@@ -1431,8 +1436,10 @@ class Buffer:
         with open(filename, "w", encoding="utf-8") as fh:
             fh.write(self.text)
 
-        # Returning (complex, filename to open, path to remove).
-        return False, filename, dirpath
+        def cleanup() -> None:
+            shutil.rmtree(dirpath)
+
+        return filename, cleanup
 
     def open_in_editor(self, validate_and_handle: bool = False) -> 'asyncio.Task[None]':
         """
@@ -1444,10 +1451,10 @@ class Buffer:
             raise EditReadOnlyBuffer()
 
         # Write current text to temporary file
-        if not self.tempfile:
-            simple, filename, remove = self._editor_simple_tempfile()
+        if self.tempfile:
+            filename, cleanup_func = self._editor_complex_tempfile()
         else:
-            simple, filename, remove = self._editor_complex_tempfile()
+            filename, cleanup_func = self._editor_simple_tempfile()
 
         async def run() -> None:
             try:
@@ -1478,10 +1485,7 @@ class Buffer:
 
             finally:
                 # Clean up temp dir/file.
-                if simple:
-                    os.unlink(remove)
-                else:
-                    shutil.rmtree(remove)
+                cleanup_func()
 
         return get_app().create_background_task(run())
 
