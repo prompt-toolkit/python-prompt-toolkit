@@ -12,18 +12,14 @@ import datetime
 import functools
 import os
 import signal
-import sys
 import threading
 import traceback
 from asyncio import (
-    CancelledError,
     get_event_loop,
     new_event_loop,
     set_event_loop,
-    sleep,
 )
 from typing import (
-    Generator,
     Generic,
     Iterable,
     List,
@@ -56,7 +52,7 @@ from prompt_toolkit.layout import (
 )
 from prompt_toolkit.layout.controls import UIContent, UIControl
 from prompt_toolkit.layout.dimension import AnyDimension, D
-from prompt_toolkit.output import ColorDepth, Output, create_output
+from prompt_toolkit.output import ColorDepth, Output
 from prompt_toolkit.styles import BaseStyle
 from prompt_toolkit.utils import in_main_thread
 
