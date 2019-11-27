@@ -1,7 +1,7 @@
 """
 Nestedcompleter for completion of hierarchical data structures.
 """
-from typing import Dict, Iterable, Mapping, Optional, Set, Union
+from typing import Any, Dict, Iterable, Mapping, Optional, Set, Union
 
 from prompt_toolkit.completion import CompleteEvent, Completer, Completion
 from prompt_toolkit.completion.word_completer import WordCompleter
@@ -11,7 +11,8 @@ __all__ = [
     'NestedCompleter'
 ]
 
-NestedDict = Mapping[str, Union['NestedDict', Set[str], None, Completer]]
+# NestedDict = Mapping[str, Union['NestedDict', Set[str], None, Completer]]
+NestedDict = Mapping[str, Union[Any, Set[str], None, Completer]]
 
 
 class NestedCompleter(Completer):
