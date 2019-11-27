@@ -11,7 +11,7 @@ from typing import Callable, ContextManager, Dict, Iterable, Optional
 from prompt_toolkit.eventloop import run_in_executor_with_context
 from prompt_toolkit.eventloop.win32 import wait_for_handles
 from prompt_toolkit.key_binding.key_processor import KeyPress
-from prompt_toolkit.keys import Keys
+from prompt_toolkit.keys import Keys, parse_key
 from prompt_toolkit.mouse_events import MouseEventType
 from prompt_toolkit.win32_types import (
     INPUT_RECORD,
@@ -254,7 +254,7 @@ class ConsoleInputReader:
                         k = None
 
                 if data:
-                    yield KeyPress(Keys.BracketedPaste, ''.join(data))
+                    yield KeyPress(parse_key(Keys.BracketedPaste), ''.join(data))
                 if k is not None:
                     yield k
         else:

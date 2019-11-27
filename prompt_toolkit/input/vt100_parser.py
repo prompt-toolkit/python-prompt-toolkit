@@ -5,7 +5,7 @@ import re
 from typing import Callable, Dict, Generator, Tuple, Union
 
 from ..key_binding.key_processor import KeyPress
-from ..keys import Keys
+from ..keys import Keys, ParsedKey, parse_key
 from .ansi_escape_sequences import ANSI_SEQUENCES
 
 __all__ = [
@@ -76,6 +76,17 @@ class Vt100Parser:
     #       "od -c" and start typing.
     def __init__(self, feed_key_callback: Callable[[KeyPress], None]) -> None:
         self.feed_key_callback = feed_key_callback
+
+        def parse(key_or_keys: Union[str, Tuple[str, ...]]) -> Tuple[ParsedKey, ...]:
+            " Parse/validate entry from ANSI_SEQUENCES dictionary. "
+            if isinstance(key_or_keys, tuple):
+                return tuple(parse_key(k) for k in key_or_keys)
+            return (parse_key(key_or_keys), )
+
+        self.ansi_sequences: Dict[str, Tuple[ParsedKey, ...]]  = {
+            sequence: parse(key_or_keys) for sequence, key_or_keys in ANSI_SEQUENCES.items()
+        }
+
         self.reset()
 
     def reset(self, request: bool = False) -> None:
@@ -89,7 +100,7 @@ class Vt100Parser:
         self._input_parser = self._input_parser_generator()
         self._input_parser.send(None)  # type: ignore
 
-    def _get_match(self, prefix: str) -> Union[None, Keys, Tuple[Keys, ...]]:
+    def _get_match(self, prefix: str) -> Union[None, ParsedKey, Tuple[ParsedKey, ...]]:
         """
         Return the key (or keys) that maps to this prefix.
         """
@@ -97,14 +108,14 @@ class Vt100Parser:
         # (This one doesn't fit in the ANSI_SEQUENCES, because it contains
         # integer variables.)
         if _cpr_response_re.match(prefix):
-            return Keys.CPRResponse
+            return ParsedKey(Keys.CPRResponse)
 
         elif _mouse_event_re.match(prefix):
-            return Keys.Vt100MouseEvent
+            return ParsedKey(Keys.Vt100MouseEvent)
 
         # Otherwise, use the mappings.
         try:
-            return ANSI_SEQUENCES[prefix]
+            return self.ansi_sequences[prefix]
         except KeyError:
             return None
 
@@ -158,7 +169,7 @@ class Vt100Parser:
                         self._call_handler(prefix[0], prefix[0])
                         prefix = prefix[1:]
 
-    def _call_handler(self, key: Union[str, Keys, Tuple[Keys, ...]],
+    def _call_handler(self, key: Union[ParsedKey, Tuple[ParsedKey, ...]],
                       insert_text: str) -> None:
         """
         Callback to handler.
@@ -191,7 +202,7 @@ class Vt100Parser:
 
                 # Feed content to key bindings.
                 paste_content = self._paste_buffer[:end_index]
-                self.feed_key_callback(KeyPress(Keys.BracketedPaste, paste_content))
+                self.feed_key_callback(KeyPress(parse_key(Keys.BracketedPaste), paste_content))
 
                 # Quit bracketed paste mode and handle remaining input.
                 self._in_bracketed_paste = False
