@@ -284,14 +284,15 @@ class Buffer:
         # Reset other attributes.
         self.reset(document=document)
 
-        # Attach callback for new history entries.
-        def new_history_item(sender: History) -> None:
+        # Load the history.
+        def new_history_item(item: str) -> None:
+            # XXX: Keep in mind that this function can be called in a different
+            #      thread!
             # Insert the new string into `_working_lines`.
-            self._working_lines.insert(0, self.history.get_strings()[0])
-            self.__working_index += 1
+            self._working_lines.insert(0, item)
+            self.__working_index += 1  # Not entirely threadsafe, but probably good enough.
 
-        self.history.get_item_loaded_event().add_handler(new_history_item)
-        self.history.start_loading()
+        self.history.load(new_history_item)
 
     def __repr__(self) -> str:
         if len(self.text) < 15:
