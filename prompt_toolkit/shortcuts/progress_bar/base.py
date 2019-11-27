@@ -13,11 +13,7 @@ import os
 import signal
 import threading
 import traceback
-from asyncio import (
-    get_event_loop,
-    new_event_loop,
-    set_event_loop,
-)
+from asyncio import get_event_loop, new_event_loop, set_event_loop
 from typing import (
     Generic,
     Iterable,
