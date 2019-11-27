@@ -2,6 +2,7 @@ from .async_generator import generator_to_async_generator
 from .inputhook import (
     InputHookContext,
     InputHookSelector,
+    new_eventloop_with_inputhook,
     set_eventloop_with_inputhook,
 )
 from .utils import (
@@ -20,6 +21,7 @@ __all__ = [
     'get_traceback_from_context',
 
     # Inputhooks.
+    'new_eventloop_with_inputhook',
     'set_eventloop_with_inputhook',
     'InputHookSelector',
     'InputHookContext',
