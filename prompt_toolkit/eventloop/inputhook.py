@@ -34,10 +34,21 @@ from typing import Callable
 from prompt_toolkit.utils import is_windows
 
 __all__ = [
+    'new_eventloop_with_inputhook',
     'set_eventloop_with_inputhook',
     'InputHookSelector',
     'InputHookContext',
 ]
+
+
+def new_eventloop_with_inputhook(
+        inputhook: Callable[['InputHookContext'], None]) -> AbstractEventLoop:
+    """
+    Create a new event loop with the given inputhook.
+    """
+    selector = InputHookSelector(selectors.DefaultSelector(), inputhook)
+    loop = asyncio.SelectorEventLoop(selector)  # type: ignore
+    return loop
 
 
 def set_eventloop_with_inputhook(
@@ -45,8 +56,7 @@ def set_eventloop_with_inputhook(
     """
     Create a new event loop with the given inputhook, and activate it.
     """
-    selector = InputHookSelector(selectors.DefaultSelector(), inputhook)
-    loop = asyncio.SelectorEventLoop(selector)  # type: ignore
+    loop = new_eventloop_with_inputhook(inputhook)
     asyncio.set_event_loop(loop)
     return loop
 
