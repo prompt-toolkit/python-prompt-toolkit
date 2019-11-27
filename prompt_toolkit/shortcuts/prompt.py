@@ -129,7 +129,7 @@ from prompt_toolkit.styles import (
     SwapLightAndDarkStyleTransformation,
     merge_style_transformations,
 )
-from prompt_toolkit.utils import get_cwidth, suspend_to_background_supported
+from prompt_toolkit.utils import get_cwidth, suspend_to_background_supported, to_str
 from prompt_toolkit.validation import DynamicValidator, Validator
 from prompt_toolkit.widgets.toolbars import (
     SearchToolbar,
@@ -481,8 +481,8 @@ class PromptSession(Generic[_T]):
             history=self.history,
             auto_suggest=DynamicAutoSuggest(lambda: self.auto_suggest),
             accept_handler=accept,
-            tempfile_suffix=lambda: self.tempfile_suffix,
-            tempfile=lambda: self.tempfile)
+            tempfile_suffix=lambda: to_str(self.tempfile_suffix or ''),
+            tempfile=lambda: to_str(self.tempfile or ''))
 
     def _create_search_buffer(self) -> Buffer:
         return Buffer(name=SEARCH_BUFFER)
