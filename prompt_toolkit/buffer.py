@@ -43,7 +43,7 @@ from .filters import FilterOrBool, to_filter
 from .history import History, InMemoryHistory
 from .search import SearchDirection, SearchState
 from .selection import PasteMode, SelectionState, SelectionType
-from .utils import Event, call_if_callable
+from .utils import Event, to_str
 from .validation import ValidationError, Validator
 
 __all__ = [
@@ -1401,8 +1401,7 @@ class Buffer:
         Simple (file) tempfile implementation.
         Return (tempfile, cleanup_func).
         """
-        suffix = call_if_callable(self.tempfile_suffix)
-        suffix = str(suffix) if suffix else None
+        suffix = to_str(self.tempfile_suffix)
         descriptor, filename = tempfile.mkstemp(suffix)
 
         os.write(descriptor, self.text.encode('utf-8'))
@@ -1415,7 +1414,7 @@ class Buffer:
 
     def _editor_complex_tempfile(self) -> Tuple[str, Callable[[], None]]:
         # Complex (directory) tempfile implementation.
-        headtail = call_if_callable(self.tempfile)
+        headtail = to_str(self.tempfile)
         if not headtail:
             # Revert to simple case.
             return self._editor_simple_tempfile()
