@@ -571,12 +571,23 @@ class Application(Generic[_AppResult]):
             c()
         del self.pre_run_callables[:]
 
-    async def run_async(self, pre_run: Optional[Callable[[], None]] = None) -> _AppResult:
+    async def run_async(self, pre_run: Optional[Callable[[], None]] = None,
+                        set_exception_handler: bool = True) -> _AppResult:
         """
         Run the prompt_toolkit :class:`~prompt_toolkit.application.Application`
         until :meth:`~prompt_toolkit.application.Application.exit` has been
         called. Return the value that was passed to
         :meth:`~prompt_toolkit.application.Application.exit`.
+
+        This is the main entry point for a prompt_toolkit
+        :class:`~prompt_toolkit.application.Application` and usually the only
+        place where the event loop is actually running.
+
+        :param pre_run: Optional callable, which is called right after the
+            "reset" of the application.
+        :param set_exception_handler: When set, in case of an exception, go out
+            of the alternate screen and hide the application, display the
+            exception, and wait for the user to press ENTER.
         """
         assert not self._is_running, 'Application is already running.'
 
@@ -709,22 +720,32 @@ class Application(Generic[_AppResult]):
 
         async def _run_async2() -> _AppResult:
             self._is_running = True
-            with set_app(self):
-                try:
-                    result = await _run_async()
-                finally:
-                    # Wait for the background tasks to be done. This needs to
-                    # go in the finally! If `_run_async` raises
-                    # `KeyboardInterrupt`, we still want to wait for the
-                    # background tasks.
-                    await self.cancel_and_wait_for_background_tasks()
 
-                    # Set the `_is_running` flag to `False`. Normally this
-                    # happened already in the finally block in `run_async`
-                    # above, but in case of exceptions, that's not always the
-                    # case.
-                    self._is_running = False
-                return result
+            loop = get_event_loop()
+            if set_exception_handler:
+                previous_exc_handler = loop.get_exception_handler()
+                loop.set_exception_handler(self._handle_exception)
+
+            try:
+                with set_app(self):
+                    try:
+                        result = await _run_async()
+                    finally:
+                        # Wait for the background tasks to be done. This needs to
+                        # go in the finally! If `_run_async` raises
+                        # `KeyboardInterrupt`, we still want to wait for the
+                        # background tasks.
+                        await self.cancel_and_wait_for_background_tasks()
+
+                        # Set the `_is_running` flag to `False`. Normally this
+                        # happened already in the finally block in `run_async`
+                        # above, but in case of exceptions, that's not always the
+                        # case.
+                        self._is_running = False
+                    return result
+            finally:
+                if set_exception_handler:
+                    loop.set_exception_handler(previous_exc_handler)
 
         return await _run_async2()
 
@@ -733,46 +754,36 @@ class Application(Generic[_AppResult]):
         """
         A blocking 'run' call that waits until the UI is finished.
 
+        :param pre_run: Optional callable, which is called right after the
+            "reset" of the application.
         :param set_exception_handler: When set, in case of an exception, go out
             of the alternate screen and hide the application, display the
             exception, and wait for the user to press ENTER.
         """
-        loop = get_event_loop()
+        return get_event_loop().run_until_complete(self.run_async(pre_run=pre_run))
 
-        def run() -> _AppResult:
-            coro = self.run_async(pre_run=pre_run)
-            return get_event_loop().run_until_complete(coro)
+    def _handle_exception(self, loop, context: Dict[str, Any]) -> None:
+        """
+        Handler for event loop exceptions.
+        This will print the exception, using run_in_terminal.
+        """
+        # For Python 2: we have to get traceback at this point, because
+        # we're still in the 'except:' block of the event loop where the
+        # traceback is still available. Moving this code in the
+        # 'print_exception' coroutine will loose the exception.
+        tb = get_traceback_from_context(context)
+        formatted_tb = ''.join(format_tb(tb))
 
-        def handle_exception(loop, context: Dict[str, Any]) -> None:
-            " Print the exception, using run_in_terminal. "
-            # For Python 2: we have to get traceback at this point, because
-            # we're still in the 'except:' block of the event loop where the
-            # traceback is still available. Moving this code in the
-            # 'print_exception' coroutine will loose the exception.
-            tb = get_traceback_from_context(context)
-            formatted_tb = ''.join(format_tb(tb))
+        async def in_term() -> None:
+            async with in_terminal():
+                # Print output. Similar to 'loop.default_exception_handler',
+                # but don't use logger. (This works better on Python 2.)
+                print('\nUnhandled exception in event loop:')
+                print(formatted_tb)
+                print('Exception %s' % (context.get('exception'), ))
 
-            async def in_term() -> None:
-                async with in_terminal():
-                    # Print output. Similar to 'loop.default_exception_handler',
-                    # but don't use logger. (This works better on Python 2.)
-                    print('\nUnhandled exception in event loop:')
-                    print(formatted_tb)
-                    print('Exception %s' % (context.get('exception'), ))
-
-                    await _do_wait_for_enter('Press ENTER to continue...')
-            ensure_future(in_term())
-
-        if set_exception_handler:
-            # Run with patched exception handler.
-            previous_exc_handler = loop.get_exception_handler()
-            loop.set_exception_handler(handle_exception)
-            try:
-                return run()
-            finally:
-                loop.set_exception_handler(previous_exc_handler)
-        else:
-            return run()
+                await _do_wait_for_enter('Press ENTER to continue...')
+        ensure_future(in_term())
 
     def create_background_task(self, coroutine: Awaitable[None]) -> 'asyncio.Task[None]':
         """
