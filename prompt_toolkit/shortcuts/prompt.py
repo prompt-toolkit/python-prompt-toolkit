@@ -129,7 +129,11 @@ from prompt_toolkit.styles import (
     SwapLightAndDarkStyleTransformation,
     merge_style_transformations,
 )
-from prompt_toolkit.utils import get_cwidth, suspend_to_background_supported, to_str
+from prompt_toolkit.utils import (
+    get_cwidth,
+    suspend_to_background_supported,
+    to_str,
+)
 from prompt_toolkit.validation import DynamicValidator, Validator
 from prompt_toolkit.widgets.toolbars import (
     SearchToolbar,

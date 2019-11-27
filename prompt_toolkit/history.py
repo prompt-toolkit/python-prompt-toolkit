@@ -10,7 +10,7 @@ import datetime
 import os
 from abc import ABCMeta, abstractmethod
 from threading import Thread
-from typing import Iterable, List, Callable, Optional
+from typing import Callable, Iterable, List, Optional
 
 __all__ = [
     'History',
