@@ -25,14 +25,12 @@ Example::
         s = PromptSession()
         result = s.prompt('Say something: ')
 """
-from asyncio import get_event_loop, sleep
+from asyncio import get_event_loop
 from enum import Enum
 from functools import partial
 from typing import (
     TYPE_CHECKING,
-    Any,
     Callable,
-    Generator,
     Generic,
     List,
     Optional,

@@ -9,7 +9,7 @@ import shlex
 import shutil
 import subprocess
 import tempfile
-from asyncio import Task, ensure_future
+from asyncio import Task
 from enum import Enum
 from functools import wraps
 from typing import (
@@ -43,7 +43,7 @@ from .filters import FilterOrBool, to_filter
 from .history import History, InMemoryHistory
 from .search import SearchDirection, SearchState
 from .selection import PasteMode, SelectionState, SelectionType
-from .utils import Event, call_if_callable, to_str
+from .utils import Event, call_if_callable
 from .validation import ValidationError, Validator
 
 __all__ = [
