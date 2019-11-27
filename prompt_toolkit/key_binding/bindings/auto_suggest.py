@@ -1,4 +1,3 @@
-# type: ignore[no-redef]
 """
 Key bindings for auto suggestion (for fish-style auto suggestion).
 """

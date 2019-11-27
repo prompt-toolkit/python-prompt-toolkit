@@ -1,4 +1,3 @@
-# type: ignore[no-redef]
 import asyncio
 import os
 import re

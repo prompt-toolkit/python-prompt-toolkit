@@ -1,4 +1,3 @@
-# type: ignore[no-redef]
 import math
 from itertools import zip_longest
 from typing import (
