@@ -22,7 +22,8 @@ class DummyApplication(Application[None]):
             set_exception_handler: bool = True) -> None:
         raise NotImplementedError('A DummyApplication is not supposed to run.')
 
-    async def run_async(self, pre_run: Optional[Callable[[], None]] = None) -> None:
+    async def run_async(self, pre_run: Optional[Callable[[], None]] = None,
+                        set_exception_handler: bool = True) -> None:
         raise NotImplementedError('A DummyApplication is not supposed to run.')
 
     async def run_system_command(

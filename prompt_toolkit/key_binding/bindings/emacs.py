@@ -1,4 +1,6 @@
 # pylint: disable=function-redefined
+from typing import Dict, Union
+
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import Buffer, SelectionType, indent, unindent
 from prompt_toolkit.completion import CompleteEvent
@@ -14,6 +16,7 @@ from prompt_toolkit.filters import (
     shift_selection_mode,
     vi_search_direction_reversed,
 )
+from prompt_toolkit.key_binding.key_bindings import Binding
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.keys import Keys
 
@@ -395,7 +398,7 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
             return
 
         # the other keys are handled through their readline command
-        key_to_command = {
+        key_to_command: Dict[Union[Keys, str], str] = {
             Keys.ShiftLeft:         'backward-char',
             Keys.ShiftRight:        'forward-char',
             Keys.ShiftHome:         'beginning-of-line',
@@ -412,7 +415,10 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
         except KeyError:
             pass
         else:  # (`else` is not really needed here.)
-            handler(event)
+            if not isinstance(handler, Binding):
+                # (It should always be a normal callable here, for these
+                # commands.)
+                handler(event)
 
     @handle('s-left', filter= ~has_selection)
     @handle('s-right', filter= ~has_selection)
