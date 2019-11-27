@@ -20,7 +20,7 @@ script:
   - coverage run -m pytest
 
   # Run type checker.
-  - mypy prompt_toolkit | grep -v "Name '_' already defined" | true
+  - ./typecheck.sh || true
 
   # Check wheather the imports were sorted correctly.
   # When this fails, please run ./tools/sort-imports.sh
