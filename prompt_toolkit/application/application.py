@@ -91,7 +91,7 @@ from .run_in_terminal import in_terminal, run_in_terminal
 try:
     import contextvars
 except ImportError:
-    import prompt_toolkit.eventloop.dummy_contextvars as contextvars
+    import prompt_toolkit.eventloop.dummy_contextvars as contextvars  # type: ignore
 
 
 __all__ = [
