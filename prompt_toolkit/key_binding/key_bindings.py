@@ -9,7 +9,7 @@ Typical usage::
 
     kb = KeyBindings()
 
-    @kb.add(Keys.ControlX, Keys.ControlC, filter=INSERT)
+    @kb.add('c-x', 'c-c', filter=INSERT)
     def handler(event):
         # Handle ControlX-ControlC key sequence.
         pass
@@ -32,7 +32,7 @@ been assigned, through the `key_binding` decorator.::
         ...
 
     # Later, add it to the key bindings.
-    kb.add(Keys.A, my_key_binding)
+    kb.add('c-a', my_key_binding)
 """
 from abc import ABCMeta, abstractmethod, abstractproperty
 from typing import (
@@ -50,7 +50,7 @@ from typing import (
 
 from prompt_toolkit.cache import SimpleCache
 from prompt_toolkit.filters import FilterOrBool, Never, to_filter
-from prompt_toolkit.keys import KEY_ALIASES, Keys
+from prompt_toolkit.keys import ALL_KEYS, KEY_ALIASES, Keys, parse_key, ParsedKey
 
 # Avoid circular imports.
 if TYPE_CHECKING:
@@ -69,6 +69,9 @@ __all__ = [
 
 KeyHandlerCallable = Callable[['KeyPressEvent'], None]
 
+# Sequence of keys presses.
+KeysTuple = Tuple[ParsedKey, ...]
+
 
 class Binding:
     """
@@ -79,7 +82,7 @@ class Binding:
         macro is recorded.
     """
     def __init__(
-            self, keys: Tuple[Union[Keys, str], ...],
+            self, keys: KeysTuple,
             handler: KeyHandlerCallable,
             filter: FilterOrBool = True,
             eager: FilterOrBool = False,
@@ -101,10 +104,6 @@ class Binding:
     def __repr__(self) -> str:
         return '%s(keys=%r, handler=%r)' % (
             self.__class__.__name__, self.keys, self.handler)
-
-
-# Sequence of keys presses.
-KeysTuple = Tuple[Union[Keys, str], ...]
 
 
 class KeyBindingsBase(metaclass=ABCMeta):
@@ -169,6 +168,10 @@ class KeyBindings(KeyBindingsBase):
         def _(event):
             print('Control-T pressed')
 
+        @kb.add(Keys.ControlT)
+        def _(event):
+            print('Control-T pressed')
+
         @kb.add('c-a', 'c-b')
         def _(event):
             print('Control-A pressed, followed by Control-B')
@@ -200,7 +203,7 @@ class KeyBindings(KeyBindingsBase):
         return self.__version
 
     def add(self,
-            *keys: Union[Keys, str],
+            *keys: str,
             filter: FilterOrBool = True,
             eager: FilterOrBool = False,
             is_global: FilterOrBool = False,
@@ -226,7 +229,7 @@ class KeyBindings(KeyBindingsBase):
         """
         assert keys
 
-        keys = tuple(_parse_key(k) for k in keys)
+        parsed_keys = tuple(parse_key(k) for k in keys)
 
         if isinstance(filter, Never):
             # When a filter is Never, it will always stay disabled, so in that
@@ -240,7 +243,7 @@ class KeyBindings(KeyBindingsBase):
                     # We're adding an existing Binding object.
                     self.bindings.append(
                         Binding(
-                            keys, func.handler,
+                            parsed_keys, func.handler,
                             filter=func.filter & to_filter(filter),
                             eager=to_filter(eager) | func.eager,
                             is_global = to_filter(is_global) | func.is_global,
@@ -248,7 +251,7 @@ class KeyBindings(KeyBindingsBase):
                             record_in_macro=func.record_in_macro))
                 else:
                     self.bindings.append(
-                        Binding(keys, cast(KeyHandlerCallable, func),
+                        Binding(parsed_keys, cast(KeyHandlerCallable, func),
                                 filter=filter, eager=eager, is_global=is_global,
                                 save_before=save_before,
                                 record_in_macro=record_in_macro))
@@ -257,7 +260,7 @@ class KeyBindings(KeyBindingsBase):
                 return func
         return decorator
 
-    def remove(self, *args: Union[Keys, str, KeyHandlerCallable]) -> None:
+    def remove(self, *args: Union[str, KeyHandlerCallable]) -> None:
         """
         Remove a key binding.
 
@@ -285,10 +288,10 @@ class KeyBindings(KeyBindingsBase):
 
         else:
             assert len(args) > 0
-            args = cast(Tuple[Union[Keys, str]], args)
+            args = cast(Tuple[str], args)
 
             # Remove this sequence of key bindings.
-            keys = tuple(_parse_key(k) for k in args)
+            keys = tuple(parse_key(k) for k in args)
 
             for b in self.bindings:
                 if b.keys == keys:
@@ -362,34 +365,6 @@ class KeyBindings(KeyBindingsBase):
             return result
 
         return self._get_bindings_starting_with_keys_cache.get(keys, get)
-
-
-def _parse_key(key: Union[Keys, str]) -> Union[str, Keys]:
-    """
-    Replace key by alias and verify whether it's a valid one.
-    """
-    # Already a parse key? -> Return it.
-    if isinstance(key, Keys):
-        return key
-
-    # Lookup aliases.
-    key = KEY_ALIASES.get(key, key)
-
-    # Replace 'space' by ' '
-    if key == 'space':
-        key = ' '
-
-    # Return as `Key` object when it's a special key.
-    try:
-        return Keys(key)
-    except ValueError:
-        pass
-
-    # Final validation.
-    if len(key) != 1:
-        raise ValueError('Invalid key: %s' % (key, ))
-
-    return key
 
 
 def key_binding(

@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any, Deque, Generator, List, Optional, Union
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.filters.app import vi_navigation_mode
-from prompt_toolkit.keys import Keys
+from prompt_toolkit.keys import Keys, ALL_KEYS, ParsedKey, parse_key
 from prompt_toolkit.utils import Event
 
 from .key_bindings import Binding, KeyBindingsBase
@@ -33,17 +33,16 @@ __all__ = [
 
 class KeyPress:
     """
-    :param key: A `Keys` instance or text (one character).
+    :param key: The key that was pressed. This is either a registered key
+        (e.g., "c-c" for control-c or "escape") or one single character of user
+        input.
     :param data: The received string on stdin. (Often vt100 escape codes.)
     """
-    def __init__(self, key: Union[Keys, str], data: Optional[str] = None) -> None:
-        assert isinstance(key, Keys) or len(key) == 1
+    def __init__(self, key: ParsedKey, data: Optional[str] = None) -> None:
+        assert key in ALL_KEYS or len(key) == 1
 
         if data is None:
-            if isinstance(key, Keys):
-                data = key.value
-            else:
-                data = key  # 'key' is a one character string.
+            data = key
 
         self.key = key
         self.data = data
@@ -62,7 +61,7 @@ class KeyPress:
 Helper object to indicate flush operation in the KeyProcessor.
 NOTE: the implementation is very similar to the VT100 parser.
 """
-_Flush = KeyPress('?', data='_Flush')
+_Flush = KeyPress(parse_key('?'), data='_Flush')
 
 
 class KeyProcessor:

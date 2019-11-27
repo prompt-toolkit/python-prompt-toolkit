@@ -175,7 +175,7 @@ def create_text_object_decorator(key_bindings: KeyBindings) -> Callable[..., Cal
     Create a decorator that can be used to register Vi text object implementations.
     """
     def text_object_decorator(
-            *keys: Union[Keys, str],
+            *keys: str,
             filter: Filter = Always(), no_move_handler: bool = False,
             no_selection_handler: bool = False, eager: bool = False) -> Callable[[_TOF], _TOF]:
         """
