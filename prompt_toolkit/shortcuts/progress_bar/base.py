@@ -1,4 +1,3 @@
-# type: ignore[no-redef]
 """
 Progress bar implementation on top of prompt_toolkit.
 

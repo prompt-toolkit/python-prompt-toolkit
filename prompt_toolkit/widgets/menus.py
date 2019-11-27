@@ -1,4 +1,3 @@
-# type: ignore[no-redef]
 from typing import Callable, Iterable, List, Optional, Sequence, Union
 
 from prompt_toolkit.application.current import get_app

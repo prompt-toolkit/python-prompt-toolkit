@@ -1,4 +1,3 @@
-# type: ignore[no-redef]
 """
 Line editing functionality.
 ---------------------------

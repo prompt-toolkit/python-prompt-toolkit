@@ -1,5 +1,4 @@
 # pylint: disable=function-redefined
-# type: ignore[no-redef]
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import Buffer, SelectionType, indent, unindent
 from prompt_toolkit.completion import CompleteEvent
