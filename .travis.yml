@@ -11,7 +11,7 @@ matrix:
 
 install:
   - pip install . pytest coverage codecov flake8 mypy
-  - pip install isort
+  - pip install isort black
   - pip list
 
 script:
@@ -25,6 +25,8 @@ script:
   # Check wheather the imports were sorted correctly.
   # When this fails, please run ./tools/sort-imports.sh
   - isort -c -rc prompt_toolkit
+
+  - black --check prompt_toolkit
 
 after_success:
   - codecov
