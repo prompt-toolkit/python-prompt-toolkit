@@ -130,7 +130,6 @@ class ThreadedHistory(History):
                     cb(item)
 
             self._load_thread = Thread(target=self.history.load, args=(call_all_callbacks, ))
-            print(self._load_thread.daemon)
             self._load_thread.daemon = True
             self._load_thread.start()
 
