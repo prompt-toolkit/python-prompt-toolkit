@@ -4,12 +4,10 @@ from .defaults import create_output
 
 __all__ = [
     # Base.
-    'Output',
-    'DummyOutput',
-
+    "Output",
+    "DummyOutput",
     # Color depth.
-    'ColorDepth',
-
+    "ColorDepth",
     # Defaults.
-    'create_output',
+    "create_output",
 ]

@@ -8,11 +8,10 @@ from .key_bindings import (
 from .key_processor import KeyPress
 
 __all__ = [
-    'ConditionalKeyBindings',
-    'DynamicKeyBindings',
-    'KeyBindings',
-    'KeyBindingsBase',
-    'merge_key_bindings',
-
-    'KeyPress',
+    "ConditionalKeyBindings",
+    "DynamicKeyBindings",
+    "KeyBindings",
+    "KeyBindingsBase",
+    "merge_key_bindings",
+    "KeyPress",
 ]

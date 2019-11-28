@@ -6,7 +6,7 @@ from prompt_toolkit.selection import SelectionType
 from .base import Clipboard, ClipboardData
 
 __all__ = [
-    'PyperclipClipboard',
+    "PyperclipClipboard",
 ]
 
 
@@ -15,6 +15,7 @@ class PyperclipClipboard(Clipboard):
     Clipboard that synchronizes with the Windows/Mac/Linux system clipboard,
     using the pyperclip module.
     """
+
     def __init__(self) -> None:
         self._data: Optional[ClipboardData] = None
 
@@ -36,4 +37,5 @@ class PyperclipClipboard(Clipboard):
         else:
             return ClipboardData(
                 text=text,
-                type=SelectionType.LINES if '\n' in text else SelectionType.LINES)
+                type=SelectionType.LINES if "\n" in text else SelectionType.LINES,
+            )

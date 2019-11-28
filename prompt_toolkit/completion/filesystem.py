@@ -5,8 +5,8 @@ from prompt_toolkit.completion import CompleteEvent, Completer, Completion
 from prompt_toolkit.document import Document
 
 __all__ = [
-    'PathCompleter',
-    'ExecutableCompleter',
+    "PathCompleter",
+    "ExecutableCompleter",
 ]
 
 
@@ -21,20 +21,25 @@ class PathCompleter(Completer):
                         when no filtering has to be done.
     :param min_input_len: Don't do autocompletion when the input string is shorter.
     """
-    def __init__(self, only_directories: bool = False,
-                 get_paths: Optional[Callable[[], List[str]]] = None,
-                 file_filter: Optional[Callable[[str], bool]] = None,
-                 min_input_len: int = 0,
-                 expanduser: bool = False) -> None:
+
+    def __init__(
+        self,
+        only_directories: bool = False,
+        get_paths: Optional[Callable[[], List[str]]] = None,
+        file_filter: Optional[Callable[[str], bool]] = None,
+        min_input_len: int = 0,
+        expanduser: bool = False,
+    ) -> None:
 
         self.only_directories = only_directories
-        self.get_paths = get_paths or (lambda: ['.'])
+        self.get_paths = get_paths or (lambda: ["."])
         self.file_filter = file_filter or (lambda _: True)
         self.min_input_len = min_input_len
         self.expanduser = expanduser
 
-    def get_completions(self, document: Document,
-                        complete_event: CompleteEvent) -> Iterable[Completion]:
+    def get_completions(
+        self, document: Document, complete_event: CompleteEvent
+    ) -> Iterable[Completion]:
         text = document.text_before_cursor
 
         # Complete only when we have at least the minimal input length,
@@ -51,8 +56,9 @@ class PathCompleter(Completer):
             # Directories where to look.
             dirname = os.path.dirname(text)
             if dirname:
-                directories = [os.path.dirname(os.path.join(p, text))
-                               for p in self.get_paths()]
+                directories = [
+                    os.path.dirname(os.path.join(p, text)) for p in self.get_paths()
+                ]
             else:
                 directories = self.get_paths()
 
@@ -73,14 +79,14 @@ class PathCompleter(Completer):
 
             # Yield them.
             for directory, filename in filenames:
-                completion = filename[len(prefix):]
+                completion = filename[len(prefix) :]
                 full_name = os.path.join(directory, filename)
 
                 if os.path.isdir(full_name):
                     # For directories, add a slash to the filename.
                     # (We don't add them to the `completion`. Users can type it
                     # to trigger the autocompletion themselves.)
-                    filename += '/'
+                    filename += "/"
                 elif self.only_directories:
                     continue
 
@@ -96,10 +102,12 @@ class ExecutableCompleter(PathCompleter):
     """
     Complete only executable files in the current path.
     """
+
     def __init__(self) -> None:
         super().__init__(
             only_directories=False,
             min_input_len=1,
-            get_paths=lambda: os.environ.get('PATH', '').split(os.pathsep),
+            get_paths=lambda: os.environ.get("PATH", "").split(os.pathsep),
             file_filter=lambda name: os.access(name, os.X_OK),
-            expanduser=True),
+            expanduser=True,
+        ),

@@ -15,16 +15,16 @@ except ImportError:
 
 
 __all__ = [
-    'run_in_terminal',
-    'in_terminal',
+    "run_in_terminal",
+    "in_terminal",
 ]
 
-_T = TypeVar('_T')
+_T = TypeVar("_T")
 
 
 def run_in_terminal(
-        func: Callable[[], _T], render_cli_done: bool = False,
-        in_executor: bool = False) -> Awaitable[_T]:
+    func: Callable[[], _T], render_cli_done: bool = False, in_executor: bool = False
+) -> Awaitable[_T]:
     """
     Run function on the terminal above the current application or prompt.
 
@@ -46,6 +46,7 @@ def run_in_terminal(
 
     :returns: A `Future`.
     """
+
     async def run() -> _T:
         async with in_terminal(render_cli_done=render_cli_done):
             if in_executor:

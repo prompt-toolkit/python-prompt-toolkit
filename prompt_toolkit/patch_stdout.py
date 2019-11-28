@@ -26,8 +26,8 @@ from typing import Generator, List, Optional, TextIO, cast
 from .application import run_in_terminal
 
 __all__ = [
-    'patch_stdout',
-    'StdoutProxy',
+    "patch_stdout",
+    "StdoutProxy",
 ]
 
 
@@ -68,8 +68,10 @@ class StdoutProxy:
     Proxy object for stdout which captures everything and prints output above
     the current application.
     """
-    def __init__(self, raw: bool = False,
-                 original_stdout: Optional[TextIO] = None) -> None:
+
+    def __init__(
+        self, raw: bool = False, original_stdout: Optional[TextIO] = None
+    ) -> None:
 
         original_stdout = original_stdout or sys.__stdout__
 
@@ -118,21 +120,21 @@ class StdoutProxy:
               command line. Therefor, we have a little buffer which holds the
               text until a newline is written to stdout.
         """
-        if '\n' in data:
+        if "\n" in data:
             # When there is a newline in the data, write everything before the
             # newline, including the newline itself.
-            before, after = data.rsplit('\n', 1)
-            to_write = self._buffer + [before, '\n']
+            before, after = data.rsplit("\n", 1)
+            to_write = self._buffer + [before, "\n"]
             self._buffer = [after]
 
-            text = ''.join(to_write)
+            text = "".join(to_write)
             self._write_and_flush(text)
         else:
             # Otherwise, cache in buffer.
             self._buffer.append(data)
 
     def _flush(self) -> None:
-        text = ''.join(self._buffer)
+        text = "".join(self._buffer)
         self._buffer = []
         self._write_and_flush(text)
 

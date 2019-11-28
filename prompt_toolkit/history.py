@@ -13,11 +13,11 @@ from threading import Thread
 from typing import Callable, Iterable, List, Optional
 
 __all__ = [
-    'History',
-    'ThreadedHistory',
-    'DummyHistory',
-    'FileHistory',
-    'InMemoryHistory',
+    "History",
+    "ThreadedHistory",
+    "DummyHistory",
+    "FileHistory",
+    "InMemoryHistory",
 ]
 
 
@@ -27,6 +27,7 @@ class History(metaclass=ABCMeta):
 
     This also includes abstract methods for loading/storing history.
     """
+
     def __init__(self) -> None:
         # In memory storage for strings.
         self._loaded = False
@@ -114,6 +115,7 @@ class ThreadedHistory(History):
     History entries are available as soon as they are loaded. We don't have to
     wait for everything to be loaded.
     """
+
     def __init__(self, history: History) -> None:
         self.history = history
         self._load_thread: Optional[Thread] = None
@@ -125,11 +127,14 @@ class ThreadedHistory(History):
 
         # Start the load thread, if we don't have a thread yet.
         if not self._load_thread:
+
             def call_all_callbacks(item: str) -> None:
                 for cb in self._item_loaded_callbacks:
                     cb(item)
 
-            self._load_thread = Thread(target=self.history.load, args=(call_all_callbacks, ))
+            self._load_thread = Thread(
+                target=self.history.load, args=(call_all_callbacks,)
+            )
             self._load_thread.daemon = True
             self._load_thread.start()
 
@@ -148,13 +153,14 @@ class ThreadedHistory(History):
         self.history.store_string(string)
 
     def __repr__(self) -> str:
-        return 'ThreadedHistory(%r)' % (self.history, )
+        return "ThreadedHistory(%r)" % (self.history,)
 
 
 class InMemoryHistory(History):
     """
     :class:`.History` class that keeps a list of all strings in memory.
     """
+
     def load_history_strings(self) -> Iterable[str]:
         return []
 
@@ -166,6 +172,7 @@ class DummyHistory(History):
     """
     :class:`.History` object that doesn't remember anything.
     """
+
     def load_history_strings(self) -> Iterable[str]:
         return []
 
@@ -181,6 +188,7 @@ class FileHistory(History):
     """
     :class:`.History` class that stores all strings in a file.
     """
+
     def __init__(self, filename: str) -> None:
         self.filename = filename
         super(FileHistory, self).__init__()
@@ -192,16 +200,16 @@ class FileHistory(History):
         def add() -> None:
             if lines:
                 # Join and drop trailing newline.
-                string = ''.join(lines)[:-1]
+                string = "".join(lines)[:-1]
 
                 strings.append(string)
 
         if os.path.exists(self.filename):
-            with open(self.filename, 'rb') as f:
+            with open(self.filename, "rb") as f:
                 for line_bytes in f:
-                    line = line_bytes.decode('utf-8')
+                    line = line_bytes.decode("utf-8")
 
-                    if line.startswith('+'):
+                    if line.startswith("+"):
                         lines.append(line[1:])
                     else:
                         add()
@@ -214,10 +222,11 @@ class FileHistory(History):
 
     def store_string(self, string: str) -> None:
         # Save to file.
-        with open(self.filename, 'ab') as f:
-            def write(t: str) -> None:
-                f.write(t.encode('utf-8'))
+        with open(self.filename, "ab") as f:
 
-            write('\n# %s\n' % datetime.datetime.now())
-            for line in string.split('\n'):
-                write('+%s\n' % line)
+            def write(t: str) -> None:
+                f.write(t.encode("utf-8"))
+
+            write("\n# %s\n" % datetime.datetime.now())
+            for line in string.split("\n"):
+                write("+%s\n" % line)

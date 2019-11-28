@@ -8,9 +8,7 @@ from ..utils import DummyContext
 from .vt100_parser import Vt100Parser
 from .win32 import _Win32InputBase, attach_win32_input, detach_win32_input
 
-__all__ = [
-    'Win32PipeInput'
-]
+__all__ = ["Win32PipeInput"]
 
 
 class Win32PipeInput(_Win32InputBase):
@@ -28,7 +26,9 @@ class Win32PipeInput(_Win32InputBase):
         input = Win32PipeInput()
         input.send_text('inputdata')
     """
+
     _id = 0
+
     def __init__(self) -> None:
         super().__init__()
         # Event (handle) for registering this input in the event loop.
@@ -42,8 +42,7 @@ class Win32PipeInput(_Win32InputBase):
 
         # Parser for incoming keys.
         self._buffer: List[KeyPress] = []  # Buffer to collect the Key objects.
-        self.vt100_parser = Vt100Parser(
-            lambda key: self._buffer.append(key))
+        self.vt100_parser = Vt100Parser(lambda key: self._buffer.append(key))
 
         # Identifier for every PipeInput for the hash.
         self.__class__._id += 1
@@ -110,7 +109,7 @@ class Win32PipeInput(_Win32InputBase):
 
     def send_bytes(self, data: bytes) -> None:
         " Send bytes to the input. "
-        self.send_text(data.decode('utf-8', 'ignore'))
+        self.send_text(data.decode("utf-8", "ignore"))
 
     def send_text(self, text: str) -> None:
         " Send text to the input. "
@@ -135,4 +134,4 @@ class Win32PipeInput(_Win32InputBase):
         """
         This needs to be unique for every `PipeInput`.
         """
-        return 'pipe-input-%s' % (self._id, )
+        return "pipe-input-%s" % (self._id,)

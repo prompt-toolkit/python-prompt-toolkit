@@ -11,7 +11,7 @@ from prompt_toolkit.utils import (
 from .base import Output
 
 __all__ = [
-    'create_output',
+    "create_output",
 ]
 
 
@@ -51,5 +51,5 @@ def create_output(stdout: Optional[TextIO] = None) -> Output:
             return Win32Output(stdout)
     else:
         from .vt100 import Vt100_Output
-        return Vt100_Output.from_pty(
-            stdout, term=get_term_environment_variable())
+
+        return Vt100_Output.from_pty(stdout, term=get_term_environment_variable())

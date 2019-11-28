@@ -5,7 +5,7 @@ from typing import Callable, DefaultDict, Tuple
 from prompt_toolkit.mouse_events import MouseEvent
 
 __all__ = [
-    'MouseHandlers',
+    "MouseHandlers",
 ]
 
 
@@ -13,6 +13,7 @@ class MouseHandlers:
     """
     Two dimensional raster of callbacks for mouse events.
     """
+
     def __init__(self) -> None:
         def dummy_callback(mouse_event: MouseEvent) -> None:
             """
@@ -20,12 +21,18 @@ class MouseHandlers:
             """
 
         # Map (x,y) tuples to handlers.
-        self.mouse_handlers: DefaultDict[Tuple[int, int], Callable[[MouseEvent], None]] = \
-            defaultdict(lambda: dummy_callback)
+        self.mouse_handlers: DefaultDict[
+            Tuple[int, int], Callable[[MouseEvent], None]
+        ] = defaultdict(lambda: dummy_callback)
 
     def set_mouse_handler_for_range(
-            self, x_min: int, x_max: int, y_min: int, y_max: int,
-            handler: Callable[[MouseEvent], None]) -> None:
+        self,
+        x_min: int,
+        x_max: int,
+        y_min: int,
+        y_max: int,
+        handler: Callable[[MouseEvent], None],
+    ) -> None:
         """
         Set mouse handler for a region.
         """

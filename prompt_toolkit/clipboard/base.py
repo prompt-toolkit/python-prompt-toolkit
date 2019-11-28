@@ -7,10 +7,10 @@ from typing import Callable, Optional
 from prompt_toolkit.selection import SelectionType
 
 __all__ = [
-    'Clipboard',
-    'ClipboardData',
-    'DummyClipboard',
-    'DynamicClipboard',
+    "Clipboard",
+    "ClipboardData",
+    "DummyClipboard",
+    "DynamicClipboard",
 ]
 
 
@@ -21,8 +21,10 @@ class ClipboardData:
     :param text: string
     :param type: :class:`~prompt_toolkit.selection.SelectionType`
     """
-    def __init__(self, text: str = '',
-                 type: SelectionType = SelectionType.CHARACTERS) -> None:
+
+    def __init__(
+        self, text: str = "", type: SelectionType = SelectionType.CHARACTERS
+    ) -> None:
 
         self.text = text
         self.type = type
@@ -34,6 +36,7 @@ class Clipboard(metaclass=ABCMeta):
     (An implementation can be in memory, it can share the X11 or Windows
     keyboard, or can be persistent.)
     """
+
     @abstractmethod
     def set_data(self, data: ClipboardData) -> None:
         """
@@ -64,6 +67,7 @@ class DummyClipboard(Clipboard):
     """
     Clipboard implementation that doesn't remember anything.
     """
+
     def set_data(self, data: ClipboardData) -> None:
         pass
 
@@ -83,6 +87,7 @@ class DynamicClipboard(Clipboard):
 
     :param get_clipboard: Callable that returns a :class:`.Clipboard` instance.
     """
+
     def __init__(self, get_clipboard: Callable[[], Optional[Clipboard]]) -> None:
         self.get_clipboard = get_clipboard
 

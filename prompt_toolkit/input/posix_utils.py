@@ -3,7 +3,7 @@ import select
 from codecs import getincrementaldecoder
 
 __all__ = [
-    'PosixStdinReader',
+    "PosixStdinReader",
 ]
 
 
@@ -28,28 +28,29 @@ class PosixStdinReader:
         and Guake, use the 'Mxx' notation to send mouse events, where each 'x'
         can be any possible byte.
     """
+
     # By default, we want to 'ignore' errors here. The input stream can be full
     # of junk.  One occurrence of this that I had was when using iTerm2 on OS X,
     # with "Option as Meta" checked (You should choose "Option as +Esc".)
 
-    def __init__(self, stdin_fd: int, errors: str = 'surrogateescape') -> None:
+    def __init__(self, stdin_fd: int, errors: str = "surrogateescape") -> None:
         self.stdin_fd = stdin_fd
         self.errors = errors
 
         # Create incremental decoder for decoding stdin.
         # We can not just do `os.read(stdin.fileno(), 1024).decode('utf-8')`, because
         # it could be that we are in the middle of a utf-8 byte sequence.
-        self._stdin_decoder_cls = getincrementaldecoder('utf-8')
+        self._stdin_decoder_cls = getincrementaldecoder("utf-8")
         self._stdin_decoder = self._stdin_decoder_cls(errors=errors)
 
         #: True when there is nothing anymore to read.
         self.closed = False
 
     def read(self, count: int = 1024) -> str:
-            # By default we choose a rather small chunk size, because reading
-            # big amounts of input at once, causes the event loop to process
-            # all these key bindings also at once without going back to the
-            # loop. This will make the application feel unresponsive.
+        # By default we choose a rather small chunk size, because reading
+        # big amounts of input at once, causes the event loop to process
+        # all these key bindings also at once without going back to the
+        # loop. This will make the application feel unresponsive.
         """
         Read the input and return it as a string.
 
@@ -58,7 +59,7 @@ class PosixStdinReader:
         wrong during the decoding.
         """
         if self.closed:
-            return u''
+            return ""
 
         # Check whether there is some input to read. `os.read` would block
         # otherwise.
@@ -67,7 +68,7 @@ class PosixStdinReader:
         # reason this happens in certain situations.)
         try:
             if not select.select([self.stdin_fd], [], [], 0)[0]:
-                return u''
+                return ""
         except IOError:
             # Happens for instance when the file descriptor was closed.
             # (We had this in ptterm, where the FD became ready, a callback was
@@ -82,11 +83,11 @@ class PosixStdinReader:
             data = os.read(self.stdin_fd, count)
 
             # Nothing more to read, stream is closed.
-            if data == b'':
+            if data == b"":
                 self.closed = True
-                return ''
+                return ""
         except OSError:
             # In case of SIGWINCH
-            data = b''
+            data = b""
 
         return self._stdin_decoder.decode(data)

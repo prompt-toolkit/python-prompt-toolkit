@@ -6,9 +6,7 @@ import _collections_abc
 import abc
 from functools import wraps
 
-__all__ = [
-    'asynccontextmanager'
-]
+__all__ = ["asynccontextmanager"]
 
 
 class AbstractAsyncContextManager(abc.ABC):
@@ -27,8 +25,7 @@ class AbstractAsyncContextManager(abc.ABC):
     @classmethod
     def __subclasshook__(cls, C):
         if cls is AbstractAsyncContextManager:
-            return _collections_abc._check_methods(C, "__aenter__",
-                                                   "__aexit__")
+            return _collections_abc._check_methods(C, "__aenter__", "__aexit__")
         return NotImplemented
 
 
@@ -50,8 +47,9 @@ class _GeneratorContextManagerBase:
         # See http://bugs.python.org/issue19404 for more details.
 
 
-class _AsyncGeneratorContextManager(_GeneratorContextManagerBase,
-                                    AbstractAsyncContextManager):
+class _AsyncGeneratorContextManager(
+    _GeneratorContextManagerBase, AbstractAsyncContextManager
+):
     """Helper for @asynccontextmanager."""
 
     async def __aenter__(self):
@@ -117,7 +115,9 @@ def asynccontextmanager(func):
         finally:
             <cleanup>
     """
+
     @wraps(func)
     def helper(*args, **kwds):
         return _AsyncGeneratorContextManager(func, args, kwds)
+
     return helper

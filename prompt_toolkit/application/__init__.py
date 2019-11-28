@@ -11,19 +11,16 @@ from .run_in_terminal import in_terminal, run_in_terminal
 
 __all__ = [
     # Application.
-    'Application',
-
+    "Application",
     # Current.
-    'get_app_session',
-    'create_app_session',
-    'get_app',
-    'get_app_or_none',
-    'set_app',
-
+    "get_app_session",
+    "create_app_session",
+    "get_app",
+    "get_app_or_none",
+    "set_app",
     # Dummy.
-    'DummyApplication',
-
+    "DummyApplication",
     # Run_in_terminal
-    'in_terminal',
-    'run_in_terminal',
+    "in_terminal",
+    "run_in_terminal",
 ]

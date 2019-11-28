@@ -18,11 +18,11 @@ if TYPE_CHECKING:
     from .containers import WindowRenderInfo
 
 __all__ = [
-    'Margin',
-    'NumberedMargin',
-    'ScrollbarMargin',
-    'ConditionalMargin',
-    'PromptMargin',
+    "Margin",
+    "NumberedMargin",
+    "ScrollbarMargin",
+    "ConditionalMargin",
+    "PromptMargin",
 ]
 
 
@@ -30,6 +30,7 @@ class Margin(metaclass=ABCMeta):
     """
     Base interface for a margin.
     """
+
     @abstractmethod
     def get_width(self, get_ui_content: Callable[[], UIContent]) -> int:
         """
@@ -42,8 +43,9 @@ class Margin(metaclass=ABCMeta):
         return 0
 
     @abstractmethod
-    def create_margin(self, window_render_info: 'WindowRenderInfo',
-                      width: int, height: int) -> StyleAndTextTuples:
+    def create_margin(
+        self, window_render_info: "WindowRenderInfo", width: int, height: int
+    ) -> StyleAndTextTuples:
         """
         Creates a margin.
         This should return a list of (style_str, text) tuples.
@@ -70,22 +72,25 @@ class NumberedMargin(Margin):
     :param display_tildes: Display tildes after the end of the document, just
         like Vi does.
     """
-    def __init__(self, relative: FilterOrBool = False,
-                 display_tildes: FilterOrBool = False) -> None:
+
+    def __init__(
+        self, relative: FilterOrBool = False, display_tildes: FilterOrBool = False
+    ) -> None:
 
         self.relative = to_filter(relative)
         self.display_tildes = to_filter(display_tildes)
 
     def get_width(self, get_ui_content: Callable[[], UIContent]) -> int:
         line_count = get_ui_content().line_count
-        return max(3, len('%s' % line_count) + 1)
+        return max(3, len("%s" % line_count) + 1)
 
-    def create_margin(self, window_render_info: 'WindowRenderInfo',
-                      width: int, height: int) -> StyleAndTextTuples:
+    def create_margin(
+        self, window_render_info: "WindowRenderInfo", width: int, height: int
+    ) -> StyleAndTextTuples:
         relative = self.relative()
 
-        style = 'class:line-number'
-        style_current = 'class:line-number,current-line-number'
+        style = "class:line-number"
+        style_current = "class:line-number,current-line-number"
 
         # Get current line number.
         current_lineno = window_render_info.ui_content.cursor_position.y
@@ -103,23 +108,25 @@ class NumberedMargin(Margin):
                     # Current line.
                     if relative:
                         # Left align current number in relative mode.
-                        result.append((style_current, '%i' % (lineno + 1)))
+                        result.append((style_current, "%i" % (lineno + 1)))
                     else:
-                        result.append((style_current, ('%i ' % (lineno + 1)).rjust(width)))
+                        result.append(
+                            (style_current, ("%i " % (lineno + 1)).rjust(width))
+                        )
                 else:
                     # Other lines.
                     if relative:
                         lineno = abs(lineno - current_lineno) - 1
 
-                    result.append((style, ('%i ' % (lineno + 1)).rjust(width)))
+                    result.append((style, ("%i " % (lineno + 1)).rjust(width)))
 
             last_lineno = lineno
-            result.append(('', '\n'))
+            result.append(("", "\n"))
 
         # Fill with tildes.
         if self.display_tildes():
             while y < window_render_info.window_height:
-                result.append(('class:tilde', '~\n'))
+                result.append(("class:tilde", "~\n"))
                 y += 1
 
         return result
@@ -129,6 +136,7 @@ class ConditionalMargin(Margin):
     """
     Wrapper around other :class:`.Margin` classes to show/hide them.
     """
+
     def __init__(self, margin: Margin, filter: FilterOrBool) -> None:
         self.margin = margin
         self.filter = to_filter(filter)
@@ -139,8 +147,9 @@ class ConditionalMargin(Margin):
         else:
             return 0
 
-    def create_margin(self, window_render_info: 'WindowRenderInfo',
-                      width: int, height: int) -> StyleAndTextTuples:
+    def create_margin(
+        self, window_render_info: "WindowRenderInfo", width: int, height: int
+    ) -> StyleAndTextTuples:
         if width and self.filter():
             return self.margin.create_margin(window_render_info, width, height)
         else:
@@ -153,9 +162,13 @@ class ScrollbarMargin(Margin):
 
     :param display_arrows: Display scroll up/down arrows.
     """
-    def __init__(self, display_arrows: FilterOrBool = False,
-                 up_arrow_symbol: str = '^',
-                 down_arrow_symbol: str = 'v') -> None:
+
+    def __init__(
+        self,
+        display_arrows: FilterOrBool = False,
+        up_arrow_symbol: str = "^",
+        down_arrow_symbol: str = "v",
+    ) -> None:
 
         self.display_arrows = to_filter(display_arrows)
         self.up_arrow_symbol = up_arrow_symbol
@@ -164,8 +177,9 @@ class ScrollbarMargin(Margin):
     def get_width(self, get_ui_content: Callable[[], UIContent]) -> int:
         return 1
 
-    def create_margin(self, window_render_info: 'WindowRenderInfo',
-                      width: int, height: int) -> StyleAndTextTuples:
+    def create_margin(
+        self, window_render_info: "WindowRenderInfo", width: int, height: int
+    ) -> StyleAndTextTuples:
         content_height = window_render_info.content_height
         window_height = window_render_info.window_height
         display_arrows = self.display_arrows()
@@ -174,14 +188,19 @@ class ScrollbarMargin(Margin):
             window_height -= 2
 
         try:
-            fraction_visible = len(window_render_info.displayed_lines) / float(content_height)
+            fraction_visible = len(window_render_info.displayed_lines) / float(
+                content_height
+            )
             fraction_above = window_render_info.vertical_scroll / float(content_height)
 
-            scrollbar_height = int(min(window_height, max(1, window_height * fraction_visible)))
+            scrollbar_height = int(
+                min(window_height, max(1, window_height * fraction_visible))
+            )
             scrollbar_top = int(window_height * fraction_above)
         except ZeroDivisionError:
             return []
         else:
+
             def is_scroll_button(row: int) -> bool:
                 " True if we should display a button on this row. "
                 return scrollbar_top <= row <= scrollbar_top + scrollbar_height
@@ -189,35 +208,37 @@ class ScrollbarMargin(Margin):
             # Up arrow.
             result: StyleAndTextTuples = []
             if display_arrows:
-                result.extend([
-                    ('class:scrollbar.arrow', self.up_arrow_symbol),
-                    ('class:scrollbar', '\n')
-                ])
+                result.extend(
+                    [
+                        ("class:scrollbar.arrow", self.up_arrow_symbol),
+                        ("class:scrollbar", "\n"),
+                    ]
+                )
 
             # Scrollbar body.
-            scrollbar_background = 'class:scrollbar.background'
-            scrollbar_background_start = 'class:scrollbar.background,scrollbar.start'
-            scrollbar_button = 'class:scrollbar.button'
-            scrollbar_button_end = 'class:scrollbar.button,scrollbar.end'
+            scrollbar_background = "class:scrollbar.background"
+            scrollbar_background_start = "class:scrollbar.background,scrollbar.start"
+            scrollbar_button = "class:scrollbar.button"
+            scrollbar_button_end = "class:scrollbar.button,scrollbar.end"
 
             for i in range(window_height):
                 if is_scroll_button(i):
                     if not is_scroll_button(i + 1):
                         # Give the last cell a different style, because we
                         # want to underline this.
-                        result.append((scrollbar_button_end, ' '))
+                        result.append((scrollbar_button_end, " "))
                     else:
-                        result.append((scrollbar_button, ' '))
+                        result.append((scrollbar_button, " "))
                 else:
                     if is_scroll_button(i + 1):
-                        result.append((scrollbar_background_start, ' '))
+                        result.append((scrollbar_background_start, " "))
                     else:
-                        result.append((scrollbar_background, ' '))
-                result.append(('', '\n'))
+                        result.append((scrollbar_background, " "))
+                result.append(("", "\n"))
 
             # Down arrow
             if display_arrows:
-                result.append(('class:scrollbar.arrow', self.down_arrow_symbol))
+                result.append(("class:scrollbar.arrow", self.down_arrow_symbol))
 
             return result
 
@@ -243,9 +264,14 @@ class PromptMargin(Margin):
         text or a list of `(style_str, type)` tuples for the next lines of the
         input.
     """
+
     def __init__(
-            self, get_prompt: Callable[[], StyleAndTextTuples],
-            get_continuation: Optional[Callable[[int, int, bool], StyleAndTextTuples]] = None) -> None:
+        self,
+        get_prompt: Callable[[], StyleAndTextTuples],
+        get_continuation: Optional[
+            Callable[[int, int, bool], StyleAndTextTuples]
+        ] = None,
+    ) -> None:
 
         self.get_prompt = get_prompt
         self.get_continuation = get_continuation
@@ -256,8 +282,9 @@ class PromptMargin(Margin):
         text = fragment_list_to_text(self.get_prompt())
         return get_cwidth(text)
 
-    def create_margin(self, window_render_info: 'WindowRenderInfo',
-                      width: int, height: int) -> StyleAndTextTuples:
+    def create_margin(
+        self, window_render_info: "WindowRenderInfo", width: int, height: int
+    ) -> StyleAndTextTuples:
         get_continuation = self.get_continuation
         result: StyleAndTextTuples = []
 
@@ -269,8 +296,10 @@ class PromptMargin(Margin):
             last_y = None
 
             for y in window_render_info.displayed_lines[1:]:
-                result.append(('', '\n'))
-                result.extend(to_formatted_text(get_continuation(width, y, y == last_y)))
+                result.append(("", "\n"))
+                result.extend(
+                    to_formatted_text(get_continuation(width, y, y == last_y))
+                )
                 last_y = y
 
         return result

@@ -4,9 +4,9 @@ Data structures for the selection.
 from enum import Enum
 
 __all__ = [
-    'SelectionType',
-    'PasteMode',
-    'SelectionState',
+    "SelectionType",
+    "PasteMode",
+    "SelectionState",
 ]
 
 
@@ -14,20 +14,21 @@ class SelectionType(Enum):
     """
     Type of selection.
     """
+
     #: Characters. (Visual in Vi.)
-    CHARACTERS = 'CHARACTERS'
+    CHARACTERS = "CHARACTERS"
 
     #: Whole lines. (Visual-Line in Vi.)
-    LINES = 'LINES'
+    LINES = "LINES"
 
     #: A block selection. (Visual-Block in Vi.)
-    BLOCK = 'BLOCK'
+    BLOCK = "BLOCK"
 
 
 class PasteMode(Enum):
-    EMACS = 'EMACS'  # Yank like emacs.
-    VI_AFTER = 'VI_AFTER'  # When pressing 'p' in Vi.
-    VI_BEFORE = 'VI_BEFORE'  # When pressing 'P' in Vi.
+    EMACS = "EMACS"  # Yank like emacs.
+    VI_AFTER = "VI_AFTER"  # When pressing 'p' in Vi.
+    VI_BEFORE = "VI_BEFORE"  # When pressing 'P' in Vi.
 
 
 class SelectionState:
@@ -37,8 +38,12 @@ class SelectionState:
     :param original_cursor_position: int
     :param type: :class:`~.SelectionType`
     """
-    def __init__(self, original_cursor_position: int = 0,
-                 type: SelectionType = SelectionType.CHARACTERS) -> None:
+
+    def __init__(
+        self,
+        original_cursor_position: int = 0,
+        type: SelectionType = SelectionType.CHARACTERS,
+    ) -> None:
 
         self.original_cursor_position = original_cursor_position
         self.type = type
@@ -48,6 +53,8 @@ class SelectionState:
         self.shift_mode = True
 
     def __repr__(self) -> str:
-        return '%s(original_cursor_position=%r, type=%r)' % (
+        return "%s(original_cursor_position=%r, type=%r)" % (
             self.__class__.__name__,
-            self.original_cursor_position, self.type)
+            self.original_cursor_position,
+            self.type,
+        )

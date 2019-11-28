@@ -31,26 +31,22 @@ from .utils import (
 
 __all__ = [
     # Base.
-    'AnyFormattedText',
-    'to_formatted_text',
-    'is_formatted_text',
-    'Template',
-    'merge_formatted_text',
-    'FormattedText',
-    'StyleAndTextTuples',
-
+    "AnyFormattedText",
+    "to_formatted_text",
+    "is_formatted_text",
+    "Template",
+    "merge_formatted_text",
+    "FormattedText",
+    "StyleAndTextTuples",
     # HTML.
-    'HTML',
-
+    "HTML",
     # ANSI.
-    'ANSI',
-
+    "ANSI",
     # Pygments.
-    'PygmentsTokens',
-
+    "PygmentsTokens",
     # Utils.
-    'fragment_list_len',
-    'fragment_list_width',
-    'fragment_list_to_text',
-    'split_lines',
+    "fragment_list_len",
+    "fragment_list_width",
+    "fragment_list_to_text",
+    "split_lines",
 ]

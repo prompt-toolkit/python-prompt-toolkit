@@ -14,43 +14,40 @@ if TYPE_CHECKING:
 
 
 __all__ = [
-    'has_arg',
-    'has_completions',
-    'completion_is_selected',
-    'has_focus',
-    'buffer_has_focus',
-    'has_selection',
-    'has_validation_error',
-    'is_done',
-    'is_read_only',
-    'is_multiline',
-    'renderer_height_is_known',
-    'in_editing_mode',
-    'in_paste_mode',
-
-    'vi_mode',
-    'vi_navigation_mode',
-    'vi_insert_mode',
-    'vi_insert_multiple_mode',
-    'vi_replace_mode',
-    'vi_selection_mode',
-    'vi_waiting_for_text_object_mode',
-    'vi_digraph_mode',
-    'vi_recording_macro',
-
-    'emacs_mode',
-    'emacs_insert_mode',
-    'emacs_selection_mode',
-    'shift_selection_mode',
-
-    'is_searching',
-    'control_is_searchable',
-    'vi_search_direction_reversed',
+    "has_arg",
+    "has_completions",
+    "completion_is_selected",
+    "has_focus",
+    "buffer_has_focus",
+    "has_selection",
+    "has_validation_error",
+    "is_done",
+    "is_read_only",
+    "is_multiline",
+    "renderer_height_is_known",
+    "in_editing_mode",
+    "in_paste_mode",
+    "vi_mode",
+    "vi_navigation_mode",
+    "vi_insert_mode",
+    "vi_insert_multiple_mode",
+    "vi_replace_mode",
+    "vi_selection_mode",
+    "vi_waiting_for_text_object_mode",
+    "vi_digraph_mode",
+    "vi_recording_macro",
+    "emacs_mode",
+    "emacs_insert_mode",
+    "emacs_selection_mode",
+    "shift_selection_mode",
+    "is_searching",
+    "control_is_searchable",
+    "vi_search_direction_reversed",
 ]
 
 
 @memoized()
-def has_focus(value: 'FocusableElement') -> Condition:
+def has_focus(value: "FocusableElement") -> Condition:
     """
     Enable when this buffer has the focus.
     """
@@ -60,21 +57,30 @@ def has_focus(value: 'FocusableElement') -> Condition:
     from prompt_toolkit.layout import walk
 
     if isinstance(value, str):
+
         def test() -> bool:
             return get_app().current_buffer.name == value
+
     elif isinstance(value, Buffer):
+
         def test() -> bool:
             return get_app().current_buffer == value
+
     elif isinstance(value, UIControl):
+
         def test() -> bool:
             return get_app().layout.current_control == value
+
     else:
         value = to_container(value)
 
         if isinstance(value, Window):
+
             def test() -> bool:
                 return get_app().layout.current_window == value
+
         else:
+
             def test() -> bool:
                 # Consider focused when any window inside this container is
                 # focused.
@@ -88,6 +94,7 @@ def has_focus(value: 'FocusableElement') -> Condition:
     @Condition
     def has_focus_filter() -> bool:
         return test()
+
     return has_focus_filter
 
 
@@ -122,8 +129,7 @@ def completion_is_selected() -> bool:
     True when the user selected a completion.
     """
     complete_state = get_app().current_buffer.complete_state
-    return (complete_state is not None and
-            complete_state.current_completion is not None)
+    return complete_state is not None and complete_state.current_completion is not None
 
 
 @Condition
@@ -181,9 +187,11 @@ def in_editing_mode(editing_mode: EditingMode) -> Condition:
     """
     Check whether a given editing mode is active. (Vi or Emacs.)
     """
+
     @Condition
     def in_editing_mode_filter() -> bool:
         return get_app().editing_mode == editing_mode
+
     return in_editing_mode_filter
 
 
@@ -203,30 +211,38 @@ def vi_navigation_mode() -> bool:
     Active when the set for Vi navigation key bindings are active.
     """
     from prompt_toolkit.key_binding.vi_state import InputMode
+
     app = get_app()
 
-    if (app.editing_mode != EditingMode.VI
-            or app.vi_state.operator_func
-            or app.vi_state.waiting_for_digraph
-            or app.current_buffer.selection_state):
+    if (
+        app.editing_mode != EditingMode.VI
+        or app.vi_state.operator_func
+        or app.vi_state.waiting_for_digraph
+        or app.current_buffer.selection_state
+    ):
         return False
 
-    return (app.vi_state.input_mode == InputMode.NAVIGATION or
-            app.vi_state.temporary_navigation_mode or
-            app.current_buffer.read_only())
+    return (
+        app.vi_state.input_mode == InputMode.NAVIGATION
+        or app.vi_state.temporary_navigation_mode
+        or app.current_buffer.read_only()
+    )
 
 
 @Condition
 def vi_insert_mode() -> bool:
     from prompt_toolkit.key_binding.vi_state import InputMode
+
     app = get_app()
 
-    if (app.editing_mode != EditingMode.VI
-            or app.vi_state.operator_func
-            or app.vi_state.waiting_for_digraph
-            or app.current_buffer.selection_state
-            or app.vi_state.temporary_navigation_mode
-            or app.current_buffer.read_only()):
+    if (
+        app.editing_mode != EditingMode.VI
+        or app.vi_state.operator_func
+        or app.vi_state.waiting_for_digraph
+        or app.current_buffer.selection_state
+        or app.vi_state.temporary_navigation_mode
+        or app.current_buffer.read_only()
+    ):
         return False
 
     return app.vi_state.input_mode == InputMode.INSERT
@@ -235,14 +251,17 @@ def vi_insert_mode() -> bool:
 @Condition
 def vi_insert_multiple_mode() -> bool:
     from prompt_toolkit.key_binding.vi_state import InputMode
+
     app = get_app()
 
-    if (app.editing_mode != EditingMode.VI
-            or app.vi_state.operator_func
-            or app.vi_state.waiting_for_digraph
-            or app.current_buffer.selection_state
-            or app.vi_state.temporary_navigation_mode
-            or app.current_buffer.read_only()):
+    if (
+        app.editing_mode != EditingMode.VI
+        or app.vi_state.operator_func
+        or app.vi_state.waiting_for_digraph
+        or app.current_buffer.selection_state
+        or app.vi_state.temporary_navigation_mode
+        or app.current_buffer.read_only()
+    ):
         return False
 
     return app.vi_state.input_mode == InputMode.INSERT_MULTIPLE
@@ -251,14 +270,17 @@ def vi_insert_multiple_mode() -> bool:
 @Condition
 def vi_replace_mode() -> bool:
     from prompt_toolkit.key_binding.vi_state import InputMode
+
     app = get_app()
 
-    if (app.editing_mode != EditingMode.VI
-            or app.vi_state.operator_func
-            or app.vi_state.waiting_for_digraph
-            or app.current_buffer.selection_state
-            or app.vi_state.temporary_navigation_mode
-            or app.current_buffer.read_only()):
+    if (
+        app.editing_mode != EditingMode.VI
+        or app.vi_state.operator_func
+        or app.vi_state.waiting_for_digraph
+        or app.current_buffer.selection_state
+        or app.vi_state.temporary_navigation_mode
+        or app.current_buffer.read_only()
+    ):
         return False
 
     return app.vi_state.input_mode == InputMode.REPLACE
@@ -310,9 +332,11 @@ def emacs_mode() -> bool:
 @Condition
 def emacs_insert_mode() -> bool:
     app = get_app()
-    if (app.editing_mode != EditingMode.EMACS
-            or app.current_buffer.selection_state
-            or app.current_buffer.read_only()):
+    if (
+        app.editing_mode != EditingMode.EMACS
+        or app.current_buffer.selection_state
+        or app.current_buffer.read_only()
+    ):
         return False
     return True
 
@@ -320,15 +344,18 @@ def emacs_insert_mode() -> bool:
 @Condition
 def emacs_selection_mode() -> bool:
     app = get_app()
-    return bool(app.editing_mode == EditingMode.EMACS
-            and app.current_buffer.selection_state)
+    return bool(
+        app.editing_mode == EditingMode.EMACS and app.current_buffer.selection_state
+    )
 
 
 @Condition
 def shift_selection_mode() -> bool:
     app = get_app()
-    return bool(app.current_buffer.selection_state
-            and app.current_buffer.selection_state.shift_mode)
+    return bool(
+        app.current_buffer.selection_state
+        and app.current_buffer.selection_state.shift_mode
+    )
 
 
 @Condition
@@ -342,10 +369,12 @@ def is_searching() -> bool:
 def control_is_searchable() -> bool:
     " When the current UIControl is searchable. "
     from prompt_toolkit.layout.controls import BufferControl
+
     control = get_app().layout.current_control
 
-    return (isinstance(control, BufferControl) and
-            control.search_buffer_control is not None)
+    return (
+        isinstance(control, BufferControl) and control.search_buffer_control is not None
+    )
 
 
 @Condition

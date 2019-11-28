@@ -7,13 +7,12 @@ from .pygments import PygmentsLexer, RegexSync, SyncFromStart, SyntaxSync
 
 __all__ = [
     # Base.
-    'Lexer',
-    'SimpleLexer',
-    'DynamicLexer',
-
+    "Lexer",
+    "SimpleLexer",
+    "DynamicLexer",
     # Pygments.
-    'PygmentsLexer',
-    'RegexSync',
-    'SyncFromStart',
-    'SyntaxSync',
+    "PygmentsLexer",
+    "RegexSync",
+    "SyncFromStart",
+    "SyntaxSync",
 ]

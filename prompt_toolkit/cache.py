@@ -1,25 +1,15 @@
 from collections import deque
 from functools import wraps
-from typing import (
-    Any,
-    Callable,
-    Deque,
-    Dict,
-    Generic,
-    Hashable,
-    Tuple,
-    TypeVar,
-    cast,
-)
+from typing import Any, Callable, Deque, Dict, Generic, Hashable, Tuple, TypeVar, cast
 
 __all__ = [
-    'SimpleCache',
-    'FastDictCache',
-    'memoized',
+    "SimpleCache",
+    "FastDictCache",
+    "memoized",
 ]
 
-_T = TypeVar('_T', bound=Hashable)
-_U = TypeVar('_U')
+_T = TypeVar("_T", bound=Hashable)
+_U = TypeVar("_U")
 
 
 class SimpleCache(Generic[_T, _U]):
@@ -29,6 +19,7 @@ class SimpleCache(Generic[_T, _U]):
 
     :param maxsize: Maximum size of the cache. (Don't make it too big.)
     """
+
     def __init__(self, maxsize: int = 8) -> None:
         assert maxsize > 0
 
@@ -65,8 +56,8 @@ class SimpleCache(Generic[_T, _U]):
         self._keys = deque()
 
 
-_K = TypeVar('_K', bound=Tuple)
-_V = TypeVar('_V')
+_K = TypeVar("_K", bound=Tuple)
+_V = TypeVar("_V")
 
 
 class FastDictCache(Dict[_K, _V]):
@@ -81,6 +72,7 @@ class FastDictCache(Dict[_K, _V]):
 
     :param get_value: Callable that's called in case of a missing key.
     """
+
     # NOTE: This cache is used to cache `prompt_toolkit.layout.screen.Char` and
     #       `prompt_toolkit.Document`. Make sure to keep this really lightweight.
     #       Accessing the cache should stay faster than instantiating new
@@ -89,8 +81,7 @@ class FastDictCache(Dict[_K, _V]):
     #       SimpleCache is still required for cases where the cache key is not
     #       the same as the arguments given to the function that creates the
     #       value.)
-    def __init__(self, get_value: Callable[..., _V],
-                 size: int = 1000000) -> None:
+    def __init__(self, get_value: Callable[..., _V], size: int = 1000000) -> None:
         assert size > 0
 
         self._keys: Deque[_K] = deque()
@@ -110,13 +101,14 @@ class FastDictCache(Dict[_K, _V]):
         return result
 
 
-_F = TypeVar('_F', bound=Callable)
+_F = TypeVar("_F", bound=Callable)
 
 
 def memoized(maxsize: int = 1024) -> Callable[[_F], _F]:
     """
     Memoization decorator for immutable classes and pure functions.
     """
+
     def decorator(obj: _F) -> _F:
         cache: SimpleCache[Hashable, Any] = SimpleCache(maxsize=maxsize)
 
@@ -127,5 +119,7 @@ def memoized(maxsize: int = 1024) -> Callable[[_F], _F]:
 
             key = (a, tuple(sorted(kw.items())))
             return cache.get(key, create_new)
+
         return cast(_F, new_callable)
+
     return decorator

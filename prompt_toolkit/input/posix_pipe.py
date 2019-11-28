@@ -5,7 +5,7 @@ from ..utils import DummyContext
 from .vt100 import Vt100Input
 
 __all__ = [
-    'PosixPipeInput',
+    "PosixPipeInput",
 ]
 
 
@@ -20,8 +20,10 @@ class PosixPipeInput(Vt100Input):
         input = PosixPipeInput()
         input.send_text('inputdata')
     """
+
     _id = 0
-    def __init__(self, text: str = '') -> None:
+
+    def __init__(self, text: str = "") -> None:
         self._r, self._w = os.pipe()
 
         class Stdin:
@@ -47,7 +49,7 @@ class PosixPipeInput(Vt100Input):
 
     def send_text(self, data: str) -> None:
         " Send text to the input. "
-        os.write(self._w, data.encode('utf-8'))
+        os.write(self._w, data.encode("utf-8"))
 
     def raw_mode(self) -> ContextManager[None]:
         return DummyContext()
@@ -68,4 +70,4 @@ class PosixPipeInput(Vt100Input):
         """
         This needs to be unique for every `PipeInput`.
         """
-        return 'pipe-input-%s' % (self._id, )
+        return "pipe-input-%s" % (self._id,)

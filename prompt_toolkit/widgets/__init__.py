@@ -33,31 +33,28 @@ from .toolbars import (
 
 __all__ = [
     # Base.
-    'TextArea',
-    'Label',
-    'Button',
-    'Frame',
-    'Shadow',
-    'Box',
-    'VerticalLine',
-    'HorizontalLine',
-    'CheckboxList',
-    'RadioList',
-    'Checkbox',
-    'ProgressBar',
-
+    "TextArea",
+    "Label",
+    "Button",
+    "Frame",
+    "Shadow",
+    "Box",
+    "VerticalLine",
+    "HorizontalLine",
+    "CheckboxList",
+    "RadioList",
+    "Checkbox",
+    "ProgressBar",
     # Toolbars.
-    'ArgToolbar',
-    'CompletionsToolbar',
-    'FormattedTextToolbar',
-    'SearchToolbar',
-    'SystemToolbar',
-    'ValidationToolbar',
-
+    "ArgToolbar",
+    "CompletionsToolbar",
+    "FormattedTextToolbar",
+    "SearchToolbar",
+    "SystemToolbar",
+    "ValidationToolbar",
     # Dialogs.
-    'Dialog',
-
+    "Dialog",
     # Menus.
-    'MenuContainer',
-    'MenuItem',
+    "MenuContainer",
+    "MenuItem",
 ]

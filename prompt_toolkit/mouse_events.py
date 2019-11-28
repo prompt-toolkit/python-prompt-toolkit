@@ -19,17 +19,14 @@ from enum import Enum
 
 from .data_structures import Point
 
-__all__ = [
-    'MouseEventType',
-    'MouseEvent'
-]
+__all__ = ["MouseEventType", "MouseEvent"]
 
 
 class MouseEventType(Enum):
-    MOUSE_UP = 'MOUSE_UP'
-    MOUSE_DOWN = 'MOUSE_DOWN'
-    SCROLL_UP = 'SCROLL_UP'
-    SCROLL_DOWN = 'SCROLL_DOWN'
+    MOUSE_UP = "MOUSE_UP"
+    MOUSE_DOWN = "MOUSE_DOWN"
+    SCROLL_UP = "SCROLL_UP"
+    SCROLL_DOWN = "SCROLL_DOWN"
 
 
 class MouseEvent:
@@ -39,9 +36,10 @@ class MouseEvent:
     :param position: `Point` instance.
     :param event_type: `MouseEventType`.
     """
+
     def __init__(self, position: Point, event_type: MouseEventType) -> None:
         self.position = position
         self.event_type = event_type
 
     def __repr__(self) -> str:
-        return 'MouseEvent(%r, %r)' % (self.position, self.event_type)
+        return "MouseEvent(%r, %r)" % (self.position, self.event_type)

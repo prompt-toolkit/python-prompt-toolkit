@@ -8,19 +8,19 @@ if TYPE_CHECKING:
     from .key_bindings.vi import TextObject
 
 __all__ = [
-    'InputMode',
-    'CharacterFind',
-    'ViState',
+    "InputMode",
+    "CharacterFind",
+    "ViState",
 ]
 
 
 class InputMode(str, Enum):
     value: str
 
-    INSERT = 'vi-insert'
-    INSERT_MULTIPLE = 'vi-insert-multiple'
-    NAVIGATION = 'vi-navigation'  # Normal mode.
-    REPLACE = 'vi-replace'
+    INSERT = "vi-insert"
+    INSERT_MULTIPLE = "vi-insert-multiple"
+    NAVIGATION = "vi-navigation"  # Normal mode.
+    REPLACE = "vi-replace"
 
 
 class CharacterFind:
@@ -33,6 +33,7 @@ class ViState:
     """
     Mutable class to hold the state of the Vi navigation.
     """
+
     def __init__(self) -> None:
         #: None or CharacterFind instance. (This is used to repeat the last
         #: search in Vi mode, by pressing the 'n' or 'N' in navigation mode.)
@@ -41,7 +42,9 @@ class ViState:
         # When an operator is given and we are waiting for text object,
         # -- e.g. in the case of 'dw', after the 'd' --, an operator callback
         # is set here.
-        self.operator_func: Optional[Callable[['KeyPressEvent', 'TextObject'], None]] = None
+        self.operator_func: Optional[
+            Callable[["KeyPressEvent", "TextObject"], None]
+        ] = None
         self.operator_arg: Optional[int] = None
 
         #: Named registers. Maps register name (e.g. 'a') to
@@ -64,7 +67,7 @@ class ViState:
         # recording is stopped. So we record in a separate `current_recording`
         # variable.
         self.recording_register: Optional[str] = None
-        self.current_recording = ''
+        self.current_recording = ""
 
         # Temporary navigation (normal) mode.
         # This happens when control-o has been pressed in insert or replace
@@ -100,4 +103,4 @@ class ViState:
 
         # Reset recording state.
         self.recording_register = None
-        self.current_recording = ''
+        self.current_recording = ""

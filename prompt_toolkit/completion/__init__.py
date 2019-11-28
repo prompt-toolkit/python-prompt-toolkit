@@ -15,26 +15,22 @@ from .word_completer import WordCompleter
 
 __all__ = [
     # Base.
-    'Completion',
-    'Completer',
-    'ThreadedCompleter',
-    'DummyCompleter',
-    'DynamicCompleter',
-    'CompleteEvent',
-    'merge_completers',
-    'get_common_complete_suffix',
-
+    "Completion",
+    "Completer",
+    "ThreadedCompleter",
+    "DummyCompleter",
+    "DynamicCompleter",
+    "CompleteEvent",
+    "merge_completers",
+    "get_common_complete_suffix",
     # Filesystem.
-    'PathCompleter',
-    'ExecutableCompleter',
-
+    "PathCompleter",
+    "ExecutableCompleter",
     # Fuzzy
-    'FuzzyCompleter',
-    'FuzzyWordCompleter',
-
+    "FuzzyCompleter",
+    "FuzzyWordCompleter",
     # Nested.
-    'NestedCompleter',
-
+    "NestedCompleter",
     # Word completer.
-    'WordCompleter',
+    "WordCompleter",
 ]

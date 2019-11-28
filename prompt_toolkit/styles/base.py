@@ -5,27 +5,30 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 from typing import Callable, Dict, Hashable, List, NamedTuple, Optional, Tuple
 
 __all__ = [
-    'Attrs',
-    'DEFAULT_ATTRS',
-    'ANSI_COLOR_NAMES',
-    'ANSI_COLOR_NAMES_ALIASES',
-    'BaseStyle',
-    'DummyStyle',
-    'DynamicStyle',
+    "Attrs",
+    "DEFAULT_ATTRS",
+    "ANSI_COLOR_NAMES",
+    "ANSI_COLOR_NAMES_ALIASES",
+    "BaseStyle",
+    "DummyStyle",
+    "DynamicStyle",
 ]
 
 
 #: Style attributes.
-Attrs = NamedTuple('Attrs', [
-    ('color', Optional[str]),
-    ('bgcolor', Optional[str]),
-    ('bold', Optional[bool]),
-    ('underline', Optional[bool]),
-    ('italic', Optional[bool]),
-    ('blink', Optional[bool]),
-    ('reverse', Optional[bool]),
-    ('hidden', Optional[bool])
-])
+Attrs = NamedTuple(
+    "Attrs",
+    [
+        ("color", Optional[str]),
+        ("bgcolor", Optional[str]),
+        ("bold", Optional[bool]),
+        ("underline", Optional[bool]),
+        ("italic", Optional[bool]),
+        ("blink", Optional[bool]),
+        ("reverse", Optional[bool]),
+        ("hidden", Optional[bool]),
+    ],
+)
 
 """
 :param color: Hexadecimal string. E.g. '000000' or Ansi color name: e.g. 'ansiblue'
@@ -39,8 +42,16 @@ Attrs = NamedTuple('Attrs', [
 """
 
 #: The default `Attrs`.
-DEFAULT_ATTRS = Attrs(color='', bgcolor='', bold=False, underline=False,
-                      italic=False, blink=False, reverse=False, hidden=False)
+DEFAULT_ATTRS = Attrs(
+    color="",
+    bgcolor="",
+    bold=False,
+    underline=False,
+    italic=False,
+    blink=False,
+    reverse=False,
+    hidden=False,
+)
 
 
 #: ``Attrs.bgcolor/fgcolor`` can be in either 'ffffff' format, or can be any of
@@ -49,15 +60,25 @@ DEFAULT_ATTRS = Attrs(color='', bgcolor='', bold=False, underline=False,
 #: values for these names.
 #: ISO 6429 colors
 ANSI_COLOR_NAMES = [
-    'ansidefault',
-
+    "ansidefault",
     # Low intensity, dark.  (One or two components 0x80, the other 0x00.)
-    'ansiblack', 'ansired', 'ansigreen', 'ansiyellow', 'ansiblue',
-    'ansimagenta', 'ansicyan', 'ansigray',
-
+    "ansiblack",
+    "ansired",
+    "ansigreen",
+    "ansiyellow",
+    "ansiblue",
+    "ansimagenta",
+    "ansicyan",
+    "ansigray",
     # High intensity, bright. (One or two components 0xff, the other 0x00. Not supported everywhere.)
-    'ansibrightblack', 'ansibrightred', 'ansibrightgreen', 'ansibrightyellow',
-    'ansibrightblue', 'ansibrightmagenta', 'ansibrightcyan', 'ansiwhite',
+    "ansibrightblack",
+    "ansibrightred",
+    "ansibrightgreen",
+    "ansibrightyellow",
+    "ansibrightblue",
+    "ansibrightmagenta",
+    "ansibrightcyan",
+    "ansiwhite",
 ]
 
 
@@ -67,16 +88,16 @@ ANSI_COLOR_NAMES = [
 
 # The table below maps the old aliases to the current names.
 ANSI_COLOR_NAMES_ALIASES: Dict[str, str] = {
-    'ansidarkgray': 'ansibrightblack',
-    'ansiteal': 'ansicyan',
-    'ansiturquoise': 'ansibrightcyan',
-    'ansibrown': 'ansiyellow',
-    'ansipurple': 'ansimagenta',
-    'ansifuchsia': 'ansibrightmagenta',
-    'ansilightgray': 'ansigray',
-    'ansidarkred': 'ansired',
-    'ansidarkgreen': 'ansigreen',
-    'ansidarkblue': 'ansiblue',
+    "ansidarkgray": "ansibrightblack",
+    "ansiteal": "ansicyan",
+    "ansiturquoise": "ansibrightcyan",
+    "ansibrown": "ansiyellow",
+    "ansipurple": "ansimagenta",
+    "ansifuchsia": "ansibrightmagenta",
+    "ansilightgray": "ansigray",
+    "ansidarkred": "ansired",
+    "ansidarkgreen": "ansigreen",
+    "ansidarkblue": "ansiblue",
 }
 assert set(ANSI_COLOR_NAMES_ALIASES.values()).issubset(set(ANSI_COLOR_NAMES))
 assert not (set(ANSI_COLOR_NAMES_ALIASES.keys()) & set(ANSI_COLOR_NAMES))
@@ -86,9 +107,11 @@ class BaseStyle(metaclass=ABCMeta):
     """
     Abstract base class for prompt_toolkit styles.
     """
+
     @abstractmethod
     def get_attrs_for_style_str(
-            self, style_str: str, default: Attrs = DEFAULT_ATTRS) -> Attrs:
+        self, style_str: str, default: Attrs = DEFAULT_ATTRS
+    ) -> Attrs:
         """
         Return :class:`.Attrs` for the given style string.
 
@@ -118,8 +141,10 @@ class DummyStyle(BaseStyle):
     """
     A style that doesn't style anything.
     """
+
     def get_attrs_for_style_str(
-            self, style_str: str, default: Attrs = DEFAULT_ATTRS) -> Attrs:
+        self, style_str: str, default: Attrs = DEFAULT_ATTRS
+    ) -> Attrs:
         return default
 
     def invalidation_hash(self) -> Hashable:
@@ -136,12 +161,14 @@ class DynamicStyle(BaseStyle):
 
     :param get_style: Callable that returns a :class:`.Style` instance.
     """
+
     def __init__(self, get_style: Callable[[], Optional[BaseStyle]]):
         self.get_style = get_style
         self._dummy = DummyStyle()
 
     def get_attrs_for_style_str(
-            self, style_str: str, default: Attrs = DEFAULT_ATTRS) -> Attrs:
+        self, style_str: str, default: Attrs = DEFAULT_ATTRS
+    ) -> Attrs:
         style = self.get_style() or self._dummy
 
         return style.get_attrs_for_style_str(style_str, default)

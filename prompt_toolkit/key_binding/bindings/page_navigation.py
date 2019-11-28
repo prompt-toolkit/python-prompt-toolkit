@@ -22,9 +22,9 @@ from .scroll import (
 )
 
 __all__ = [
-    'load_page_navigation_bindings',
-    'load_emacs_page_navigation_bindings',
-    'load_vi_page_navigation_bindings',
+    "load_page_navigation_bindings",
+    "load_emacs_page_navigation_bindings",
+    "load_vi_page_navigation_bindings",
 ]
 
 
@@ -36,10 +36,11 @@ def load_page_navigation_bindings() -> KeyBindingsBase:
     # when another widget is focused (like for instance `c-d` in a
     # ptterm.Terminal).
     return ConditionalKeyBindings(
-        merge_key_bindings([
-            load_emacs_page_navigation_bindings(),
-            load_vi_page_navigation_bindings(),
-        ]), buffer_has_focus)
+        merge_key_bindings(
+            [load_emacs_page_navigation_bindings(), load_vi_page_navigation_bindings(),]
+        ),
+        buffer_has_focus,
+    )
 
 
 def load_emacs_page_navigation_bindings() -> KeyBindingsBase:
@@ -50,10 +51,10 @@ def load_emacs_page_navigation_bindings() -> KeyBindingsBase:
     key_bindings = KeyBindings()
     handle = key_bindings.add
 
-    handle('c-v')(scroll_page_down)
-    handle('pagedown')(scroll_page_down)
-    handle('escape', 'v')(scroll_page_up)
-    handle('pageup')(scroll_page_up)
+    handle("c-v")(scroll_page_down)
+    handle("pagedown")(scroll_page_down)
+    handle("escape", "v")(scroll_page_up)
+    handle("pageup")(scroll_page_up)
 
     return ConditionalKeyBindings(key_bindings, emacs_mode)
 
@@ -66,13 +67,13 @@ def load_vi_page_navigation_bindings() -> KeyBindingsBase:
     key_bindings = KeyBindings()
     handle = key_bindings.add
 
-    handle('c-f')(scroll_forward)
-    handle('c-b')(scroll_backward)
-    handle('c-d')(scroll_half_page_down)
-    handle('c-u')(scroll_half_page_up)
-    handle('c-e')(scroll_one_line_down)
-    handle('c-y')(scroll_one_line_up)
-    handle('pagedown')(scroll_page_down)
-    handle('pageup')(scroll_page_up)
+    handle("c-f")(scroll_forward)
+    handle("c-b")(scroll_backward)
+    handle("c-d")(scroll_half_page_down)
+    handle("c-u")(scroll_half_page_up)
+    handle("c-e")(scroll_one_line_down)
+    handle("c-y")(scroll_one_line_up)
+    handle("pagedown")(scroll_page_down)
+    handle("pageup")(scroll_page_up)
 
     return ConditionalKeyBindings(key_bindings, vi_mode)

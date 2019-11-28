@@ -1,14 +1,5 @@
 import re
-from typing import (
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    NamedTuple,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
 
 from prompt_toolkit.document import Document
 from prompt_toolkit.filters import FilterOrBool, to_filter
@@ -18,8 +9,8 @@ from .base import CompleteEvent, Completer, Completion
 from .word_completer import WordCompleter
 
 __all__ = [
-    'FuzzyCompleter',
-    'FuzzyWordCompleter',
+    "FuzzyCompleter",
+    "FuzzyWordCompleter",
 ]
 
 
@@ -51,11 +42,16 @@ class FuzzyCompleter(Completer):
     :param enable_fuzzy: (bool or `Filter`) Enabled the fuzzy behavior. For
         easily turning fuzzyness on or off according to a certain condition.
     """
-    def __init__(self, completer: Completer, WORD: bool = False,
-                 pattern: Optional[str] = None,
-                 enable_fuzzy: FilterOrBool = True):
 
-        assert pattern is None or pattern.startswith('^')
+    def __init__(
+        self,
+        completer: Completer,
+        WORD: bool = False,
+        pattern: Optional[str] = None,
+        enable_fuzzy: FilterOrBool = True,
+    ):
+
+        assert pattern is None or pattern.startswith("^")
 
         self.completer = completer
         self.pattern = pattern
@@ -63,8 +59,9 @@ class FuzzyCompleter(Completer):
         self.pattern = pattern
         self.enable_fuzzy = to_filter(enable_fuzzy)
 
-    def get_completions(self, document: Document,
-                        complete_event: CompleteEvent) -> Iterable[Completion]:
+    def get_completions(
+        self, document: Document, complete_event: CompleteEvent
+    ) -> Iterable[Completion]:
         if self.enable_fuzzy():
             return self._get_fuzzy_completions(document, complete_event)
         else:
@@ -74,35 +71,40 @@ class FuzzyCompleter(Completer):
         if self.pattern:
             return self.pattern
         if self.WORD:
-            return r'[^\s]+'
-        return '^[a-zA-Z0-9_]*'
+            return r"[^\s]+"
+        return "^[a-zA-Z0-9_]*"
 
     def _get_fuzzy_completions(
-            self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
+        self, document: Document, complete_event: CompleteEvent
+    ) -> Iterable[Completion]:
 
         word_before_cursor = document.get_word_before_cursor(
-            pattern=re.compile(self._get_pattern()))
+            pattern=re.compile(self._get_pattern())
+        )
 
         # Get completions
         document2 = Document(
-            text=document.text[:document.cursor_position - len(word_before_cursor)],
-            cursor_position=document.cursor_position - len(word_before_cursor))
+            text=document.text[: document.cursor_position - len(word_before_cursor)],
+            cursor_position=document.cursor_position - len(word_before_cursor),
+        )
 
         completions = list(self.completer.get_completions(document2, complete_event))
 
         fuzzy_matches: List[_FuzzyMatch] = []
 
-        pat = '.*?'.join(map(re.escape, word_before_cursor))
-        pat = '(?=({0}))'.format(pat)   # lookahead regex to manage overlapping matches
+        pat = ".*?".join(map(re.escape, word_before_cursor))
+        pat = "(?=({0}))".format(pat)  # lookahead regex to manage overlapping matches
         regex = re.compile(pat, re.IGNORECASE)
         for compl in completions:
             matches = list(regex.finditer(compl.text))
             if matches:
                 # Prefer the match, closest to the left, then shortest.
                 best = min(matches, key=lambda m: (m.start(), len(m.group(1))))
-                fuzzy_matches.append(_FuzzyMatch(len(best.group(1)), best.start(), compl))
+                fuzzy_matches.append(
+                    _FuzzyMatch(len(best.group(1)), best.start(), compl)
+                )
 
-        def sort_key(fuzzy_match: '_FuzzyMatch') -> Tuple[int, int]:
+        def sort_key(fuzzy_match: "_FuzzyMatch") -> Tuple[int, int]:
             " Sort by start position, then by the length of the match. "
             return fuzzy_match.start_pos, fuzzy_match.match_length
 
@@ -113,13 +115,16 @@ class FuzzyCompleter(Completer):
             # attribute and `start_position`.
             yield Completion(
                 match.completion.text,
-                start_position=match.completion.start_position - len(word_before_cursor),
+                start_position=match.completion.start_position
+                - len(word_before_cursor),
                 display_meta=match.completion.display_meta,
                 display=self._get_display(match, word_before_cursor),
-                style=match.completion.style)
+                style=match.completion.style,
+            )
 
-    def _get_display(self, fuzzy_match: '_FuzzyMatch',
-                     word_before_cursor: str) -> AnyFormattedText:
+    def _get_display(
+        self, fuzzy_match: "_FuzzyMatch", word_before_cursor: str
+    ) -> AnyFormattedText:
         """
         Generate formatted text for the display label.
         """
@@ -133,22 +138,23 @@ class FuzzyCompleter(Completer):
         result: StyleAndTextTuples = []
 
         # Text before match.
-        result.append(('class:fuzzymatch.outside', word[:m.start_pos]))
+        result.append(("class:fuzzymatch.outside", word[: m.start_pos]))
 
         # The match itself.
         characters = list(word_before_cursor)
 
-        for c in word[m.start_pos:m.start_pos + m.match_length]:
-            classname = 'class:fuzzymatch.inside'
+        for c in word[m.start_pos : m.start_pos + m.match_length]:
+            classname = "class:fuzzymatch.inside"
             if characters and c.lower() == characters[0].lower():
-                classname += '.character'
+                classname += ".character"
                 del characters[0]
 
             result.append((classname, c))
 
         # Text after match.
         result.append(
-            ('class:fuzzymatch.outside', word[m.start_pos + m.match_length:]))
+            ("class:fuzzymatch.outside", word[m.start_pos + m.match_length :])
+        )
 
         return result
 
@@ -163,30 +169,31 @@ class FuzzyWordCompleter(Completer):
     :param meta_dict: Optional dict mapping words to their meta-information.
     :param WORD: When True, use WORD characters.
     """
-    def __init__(self, words: Union[List[str], Callable[[], List[str]]],
-                 meta_dict: Optional[Dict[str, str]] = None,
-                 WORD: bool = False) -> None:
+
+    def __init__(
+        self,
+        words: Union[List[str], Callable[[], List[str]]],
+        meta_dict: Optional[Dict[str, str]] = None,
+        WORD: bool = False,
+    ) -> None:
 
         self.words = words
         self.meta_dict = meta_dict or {}
         self.WORD = WORD
 
         self.word_completer = WordCompleter(
-            words=self.words,
-            WORD=self.WORD,
-            meta_dict=self.meta_dict)
+            words=self.words, WORD=self.WORD, meta_dict=self.meta_dict
+        )
 
-        self.fuzzy_completer = FuzzyCompleter(
-            self.word_completer,
-            WORD=self.WORD)
+        self.fuzzy_completer = FuzzyCompleter(self.word_completer, WORD=self.WORD)
 
-    def get_completions(self, document: Document,
-                        complete_event: CompleteEvent) -> Iterable[Completion]:
+    def get_completions(
+        self, document: Document, complete_event: CompleteEvent
+    ) -> Iterable[Completion]:
         return self.fuzzy_completer.get_completions(document, complete_event)
 
 
-_FuzzyMatch = NamedTuple('_FuzzyMatch', [
-    ('match_length', int),
-    ('start_pos', int),
-    ('completion', Completion)
-])
+_FuzzyMatch = NamedTuple(
+    "_FuzzyMatch",
+    [("match_length", int), ("start_pos", int), ("completion", Completion)],
+)

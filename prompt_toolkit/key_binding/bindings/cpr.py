@@ -4,7 +4,7 @@ from prompt_toolkit.keys import Keys
 from ..key_bindings import KeyBindings
 
 __all__ = [
-    'load_cpr_bindings',
+    "load_cpr_bindings",
 ]
 
 E = KeyPressEvent
@@ -20,7 +20,7 @@ def load_cpr_bindings() -> KeyBindings:
         """
         # The incoming data looks like u'\x1b[35;1R'
         # Parse row/col information.
-        row, col = map(int, event.data[2:-1].split(';'))
+        row, col = map(int, event.data[2:-1].split(";"))
 
         # Report absolute cursor position to the renderer.
         event.app.renderer.report_absolute_cursor_row(row)

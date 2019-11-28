@@ -4,7 +4,7 @@ from prompt_toolkit.completion import CompleteEvent, Completer, Completion
 from prompt_toolkit.document import Document
 
 __all__ = [
-    'WordCompleter',
+    "WordCompleter",
 ]
 
 
@@ -26,14 +26,17 @@ class WordCompleter(Completer):
     :param pattern: Optional regex. When given, use this regex
         pattern instead of default one.
     """
-    def __init__(self,
-                 words: Union[List[str], Callable[[], List[str]]],
-                 ignore_case: bool = False,
-                 meta_dict: Optional[Dict[str, str]] = None,
-                 WORD: bool = False,
-                 sentence: bool = False,
-                 match_middle: bool = False,
-                 pattern: Optional[Pattern[str]] = None) -> None:
+
+    def __init__(
+        self,
+        words: Union[List[str], Callable[[], List[str]]],
+        ignore_case: bool = False,
+        meta_dict: Optional[Dict[str, str]] = None,
+        WORD: bool = False,
+        sentence: bool = False,
+        match_middle: bool = False,
+        pattern: Optional[Pattern[str]] = None,
+    ) -> None:
 
         assert not (WORD and sentence)
 
@@ -45,8 +48,9 @@ class WordCompleter(Completer):
         self.match_middle = match_middle
         self.pattern = pattern
 
-    def get_completions(self, document: Document,
-                        complete_event: CompleteEvent) -> Iterable[Completion]:
+    def get_completions(
+        self, document: Document, complete_event: CompleteEvent
+    ) -> Iterable[Completion]:
         # Get list of words.
         words = self.words
         if callable(words):
@@ -57,7 +61,8 @@ class WordCompleter(Completer):
             word_before_cursor = document.text_before_cursor
         else:
             word_before_cursor = document.get_word_before_cursor(
-                WORD=self.WORD, pattern=self.pattern)
+                WORD=self.WORD, pattern=self.pattern
+            )
 
         if self.ignore_case:
             word_before_cursor = word_before_cursor.lower()
@@ -74,5 +79,5 @@ class WordCompleter(Completer):
 
         for a in words:
             if word_matches(a):
-                display_meta = self.meta_dict.get(a, '')
+                display_meta = self.meta_dict.get(a, "")
                 yield Completion(a, -len(word_before_cursor), display_meta=display_meta)

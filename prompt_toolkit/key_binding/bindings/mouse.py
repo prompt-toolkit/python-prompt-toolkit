@@ -7,7 +7,7 @@ from prompt_toolkit.utils import is_windows
 from ..key_bindings import KeyBindings
 
 __all__ = [
-    'load_mouse_bindings',
+    "load_mouse_bindings",
 ]
 
 E = KeyPressEvent
@@ -30,7 +30,7 @@ def load_mouse_bindings() -> KeyBindings:
         # Xterm SGR: "Esc[<64;85;12M"
 
         # Parse incoming packet.
-        if event.data[2] == 'M':
+        if event.data[2] == "M":
             # Typical.
             mouse_event, x, y = map(ord, event.data[3:])
             mouse_event = {
@@ -41,8 +41,10 @@ def load_mouse_bindings() -> KeyBindings:
             }.get(mouse_event)
 
             # Handle situations where `PosixStdinReader` used surrogateescapes.
-            if x >= 0xdc00: x -= 0xdc00
-            if y >= 0xdc00: y -= 0xdc00
+            if x >= 0xDC00:
+                x -= 0xDC00
+            if y >= 0xDC00:
+                y -= 0xDC00
 
             x -= 32
             y -= 32
@@ -51,23 +53,23 @@ def load_mouse_bindings() -> KeyBindings:
             # When the '<' is not present, we are not using the Xterm SGR mode,
             # but Urxvt instead.
             data = event.data[2:]
-            if data[:1] == '<':
+            if data[:1] == "<":
                 sgr = True
                 data = data[1:]
             else:
                 sgr = False
 
             # Extract coordinates.
-            mouse_event, x, y = map(int, data[:-1].split(';'))
+            mouse_event, x, y = map(int, data[:-1].split(";"))
             m = data[-1]
 
             # Parse event type.
             if sgr:
                 mouse_event = {
-                    (0, 'M'): MouseEventType.MOUSE_DOWN,
-                    (0, 'm'): MouseEventType.MOUSE_UP,
-                    (64, 'M'): MouseEventType.SCROLL_UP,
-                    (65, 'M'): MouseEventType.SCROLL_DOWN,
+                    (0, "M"): MouseEventType.MOUSE_DOWN,
+                    (0, "m"): MouseEventType.MOUSE_UP,
+                    (64, "M"): MouseEventType.SCROLL_UP,
+                    (65, "M"): MouseEventType.SCROLL_DOWN,
                 }.get((mouse_event, m))
             else:
                 mouse_event = {
@@ -75,7 +77,7 @@ def load_mouse_bindings() -> KeyBindings:
                     35: MouseEventType.MOUSE_UP,
                     96: MouseEventType.SCROLL_UP,
                     97: MouseEventType.SCROLL_DOWN,
-                    }.get(mouse_event)
+                }.get(mouse_event)
 
         x -= 1
         y -= 1
@@ -85,6 +87,7 @@ def load_mouse_bindings() -> KeyBindings:
             # Take region above the layout into account. The reported
             # coordinates are absolute to the visible part of the terminal.
             from prompt_toolkit.renderer import HeightIsUnknownError
+
             try:
                 y -= event.app.renderer.rows_above_layout
             except HeightIsUnknownError:
@@ -92,8 +95,7 @@ def load_mouse_bindings() -> KeyBindings:
 
             # Call the mouse handler from the renderer.
             handler = event.app.renderer.mouse_handlers.mouse_handlers[x, y]
-            handler(MouseEvent(position=Point(x=x, y=y),
-                               event_type=mouse_event))
+            handler(MouseEvent(position=Point(x=x, y=y), event_type=mouse_event))
 
     @key_bindings.add(Keys.ScrollUp)
     def _(event: E) -> None:
@@ -119,13 +121,15 @@ def load_mouse_bindings() -> KeyBindings:
         assert is_windows()  # This key binding should only exist for Windows.
 
         # Parse data.
-        event_type, x, y = event.data.split(';')
+        event_type, x, y = event.data.split(";")
         x = int(x)
         y = int(y)
 
         # Make coordinates absolute to the visible part of the terminal.
         screen_buffer_info = event.app.renderer.output.get_win32_screen_buffer_info()
-        rows_above_cursor = screen_buffer_info.dwCursorPosition.Y - event.app.renderer._cursor_pos.y
+        rows_above_cursor = (
+            screen_buffer_info.dwCursorPosition.Y - event.app.renderer._cursor_pos.y
+        )
         y -= rows_above_cursor
 
         # Call the mouse event handler.

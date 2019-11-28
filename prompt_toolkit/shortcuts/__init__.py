@@ -15,37 +15,28 @@ from .prompt import (
     create_confirm_session,
     prompt,
 )
-from .utils import (
-    clear,
-    clear_title,
-    print_container,
-    print_formatted_text,
-    set_title,
-)
+from .utils import clear, clear_title, print_container, print_formatted_text, set_title
 
 __all__ = [
     # Dialogs.
-    'input_dialog',
-    'message_dialog',
-    'progress_dialog',
-    'checkboxlist_dialog',
-    'radiolist_dialog',
-    'yes_no_dialog',
-    'button_dialog',
-
+    "input_dialog",
+    "message_dialog",
+    "progress_dialog",
+    "checkboxlist_dialog",
+    "radiolist_dialog",
+    "yes_no_dialog",
+    "button_dialog",
     # Prompts.
-    'PromptSession',
-    'prompt',
-    'confirm',
-    'create_confirm_session',
-    'CompleteStyle',
-
+    "PromptSession",
+    "prompt",
+    "confirm",
+    "create_confirm_session",
+    "CompleteStyle",
     # Progress bars.
-    'ProgressBar',
-
+    "ProgressBar",
     # Utils.
-    'clear',
-    'clear_title',
-    'print_formatted_text',
-    'set_title',
+    "clear",
+    "clear_title",
+    "print_formatted_text",
+    "set_title",
 ]

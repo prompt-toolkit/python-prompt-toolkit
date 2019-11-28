@@ -25,9 +25,9 @@ if TYPE_CHECKING:
 
 
 __all__ = [
-    'KeyProcessor',
-    'KeyPress',
-    'KeyPressEvent',
+    "KeyProcessor",
+    "KeyPress",
+    "KeyPressEvent",
 ]
 
 
@@ -36,6 +36,7 @@ class KeyPress:
     :param key: A `Keys` instance or text (one character).
     :param data: The received string on stdin. (Often vt100 escape codes.)
     """
+
     def __init__(self, key: Union[Keys, str], data: Optional[str] = None) -> None:
         assert isinstance(key, Keys) or len(key) == 1
 
@@ -49,8 +50,7 @@ class KeyPress:
         self.data = data
 
     def __repr__(self) -> str:
-        return '%s(key=%r, data=%r)' % (
-            self.__class__.__name__, self.key, self.data)
+        return "%s(key=%r, data=%r)" % (self.__class__.__name__, self.key, self.data)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, KeyPress):
@@ -62,7 +62,7 @@ class KeyPress:
 Helper object to indicate flush operation in the KeyProcessor.
 NOTE: the implementation is very similar to the VT100 parser.
 """
-_Flush = KeyPress('?', data='_Flush')
+_Flush = KeyPress("?", data="_Flush")
 
 
 class KeyProcessor:
@@ -86,6 +86,7 @@ class KeyProcessor:
 
     :param key_bindings: `KeyBindingsBase` instance.
     """
+
     def __init__(self, key_bindings: KeyBindingsBase) -> None:
         self._bindings = key_bindings
 
@@ -136,7 +137,9 @@ class KeyProcessor:
         # Note that we transform it into a `set`, because we don't care about
         # the actual bindings and executing it more than once doesn't make
         # sense. (Many key bindings share the same filter.)
-        filters = set(b.filter for b in self._bindings.get_bindings_starting_with_keys(keys))
+        filters = set(
+            b.filter for b in self._bindings.get_bindings_starting_with_keys(keys)
+        )
 
         # When any key binding is active, return True.
         return any(f() for f in filters)
@@ -214,8 +217,7 @@ class KeyProcessor:
         else:
             self.input_queue.append(key_press)
 
-    def feed_multiple(
-            self, key_presses: List[KeyPress], first: bool = False) -> None:
+    def feed_multiple(self, key_presses: List[KeyPress], first: bool = False) -> None:
         """
         :param first: If true, insert before everything else.
         """
@@ -317,7 +319,8 @@ class KeyProcessor:
             arg=arg,
             key_sequence=key_sequence,
             previous_key_sequence=self._previous_key_sequence,
-            is_repeat=(handler == self._previous_handler))
+            is_repeat=(handler == self._previous_handler),
+        )
 
         # Save the state of the current buffer.
         if handler.save_before(event):
@@ -325,6 +328,7 @@ class KeyProcessor:
 
         # Call handler.
         from prompt_toolkit.buffer import EditReadOnlyBuffer
+
         try:
             handler.call(event)
             self._fix_vi_cursor_position(event)
@@ -346,14 +350,14 @@ class KeyProcessor:
             if app.emacs_state.is_recording and was_recording_emacs:
                 recording = app.emacs_state.current_recording
                 if recording is not None:  # Should always be true, given that
-                                           # `was_recording_emacs` is set.
+                    # `was_recording_emacs` is set.
                     recording.extend(key_sequence)
 
             if app.vi_state.recording_register and was_recording_vi:
                 for k in key_sequence:
                     app.vi_state.current_recording += k.data
 
-    def _fix_vi_cursor_position(self, event: 'KeyPressEvent') -> None:
+    def _fix_vi_cursor_position(self, event: "KeyPressEvent") -> None:
         """
         After every command, make sure that if we are in Vi navigation mode, we
         never put the cursor after the last character of a line. (Unless it's
@@ -363,16 +367,18 @@ class KeyProcessor:
         buff = app.current_buffer
         preferred_column = buff.preferred_column
 
-        if (vi_navigation_mode() and
-                buff.document.is_cursor_at_the_end_of_line and
-                len(buff.document.current_line) > 0):
+        if (
+            vi_navigation_mode()
+            and buff.document.is_cursor_at_the_end_of_line
+            and len(buff.document.current_line) > 0
+        ):
             buff.cursor_position -= 1
 
             # Set the preferred_column for arrow up/down again.
             # (This was cleared after changing the cursor position.)
             buff.preferred_column = preferred_column
 
-    def _leave_vi_temp_navigation_mode(self, event: 'KeyPressEvent') -> None:
+    def _leave_vi_temp_navigation_mode(self, event: "KeyPressEvent") -> None:
         """
         If we're in Vi temporary navigation (normal) mode, return to
         insert/replace mode after executing one action.
@@ -429,12 +435,15 @@ class KeyPressEvent:
     :param previouskey_sequence: Previous list of `KeyPress` instances.
     :param is_repeat: True when the previous event was delivered to the same handler.
     """
-    def __init__(self,
-                 key_processor_ref: 'weakref.ReferenceType[KeyProcessor]',
-                 arg: Optional[str],
-                 key_sequence: List[KeyPress],
-                 previous_key_sequence: List[KeyPress],
-                 is_repeat: bool) -> None:
+
+    def __init__(
+        self,
+        key_processor_ref: "weakref.ReferenceType[KeyProcessor]",
+        arg: Optional[str],
+        key_sequence: List[KeyPress],
+        previous_key_sequence: List[KeyPress],
+        is_repeat: bool,
+    ) -> None:
 
         self._key_processor_ref = key_processor_ref
         self.key_sequence = key_sequence
@@ -447,8 +456,11 @@ class KeyPressEvent:
         self._app = get_app()
 
     def __repr__(self) -> str:
-        return 'KeyPressEvent(arg=%r, key_sequence=%r, is_repeat=%r)' % (
-                self.arg, self.key_sequence, self.is_repeat)
+        return "KeyPressEvent(arg=%r, key_sequence=%r, is_repeat=%r)" % (
+            self.arg,
+            self.key_sequence,
+            self.is_repeat,
+        )
 
     @property
     def data(self) -> str:
@@ -458,18 +470,18 @@ class KeyPressEvent:
     def key_processor(self) -> KeyProcessor:
         processor = self._key_processor_ref()
         if processor is None:
-            raise Exception('KeyProcessor was lost. This should not happen.')
+            raise Exception("KeyProcessor was lost. This should not happen.")
         return processor
 
     @property
-    def app(self) -> 'Application[Any]':
+    def app(self) -> "Application[Any]":
         """
         The current `Application` object.
         """
         return self._app
 
     @property
-    def current_buffer(self) -> 'Buffer':
+    def current_buffer(self) -> "Buffer":
         """
         The current buffer.
         """
@@ -480,7 +492,7 @@ class KeyPressEvent:
         """
         Repetition argument.
         """
-        if self._arg == '-':
+        if self._arg == "-":
             return -1
 
         result = int(self._arg or 1)
@@ -504,11 +516,11 @@ class KeyPressEvent:
 
         :param data: the typed digit as string
         """
-        assert data in '-0123456789'
+        assert data in "-0123456789"
         current = self._arg
 
-        if data == '-':
-            assert current is None or current == '-'
+        if data == "-":
+            assert current is None or current == "-"
             result = data
         elif current is None:
             result = data
@@ -518,6 +530,6 @@ class KeyPressEvent:
         self.key_processor.arg = result
 
     @property
-    def cli(self) -> 'Application':
+    def cli(self) -> "Application":
         " For backward-compatibility. "
         return self.app

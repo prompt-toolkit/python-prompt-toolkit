@@ -13,16 +13,7 @@ container object.
     `prompt_toolkit.shortcuts.dialogs` on the other hand is considered stable.
 """
 from functools import partial
-from typing import (
-    Callable,
-    Generic,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    TypeVar,
-    Union,
-)
+from typing import Callable, Generic, List, Optional, Sequence, Tuple, TypeVar, Union
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.auto_suggest import AutoSuggest, DynamicAutoSuggest
@@ -83,19 +74,18 @@ from prompt_toolkit.utils import get_cwidth
 from .toolbars import SearchToolbar
 
 __all__ = [
-    'TextArea',
-    'Label',
-    'Button',
-    'Frame',
-    'Shadow',
-    'Box',
-    'VerticalLine',
-    'HorizontalLine',
-    'RadioList',
-    'CheckboxList',
-
-    'Checkbox',  # backward compatibility
-    'ProgressBar',
+    "TextArea",
+    "Label",
+    "Button",
+    "Frame",
+    "Shadow",
+    "Box",
+    "VerticalLine",
+    "HorizontalLine",
+    "RadioList",
+    "CheckboxList",
+    "Checkbox",  # backward compatibility
+    "ProgressBar",
 ]
 
 E = KeyPressEvent
@@ -103,12 +93,12 @@ E = KeyPressEvent
 
 class Border:
     " Box drawing characters. (Thin) "
-    HORIZONTAL = '\u2500'
-    VERTICAL = '\u2502'
-    TOP_LEFT = '\u250c'
-    TOP_RIGHT = '\u2510'
-    BOTTOM_LEFT = '\u2514'
-    BOTTOM_RIGHT = '\u2518'
+    HORIZONTAL = "\u2500"
+    VERTICAL = "\u2502"
+    TOP_LEFT = "\u250c"
+    TOP_RIGHT = "\u2510"
+    BOTTOM_LEFT = "\u2514"
+    BOTTOM_RIGHT = "\u2518"
 
 
 class TextArea:
@@ -169,32 +159,35 @@ class TextArea:
 
     :param search_field: An optional `SearchToolbar` object.
     """
-    def __init__(self,
-                 text: str = '',
-                 multiline: FilterOrBool = True,
-                 password: FilterOrBool = False,
-                 lexer: Optional[Lexer] = None,
-                 auto_suggest: Optional[AutoSuggest] = None,
-                 completer: Optional[Completer] = None,
-                 complete_while_typing: FilterOrBool = True,
-                 accept_handler: Optional[BufferAcceptHandler] = None,
-                 history: Optional[History] = None,
-                 focusable: FilterOrBool = True,
-                 focus_on_click: FilterOrBool = False,
-                 wrap_lines: FilterOrBool = True,
-                 read_only: FilterOrBool = False,
-                 width: AnyDimension = None,
-                 height: AnyDimension = None,
-                 dont_extend_height: FilterOrBool = False,
-                 dont_extend_width: FilterOrBool = False,
-                 line_numbers: bool = False,
-                 get_line_prefix: Optional[GetLinePrefixCallable] = None,
-                 scrollbar: bool = False,
-                 style: str = '',
-                 search_field: Optional[SearchToolbar] = None,
-                 preview_search: FilterOrBool = True,
-                 prompt: AnyFormattedText = '',
-                 input_processors: Optional[List[Processor]] = None) -> None:
+
+    def __init__(
+        self,
+        text: str = "",
+        multiline: FilterOrBool = True,
+        password: FilterOrBool = False,
+        lexer: Optional[Lexer] = None,
+        auto_suggest: Optional[AutoSuggest] = None,
+        completer: Optional[Completer] = None,
+        complete_while_typing: FilterOrBool = True,
+        accept_handler: Optional[BufferAcceptHandler] = None,
+        history: Optional[History] = None,
+        focusable: FilterOrBool = True,
+        focus_on_click: FilterOrBool = False,
+        wrap_lines: FilterOrBool = True,
+        read_only: FilterOrBool = False,
+        width: AnyDimension = None,
+        height: AnyDimension = None,
+        dont_extend_height: FilterOrBool = False,
+        dont_extend_width: FilterOrBool = False,
+        line_numbers: bool = False,
+        get_line_prefix: Optional[GetLinePrefixCallable] = None,
+        scrollbar: bool = False,
+        style: str = "",
+        search_field: Optional[SearchToolbar] = None,
+        preview_search: FilterOrBool = True,
+        prompt: AnyFormattedText = "",
+        input_processors: Optional[List[Processor]] = None,
+    ) -> None:
 
         if search_field is None:
             search_control = None
@@ -218,28 +211,31 @@ class TextArea:
             read_only=Condition(lambda: is_true(self.read_only)),
             completer=DynamicCompleter(lambda: self.completer),
             complete_while_typing=Condition(
-                lambda: is_true(self.complete_while_typing)),
+                lambda: is_true(self.complete_while_typing)
+            ),
             auto_suggest=DynamicAutoSuggest(lambda: self.auto_suggest),
             accept_handler=accept_handler,
-            history=history)
+            history=history,
+        )
 
         self.control = BufferControl(
             buffer=self.buffer,
             lexer=DynamicLexer(lambda: self.lexer),
             input_processors=[
                 ConditionalProcessor(
-                    AppendAutoSuggestion(),
-                    has_focus(self.buffer) & ~is_done),
-                ConditionalProcessor(
-                    processor=PasswordProcessor(),
-                    filter=to_filter(password)
+                    AppendAutoSuggestion(), has_focus(self.buffer) & ~is_done
                 ),
-                BeforeInput(prompt, style='class:text-area.prompt'),
-            ] + input_processors,
+                ConditionalProcessor(
+                    processor=PasswordProcessor(), filter=to_filter(password)
+                ),
+                BeforeInput(prompt, style="class:text-area.prompt"),
+            ]
+            + input_processors,
             search_buffer_control=search_control,
             preview_search=preview_search,
             focusable=focusable,
-            focus_on_click=focus_on_click)
+            focus_on_click=focus_on_click,
+        )
 
         if multiline:
             if scrollbar:
@@ -255,7 +251,7 @@ class TextArea:
             left_margins = []
             right_margins = []
 
-        style = 'class:text-area ' + style
+        style = "class:text-area " + style
 
         self.window = Window(
             height=height,
@@ -267,7 +263,8 @@ class TextArea:
             wrap_lines=Condition(lambda: is_true(self.wrap_lines)),
             left_margins=left_margins,
             right_margins=right_margins,
-            get_line_prefix=get_line_prefix)
+            get_line_prefix=get_line_prefix,
+        )
 
     @property
     def text(self) -> str:
@@ -316,12 +313,15 @@ class Label:
     :param width: When given, use this width, rather than calculating it from
         the text size.
     """
-    def __init__(self,
-                 text: AnyFormattedText,
-                 style: str = '',
-                 width: AnyDimension = None,
-                 dont_extend_height: bool = True,
-                 dont_extend_width: bool = False) -> None:
+
+    def __init__(
+        self,
+        text: AnyFormattedText,
+        style: str = "",
+        width: AnyDimension = None,
+        dont_extend_height: bool = True,
+        dont_extend_width: bool = False,
+    ) -> None:
 
         self.text = text
 
@@ -337,15 +337,15 @@ class Label:
             else:
                 return width
 
-        self.formatted_text_control = FormattedTextControl(
-            text=lambda: self.text)
+        self.formatted_text_control = FormattedTextControl(text=lambda: self.text)
 
         self.window = Window(
             content=self.formatted_text_control,
             width=get_width,
-            style='class:label ' + style,
+            style="class:label " + style,
             dont_extend_height=dont_extend_height,
-            dont_extend_width=dont_extend_width)
+            dont_extend_width=dont_extend_width,
+        )
 
     def __pt_container__(self) -> Container:
         return self.window
@@ -359,9 +359,10 @@ class Button:
     :param handler: `None` or callable. Called when the button is clicked.
     :param width: Width of the button.
     """
-    def __init__(self, text: str,
-                 handler: Optional[Callable[[], None]] = None,
-                 width: int = 12) -> None:
+
+    def __init__(
+        self, text: str, handler: Optional[Callable[[], None]] = None, width: int = 12
+    ) -> None:
 
         self.text = text
         self.handler = handler
@@ -369,13 +370,14 @@ class Button:
         self.control = FormattedTextControl(
             self._get_text_fragments,
             key_bindings=self._get_key_bindings(),
-            focusable=True)
+            focusable=True,
+        )
 
         def get_style() -> str:
             if get_app().layout.has_focus(self):
-                return 'class:button.focused'
+                return "class:button.focused"
             else:
-                return 'class:button'
+                return "class:button"
 
         self.window = Window(
             self.control,
@@ -384,29 +386,32 @@ class Button:
             width=width,
             style=get_style,
             dont_extend_width=True,
-            dont_extend_height=True)
+            dont_extend_height=True,
+        )
 
     def _get_text_fragments(self) -> StyleAndTextTuples:
-        text = ('{:^%s}' % (self.width - 2)).format(self.text)
+        text = ("{:^%s}" % (self.width - 2)).format(self.text)
 
         def handler(mouse_event: MouseEvent) -> None:
-            if self.handler is not None and \
-                    mouse_event.event_type == MouseEventType.MOUSE_UP:
+            if (
+                self.handler is not None
+                and mouse_event.event_type == MouseEventType.MOUSE_UP
+            ):
                 self.handler()
 
         return [
-            ('class:button.arrow', '<', handler),
-            ('[SetCursorPosition]', ''),
-            ('class:button.text', text, handler),
-            ('class:button.arrow', '>', handler),
+            ("class:button.arrow", "<", handler),
+            ("[SetCursorPosition]", ""),
+            ("class:button.text", text, handler),
+            ("class:button.arrow", ">", handler),
         ]
 
     def _get_key_bindings(self) -> KeyBindings:
         " Key bindings for the Button. "
         kb = KeyBindings()
 
-        @kb.add(' ')
-        @kb.add('enter')
+        @kb.add(" ")
+        @kb.add("enter")
         def _(event: E) -> None:
             if self.handler is not None:
                 self.handler()
@@ -428,66 +433,84 @@ class Frame:
     :param title: Text to be displayed in the top of the frame (can be formatted text).
     :param style: Style string to be applied to this widget.
     """
-    def __init__(self,
-                 body: AnyContainer,
-                 title: AnyFormattedText = '',
-                 style: str = '',
-                 width: AnyDimension = None,
-                 height: AnyDimension = None,
-                 key_bindings: Optional[KeyBindings] = None,
-                 modal: bool = False) -> None:
+
+    def __init__(
+        self,
+        body: AnyContainer,
+        title: AnyFormattedText = "",
+        style: str = "",
+        width: AnyDimension = None,
+        height: AnyDimension = None,
+        key_bindings: Optional[KeyBindings] = None,
+        modal: bool = False,
+    ) -> None:
 
         self.title = title
         self.body = body
 
-        fill = partial(Window, style='class:frame.border')
-        style = 'class:frame ' + style
+        fill = partial(Window, style="class:frame.border")
+        style = "class:frame " + style
 
-        top_row_with_title = VSplit([
-            fill(width=1, height=1, char=Border.TOP_LEFT),
-            fill(char=Border.HORIZONTAL),
-            fill(width=1, height=1, char='|'),
-            # Notice: we use `Template` here, because `self.title` can be an
-            # `HTML` object for instance.
-            Label(lambda: Template(' {} ').format(self.title),
-                  style='class:frame.label',
-                  dont_extend_width=True),
-            fill(width=1, height=1, char='|'),
-            fill(char=Border.HORIZONTAL),
-            fill(width=1, height=1, char=Border.TOP_RIGHT),
-        ], height=1)
+        top_row_with_title = VSplit(
+            [
+                fill(width=1, height=1, char=Border.TOP_LEFT),
+                fill(char=Border.HORIZONTAL),
+                fill(width=1, height=1, char="|"),
+                # Notice: we use `Template` here, because `self.title` can be an
+                # `HTML` object for instance.
+                Label(
+                    lambda: Template(" {} ").format(self.title),
+                    style="class:frame.label",
+                    dont_extend_width=True,
+                ),
+                fill(width=1, height=1, char="|"),
+                fill(char=Border.HORIZONTAL),
+                fill(width=1, height=1, char=Border.TOP_RIGHT),
+            ],
+            height=1,
+        )
 
-        top_row_without_title = VSplit([
-            fill(width=1, height=1, char=Border.TOP_LEFT),
-            fill(char=Border.HORIZONTAL),
-            fill(width=1, height=1, char=Border.TOP_RIGHT),
-        ], height=1)
+        top_row_without_title = VSplit(
+            [
+                fill(width=1, height=1, char=Border.TOP_LEFT),
+                fill(char=Border.HORIZONTAL),
+                fill(width=1, height=1, char=Border.TOP_RIGHT),
+            ],
+            height=1,
+        )
 
         @Condition
         def has_title() -> bool:
             return bool(self.title)
 
-        self.container = HSplit([
-            ConditionalContainer(
-                content=top_row_with_title,
-                filter=has_title),
-            ConditionalContainer(
-                content=top_row_without_title,
-                filter=~has_title),
-            VSplit([
-                fill(width=1, char=Border.VERTICAL),
-                DynamicContainer(lambda: self.body),
-                fill(width=1, char=Border.VERTICAL),
-                    # Padding is required to make sure that if the content is
-                    # too small, the right frame border is still aligned.
-            ], padding=0),
-            VSplit([
-                fill(width=1, height=1, char=Border.BOTTOM_LEFT),
-                fill(char=Border.HORIZONTAL),
-                fill(width=1, height=1, char=Border.BOTTOM_RIGHT),
-            ]),
-        ], width=width, height=height, style=style, key_bindings=key_bindings,
-        modal=modal)
+        self.container = HSplit(
+            [
+                ConditionalContainer(content=top_row_with_title, filter=has_title),
+                ConditionalContainer(content=top_row_without_title, filter=~has_title),
+                VSplit(
+                    [
+                        fill(width=1, char=Border.VERTICAL),
+                        DynamicContainer(lambda: self.body),
+                        fill(width=1, char=Border.VERTICAL),
+                        # Padding is required to make sure that if the content is
+                        # too small, the right frame border is still aligned.
+                    ],
+                    padding=0,
+                ),
+                VSplit(
+                    [
+                        fill(width=1, height=1, char=Border.BOTTOM_LEFT),
+                        fill(char=Border.HORIZONTAL),
+                        fill(width=1, height=1, char=Border.BOTTOM_RIGHT),
+                    ]
+                ),
+            ],
+            width=width,
+            height=height,
+            style=style,
+            key_bindings=key_bindings,
+            modal=modal,
+        )
 
     def __pt_container__(self) -> Container:
         return self.container
@@ -501,18 +524,29 @@ class Shadow:
 
     :param body: Another container object.
     """
+
     def __init__(self, body: AnyContainer) -> None:
         self.container = FloatContainer(
             content=body,
             floats=[
-                Float(bottom=-1, height=1, left=1, right=-1,
-                      transparent=True,
-                      content=Window(style='class:shadow')),
-                Float(bottom=-1, top=1, width=1, right=-1,
-                      transparent=True,
-                      content=Window(style='class:shadow')),
-                ]
-            )
+                Float(
+                    bottom=-1,
+                    height=1,
+                    left=1,
+                    right=-1,
+                    transparent=True,
+                    content=Window(style="class:shadow"),
+                ),
+                Float(
+                    bottom=-1,
+                    top=1,
+                    width=1,
+                    right=-1,
+                    transparent=True,
+                    content=Window(style="class:shadow"),
+                ),
+            ],
+        )
 
     def __pt_container__(self) -> Container:
         return self.container
@@ -536,19 +570,22 @@ class Box:
     :param char: Character to be used for filling the space around the body.
         (This is supposed to be a character with a terminal width of 1.)
     """
-    def __init__(self,
-                 body: AnyContainer,
-                 padding: AnyDimension = None,
-                 padding_left: AnyDimension = None,
-                 padding_right: AnyDimension = None,
-                 padding_top: AnyDimension = None,
-                 padding_bottom: AnyDimension = None,
-                 width: AnyDimension = None,
-                 height: AnyDimension = None,
-                 style: str = '',
-                 char: Union[None, str, Callable[[], str]] = None,
-                 modal: bool = False,
-                 key_bindings: Optional[KeyBindings] = None) -> None:
+
+    def __init__(
+        self,
+        body: AnyContainer,
+        padding: AnyDimension = None,
+        padding_left: AnyDimension = None,
+        padding_right: AnyDimension = None,
+        padding_top: AnyDimension = None,
+        padding_bottom: AnyDimension = None,
+        width: AnyDimension = None,
+        height: AnyDimension = None,
+        style: str = "",
+        char: Union[None, str, Callable[[], str]] = None,
+        modal: bool = False,
+        key_bindings: Optional[KeyBindings] = None,
+    ) -> None:
 
         if padding is None:
             padding = D(preferred=0)
@@ -564,23 +601,30 @@ class Box:
         self.padding_bottom = get(padding_bottom)
         self.body = body
 
-        self.container = HSplit([
-            Window(height=self.padding_top, char=char),
-            VSplit([
-                Window(width=self.padding_left, char=char),
-                body,
-                Window(width=self.padding_right, char=char),
-            ]),
-            Window(height=self.padding_bottom, char=char),
-        ],
-        width=width, height=height, style=style, modal=modal,
-        key_bindings=None)
+        self.container = HSplit(
+            [
+                Window(height=self.padding_top, char=char),
+                VSplit(
+                    [
+                        Window(width=self.padding_left, char=char),
+                        body,
+                        Window(width=self.padding_right, char=char),
+                    ]
+                ),
+                Window(height=self.padding_bottom, char=char),
+            ],
+            width=width,
+            height=height,
+            style=style,
+            modal=modal,
+            key_bindings=None,
+        )
 
     def __pt_container__(self) -> Container:
         return self.container
 
 
-_T = TypeVar('_T')
+_T = TypeVar("_T")
 
 
 class _DialogList(Generic[_T]):
@@ -605,57 +649,53 @@ class _DialogList(Generic[_T]):
         # Key bindings.
         kb = KeyBindings()
 
-        @kb.add('up')
+        @kb.add("up")
         def _(event: E) -> None:
             self._selected_index = max(0, self._selected_index - 1)
 
-        @kb.add('down')
+        @kb.add("down")
         def _(event: E) -> None:
-            self._selected_index = min(
-                len(self.values) - 1, self._selected_index + 1)
+            self._selected_index = min(len(self.values) - 1, self._selected_index + 1)
 
-        @kb.add('pageup')
+        @kb.add("pageup")
         def _(event: E) -> None:
             w = event.app.layout.current_window
             self._selected_index = max(
-                0,
-                self._selected_index - len(w.render_info.displayed_lines)
+                0, self._selected_index - len(w.render_info.displayed_lines)
             )
 
-        @kb.add('pagedown')
+        @kb.add("pagedown")
         def _(event: E) -> None:
             w = event.app.layout.current_window
             self._selected_index = min(
                 len(self.values) - 1,
-                self._selected_index + len(w.render_info.displayed_lines)
+                self._selected_index + len(w.render_info.displayed_lines),
             )
 
-        @kb.add('enter')
-        @kb.add(' ')
+        @kb.add("enter")
+        @kb.add(" ")
         def _(event: E) -> None:
             self._handle_enter()
 
         @kb.add(Keys.Any)
         def _(event: E) -> None:
             # We first check values after the selected value, then all values.
-            for value in self.values[self._selected_index + 1:] + self.values:
+            for value in self.values[self._selected_index + 1 :] + self.values:
                 if value[1].startswith(event.data):
                     self._selected_index = self.values.index(value)
                     return
 
         # Control and window.
         self.control = FormattedTextControl(
-            self._get_text_fragments,
-            key_bindings=kb,
-            focusable=True)
+            self._get_text_fragments, key_bindings=kb, focusable=True
+        )
 
         self.window = Window(
             content=self.control,
             style=self.container_style,
-            right_margins=[
-                ScrollbarMargin(display_arrows=True),
-            ],
-            dont_extend_height=True)
+            right_margins=[ScrollbarMargin(display_arrows=True),],
+            dont_extend_height=True,
+        )
 
     def _handle_enter(self) -> None:
         if self.multiple_selection:
@@ -680,31 +720,31 @@ class _DialogList(Generic[_T]):
         result: StyleAndTextTuples = []
         for i, value in enumerate(self.values):
             if self.multiple_selection:
-                checked = (value[0] in self.current_values)
+                checked = value[0] in self.current_values
             else:
-                checked = (value[0] == self.current_value)
-            selected = (i == self._selected_index)
+                checked = value[0] == self.current_value
+            selected = i == self._selected_index
 
-            style = ''
+            style = ""
             if checked:
-                style += ' ' + self.checked_style
+                style += " " + self.checked_style
             if selected:
-                style += ' ' + self.selected_style
+                style += " " + self.selected_style
 
             result.append((style, self.open_character))
 
             if selected:
-                result.append(('[SetCursorPosition]', ''))
+                result.append(("[SetCursorPosition]", ""))
 
             if checked:
-                result.append((style, '*'))
+                result.append((style, "*"))
             else:
-                result.append((style, ' '))
+                result.append((style, " "))
 
             result.append((style, self.close_character))
-            result.append((self.default_style, ' '))
+            result.append((self.default_style, " "))
             result.extend(to_formatted_text(value[1], style=self.default_style))
-            result.append(('', '\n'))
+            result.append(("", "\n"))
 
         # Add mouse handler to all fragments.
         for i in range(len(result)):
@@ -723,6 +763,7 @@ class RadioList(_DialogList[_T]):
 
     :param values: List of (value, label) tuples.
     """
+
     open_character = "("
     close_character = ")"
     container_style = "class:radio-list"
@@ -738,6 +779,7 @@ class CheckboxList(_DialogList[_T]):
 
     :param values: List of (value, label) tuples.
     """
+
     open_character = "["
     close_character = "]"
     container_style = "class:checkbox-list"
@@ -752,7 +794,8 @@ class Checkbox(CheckboxList[str]):
 
     :param text: the text
     """
-    def __init__(self, text: AnyFormattedText = '') -> None:
+
+    def __init__(self, text: AnyFormattedText = "") -> None:
         values = [("value", text)]
         CheckboxList.__init__(self, values)
 
@@ -765,11 +808,11 @@ class VerticalLine(object):
     """
     A simple vertical line with a width of 1.
     """
+
     def __init__(self) -> None:
         self.window = Window(
-            char=Border.VERTICAL,
-            style='class:line,vertical-line',
-            width=1)
+            char=Border.VERTICAL, style="class:line,vertical-line", width=1
+        )
 
     def __pt_container__(self) -> Container:
         return self.window
@@ -779,11 +822,11 @@ class HorizontalLine:
     """
     A simple horizontal line with a height of 1.
     """
+
     def __init__(self) -> None:
         self.window = Window(
-            char=Border.HORIZONTAL,
-            style='class:line,horizontal-line',
-            height=1)
+            char=Border.HORIZONTAL, style="class:line,horizontal-line", height=1
+        )
 
     def __pt_container__(self) -> Container:
         return self.window
@@ -793,7 +836,7 @@ class ProgressBar:
     def __init__(self) -> None:
         self._percentage = 60
 
-        self.label = Label('60%')
+        self.label = Label("60%")
         self.container = FloatContainer(
             content=Window(height=1),
             floats=[
@@ -802,15 +845,26 @@ class ProgressBar:
                 # bar appear on top of the label. The problem is that our label
                 # can't be part of any `Window` below.
                 Float(content=self.label, top=0, bottom=0),
-
-                Float(left=0, top=0, right=0, bottom=0, content=VSplit([
-                    Window(style='class:progress-bar.used',
-                           width=lambda: D(weight=int(self._percentage))),
-
-                    Window(style='class:progress-bar',
-                           width=lambda: D(weight=int(100 - self._percentage))),
-                ])),
-            ])
+                Float(
+                    left=0,
+                    top=0,
+                    right=0,
+                    bottom=0,
+                    content=VSplit(
+                        [
+                            Window(
+                                style="class:progress-bar.used",
+                                width=lambda: D(weight=int(self._percentage)),
+                            ),
+                            Window(
+                                style="class:progress-bar",
+                                width=lambda: D(weight=int(100 - self._percentage)),
+                            ),
+                        ]
+                    ),
+                ),
+            ],
+        )
 
     @property
     def percentage(self) -> int:
@@ -819,7 +873,7 @@ class ProgressBar:
     @percentage.setter
     def percentage(self, value: int) -> None:
         self._percentage = value
-        self.label.text = '{0}%'.format(value)
+        self.label.text = "{0}%".format(value)
 
     def __pt_container__(self) -> Container:
         return self.container

@@ -30,81 +30,79 @@ from prompt_toolkit.styles import ANSI_COLOR_NAMES, Attrs
 from .color_depth import ColorDepth
 
 __all__ = [
-    'Vt100_Output',
+    "Vt100_Output",
 ]
 
 
 FG_ANSI_COLORS = {
-    'ansidefault': 39,
-
+    "ansidefault": 39,
     # Low intensity.
-    'ansiblack':   30,
-    'ansired':     31,
-    'ansigreen':   32,
-    'ansiyellow':  33,
-    'ansiblue':    34,
-    'ansimagenta': 35,
-    'ansicyan':    36,
-    'ansigray':    37,
-
+    "ansiblack": 30,
+    "ansired": 31,
+    "ansigreen": 32,
+    "ansiyellow": 33,
+    "ansiblue": 34,
+    "ansimagenta": 35,
+    "ansicyan": 36,
+    "ansigray": 37,
     # High intensity.
-    'ansibrightblack':   90,
-    'ansibrightred':     91,
-    'ansibrightgreen':   92,
-    'ansibrightyellow':  93,
-    'ansibrightblue':    94,
-    'ansibrightmagenta': 95,
-    'ansibrightcyan':    96,
-    'ansiwhite':         97,
+    "ansibrightblack": 90,
+    "ansibrightred": 91,
+    "ansibrightgreen": 92,
+    "ansibrightyellow": 93,
+    "ansibrightblue": 94,
+    "ansibrightmagenta": 95,
+    "ansibrightcyan": 96,
+    "ansiwhite": 97,
 }
 
 BG_ANSI_COLORS = {
-    'ansidefault':     49,
-
+    "ansidefault": 49,
     # Low intensity.
-    'ansiblack':   40,
-    'ansired':     41,
-    'ansigreen':   42,
-    'ansiyellow':  43,
-    'ansiblue':    44,
-    'ansimagenta': 45,
-    'ansicyan':    46,
-    'ansigray':    47,
-
+    "ansiblack": 40,
+    "ansired": 41,
+    "ansigreen": 42,
+    "ansiyellow": 43,
+    "ansiblue": 44,
+    "ansimagenta": 45,
+    "ansicyan": 46,
+    "ansigray": 47,
     # High intensity.
-    'ansibrightblack':   100,
-    'ansibrightred':     101,
-    'ansibrightgreen':   102,
-    'ansibrightyellow':  103,
-    'ansibrightblue':    104,
-    'ansibrightmagenta': 105,
-    'ansibrightcyan':    106,
-    'ansiwhite':         107,
+    "ansibrightblack": 100,
+    "ansibrightred": 101,
+    "ansibrightgreen": 102,
+    "ansibrightyellow": 103,
+    "ansibrightblue": 104,
+    "ansibrightmagenta": 105,
+    "ansibrightcyan": 106,
+    "ansiwhite": 107,
 }
 
 
 ANSI_COLORS_TO_RGB = {
-    'ansidefault':     (0x00, 0x00, 0x00),  # Don't use, 'default' doesn't really have a value.
-    'ansiblack':       (0x00, 0x00, 0x00),
-    'ansigray':        (0xe5, 0xe5, 0xe5),
-    'ansibrightblack': (0x7f, 0x7f, 0x7f),
-    'ansiwhite':       (0xff, 0xff, 0xff),
-
+    "ansidefault": (
+        0x00,
+        0x00,
+        0x00,
+    ),  # Don't use, 'default' doesn't really have a value.
+    "ansiblack": (0x00, 0x00, 0x00),
+    "ansigray": (0xE5, 0xE5, 0xE5),
+    "ansibrightblack": (0x7F, 0x7F, 0x7F),
+    "ansiwhite": (0xFF, 0xFF, 0xFF),
     # Low intensity.
-    'ansired':     (0xcd, 0x00, 0x00),
-    'ansigreen':   (0x00, 0xcd, 0x00),
-    'ansiyellow':  (0xcd, 0xcd, 0x00),
-    'ansiblue':    (0x00, 0x00, 0xcd),
-    'ansimagenta': (0xcd, 0x00, 0xcd),
-    'ansicyan':    (0x00, 0xcd, 0xcd),
-
+    "ansired": (0xCD, 0x00, 0x00),
+    "ansigreen": (0x00, 0xCD, 0x00),
+    "ansiyellow": (0xCD, 0xCD, 0x00),
+    "ansiblue": (0x00, 0x00, 0xCD),
+    "ansimagenta": (0xCD, 0x00, 0xCD),
+    "ansicyan": (0x00, 0xCD, 0xCD),
     # High intensity.
-    'ansibrightred':     (0xff, 0x00, 0x00),
-    'ansibrightgreen':   (0x00, 0xff, 0x00),
-    'ansibrightyellow':  (0xff, 0xff, 0x00),
-    'ansibrightblue':    (0x00, 0x00, 0xff),
-    'ansibrightmagenta': (0xff, 0x00, 0xff),
-    'ansibrightcyan':    (0x00, 0xff, 0xff),
+    "ansibrightred": (0xFF, 0x00, 0x00),
+    "ansibrightgreen": (0x00, 0xFF, 0x00),
+    "ansibrightyellow": (0xFF, 0xFF, 0x00),
+    "ansibrightblue": (0x00, 0x00, 0xFF),
+    "ansibrightmagenta": (0xFF, 0x00, 0xFF),
+    "ansibrightcyan": (0x00, 0xFF, 0xFF),
 }
 
 
@@ -129,15 +127,15 @@ def _get_closest_ansi_color(r: int, g: int, b: int, exclude: Sequence[str] = ())
     saturation = abs(r - g) + abs(g - b) + abs(b - r)  # Between 0..510
 
     if saturation > 30:
-        exclude.extend(['ansilightgray', 'ansidarkgray', 'ansiwhite', 'ansiblack'])
+        exclude.extend(["ansilightgray", "ansidarkgray", "ansiwhite", "ansiblack"])
 
     # Take the closest color.
     # (Thanks to Pygments for this part.)
     distance = 257 * 257 * 3  # "infinity" (>distance from #000000 to #ffffff)
-    match = 'ansidefault'
+    match = "ansidefault"
 
     for name, (r2, g2, b2) in ANSI_COLORS_TO_RGB.items():
-        if name != 'ansidefault' and name not in exclude:
+        if name != "ansidefault" and name not in exclude:
             d = (r - r2) ** 2 + (g - g2) ** 2 + (b - b2) ** 2
 
             if d < distance:
@@ -156,12 +154,14 @@ class _16ColorCache:
 
     :param bg: Cache for background colors, instead of foreground.
     """
+
     def __init__(self, bg: bool = False) -> None:
         self.bg = bg
         self._cache: Dict[Hashable, _ColorCodeAndName] = {}
 
-    def get_code(self, value: Tuple[int, int, int],
-                 exclude: Sequence[str] = ()) -> _ColorCodeAndName:
+    def get_code(
+        self, value: Tuple[int, int, int], exclude: Sequence[str] = ()
+    ) -> _ColorCodeAndName:
         """
         Return a (ansi_code, ansi_name) tuple. (E.g. ``(44, 'ansiblue')``.) for
         a given (r,g,b) value.
@@ -174,8 +174,9 @@ class _16ColorCache:
 
         return cache[key]
 
-    def _get(self, value: Tuple[int, int, int],
-             exclude: Sequence[str] = ()) -> _ColorCodeAndName:
+    def _get(
+        self, value: Tuple[int, int, int], exclude: Sequence[str] = ()
+    ) -> _ColorCodeAndName:
 
         r, g, b = value
         match = _get_closest_ansi_color(r, g, b, exclude=exclude)
@@ -193,30 +194,31 @@ class _256ColorCache(Dict[Tuple[int, int, int], int]):
     """
     Cache which maps (r, g, b) tuples to 256 colors.
     """
+
     def __init__(self) -> None:
         # Build color table.
         colors: List[Tuple[int, int, int]] = []
 
         # colors 0..15: 16 basic colors
         colors.append((0x00, 0x00, 0x00))  # 0
-        colors.append((0xcd, 0x00, 0x00))  # 1
-        colors.append((0x00, 0xcd, 0x00))  # 2
-        colors.append((0xcd, 0xcd, 0x00))  # 3
-        colors.append((0x00, 0x00, 0xee))  # 4
-        colors.append((0xcd, 0x00, 0xcd))  # 5
-        colors.append((0x00, 0xcd, 0xcd))  # 6
-        colors.append((0xe5, 0xe5, 0xe5))  # 7
-        colors.append((0x7f, 0x7f, 0x7f))  # 8
-        colors.append((0xff, 0x00, 0x00))  # 9
-        colors.append((0x00, 0xff, 0x00))  # 10
-        colors.append((0xff, 0xff, 0x00))  # 11
-        colors.append((0x5c, 0x5c, 0xff))  # 12
-        colors.append((0xff, 0x00, 0xff))  # 13
-        colors.append((0x00, 0xff, 0xff))  # 14
-        colors.append((0xff, 0xff, 0xff))  # 15
+        colors.append((0xCD, 0x00, 0x00))  # 1
+        colors.append((0x00, 0xCD, 0x00))  # 2
+        colors.append((0xCD, 0xCD, 0x00))  # 3
+        colors.append((0x00, 0x00, 0xEE))  # 4
+        colors.append((0xCD, 0x00, 0xCD))  # 5
+        colors.append((0x00, 0xCD, 0xCD))  # 6
+        colors.append((0xE5, 0xE5, 0xE5))  # 7
+        colors.append((0x7F, 0x7F, 0x7F))  # 8
+        colors.append((0xFF, 0x00, 0x00))  # 9
+        colors.append((0x00, 0xFF, 0x00))  # 10
+        colors.append((0xFF, 0xFF, 0x00))  # 11
+        colors.append((0x5C, 0x5C, 0xFF))  # 12
+        colors.append((0xFF, 0x00, 0xFF))  # 13
+        colors.append((0x00, 0xFF, 0xFF))  # 14
+        colors.append((0xFF, 0xFF, 0xFF))  # 15
 
         # colors 16..232: the 6x6x6 color cube
-        valuerange = (0x00, 0x5f, 0x87, 0xaf, 0xd7, 0xff)
+        valuerange = (0x00, 0x5F, 0x87, 0xAF, 0xD7, 0xFF)
 
         for i in range(217):
             r = valuerange[(i // 36) % 6]
@@ -241,8 +243,8 @@ class _256ColorCache(Dict[Tuple[int, int, int], int]):
 
         for i, (r2, g2, b2) in enumerate(self.colors):
             if i >= 16:  # XXX: We ignore the 16 ANSI colors when mapping RGB
-                         # to the 256 colors, because these highly depend on
-                         # the color scheme of the terminal.
+                # to the 256 colors, because these highly depend on
+                # the color scheme of the terminal.
                 d = (r - r2) ** 2 + (g - g2) ** 2 + (b - b2) ** 2
 
                 if d < distance:
@@ -266,6 +268,7 @@ class _EscapeCodeCache(Dict[Attrs, str]):
 
     :param true_color: When True, use 24bit colors instead of 256 colors.
     """
+
     def __init__(self, color_depth: ColorDepth) -> None:
         self.color_depth = color_depth
 
@@ -273,25 +276,25 @@ class _EscapeCodeCache(Dict[Attrs, str]):
         fgcolor, bgcolor, bold, underline, italic, blink, reverse, hidden = attrs
         parts: List[str] = []
 
-        parts.extend(self._colors_to_code(fgcolor or '', bgcolor or ''))
+        parts.extend(self._colors_to_code(fgcolor or "", bgcolor or ""))
 
         if bold:
-            parts.append('1')
+            parts.append("1")
         if italic:
-            parts.append('3')
+            parts.append("3")
         if blink:
-            parts.append('5')
+            parts.append("5")
         if underline:
-            parts.append('4')
+            parts.append("4")
         if reverse:
-            parts.append('7')
+            parts.append("7")
         if hidden:
-            parts.append('8')
+            parts.append("8")
 
         if parts:
-            result = '\x1b[0;' + ';'.join(parts) + 'm'
+            result = "\x1b[0;" + ";".join(parts) + "m"
         else:
-            result = '\x1b[0m'
+            result = "\x1b[0m"
 
         self[attrs] = result
         return result
@@ -303,9 +306,9 @@ class _EscapeCodeCache(Dict[Attrs, str]):
         except ValueError:
             raise
         else:
-            r = (rgb >> 16) & 0xff
-            g = (rgb >> 8) & 0xff
-            b = rgb & 0xff
+            r = (rgb >> 16) & 0xFF
+            g = (rgb >> 8) & 0xFF
+            b = rgb & 0xFF
             return r, g, b
 
     def _colors_to_code(self, fg_color: str, bg_color: str) -> Iterable[str]:
@@ -315,7 +318,7 @@ class _EscapeCodeCache(Dict[Attrs, str]):
         # When requesting ANSI colors only, and both fg/bg color were converted
         # to ANSI, ensure that the foreground and background color are not the
         # same. (Unless they were explicitly defined to be the same color.)
-        fg_ansi = ''
+        fg_ansi = ""
 
         def get(color: str, bg: bool) -> List[int]:
             nonlocal fg_ansi
@@ -381,7 +384,7 @@ def _get_size(fileno: int) -> Tuple[int, int]:
     import termios
 
     # Buffer for the C call
-    buf = array.array('h', [0, 0, 0, 0])
+    buf = array.array("h", [0, 0, 0, 0])
 
     # Do TIOCGWINSZ (Get)
     # Note: We should not pass 'True' as a fourth parameter to 'ioctl'. (True
@@ -401,26 +404,29 @@ class Vt100_Output(Output):
     :param write_binary: Encode the output before writing it. If `True` (the
         default), the `stdout` object is supposed to expose an `encoding` attribute.
     """
+
     # For the error messages. Only display "Output is not a terminal" once per
     # file descriptor.
     _fds_not_a_terminal: Set[int] = set()
 
-    def __init__(self,
-                 stdout: TextIO,
-                 get_size: Callable[[], Size],
-                 term: Optional[str] = None,
-                 write_binary: bool = True) -> None:
+    def __init__(
+        self,
+        stdout: TextIO,
+        get_size: Callable[[], Size],
+        term: Optional[str] = None,
+        write_binary: bool = True,
+    ) -> None:
 
-        assert all(hasattr(stdout, a) for a in ('write', 'flush'))
+        assert all(hasattr(stdout, a) for a in ("write", "flush"))
 
         if write_binary:
-            assert hasattr(stdout, 'encoding')
+            assert hasattr(stdout, "encoding")
 
         self._buffer: List[str] = []
         self.stdout = stdout
         self.write_binary = write_binary
         self._get_size = get_size
-        self.term = term or 'xterm'
+        self.term = term or "xterm"
 
         # Cache for escape codes.
         self._escape_code_caches: Dict[ColorDepth, _EscapeCodeCache] = {
@@ -431,7 +437,7 @@ class Vt100_Output(Output):
         }
 
     @classmethod
-    def from_pty(cls, stdout: TextIO, term: Optional[str] = None) -> 'Vt100_Output':
+    def from_pty(cls, stdout: TextIO, term: Optional[str] = None) -> "Vt100_Output":
         """
         Create an Output class from a pseudo terminal.
         (This will take the dimensions by reading the pseudo
@@ -444,7 +450,7 @@ class Vt100_Output(Output):
         fd = stdout.fileno()
 
         if not isatty and fd not in cls._fds_not_a_terminal:
-            msg = 'Warning: Output is not a terminal (fd=%r).\n'
+            msg = "Warning: Output is not a terminal (fd=%r).\n"
             sys.stderr.write(msg % fd)
             cls._fds_not_a_terminal.add(fd)
 
@@ -482,63 +488,68 @@ class Vt100_Output(Output):
         Write text to output.
         (Removes vt100 escape codes. -- used for safely writing text.)
         """
-        self._buffer.append(data.replace('\x1b', '?'))
+        self._buffer.append(data.replace("\x1b", "?"))
 
     def set_title(self, title: str) -> None:
         """
         Set terminal title.
         """
-        if self.term not in ('linux', 'eterm-color'):  # Not supported by the Linux console.
-            self.write_raw('\x1b]2;%s\x07' % title.replace('\x1b', '').replace('\x07', ''))
+        if self.term not in (
+            "linux",
+            "eterm-color",
+        ):  # Not supported by the Linux console.
+            self.write_raw(
+                "\x1b]2;%s\x07" % title.replace("\x1b", "").replace("\x07", "")
+            )
 
     def clear_title(self) -> None:
-        self.set_title('')
+        self.set_title("")
 
     def erase_screen(self) -> None:
         """
         Erases the screen with the background colour and moves the cursor to
         home.
         """
-        self.write_raw('\x1b[2J')
+        self.write_raw("\x1b[2J")
 
     def enter_alternate_screen(self) -> None:
-        self.write_raw('\x1b[?1049h\x1b[H')
+        self.write_raw("\x1b[?1049h\x1b[H")
 
     def quit_alternate_screen(self) -> None:
-        self.write_raw('\x1b[?1049l')
+        self.write_raw("\x1b[?1049l")
 
     def enable_mouse_support(self) -> None:
-        self.write_raw('\x1b[?1000h')
+        self.write_raw("\x1b[?1000h")
 
         # Enable urxvt Mouse mode. (For terminals that understand this.)
-        self.write_raw('\x1b[?1015h')
+        self.write_raw("\x1b[?1015h")
 
         # Also enable Xterm SGR mouse mode. (For terminals that understand this.)
-        self.write_raw('\x1b[?1006h')
+        self.write_raw("\x1b[?1006h")
 
         # Note: E.g. lxterminal understands 1000h, but not the urxvt or sgr
         #       extensions.
 
     def disable_mouse_support(self) -> None:
-        self.write_raw('\x1b[?1000l')
-        self.write_raw('\x1b[?1015l')
-        self.write_raw('\x1b[?1006l')
+        self.write_raw("\x1b[?1000l")
+        self.write_raw("\x1b[?1015l")
+        self.write_raw("\x1b[?1006l")
 
     def erase_end_of_line(self) -> None:
         """
         Erases from the current cursor position to the end of the current line.
         """
-        self.write_raw('\x1b[K')
+        self.write_raw("\x1b[K")
 
     def erase_down(self) -> None:
         """
         Erases the screen from the current line down to the bottom of the
         screen.
         """
-        self.write_raw('\x1b[J')
+        self.write_raw("\x1b[J")
 
     def reset_attributes(self) -> None:
-        self.write_raw('\x1b[0m')
+        self.write_raw("\x1b[0m")
 
     def set_attributes(self, attrs: Attrs, color_depth: ColorDepth) -> None:
         """
@@ -553,30 +564,30 @@ class Vt100_Output(Output):
         self.write_raw(escape_code_cache[attrs])
 
     def disable_autowrap(self) -> None:
-        self.write_raw('\x1b[?7l')
+        self.write_raw("\x1b[?7l")
 
     def enable_autowrap(self) -> None:
-        self.write_raw('\x1b[?7h')
+        self.write_raw("\x1b[?7h")
 
     def enable_bracketed_paste(self) -> None:
-        self.write_raw('\x1b[?2004h')
+        self.write_raw("\x1b[?2004h")
 
     def disable_bracketed_paste(self) -> None:
-        self.write_raw('\x1b[?2004l')
+        self.write_raw("\x1b[?2004l")
 
     def cursor_goto(self, row: int = 0, column: int = 0) -> None:
         """
         Move cursor position.
         """
-        self.write_raw('\x1b[%i;%iH' % (row, column))
+        self.write_raw("\x1b[%i;%iH" % (row, column))
 
     def cursor_up(self, amount: int) -> None:
         if amount == 0:
             pass
         elif amount == 1:
-            self.write_raw('\x1b[A')
+            self.write_raw("\x1b[A")
         else:
-            self.write_raw('\x1b[%iA' % amount)
+            self.write_raw("\x1b[%iA" % amount)
 
     def cursor_down(self, amount: int) -> None:
         if amount == 0:
@@ -584,31 +595,31 @@ class Vt100_Output(Output):
         elif amount == 1:
             # Note: Not the same as '\n', '\n' can cause the window content to
             #       scroll.
-            self.write_raw('\x1b[B')
+            self.write_raw("\x1b[B")
         else:
-            self.write_raw('\x1b[%iB' % amount)
+            self.write_raw("\x1b[%iB" % amount)
 
     def cursor_forward(self, amount: int) -> None:
         if amount == 0:
             pass
         elif amount == 1:
-            self.write_raw('\x1b[C')
+            self.write_raw("\x1b[C")
         else:
-            self.write_raw('\x1b[%iC' % amount)
+            self.write_raw("\x1b[%iC" % amount)
 
     def cursor_backward(self, amount: int) -> None:
         if amount == 0:
             pass
         elif amount == 1:
-            self.write_raw('\b')  # '\x1b[D'
+            self.write_raw("\b")  # '\x1b[D'
         else:
-            self.write_raw('\x1b[%iD' % amount)
+            self.write_raw("\x1b[%iD" % amount)
 
     def hide_cursor(self) -> None:
-        self.write_raw('\x1b[?25l')
+        self.write_raw("\x1b[?25l")
 
     def show_cursor(self) -> None:
-        self.write_raw('\x1b[?12l\x1b[?25h')  # Stop blinking cursor and show.
+        self.write_raw("\x1b[?12l\x1b[?25h")  # Stop blinking cursor and show.
 
     def flush(self) -> None:
         """
@@ -617,7 +628,7 @@ class Vt100_Output(Output):
         if not self._buffer:
             return
 
-        data = ''.join(self._buffer)
+        data = "".join(self._buffer)
 
         try:
             # (We try to encode ourself, because that way we can replace
@@ -627,11 +638,11 @@ class Vt100_Output(Output):
             # for sys.stdout.encoding in xterm.
             out: IO
             if self.write_binary:
-                if hasattr(self.stdout, 'buffer'):
+                if hasattr(self.stdout, "buffer"):
                     out = self.stdout.buffer  # Py3.
                 else:
                     out = self.stdout
-                out.write(data.encode(self.stdout.encoding or 'utf-8', 'replace'))
+                out.write(data.encode(self.stdout.encoding or "utf-8", "replace"))
             else:
                 self.stdout.write(data)
 
@@ -659,10 +670,10 @@ class Vt100_Output(Output):
         """
         Asks for a cursor position report (CPR).
         """
-        self.write_raw('\x1b[6n')
+        self.write_raw("\x1b[6n")
         self.flush()
 
     def bell(self) -> None:
         " Sound bell. "
-        self.write_raw('\a')
+        self.write_raw("\a")
         self.flush()

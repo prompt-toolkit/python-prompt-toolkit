@@ -3,7 +3,7 @@ from typing import List, Optional
 from .key_processor import KeyPress
 
 __all__ = [
-    'EmacsState',
+    "EmacsState",
 ]
 
 
@@ -11,6 +11,7 @@ class EmacsState:
     """
     Mutable class to hold Emacs specific state.
     """
+
     def __init__(self) -> None:
         # Simple macro recording. (Like Readline does.)
         # (For Emacs mode.)

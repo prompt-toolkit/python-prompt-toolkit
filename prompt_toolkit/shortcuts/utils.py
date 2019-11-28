@@ -12,8 +12,9 @@ from prompt_toolkit.input import DummyInput
 from prompt_toolkit.layout import Layout
 from prompt_toolkit.output import ColorDepth, Output
 from prompt_toolkit.output.defaults import create_output
-from prompt_toolkit.renderer import \
-    print_formatted_text as renderer_print_formatted_text
+from prompt_toolkit.renderer import (
+    print_formatted_text as renderer_print_formatted_text,
+)
 from prompt_toolkit.styles import (
     BaseStyle,
     StyleTransformation,
@@ -26,25 +27,26 @@ if TYPE_CHECKING:
     from prompt_toolkit.layout.containers import Container
 
 __all__ = [
-    'print_formatted_text',
-    'print_container',
-    'clear',
-    'set_title',
-    'clear_title',
+    "print_formatted_text",
+    "print_container",
+    "clear",
+    "set_title",
+    "clear_title",
 ]
 
 
 def print_formatted_text(
-        *values: Any,
-        sep: str = ' ',
-        end: str = '\n',
-        file: Optional[TextIO] = None,
-        flush: bool = False,
-        style: Optional[BaseStyle] = None,
-        output: Optional[Output] = None,
-        color_depth: Optional[ColorDepth] = None,
-        style_transformation: Optional[StyleTransformation] = None,
-        include_default_pygments_style: bool = True) -> None:
+    *values: Any,
+    sep: str = " ",
+    end: str = "\n",
+    file: Optional[TextIO] = None,
+    flush: bool = False,
+    style: Optional[BaseStyle] = None,
+    output: Optional[Output] = None,
+    color_depth: Optional[ColorDepth] = None,
+    style_transformation: Optional[StyleTransformation] = None,
+    include_default_pygments_style: bool = True,
+) -> None:
     """
     ::
 
@@ -119,7 +121,7 @@ def print_formatted_text(
         # Normal lists which are not instances of `FormattedText` are
         # considered plain text.
         if isinstance(val, list) and not isinstance(val, FormattedText):
-            return to_formatted_text('{0}'.format(val))
+            return to_formatted_text("{0}".format(val))
         return to_formatted_text(val, auto_convert=True)
 
     fragments = []
@@ -133,15 +135,19 @@ def print_formatted_text(
 
     # Print output.
     renderer_print_formatted_text(
-        output, fragments, merged_style, color_depth=color_depth,
-        style_transformation=style_transformation)
+        output,
+        fragments,
+        merged_style,
+        color_depth=color_depth,
+        style_transformation=style_transformation,
+    )
 
     # Flush the output stream.
     if flush:
         output.flush()
 
 
-def print_container(container: 'Container', file: Optional[TextIO] = None) -> None:
+def print_container(container: "Container", file: Optional[TextIO] = None) -> None:
     """
     Print any layout to the output in a non-interactive way.
 
@@ -162,9 +168,8 @@ def print_container(container: 'Container', file: Optional[TextIO] = None) -> No
         get_event_loop().call_soon(lambda: app.exit())
 
     app: Application[None] = Application(
-        layout=Layout(container=container),
-        output=output,
-        input=DummyInput())
+        layout=Layout(container=container), output=output, input=DummyInput()
+    )
     app.run(pre_run=exit_immediately)
 
 
@@ -190,4 +195,4 @@ def clear_title() -> None:
     """
     Erase the current title.
     """
-    set_title('')
+    set_title("")

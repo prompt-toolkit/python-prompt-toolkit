@@ -8,9 +8,9 @@ from prompt_toolkit.document import Document
 from prompt_toolkit.formatted_text.base import StyleAndTextTuples
 
 __all__ = [
-    'Lexer',
-    'SimpleLexer',
-    'DynamicLexer',
+    "Lexer",
+    "SimpleLexer",
+    "DynamicLexer",
 ]
 
 
@@ -18,6 +18,7 @@ class Lexer(metaclass=ABCMeta):
     """
     Base class for all lexers.
     """
+
     @abstractmethod
     def lex_document(self, document: Document) -> Callable[[int], StyleAndTextTuples]:
         """
@@ -44,7 +45,8 @@ class SimpleLexer(Lexer):
 
     :param style: The style string for this lexer.
     """
-    def __init__(self, style: str = '') -> None:
+
+    def __init__(self, style: str = "") -> None:
         self.style = style
 
     def lex_document(self, document: Document) -> Callable[[int], StyleAndTextTuples]:
@@ -56,6 +58,7 @@ class SimpleLexer(Lexer):
                 return [(self.style, lines[lineno])]
             except IndexError:
                 return []
+
         return get_line
 
 
@@ -65,6 +68,7 @@ class DynamicLexer(Lexer):
 
     :param get_lexer: Callable that returns a :class:`.Lexer` instance.
     """
+
     def __init__(self, get_lexer: Callable[[], Optional[Lexer]]) -> None:
         self.get_lexer = get_lexer
         self._dummy = SimpleLexer()

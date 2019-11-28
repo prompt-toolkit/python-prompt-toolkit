@@ -9,29 +9,30 @@ from ..keys import Keys
 from .ansi_escape_sequences import ANSI_SEQUENCES
 
 __all__ = [
-    'Vt100Parser',
+    "Vt100Parser",
 ]
 
 
 # Regex matching any CPR response
 # (Note that we use '\Z' instead of '$', because '$' could include a trailing
 # newline.)
-_cpr_response_re = re.compile('^' + re.escape('\x1b[') + r'\d+;\d+R\Z')
+_cpr_response_re = re.compile("^" + re.escape("\x1b[") + r"\d+;\d+R\Z")
 
 # Mouse events:
 # Typical: "Esc[MaB*"  Urxvt: "Esc[96;14;13M" and for Xterm SGR: "Esc[<64;85;12M"
-_mouse_event_re = re.compile('^' + re.escape('\x1b[') + r'(<?[\d;]+[mM]|M...)\Z')
+_mouse_event_re = re.compile("^" + re.escape("\x1b[") + r"(<?[\d;]+[mM]|M...)\Z")
 
 # Regex matching any valid prefix of a CPR response.
 # (Note that it doesn't contain the last character, the 'R'. The prefix has to
 # be shorter.)
-_cpr_response_prefix_re = re.compile('^' + re.escape('\x1b[') + r'[\d;]*\Z')
+_cpr_response_prefix_re = re.compile("^" + re.escape("\x1b[") + r"[\d;]*\Z")
 
-_mouse_event_prefix_re = re.compile('^' + re.escape('\x1b[') + r'(<?[\d;]*|M.{0,2})\Z')
+_mouse_event_prefix_re = re.compile("^" + re.escape("\x1b[") + r"(<?[\d;]*|M.{0,2})\Z")
 
 
 class _Flush:
     """ Helper object to indicate flush operation to the parser. """
+
     pass
 
 
@@ -40,14 +41,21 @@ class _IsPrefixOfLongerMatchCache(Dict[str, bool]):
     Dictionary that maps input sequences to a boolean indicating whether there is
     any key that start with this characters.
     """
+
     def __missing__(self, prefix: str) -> bool:
         # (hard coded) If this could be a prefix of a CPR response, return
         # True.
-        if (_cpr_response_prefix_re.match(prefix) or _mouse_event_prefix_re.match(prefix)):
+        if _cpr_response_prefix_re.match(prefix) or _mouse_event_prefix_re.match(
+            prefix
+        ):
             result = True
         else:
             # If this could be a prefix of anything else, also return True.
-            result = any(v for k, v in ANSI_SEQUENCES.items() if k.startswith(prefix) and k != prefix)
+            result = any(
+                v
+                for k, v in ANSI_SEQUENCES.items()
+                if k.startswith(prefix) and k != prefix
+            )
 
         self[prefix] = result
         return result
@@ -71,6 +79,7 @@ class Vt100Parser:
 
     :attr feed_key_callback: Function that will be called when a key is parsed.
     """
+
     # Lookup table of ANSI escape sequences for a VT100 terminal
     # Hint: in order to know what sequences your terminal writes to stdin, run
     #       "od -c" and start typing.
@@ -112,7 +121,7 @@ class Vt100Parser:
         """
         Coroutine (state machine) for the input parser.
         """
-        prefix = ''
+        prefix = ""
         retry = False
         flush = False
 
@@ -138,7 +147,7 @@ class Vt100Parser:
                 # Exact matches found, call handlers..
                 if (flush or not is_prefix_of_longer_match) and match:
                     self._call_handler(match, prefix)
-                    prefix = ''
+                    prefix = ""
 
                 # No exact match found.
                 elif (flush or not is_prefix_of_longer_match) and not match:
@@ -158,8 +167,9 @@ class Vt100Parser:
                         self._call_handler(prefix[0], prefix[0])
                         prefix = prefix[1:]
 
-    def _call_handler(self, key: Union[str, Keys, Tuple[Keys, ...]],
-                      insert_text: str) -> None:
+    def _call_handler(
+        self, key: Union[str, Keys, Tuple[Keys, ...]], insert_text: str
+    ) -> None:
         """
         Callback to handler.
         """
@@ -169,7 +179,7 @@ class Vt100Parser:
         else:
             if key == Keys.BracketedPaste:
                 self._in_bracketed_paste = True
-                self._paste_buffer = ''
+                self._paste_buffer = ""
             else:
                 self.feed_key_callback(KeyPress(key, insert_text))
 
@@ -184,7 +194,7 @@ class Vt100Parser:
         # This is much faster then parsing character by character.
         if self._in_bracketed_paste:
             self._paste_buffer += data
-            end_mark = '\x1b[201~'
+            end_mark = "\x1b[201~"
 
             if end_mark in self._paste_buffer:
                 end_index = self._paste_buffer.index(end_mark)
@@ -195,8 +205,8 @@ class Vt100Parser:
 
                 # Quit bracketed paste mode and handle remaining input.
                 self._in_bracketed_paste = False
-                remaining = self._paste_buffer[end_index + len(end_mark):]
-                self._paste_buffer = ''
+                remaining = self._paste_buffer[end_index + len(end_mark) :]
+                self._paste_buffer = ""
 
                 self.feed(remaining)
 

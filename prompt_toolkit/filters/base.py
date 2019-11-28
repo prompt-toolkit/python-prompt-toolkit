@@ -1,13 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from typing import Callable, Dict, Iterable, List, Tuple, Union, cast
 
-__all__ = [
-    'Filter',
-    'Never',
-    'Always',
-    'Condition',
-    'FilterOrBool'
-]
+__all__ = ["Filter", "Never", "Always", "Condition", "FilterOrBool"]
 
 
 class Filter(metaclass=ABCMeta):
@@ -17,6 +11,7 @@ class Filter(metaclass=ABCMeta):
 
     The return value of ``__call__`` will tell if the feature should be active.
     """
+
     @abstractmethod
     def __call__(self) -> bool:
         """
@@ -24,19 +19,19 @@ class Filter(metaclass=ABCMeta):
         """
         return True
 
-    def __and__(self, other: 'Filter') -> 'Filter':
+    def __and__(self, other: "Filter") -> "Filter":
         """
         Chaining of filters using the & operator.
         """
         return _and_cache[self, other]
 
-    def __or__(self, other: 'Filter') -> 'Filter':
+    def __or__(self, other: "Filter") -> "Filter":
         """
         Chaining of filters using the | operator.
         """
         return _or_cache[self, other]
 
-    def __invert__(self) -> 'Filter':
+    def __invert__(self) -> "Filter":
         """
         Inverting of filters using the ~ operator.
         """
@@ -51,11 +46,13 @@ class Filter(metaclass=ABCMeta):
         defaults for `None` values should be done through an `is None` check
         instead of for instance ``filter1 or Always()``.
         """
-        raise ValueError('The truth value of a Filter is ambiguous. '
-                         'Instead, call it as a function.')
+        raise ValueError(
+            "The truth value of a Filter is ambiguous. "
+            "Instead, call it as a function."
+        )
 
 
-class _AndCache(Dict[Tuple[Filter, Filter], '_AndList']):
+class _AndCache(Dict[Tuple[Filter, Filter], "_AndList"]):
     """
     Cache for And operation between filters.
     (Filter classes are stateless, so we can reuse them.)
@@ -65,9 +62,10 @@ class _AndCache(Dict[Tuple[Filter, Filter], '_AndList']):
           filters), and tuples should be removed when one of these filters is
           removed. In practise however, there is a finite amount of filters.
     """
+
     def __missing__(self, filters: Tuple[Filter, Filter]) -> Filter:
         a, b = filters
-        assert isinstance(b, Filter), 'Expecting filter, got %r' % b
+        assert isinstance(b, Filter), "Expecting filter, got %r" % b
 
         if isinstance(b, Always) or isinstance(a, Never):
             return a
@@ -79,11 +77,12 @@ class _AndCache(Dict[Tuple[Filter, Filter], '_AndList']):
         return result
 
 
-class _OrCache(Dict[Tuple[Filter, Filter], '_OrList']):
+class _OrCache(Dict[Tuple[Filter, Filter], "_OrList"]):
     """ Cache for Or operation between filters. """
+
     def __missing__(self, filters: Tuple[Filter, Filter]) -> Filter:
         a, b = filters
-        assert isinstance(b, Filter), 'Expecting filter, got %r' % b
+        assert isinstance(b, Filter), "Expecting filter, got %r" % b
 
         if isinstance(b, Always) or isinstance(a, Never):
             return b
@@ -95,8 +94,9 @@ class _OrCache(Dict[Tuple[Filter, Filter], '_OrList']):
         return result
 
 
-class _InvertCache(Dict[Filter, '_Invert']):
+class _InvertCache(Dict[Filter, "_Invert"]):
     """ Cache for inversion operator. """
+
     def __missing__(self, filter: Filter) -> Filter:
         result = _Invert(filter)
         self[filter] = result
@@ -112,6 +112,7 @@ class _AndList(Filter):
     """
     Result of &-operation between several filters.
     """
+
     def __init__(self, filters: Iterable[Filter]) -> None:
         self.filters: List[Filter] = []
 
@@ -125,13 +126,14 @@ class _AndList(Filter):
         return all(f() for f in self.filters)
 
     def __repr__(self) -> str:
-        return '&'.join(repr(f) for f in self.filters)
+        return "&".join(repr(f) for f in self.filters)
 
 
 class _OrList(Filter):
     """
     Result of |-operation between several filters.
     """
+
     def __init__(self, filters: Iterable[Filter]) -> None:
         self.filters: List[Filter] = []
 
@@ -145,13 +147,14 @@ class _OrList(Filter):
         return any(f() for f in self.filters)
 
     def __repr__(self) -> str:
-        return '|'.join(repr(f) for f in self.filters)
+        return "|".join(repr(f) for f in self.filters)
 
 
 class _Invert(Filter):
     """
     Negation of another filter.
     """
+
     def __init__(self, filter: Filter) -> None:
         self.filter = filter
 
@@ -159,17 +162,18 @@ class _Invert(Filter):
         return not self.filter()
 
     def __repr__(self) -> str:
-        return '~%r' % self.filter
+        return "~%r" % self.filter
 
 
 class Always(Filter):
     """
     Always enable feature.
     """
+
     def __call__(self) -> bool:
         return True
 
-    def __invert__(self) -> 'Never':
+    def __invert__(self) -> "Never":
         return Never()
 
 
@@ -177,6 +181,7 @@ class Never(Filter):
     """
     Never enable feature.
     """
+
     def __call__(self) -> bool:
         return False
 
@@ -197,6 +202,7 @@ class Condition(Filter):
 
     :param func: Callable which takes no inputs and returns a boolean.
     """
+
     def __init__(self, func: Callable[[], bool]):
         self.func = func
 
@@ -204,7 +210,7 @@ class Condition(Filter):
         return self.func()
 
     def __repr__(self) -> str:
-        return 'Condition(%r)' % self.func
+        return "Condition(%r)" % self.func
 
 
 # Often used as type annotation.
