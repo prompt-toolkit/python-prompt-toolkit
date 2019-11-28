@@ -14,7 +14,7 @@ def run():
     bindings = KeyBindings()
 
     # Add an additional key binding for toggling this flag.
-    @bindings.add('f4')
+    @bindings.add("f4")
     def _(event):
         " Toggle between Emacs and Vi mode. "
         if event.app.editing_mode == EditingMode.VI:
@@ -25,12 +25,12 @@ def run():
     def bottom_toolbar():
         " Display the current input mode. "
         if get_app().editing_mode == EditingMode.VI:
-            return ' [F4] Vi '
+            return " [F4] Vi "
         else:
-            return ' [F4] Emacs '
+            return " [F4] Emacs "
 
-    prompt('> ', key_bindings=bindings, bottom_toolbar=bottom_toolbar)
+    prompt("> ", key_bindings=bindings, bottom_toolbar=bottom_toolbar)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()

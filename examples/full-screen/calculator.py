@@ -22,17 +22,24 @@ def main():
     # The layout.
     search_field = SearchToolbar()  # For reverse search.
 
-    output_field = TextArea(style='class:output-field', text=help_text)
+    output_field = TextArea(style="class:output-field", text=help_text)
     input_field = TextArea(
-        height=1, prompt='>>> ', style='class:input-field', multiline=False,
-        wrap_lines=False, search_field=search_field)
+        height=1,
+        prompt=">>> ",
+        style="class:input-field",
+        multiline=False,
+        wrap_lines=False,
+        search_field=search_field,
+    )
 
-    container = HSplit([
-        output_field,
-        Window(height=1, char='-', style='class:line'),
-        input_field,
-        search_field,
-    ])
+    container = HSplit(
+        [
+            output_field,
+            Window(height=1, char="-", style="class:line"),
+            input_field,
+            search_field,
+        ]
+    )
 
     # Attach accept handler to the input field. We do this by assigning the
     # handler to the `TextArea` that we created earlier. it is also possible to
@@ -43,34 +50,37 @@ def main():
     def accept(buff):
         # Evaluate "calculator" expression.
         try:
-            output = '\n\nIn:  {}\nOut: {}'.format(
-                input_field.text,
-                eval(input_field.text))  # Don't do 'eval' in real code!
+            output = "\n\nIn:  {}\nOut: {}".format(
+                input_field.text, eval(input_field.text)
+            )  # Don't do 'eval' in real code!
         except BaseException as e:
-            output = '\n\n{}'.format(e)
+            output = "\n\n{}".format(e)
         new_text = output_field.text + output
 
         # Add text to output buffer.
         output_field.buffer.document = Document(
-            text=new_text, cursor_position=len(new_text))
+            text=new_text, cursor_position=len(new_text)
+        )
 
     input_field.accept_handler = accept
 
     # The key bindings.
     kb = KeyBindings()
 
-    @kb.add('c-c')
-    @kb.add('c-q')
+    @kb.add("c-c")
+    @kb.add("c-q")
     def _(event):
         " Pressing Ctrl-Q or Ctrl-C will exit the user interface. "
         event.app.exit()
 
     # Style.
-    style = Style([
-        ('output-field', 'bg:#000044 #ffffff'),
-        ('input-field', 'bg:#000000 #ffffff'),
-        ('line',        '#004400'),
-    ])
+    style = Style(
+        [
+            ("output-field", "bg:#000044 #ffffff"),
+            ("input-field", "bg:#000000 #ffffff"),
+            ("line", "#004400"),
+        ]
+    )
 
     # Run application.
     application = Application(
@@ -78,10 +88,11 @@ def main():
         key_bindings=kb,
         style=style,
         mouse_support=True,
-        full_screen=True)
+        full_screen=True,
+    )
 
     application.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -18,22 +18,21 @@ logging.getLogger().setLevel(logging.INFO)
 async def interact(connection):
     # When a client is connected, erase the screen from the client and say
     # Hello.
-    connection.send('Welcome!\n')
+    connection.send("Welcome!\n")
 
     # Display prompt with bottom toolbar.
-    animal_completer = WordCompleter(['alligator', 'ant'])
+    animal_completer = WordCompleter(["alligator", "ant"])
 
     def get_toolbar():
-        return 'Bottom toolbar...'
+        return "Bottom toolbar..."
 
     session = PromptSession()
     result = await session.prompt_async(
-        'Say something: ',
-        bottom_toolbar=get_toolbar,
-        completer=animal_completer)
+        "Say something: ", bottom_toolbar=get_toolbar, completer=animal_completer
+    )
 
-    connection.send('You said: {}\n'.format(result))
-    connection.send('Bye.\n')
+    connection.send("You said: {}\n".format(result))
+    connection.send("Bye.\n")
 
 
 def main():
@@ -42,5 +41,5 @@ def main():
     get_event_loop().run_forever()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

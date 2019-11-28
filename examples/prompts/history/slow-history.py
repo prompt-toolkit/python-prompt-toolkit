@@ -15,10 +15,11 @@ class SlowHistory(History):
     """
     Example class that loads the history very slowly...
     """
+
     def load_history_strings(self):
         for i in range(1000):
             time.sleep(1)  # Emulate slowness.
-            yield 'item-%s' % (i, )
+            yield "item-%s" % (i,)
 
     def store_string(self, string):
         pass  # Don't store strings.
@@ -26,10 +27,10 @@ class SlowHistory(History):
 
 def main():
     print(
-        'Asynchronous loading of history. Notice that the up-arrow will work '
-        'for as far as the completions are loaded.\n'
-        'Even when the input is accepted, loading will continue in the '
-        'background and when the next prompt is displayed.\n'
+        "Asynchronous loading of history. Notice that the up-arrow will work "
+        "for as far as the completions are loaded.\n"
+        "Even when the input is accepted, loading will continue in the "
+        "background and when the next prompt is displayed.\n"
     )
     our_history = ThreadedHistory(SlowHistory())
 
@@ -39,9 +40,9 @@ def main():
     session = PromptSession(history=our_history)
 
     while True:
-        text = session.prompt('Say something: ')
-        print('You said: %s' % text)
+        text = session.prompt("Say something: ")
+        print("You said: %s" % text)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -15,10 +15,11 @@ logging.getLogger().setLevel(logging.INFO)
 
 async def interact(connection):
     result = await yes_no_dialog(
-        title='Yes/no dialog demo', text='Press yes or no').run_async()
+        title="Yes/no dialog demo", text="Press yes or no"
+    ).run_async()
 
-    connection.send('You said: {}\n'.format(result))
-    connection.send('Bye.\n')
+    connection.send("You said: {}\n".format(result))
+    connection.send("Bye.\n")
 
 
 def main():
@@ -27,5 +28,5 @@ def main():
     get_event_loop().run_forever()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

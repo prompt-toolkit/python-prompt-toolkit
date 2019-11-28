@@ -12,15 +12,18 @@ class RainbowLexer(Lexer):
         colors = list(sorted(NAMED_COLORS, key=NAMED_COLORS.get))
 
         def get_line(lineno):
-            return [(colors[i % len(colors)], c) for i, c in enumerate(document.lines[lineno])]
+            return [
+                (colors[i % len(colors)], c)
+                for i, c in enumerate(document.lines[lineno])
+            ]
 
         return get_line
 
 
 def main():
-    answer = prompt('Give me some input: ', lexer=RainbowLexer())
-    print('You said: %s' % answer)
+    answer = prompt("Give me some input: ", lexer=RainbowLexer())
+    print("You said: %s" % answer)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -9,7 +9,9 @@ from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.widgets import Frame
 
-LIPSUM = ' '.join(("""Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+LIPSUM = " ".join(
+    (
+        """Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 Maecenas quis interdum enim. Nam viverra, mauris et blandit malesuada, ante est
 bibendum mauris, ac dignissim dui tellus quis ligula. Aenean condimentum leo at
 dignissim placerat. In vel dictum ex, vulputate accumsan mi. Donec ut quam
@@ -19,7 +21,10 @@ risus aliquam sit amet. Pellentesque blandit scelerisque felis, faucibus
 consequat ante. Curabitur tempor tortor a imperdiet tincidunt. Nam sed justo
 sit amet odio bibendum congue. Quisque varius ligula nec ligula gravida, sed
 convallis augue faucibus. Nunc ornare pharetra bibendum. Praesent blandit ex
-quis sodales maximus. """ * 100).split())
+quis sodales maximus. """
+        * 100
+    ).split()
+)
 
 
 # 1. The layout
@@ -34,69 +39,78 @@ quit_text = "Press 'q' to quit."
 body = FloatContainer(
     content=Window(FormattedTextControl(LIPSUM), wrap_lines=True),
     floats=[
-
         # Important note: Wrapping the floating objects in a 'Frame' is
         #                 only required for drawing the border around the
         #                 floating text. We do it here to make the layout more
         #                 obvious.
-
         # Left float.
         Float(
-            Frame(Window(FormattedTextControl(left_text), width=10, height=2),
-                   style='bg:#44ffff #ffffff'),
-            left=0),
-
+            Frame(
+                Window(FormattedTextControl(left_text), width=10, height=2),
+                style="bg:#44ffff #ffffff",
+            ),
+            left=0,
+        ),
         # Right float.
         Float(
-            Frame(Window(FormattedTextControl(right_text), width=10, height=2),
-                   style='bg:#44ffff #ffffff'),
-            right=0),
-
+            Frame(
+                Window(FormattedTextControl(right_text), width=10, height=2),
+                style="bg:#44ffff #ffffff",
+            ),
+            right=0,
+        ),
         # Bottom float.
         Float(
-            Frame(Window(FormattedTextControl(bottom_text), width=10, height=2),
-                   style='bg:#44ffff #ffffff'),
-            bottom=0),
-
+            Frame(
+                Window(FormattedTextControl(bottom_text), width=10, height=2),
+                style="bg:#44ffff #ffffff",
+            ),
+            bottom=0,
+        ),
         # Top float.
         Float(
-            Frame(Window(FormattedTextControl(top_text), width=10, height=2),
-                   style='bg:#44ffff #ffffff'),
-            top=0),
-
+            Frame(
+                Window(FormattedTextControl(top_text), width=10, height=2),
+                style="bg:#44ffff #ffffff",
+            ),
+            top=0,
+        ),
         # Center float.
         Float(
-            Frame(Window(FormattedTextControl(center_text), width=10, height=2),
-                   style='bg:#44ffff #ffffff')),
-
+            Frame(
+                Window(FormattedTextControl(center_text), width=10, height=2),
+                style="bg:#44ffff #ffffff",
+            )
+        ),
         # Quit text.
         Float(
-            Frame(Window(FormattedTextControl(quit_text), width=18, height=1),
-                   style='bg:#ff44ff #ffffff'),
-            top=6),
-    ])
+            Frame(
+                Window(FormattedTextControl(quit_text), width=18, height=1),
+                style="bg:#ff44ff #ffffff",
+            ),
+            top=6,
+        ),
+    ],
+)
 
 
 # 2. Key bindings
 kb = KeyBindings()
 
 
-@kb.add('q')
+@kb.add("q")
 def _(event):
     " Quit application. "
     event.app.exit()
 
 
 # 3. The `Application`
-application = Application(
-    layout=Layout(body),
-    key_bindings=kb,
-    full_screen=True)
+application = Application(layout=Layout(body), key_bindings=kb, full_screen=True)
 
 
 def run():
     application.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()

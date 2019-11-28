@@ -8,9 +8,9 @@ allow any editing.
 """
 from prompt_toolkit import HTML, prompt
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     answer = prompt(
-        HTML('<b>Type <u>some input</u>: </b>'),
-        accept_default=True, default='test')
+        HTML("<b>Type <u>some input</u>: </b>"), accept_default=True, default="test"
+    )
 
-    print('You said: %s' % answer)
+    print("You said: %s" % answer)

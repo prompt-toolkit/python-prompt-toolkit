@@ -13,7 +13,8 @@ from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.layout.margins import NumberedMargin, ScrollbarMargin
 
-LIPSUM = """
+LIPSUM = (
+    """
 Lorem ipsum dolor sit amet, consectetur adipiscing elit.  Maecenas
 quis interdum enim. Nam viverra, mauris et blandit malesuada, ante est bibendum
 mauris, ac dignissim dui tellus quis ligula. Aenean condimentum leo at
@@ -24,7 +25,9 @@ risus aliquam sit amet. Pellentesque blandit scelerisque felis, faucibus
 consequat ante. Curabitur tempor tortor a imperdiet tincidunt. Nam sed justo
 sit amet odio bibendum congue. Quisque varius ligula nec ligula gravida, sed
 convallis augue faucibus. Nunc ornare pharetra bibendum. Praesent blandit ex
-quis sodales maximus.""" * 40
+quis sodales maximus."""
+    * 40
+)
 
 # Create text buffers. The margins will update if you scroll up or down.
 
@@ -32,39 +35,37 @@ buff = Buffer()
 buff.text = LIPSUM
 
 # 1. The layout
-body = HSplit([
-    Window(FormattedTextControl('Press "q" to quit.'), height=1, style='reverse'),
-    Window(
-        BufferControl(buffer=buff),
-
-        # Add margins.
-        left_margins=[NumberedMargin(), ScrollbarMargin()],
-        right_margins=[ScrollbarMargin(), ScrollbarMargin()],
-    ),
-])
+body = HSplit(
+    [
+        Window(FormattedTextControl('Press "q" to quit.'), height=1, style="reverse"),
+        Window(
+            BufferControl(buffer=buff),
+            # Add margins.
+            left_margins=[NumberedMargin(), ScrollbarMargin()],
+            right_margins=[ScrollbarMargin(), ScrollbarMargin()],
+        ),
+    ]
+)
 
 
 # 2. Key bindings
 kb = KeyBindings()
 
 
-@kb.add('q')
-@kb.add('c-c')
+@kb.add("q")
+@kb.add("c-c")
 def _(event):
     " Quit application. "
     event.app.exit()
 
 
 # 3. The `Application`
-application = Application(
-    layout=Layout(body),
-    key_bindings=kb,
-    full_screen=True)
+application = Application(layout=Layout(body), key_bindings=kb, full_screen=True)
 
 
 def run():
     application.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()

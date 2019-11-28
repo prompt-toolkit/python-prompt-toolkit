@@ -9,10 +9,10 @@ from prompt_toolkit.shortcuts import PromptSession
 
 
 def main():
-    session = PromptSession('prompt> ')
+    session = PromptSession("prompt> ")
     while True:
         session.prompt()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

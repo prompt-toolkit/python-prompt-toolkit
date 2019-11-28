@@ -10,11 +10,9 @@ from prompt_toolkit.widgets import Box, Frame, TextArea
 # Layout for displaying hello world.
 # (The frame creates the border, the box takes care of the margin/padding.)
 root_container = Box(
-    Frame(TextArea(
-        text='Hello world!\nPress control-c to quit.',
-        width=40,
-        height=10,
-    )),
+    Frame(
+        TextArea(text="Hello world!\nPress control-c to quit.", width=40, height=10,)
+    ),
 )
 layout = Layout(container=root_container)
 
@@ -22,22 +20,20 @@ layout = Layout(container=root_container)
 # Key bindings.
 kb = KeyBindings()
 
-@kb.add('c-c')
+
+@kb.add("c-c")
 def _(event):
     " Quit when control-c is pressed. "
     event.app.exit()
 
 
 # Build a main application object.
-application = Application(
-    layout=layout,
-    key_bindings=kb,
-    full_screen=True)
+application = Application(layout=layout, key_bindings=kb, full_screen=True)
 
 
 def main():
     application.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

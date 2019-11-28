@@ -10,9 +10,9 @@ from prompt_toolkit.lexers import PygmentsLexer
 
 
 def main():
-    text = prompt('Enter HTML: ', lexer=PygmentsLexer(HtmlLexer))
-    print('You said: %s' % text)
+    text = prompt("Enter HTML: ", lexer=PygmentsLexer(HtmlLexer))
+    print("You said: %s" % text)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

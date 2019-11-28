@@ -23,39 +23,38 @@ quis sodales maximus."""
 # 1. The layout
 
 left_text = '\nLeft aligned text. - (Press "q" to quit)\n\n' + LIPSUM
-center_text = 'Centered text.\n\n' + LIPSUM
-right_text = 'Right aligned text.\n\n' + LIPSUM
+center_text = "Centered text.\n\n" + LIPSUM
+right_text = "Right aligned text.\n\n" + LIPSUM
 
 
-body = HSplit([
-    Window(FormattedTextControl(left_text), align=WindowAlign.LEFT),
-    Window(height=1, char='-'),
-    Window(FormattedTextControl(center_text), align=WindowAlign.CENTER),
-    Window(height=1, char='-'),
-    Window(FormattedTextControl(right_text), align=WindowAlign.RIGHT),
-])
+body = HSplit(
+    [
+        Window(FormattedTextControl(left_text), align=WindowAlign.LEFT),
+        Window(height=1, char="-"),
+        Window(FormattedTextControl(center_text), align=WindowAlign.CENTER),
+        Window(height=1, char="-"),
+        Window(FormattedTextControl(right_text), align=WindowAlign.RIGHT),
+    ]
+)
 
 
 # 2. Key bindings
 kb = KeyBindings()
 
 
-@kb.add('q')
+@kb.add("q")
 def _(event):
     " Quit application. "
     event.app.exit()
 
 
 # 3. The `Application`
-application = Application(
-    layout=Layout(body),
-    key_bindings=kb,
-    full_screen=True)
+application = Application(layout=Layout(body), key_bindings=kb, full_screen=True)
 
 
 def run():
     application.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()

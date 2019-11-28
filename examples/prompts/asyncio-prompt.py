@@ -20,7 +20,6 @@ from prompt_toolkit.patch_stdout import patch_stdout
 from prompt_toolkit.shortcuts import PromptSession
 
 
-
 async def print_counter():
     """
     Coroutine that prints counters.
@@ -28,11 +27,11 @@ async def print_counter():
     try:
         i = 0
         while True:
-            print('Counter: %i' % i)
+            print("Counter: %i" % i)
             i += 1
             await asyncio.sleep(3)
     except asyncio.CancelledError:
-        print('Background task cancelled.')
+        print("Background task cancelled.")
 
 
 async def interactive_shell():
@@ -40,7 +39,7 @@ async def interactive_shell():
     Like `interactive_shell`, but doing things manual.
     """
     # Create Prompt.
-    session = PromptSession('Say something: ')
+    session = PromptSession("Say something: ")
 
     # Run echo loop. Read text from stdin, and reply it back.
     while True:
@@ -58,10 +57,10 @@ async def main():
             await interactive_shell()
         finally:
             background_task.cancel()
-        print('Quitting event loop. Bye.')
+        print("Quitting event loop. Bye.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         from asyncio import run
     except ImportError:

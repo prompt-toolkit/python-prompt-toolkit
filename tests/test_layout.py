@@ -15,13 +15,7 @@ def test_layout_class():
     win2 = Window(content=c2)
     win3 = Window(content=c3)
 
-    layout = Layout(container=VSplit([
-        HSplit([
-            win1,
-            win2
-        ]),
-        win3
-    ]))
+    layout = Layout(container=VSplit([HSplit([win1, win2]), win3]))
 
     # Listing of windows/controls.
     assert list(layout.find_all_windows()) == [win1, win2, win3]

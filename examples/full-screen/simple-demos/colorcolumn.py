@@ -29,36 +29,35 @@ buff.text = LIPSUM
 # 1. The layout
 color_columns = [
     ColorColumn(50),
-    ColorColumn(80, style='bg:#ff0000'),
-    ColorColumn(10, style='bg:#ff0000'),
+    ColorColumn(80, style="bg:#ff0000"),
+    ColorColumn(10, style="bg:#ff0000"),
 ]
 
-body = HSplit([
-    Window(FormattedTextControl('Press "q" to quit.'), height=1, style='reverse'),
-    Window(BufferControl(buffer=buff), colorcolumns=color_columns),
-])
+body = HSplit(
+    [
+        Window(FormattedTextControl('Press "q" to quit.'), height=1, style="reverse"),
+        Window(BufferControl(buffer=buff), colorcolumns=color_columns),
+    ]
+)
 
 
 # 2. Key bindings
 kb = KeyBindings()
 
 
-@kb.add('q')
+@kb.add("q")
 def _(event):
     " Quit application. "
     event.app.exit()
 
 
 # 3. The `Application`
-application = Application(
-    layout=Layout(body),
-    key_bindings=kb,
-    full_screen=True)
+application = Application(layout=Layout(body), key_bindings=kb, full_screen=True)
 
 
 def run():
     application.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()

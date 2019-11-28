@@ -20,8 +20,9 @@ def main():
         i = 0
         while running:
             i += 1
-            print('i=%i' % i)
+            print("i=%i" % i)
             time.sleep(1)
+
     t = threading.Thread(target=thread)
     t.daemon = True
     t.start()
@@ -29,12 +30,12 @@ def main():
     # Now read the input. The print statements of the other thread
     # should not disturb anything.
     with patch_stdout():
-        result = prompt('Say something: ')
-    print('You said: %s' % result)
+        result = prompt("Say something: ")
+    print("You said: %s" % result)
 
     # Stop thread.
     running = False
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

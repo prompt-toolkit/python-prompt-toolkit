@@ -10,7 +10,7 @@ from asyncio import get_event_loop
 
 from prompt_toolkit.contrib.telnet.server import TelnetServer
 from prompt_toolkit.formatted_text import HTML
-from prompt_toolkit.shortcuts import clear, prompt, PromptSession
+from prompt_toolkit.shortcuts import PromptSession, clear, prompt
 
 # Set up logging
 logging.basicConfig()
@@ -22,9 +22,21 @@ _connection_to_color = {}
 
 
 COLORS = [
-    'ansired', 'ansigreen', 'ansiyellow', 'ansiblue', 'ansifuchsia',
-    'ansiturquoise', 'ansilightgray', 'ansidarkgray', 'ansidarkred',
-    'ansidarkgreen', 'ansibrown', 'ansidarkblue', 'ansipurple', 'ansiteal']
+    "ansired",
+    "ansigreen",
+    "ansiyellow",
+    "ansiblue",
+    "ansifuchsia",
+    "ansiturquoise",
+    "ansilightgray",
+    "ansidarkgray",
+    "ansidarkred",
+    "ansidarkgreen",
+    "ansibrown",
+    "ansidarkblue",
+    "ansipurple",
+    "ansiteal",
+]
 
 
 async def interact(connection):
@@ -34,17 +46,17 @@ async def interact(connection):
     # When a client is connected, erase the screen from the client and say
     # Hello.
     clear()
-    write('Welcome to our chat application!\n')
-    write('All connected clients will receive what you say.\n')
+    write("Welcome to our chat application!\n")
+    write("All connected clients will receive what you say.\n")
 
-    name = await prompt_session.prompt_async(message='Type your name: ')
+    name = await prompt_session.prompt_async(message="Type your name: ")
 
     # Random color.
     color = random.choice(COLORS)
     _connection_to_color[connection] = color
 
     # Send 'connected' message.
-    _send_to_everyone(connection, name, '(connected)', color)
+    _send_to_everyone(connection, name, "(connected)", color)
 
     # Prompt.
     prompt_msg = HTML('<reverse fg="{}">[{}]</reverse> &gt; ').format(color, name)
@@ -59,7 +71,7 @@ async def interact(connection):
             except KeyboardInterrupt:
                 pass
     except EOFError:
-        _send_to_everyone(connection, name, '(leaving)', color)
+        _send_to_everyone(connection, name, "(leaving)", color)
     finally:
         _connections.remove(connection)
 
@@ -70,11 +82,13 @@ def _send_to_everyone(sender_connection, name, message, color):
     """
     for c in _connections:
         if c != sender_connection:
-            c.send_above_prompt([
-                ('fg:' + color, '[%s]' % name),
-                ('', ' '),
-                ('fg:' + color, '%s\n' % message),
-            ])
+            c.send_above_prompt(
+                [
+                    ("fg:" + color, "[%s]" % name),
+                    ("", " "),
+                    ("fg:" + color, "%s\n" % message),
+                ]
+            )
 
 
 def main():
@@ -83,5 +97,5 @@ def main():
     get_event_loop().run_forever()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

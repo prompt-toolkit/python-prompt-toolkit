@@ -9,7 +9,7 @@ from prompt_toolkit.history import FileHistory
 
 
 def main():
-    our_history = FileHistory('.example-history-file')
+    our_history = FileHistory(".example-history-file")
 
     # The history needs to be passed to the `PromptSession`. It can't be passed
     # to the `prompt` call because only one history can be used during a
@@ -17,9 +17,9 @@ def main():
     session = PromptSession(history=our_history)
 
     while True:
-        text = session.prompt('Say something: ')
-        print('You said: %s' % text)
+        text = session.prompt("Say something: ")
+        print("You said: %s" % text)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

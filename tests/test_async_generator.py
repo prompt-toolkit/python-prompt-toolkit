@@ -18,6 +18,7 @@ def test_generator_to_async_generator():
     async_gen = generator_to_async_generator(_sync_generator)
 
     items = []
+
     async def consume_async_generator():
         async for item in async_gen:
             items.append(item)
