@@ -736,6 +736,13 @@ class Application(Generic[_AppResult]):
         async def _run_async2() -> _AppResult:
             self._is_running = True
 
+            # Make sure to set `_invalidated` to `False` to begin with,
+            # otherwise we're not going to paint anything. This can happen if
+            # this application had run before on a different event loop, and a
+            # paint was scheduled using `call_soon_threadsafe` with
+            # `max_postpone_time`.
+            self._invalidated = False
+
             loop = get_event_loop()
             if set_exception_handler:
                 previous_exc_handler = loop.get_exception_handler()
