@@ -83,7 +83,7 @@ ANSI_COLOR_NAMES = [
 
 
 # People don't use the same ANSI color names everywhere. In prompt_toolkit 1.0
-# we used some unconvential names (which were contributed like that to
+# we used some unconventional names (which were contributed like that to
 # Pygments). This is fixed now, but we still support the old names.
 
 # The table below maps the old aliases to the current names.
