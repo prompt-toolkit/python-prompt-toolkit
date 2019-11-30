@@ -1,6 +1,15 @@
 CHANGELOG
 =========
 
+3.0.2: 2019-11-30
+-----------------
+
+Fixes:
+- Bugfix in the UI invalidation. Fixes an issue when the application runs again
+  on another event loop.
+  See: https://github.com/ipython/ipython/pull/11973
+
+
 3.0.1: 2019-11-28
 -----------------
 
