@@ -98,6 +98,13 @@ def test_ansi_256_color():
     ]
 
 
+def test_ansi_true_color():
+    assert to_formatted_text(ANSI("\033[38;2;144;238;144m$\033[0;39;49m ")) == [
+        ("#90ee90", "$"),
+        ("ansidefault bg:ansidefault", " "),
+    ]
+
+
 def test_interpolation():
     value = Template(" {} ").format(HTML("<b>hello</b>"))
 
