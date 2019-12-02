@@ -29,6 +29,7 @@ def load_auto_suggest_bindings():
     def suggestion_available():
         app = get_app()
         return (app.current_buffer.suggestion is not None and
+                app.current_buffer.suggestion.text and
                 app.current_buffer.document.is_cursor_at_the_end)
 
     @handle('c-f', filter=suggestion_available)
