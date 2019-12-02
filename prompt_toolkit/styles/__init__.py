@@ -31,39 +31,34 @@ from .style_transformation import (
 
 __all__ = [
     # Base.
-    'Attrs',
-    'DEFAULT_ATTRS',
-    'ANSI_COLOR_NAMES',
-    'BaseStyle',
-    'DummyStyle',
-    'DynamicStyle',
-
+    "Attrs",
+    "DEFAULT_ATTRS",
+    "ANSI_COLOR_NAMES",
+    "BaseStyle",
+    "DummyStyle",
+    "DynamicStyle",
     # Defaults.
-    'default_ui_style',
-    'default_pygments_style',
-
+    "default_ui_style",
+    "default_pygments_style",
     # Style.
-    'Style',
-    'Priority',
-    'merge_styles',
-    'parse_color',
-
+    "Style",
+    "Priority",
+    "merge_styles",
+    "parse_color",
     # Style transformation.
-    'StyleTransformation',
-    'SwapLightAndDarkStyleTransformation',
-    'ReverseStyleTransformation',
-    'SetDefaultColorStyleTransformation',
-    'AdjustBrightnessStyleTransformation',
-    'DummyStyleTransformation',
-    'ConditionalStyleTransformation',
-    'DynamicStyleTransformation',
-    'merge_style_transformations',
-
+    "StyleTransformation",
+    "SwapLightAndDarkStyleTransformation",
+    "ReverseStyleTransformation",
+    "SetDefaultColorStyleTransformation",
+    "AdjustBrightnessStyleTransformation",
+    "DummyStyleTransformation",
+    "ConditionalStyleTransformation",
+    "DynamicStyleTransformation",
+    "merge_style_transformations",
     # Pygments.
-    'style_from_pygments_cls',
-    'style_from_pygments_dict',
-    'pygments_token_to_classname',
-
+    "style_from_pygments_cls",
+    "style_from_pygments_dict",
+    "pygments_token_to_classname",
     # Named colors.
-    'NAMED_COLORS',
+    "NAMED_COLORS",
 ]

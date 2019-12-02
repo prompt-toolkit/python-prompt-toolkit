@@ -1,4 +1,3 @@
-# type: ignore[no-redef]
 from typing import Optional
 
 from prompt_toolkit.application.current import get_app
@@ -31,11 +30,7 @@ from prompt_toolkit.key_binding.key_bindings import (
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.key_binding.vi_state import InputMode
 from prompt_toolkit.keys import Keys
-from prompt_toolkit.layout.containers import (
-    ConditionalContainer,
-    Container,
-    Window,
-)
+from prompt_toolkit.layout.containers import ConditionalContainer, Container, Window
 from prompt_toolkit.layout.controls import (
     BufferControl,
     FormattedTextControl,
@@ -49,26 +44,27 @@ from prompt_toolkit.lexers import SimpleLexer
 from prompt_toolkit.search import SearchDirection
 
 __all__ = [
-    'ArgToolbar',
-    'CompletionsToolbar',
-    'FormattedTextToolbar',
-    'SearchToolbar',
-    'SystemToolbar',
-    'ValidationToolbar',
+    "ArgToolbar",
+    "CompletionsToolbar",
+    "FormattedTextToolbar",
+    "SearchToolbar",
+    "SystemToolbar",
+    "ValidationToolbar",
 ]
 
 E = KeyPressEvent
 
 
 class FormattedTextToolbar(Window):
-    def __init__(self, text: AnyFormattedText, style: str = '', **kw) -> None:
+    def __init__(self, text: AnyFormattedText, style: str = "", **kw) -> None:
         # Note: The style needs to be applied to the toolbar as a whole, not
         #       just the `FormattedTextControl`.
         super().__init__(
             FormattedTextControl(text, **kw),
             style=style,
             dont_extend_height=True,
-            height=Dimension(min=1))
+            height=Dimension(min=1),
+        )
 
 
 class SystemToolbar:
@@ -77,8 +73,12 @@ class SystemToolbar:
 
     :param prompt: Prompt to be displayed to the user.
     """
-    def __init__(self, prompt: AnyFormattedText = 'Shell command: ',
-                 enable_global_bindings: FilterOrBool = True) -> None:
+
+    def __init__(
+        self,
+        prompt: AnyFormattedText = "Shell command: ",
+        enable_global_bindings: FilterOrBool = True,
+    ) -> None:
 
         self.prompt = prompt
         self.enable_global_bindings = to_filter(enable_global_bindings)
@@ -89,24 +89,26 @@ class SystemToolbar:
 
         self.buffer_control = BufferControl(
             buffer=self.system_buffer,
-            lexer=SimpleLexer(style='class:system-toolbar.text'),
-            input_processors=[BeforeInput(
-                lambda: self.prompt, style='class:system-toolbar')],
-            key_bindings=self._bindings)
+            lexer=SimpleLexer(style="class:system-toolbar.text"),
+            input_processors=[
+                BeforeInput(lambda: self.prompt, style="class:system-toolbar")
+            ],
+            key_bindings=self._bindings,
+        )
 
         self.window = Window(
-            self.buffer_control, height=1,
-            style='class:system-toolbar')
+            self.buffer_control, height=1, style="class:system-toolbar"
+        )
 
         self.container = ConditionalContainer(
-            content=self.window,
-            filter=has_focus(self.system_buffer))
+            content=self.window, filter=has_focus(self.system_buffer)
+        )
 
     def _get_display_before_text(self) -> StyleAndTextTuples:
         return [
-            ('class:system-toolbar', 'Shell command: '),
-            ('class:system-toolbar.text', self.system_buffer.text),
-            ('', '\n'),
+            ("class:system-toolbar", "Shell command: "),
+            ("class:system-toolbar.text", self.system_buffer.text),
+            ("", "\n"),
         ]
 
     def _build_key_bindings(self) -> KeyBindingsBase:
@@ -116,20 +118,21 @@ class SystemToolbar:
         emacs_bindings = KeyBindings()
         handle = emacs_bindings.add
 
-        @handle('escape', filter=focused)
-        @handle('c-g', filter=focused)
-        @handle('c-c', filter=focused)
+        @handle("escape", filter=focused)
+        @handle("c-g", filter=focused)
+        @handle("c-c", filter=focused)
         def _(event: E) -> None:
             " Hide system prompt. "
             self.system_buffer.reset()
             event.app.layout.focus_last()
 
-        @handle('enter', filter=focused)
+        @handle("enter", filter=focused)
         def _(event: E) -> None:
             " Run system command. "
             event.app.run_system_command(
                 self.system_buffer.text,
-                display_before_text=self._get_display_before_text())
+                display_before_text=self._get_display_before_text(),
+            )
             self.system_buffer.reset(append_to_history=True)
             event.app.layout.focus_last()
 
@@ -137,21 +140,22 @@ class SystemToolbar:
         vi_bindings = KeyBindings()
         handle = vi_bindings.add
 
-        @handle('escape', filter=focused)
-        @handle('c-c', filter=focused)
+        @handle("escape", filter=focused)
+        @handle("c-c", filter=focused)
         def _(event: E) -> None:
             " Hide system prompt. "
             event.app.vi_state.input_mode = InputMode.NAVIGATION
             self.system_buffer.reset()
             event.app.layout.focus_last()
 
-        @handle('enter', filter=focused)
+        @handle("enter", filter=focused)
         def _(event: E) -> None:
             " Run system command. "
             event.app.vi_state.input_mode = InputMode.NAVIGATION
             event.app.run_system_command(
                 self.system_buffer.text,
-                display_before_text=self._get_display_before_text())
+                display_before_text=self._get_display_before_text(),
+            )
             self.system_buffer.reset(append_to_history=True)
             event.app.layout.focus_last()
 
@@ -160,22 +164,24 @@ class SystemToolbar:
         global_bindings = KeyBindings()
         handle = global_bindings.add
 
-        @handle(Keys.Escape, '!', filter= ~focused & emacs_mode, is_global=True)
+        @handle(Keys.Escape, "!", filter=~focused & emacs_mode, is_global=True)
         def _(event: E) -> None:
             " M-'!' will focus this user control. "
             event.app.layout.focus(self.window)
 
-        @handle('!', filter=~focused & vi_mode & vi_navigation_mode, is_global=True)
+        @handle("!", filter=~focused & vi_mode & vi_navigation_mode, is_global=True)
         def _(event: E) -> None:
             " Focus. "
             event.app.vi_state.input_mode = InputMode.INSERT
             event.app.layout.focus(self.window)
 
-        return merge_key_bindings([
-            ConditionalKeyBindings(emacs_bindings, emacs_mode),
-            ConditionalKeyBindings(vi_bindings, vi_mode),
-            ConditionalKeyBindings(global_bindings, self.enable_global_bindings),
-        ])
+        return merge_key_bindings(
+            [
+                ConditionalKeyBindings(emacs_bindings, emacs_mode),
+                ConditionalKeyBindings(vi_bindings, vi_mode),
+                ConditionalKeyBindings(global_bindings, self.enable_global_bindings),
+            ]
+        )
 
     def __pt_container__(self) -> Container:
         return self.container
@@ -184,22 +190,18 @@ class SystemToolbar:
 class ArgToolbar:
     def __init__(self) -> None:
         def get_formatted_text() -> StyleAndTextTuples:
-            arg = get_app().key_processor.arg or ''
-            if arg == '-':
-                arg = '-1'
+            arg = get_app().key_processor.arg or ""
+            if arg == "-":
+                arg = "-1"
 
             return [
-                ('class:arg-toolbar', 'Repeat: '),
-                ('class:arg-toolbar.text', arg),
+                ("class:arg-toolbar", "Repeat: "),
+                ("class:arg-toolbar.text", arg),
             ]
 
-        self.window = Window(
-            FormattedTextControl(get_formatted_text),
-            height=1)
+        self.window = Window(FormattedTextControl(get_formatted_text), height=1)
 
-        self.container = ConditionalContainer(
-            content=self.window,
-            filter=has_arg)
+        self.container = ConditionalContainer(content=self.window, filter=has_arg)
 
     def __pt_container__(self) -> Container:
         return self.container
@@ -210,12 +212,16 @@ class SearchToolbar:
     :param vi_mode: Display '/' and '?' instead of I-search.
     :param ignore_case: Search case insensitive.
     """
-    def __init__(self, search_buffer: Optional[Buffer] = None,
-                 vi_mode: bool = False,
-                 text_if_not_searching: AnyFormattedText = '',
-                 forward_search_prompt: AnyFormattedText = 'I-search: ',
-                 backward_search_prompt: AnyFormattedText = 'I-search backward: ',
-                 ignore_case: FilterOrBool = False) -> None:
+
+    def __init__(
+        self,
+        search_buffer: Optional[Buffer] = None,
+        vi_mode: bool = False,
+        text_if_not_searching: AnyFormattedText = "",
+        forward_search_prompt: AnyFormattedText = "I-search: ",
+        backward_search_prompt: AnyFormattedText = "I-search backward: ",
+        ignore_case: FilterOrBool = False,
+    ) -> None:
 
         if search_buffer is None:
             search_buffer = Buffer()
@@ -227,28 +233,28 @@ class SearchToolbar:
         def get_before_input() -> AnyFormattedText:
             if not is_searching():
                 return text_if_not_searching
-            elif self.control.searcher_search_state.direction == SearchDirection.BACKWARD:
-                return ('?' if vi_mode else backward_search_prompt)
+            elif (
+                self.control.searcher_search_state.direction == SearchDirection.BACKWARD
+            ):
+                return "?" if vi_mode else backward_search_prompt
             else:
-                return ('/' if vi_mode else forward_search_prompt)
+                return "/" if vi_mode else forward_search_prompt
 
         self.search_buffer = search_buffer
 
         self.control = SearchBufferControl(
             buffer=search_buffer,
-            input_processors=[BeforeInput(
-                get_before_input,
-                style='class:search-toolbar.prompt')],
-            lexer=SimpleLexer(
-                style='class:search-toolbar.text'),
-            ignore_case=ignore_case)
+            input_processors=[
+                BeforeInput(get_before_input, style="class:search-toolbar.prompt")
+            ],
+            lexer=SimpleLexer(style="class:search-toolbar.text"),
+            ignore_case=ignore_case,
+        )
 
         self.container = ConditionalContainer(
-            content=Window(
-                self.control,
-                height=1,
-                style='class:search-toolbar'),
-            filter=is_searching)
+            content=Window(self.control, height=1, style="class:search-toolbar"),
+            filter=is_searching,
+        )
 
     def __pt_container__(self) -> Container:
         return self.container
@@ -285,27 +291,36 @@ class _CompletionsToolbarControl(UIControl):
                         cut_right = True
                         break
 
-                fragments.extend(to_formatted_text(
-                    c.display_text,
-                    style=('class:completion-toolbar.completion.current'
-                           if i == index else 'class:completion-toolbar.completion')
-                ))
-                fragments.append(('', ' '))
+                fragments.extend(
+                    to_formatted_text(
+                        c.display_text,
+                        style=(
+                            "class:completion-toolbar.completion.current"
+                            if i == index
+                            else "class:completion-toolbar.completion"
+                        ),
+                    )
+                )
+                fragments.append(("", " "))
 
             # Extend/strip until the content width.
-            fragments.append(('', ' ' * (content_width - fragment_list_len(fragments))))
+            fragments.append(("", " " * (content_width - fragment_list_len(fragments))))
             fragments = fragments[:content_width]
 
             # Return fragments
-            all_fragments.append(('', ' '))
-            all_fragments.append(('class:completion-toolbar.arrow', '<' if cut_left else ' '))
-            all_fragments.append(('', ' '))
+            all_fragments.append(("", " "))
+            all_fragments.append(
+                ("class:completion-toolbar.arrow", "<" if cut_left else " ")
+            )
+            all_fragments.append(("", " "))
 
             all_fragments.extend(fragments)
 
-            all_fragments.append(('', ' '))
-            all_fragments.append(('class:completion-toolbar.arrow', '>' if cut_right else ' '))
-            all_fragments.append(('', ' '))
+            all_fragments.append(("", " "))
+            all_fragments.append(
+                ("class:completion-toolbar.arrow", ">" if cut_right else " ")
+            )
+            all_fragments.append(("", " "))
 
         def get_line(i: int) -> StyleAndTextTuples:
             return all_fragments
@@ -317,10 +332,10 @@ class CompletionsToolbar:
     def __init__(self) -> None:
         self.container = ConditionalContainer(
             content=Window(
-                _CompletionsToolbarControl(),
-                height=1,
-                style='class:completion-toolbar'),
-            filter=has_completions)
+                _CompletionsToolbarControl(), height=1, style="class:completion-toolbar"
+            ),
+            filter=has_completions,
+        )
 
     def __pt_container__(self) -> Container:
         return self.container
@@ -333,23 +348,27 @@ class ValidationToolbar:
 
             if buff.validation_error:
                 row, column = buff.document.translate_index_to_position(
-                    buff.validation_error.cursor_position)
+                    buff.validation_error.cursor_position
+                )
 
                 if show_position:
-                    text = '%s (line=%s column=%s)' % (
-                        buff.validation_error.message, row + 1, column + 1)
+                    text = "%s (line=%s column=%s)" % (
+                        buff.validation_error.message,
+                        row + 1,
+                        column + 1,
+                    )
                 else:
                     text = buff.validation_error.message
 
-                return [('class:validation-toolbar', text)]
+                return [("class:validation-toolbar", text)]
             else:
                 return []
 
         self.control = FormattedTextControl(get_formatted_text)
 
         self.container = ConditionalContainer(
-            content=Window(self.control, height=1),
-            filter=has_validation_error)
+            content=Window(self.control, height=1), filter=has_validation_error
+        )
 
     def __pt_container__(self) -> Container:
         return self.container

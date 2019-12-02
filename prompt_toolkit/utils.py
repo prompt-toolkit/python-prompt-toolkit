@@ -18,20 +18,20 @@ from typing import (
 from wcwidth import wcwidth
 
 __all__ = [
-    'Event',
-    'DummyContext',
-    'get_cwidth',
-    'suspend_to_background_supported',
-    'is_conemu_ansi',
-    'is_windows',
-    'in_main_thread',
-    'take_using_weights',
-    'to_str',
-    'to_int',
-    'to_float',
+    "Event",
+    "DummyContext",
+    "get_cwidth",
+    "suspend_to_background_supported",
+    "is_conemu_ansi",
+    "is_windows",
+    "in_main_thread",
+    "take_using_weights",
+    "to_str",
+    "to_int",
+    "to_float",
 ]
 
-_Sender = TypeVar('_Sender', covariant=True)
+_Sender = TypeVar("_Sender", covariant=True)
 
 
 class Event(Generic[_Sender]):
@@ -54,7 +54,10 @@ class Event(Generic[_Sender]):
         # Fire event.
         obj.event()
     """
-    def __init__(self, sender: _Sender, handler: Optional[Callable[[_Sender], None]] = None):
+
+    def __init__(
+        self, sender: _Sender, handler: Optional[Callable[[_Sender], None]] = None
+    ):
         self.sender = sender
         self._handlers: List[Callable[[_Sender], None]] = []
 
@@ -86,14 +89,14 @@ class Event(Generic[_Sender]):
         if handler in self._handlers:
             self._handlers.remove(handler)
 
-    def __iadd__(self, handler: Callable[[_Sender], None]) -> 'Event[_Sender]':
+    def __iadd__(self, handler: Callable[[_Sender], None]) -> "Event[_Sender]":
         """
         `event += handler` notation for adding a handler.
         """
         self.add_handler(handler)
         return self
 
-    def __isub__(self, handler: Callable[[_Sender], None]) -> 'Event[_Sender]':
+    def __isub__(self, handler: Callable[[_Sender], None]) -> "Event[_Sender]":
         """
         `event -= handler` notation for removing a handler.
         """
@@ -105,6 +108,7 @@ class DummyContext:
     """
     (contextlib.nested is not available on Py3)
     """
+
     def __enter__(self) -> None:
         pass
 
@@ -116,6 +120,7 @@ class _CharSizesCache(Dict[str, int]):
     """
     Cache for wcwidth sizes.
     """
+
     LONG_STRING_MIN_LEN = 64  # Minimum string length for considering it long.
     MAX_LONG_STRINGS = 16  # Maximum number of long strings to remember.
 
@@ -167,14 +172,14 @@ def suspend_to_background_supported() -> bool:
     Returns `True` when the Python implementation supports
     suspend-to-background. This is typically `False' on Windows systems.
     """
-    return hasattr(signal, 'SIGTSTP')
+    return hasattr(signal, "SIGTSTP")
 
 
 def is_windows() -> bool:
     """
     True when we are using Windows.
     """
-    return sys.platform.startswith('win')  # E.g. 'win32', not 'darwin' or 'linux2'
+    return sys.platform.startswith("win")  # E.g. 'win32', not 'darwin' or 'linux2'
 
 
 def is_windows_vt100_supported() -> bool:
@@ -183,6 +188,7 @@ def is_windows_vt100_supported() -> bool:
     """
     # Import needs to be inline. Windows libraries are not always available.
     from prompt_toolkit.output.windows10 import is_win_vt100_enabled
+
     return is_windows() and is_win_vt100_enabled()
 
 
@@ -190,26 +196,27 @@ def is_conemu_ansi() -> bool:
     """
     True when the ConEmu Windows console is used.
     """
-    return is_windows() and os.environ.get('ConEmuANSI', 'OFF') == 'ON'
+    return is_windows() and os.environ.get("ConEmuANSI", "OFF") == "ON"
 
 
 def in_main_thread() -> bool:
     """
     True when the current thread is the main thread.
     """
-    return threading.current_thread().__class__.__name__ == '_MainThread'
+    return threading.current_thread().__class__.__name__ == "_MainThread"
 
 
 def get_term_environment_variable() -> str:
     " Return the $TERM environment variable. "
-    return os.environ.get('TERM', '')
+    return os.environ.get("TERM", "")
 
 
-_T = TypeVar('_T')
+_T = TypeVar("_T")
 
 
 def take_using_weights(
-        items: List[_T], weights: List[int]) -> Generator[_T, None, None]:
+    items: List[_T], weights: List[int]
+) -> Generator[_T, None, None]:
     """
     Generator that keeps yielding items from the items list, in proportion to
     their weight. For instance::

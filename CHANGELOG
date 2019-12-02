@@ -1,12 +1,38 @@
 CHANGELOG
 =========
 
-3.x.x
+3.0.2: 2019-11-30
+-----------------
+
+Fixes:
+- Bugfix in the UI invalidation. Fixes an issue when the application runs again
+  on another event loop.
+  See: https://github.com/ipython/ipython/pull/11973
+
+
+3.0.1: 2019-11-28
+-----------------
+
+New features:
+- Added `new_eventloop_with_inputhook` function.
+- Set exception handler from within `Application.run_async`.
+- Applied Black code style.
+
+Fixes:
+- No longer expect a working event loop in the `History` classes.
+  (Fix for special situations when a `ThreadedHistory` is created before the
+  event loop has been set up.)
+- Accept an empty prompt continuation.
+- A few fixes to the `Buffer` tempfile code.
+
+
+3.0.0: 2019-11-24
 -----------------
 
 New features:
 - (almost) 100% type annotated.
 - Native asyncio instead of custom event loops.
+- Added shift-based text selection (use shift+arrows to start selecting text).
 
 Breaking changes:
 - Python 2 support has been dropped. Minimal Python version is now 3.6,

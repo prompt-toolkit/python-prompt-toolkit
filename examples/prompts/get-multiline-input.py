@@ -15,14 +15,15 @@ def prompt_continuation(width, line_number, wrap_count):
     the prompt.
     """
     if wrap_count > 0:
-        return ' ' * (width - 3) + '-> '
+        return " " * (width - 3) + "-> "
     else:
-        text = ('- %i - ' % (line_number + 1)).rjust(width)
-        return HTML('<strong>%s</strong>') % text
+        text = ("- %i - " % (line_number + 1)).rjust(width)
+        return HTML("<strong>%s</strong>") % text
 
 
-if __name__ == '__main__':
-    print('Press [Meta+Enter] or [Esc] followed by [Enter] to accept input.')
-    answer = prompt('Multiline input: ', multiline=True,
-                    prompt_continuation=prompt_continuation)
-    print('You said: %s' % answer)
+if __name__ == "__main__":
+    print("Press [Meta+Enter] or [Esc] followed by [Enter] to accept input.")
+    answer = prompt(
+        "Multiline input: ", multiline=True, prompt_continuation=prompt_continuation
+    )
+    print("You said: %s" % answer)

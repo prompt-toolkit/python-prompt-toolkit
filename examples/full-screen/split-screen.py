@@ -8,12 +8,7 @@ reversed input is shown on the right. Pressing Ctrl-Q will quit the application.
 from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout.containers import (
-    HSplit,
-    VSplit,
-    Window,
-    WindowAlign,
-)
+from prompt_toolkit.layout.containers import HSplit, VSplit, Window, WindowAlign
 from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
 from prompt_toolkit.layout.layout import Layout
 
@@ -30,17 +25,17 @@ left_window = Window(BufferControl(buffer=left_buffer))
 right_window = Window(BufferControl(buffer=right_buffer))
 
 
-body = VSplit([
-    left_window,
-
-    # A vertical line in the middle. We explicitly specify the width, to make
-    # sure that the layout engine will not try to divide the whole width by
-    # three for all these windows.
-    Window(width=1, char='|', style='class:line'),
-
-    # Display the Result buffer on the right.
-    right_window,
-])
+body = VSplit(
+    [
+        left_window,
+        # A vertical line in the middle. We explicitly specify the width, to make
+        # sure that the layout engine will not try to divide the whole width by
+        # three for all these windows.
+        Window(width=1, char="|", style="class:line"),
+        # Display the Result buffer on the right.
+        right_window,
+    ]
+)
 
 # As a demonstration. Let's add a title bar to the top, displaying "Hello world".
 
@@ -52,23 +47,25 @@ body = VSplit([
 
 def get_titlebar_text():
     return [
-        ('class:title', ' Hello world '),
-        ('class:title', ' (Press [Ctrl-Q] to quit.)'),
+        ("class:title", " Hello world "),
+        ("class:title", " (Press [Ctrl-Q] to quit.)"),
     ]
 
 
-root_container = HSplit([
-    # The titlebar.
-    Window(height=1,
-           content=FormattedTextControl(get_titlebar_text),
-           align=WindowAlign.CENTER),
-
-    # Horizontal separator.
-    Window(height=1, char='-', style='class:line'),
-
-    # The 'body', like defined above.
-    body,
-])
+root_container = HSplit(
+    [
+        # The titlebar.
+        Window(
+            height=1,
+            content=FormattedTextControl(get_titlebar_text),
+            align=WindowAlign.CENTER,
+        ),
+        # Horizontal separator.
+        Window(height=1, char="-", style="class:line"),
+        # The 'body', like defined above.
+        body,
+    ]
+)
 
 
 # 2. Adding key bindings
@@ -100,8 +97,8 @@ kb = KeyBindings()
 # existing key binding, and you definitely want to override that behaviour.
 
 
-@kb.add('c-c', eager=True)
-@kb.add('c-q', eager=True)
+@kb.add("c-c", eager=True)
+@kb.add("c-q", eager=True)
 def _(event):
     """
     Pressing Ctrl-Q or Ctrl-C will exit the user interface.
@@ -138,13 +135,12 @@ left_buffer.on_text_changed += default_buffer_changed
 application = Application(
     layout=Layout(root_container, focused_element=left_window),
     key_bindings=kb,
-
     # Let's add mouse support!
     mouse_support=True,
-
     # Using an alternate screen buffer means as much as: "run full screen".
     # It switches the terminal to an alternate screen.
-    full_screen=True)
+    full_screen=True,
+)
 
 
 # 4. Run the application
@@ -156,5 +152,5 @@ def run():
     application.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()

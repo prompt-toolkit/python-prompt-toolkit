@@ -14,18 +14,17 @@ from .formatters import (
 )
 
 __all__ = [
-    'ProgressBar',
-
+    "ProgressBar",
     # Formatters.
-    'Formatter',
-    'Text',
-    'Label',
-    'Percentage',
-    'Bar',
-    'Progress',
-    'TimeElapsed',
-    'TimeLeft',
-    'IterationsPerSecond',
-    'SpinningWheel',
-    'Rainbow',
+    "Formatter",
+    "Text",
+    "Label",
+    "Percentage",
+    "Bar",
+    "Progress",
+    "TimeElapsed",
+    "TimeLeft",
+    "IterationsPerSecond",
+    "SpinningWheel",
+    "Rainbow",
 ]

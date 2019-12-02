@@ -1,0 +1,13 @@
+[tool.black]
+target-version = ['py36']
+
+
+[tool.isort]
+# isort configuration that is compatible with Black.
+multi_line_output = 3
+include_trailing_comma = true
+known_first_party = "prompt_toolkit"
+known_third_party = "asyncssh,pygments"
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 88

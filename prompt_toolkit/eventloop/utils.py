@@ -10,17 +10,17 @@ except ImportError:
     from . import dummy_contextvars as contextvars  # type: ignore
 
 __all__ = [
-    'run_in_executor_with_context',
-    'call_soon_threadsafe',
-    'get_traceback_from_context',
+    "run_in_executor_with_context",
+    "call_soon_threadsafe",
+    "get_traceback_from_context",
 ]
 
-_T = TypeVar('_T')
+_T = TypeVar("_T")
 
 
 def run_in_executor_with_context(
-        func: Callable[..., _T], *args: Any,
-        loop: Optional[AbstractEventLoop] = None) -> Awaitable[_T]:
+    func: Callable[..., _T], *args: Any, loop: Optional[AbstractEventLoop] = None
+) -> Awaitable[_T]:
     """
     Run a function in an executor, but make sure it uses the same contextvars.
     This is required so that the function will see the right application.
@@ -34,9 +34,10 @@ def run_in_executor_with_context(
 
 
 def call_soon_threadsafe(
-        func: Callable[[], None],
-        max_postpone_time: Optional[float] = None,
-        loop: Optional[AbstractEventLoop] = None) -> None:
+    func: Callable[[], None],
+    max_postpone_time: Optional[float] = None,
+    loop: Optional[AbstractEventLoop] = None,
+) -> None:
     """
     Wrapper around asyncio's `call_soon_threadsafe`.
 
@@ -84,9 +85,9 @@ def get_traceback_from_context(context: Dict[str, Any]) -> Optional[TracebackTyp
     """
     Get the traceback object from the context.
     """
-    exception = context.get('exception')
+    exception = context.get("exception")
     if exception:
-        if hasattr(exception, '__traceback__'):
+        if hasattr(exception, "__traceback__"):
             return exception.__traceback__
         else:
             # call_exception_handler() is usually called indirectly

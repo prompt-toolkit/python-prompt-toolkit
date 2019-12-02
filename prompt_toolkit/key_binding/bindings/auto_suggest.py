@@ -1,4 +1,3 @@
-# type: ignore[no-redef]
 """
 Key bindings for auto suggestion (for fish-style auto suggestion).
 """
@@ -10,7 +9,7 @@ from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 
 __all__ = [
-    'load_auto_suggest_bindings',
+    "load_auto_suggest_bindings",
 ]
 
 E = KeyPressEvent
@@ -30,12 +29,14 @@ def load_auto_suggest_bindings() -> KeyBindings:
     @Condition
     def suggestion_available() -> bool:
         app = get_app()
-        return (app.current_buffer.suggestion and
-                app.current_buffer.document.is_cursor_at_the_end)
+        return (
+            app.current_buffer.suggestion is not None
+            and app.current_buffer.document.is_cursor_at_the_end
+        )
 
-    @handle('c-f', filter=suggestion_available)
-    @handle('c-e', filter=suggestion_available)
-    @handle('right', filter=suggestion_available)
+    @handle("c-f", filter=suggestion_available)
+    @handle("c-e", filter=suggestion_available)
+    @handle("right", filter=suggestion_available)
     def _(event: E) -> None:
         """
         Accept suggestion.
@@ -46,7 +47,7 @@ def load_auto_suggest_bindings() -> KeyBindings:
         if suggestion:
             b.insert_text(suggestion.text)
 
-    @handle('escape', 'f', filter=suggestion_available & emacs_mode)
+    @handle("escape", "f", filter=suggestion_available & emacs_mode)
     def _(event: E) -> None:
         """
         Fill partial suggestion.
@@ -55,7 +56,7 @@ def load_auto_suggest_bindings() -> KeyBindings:
         suggestion = b.suggestion
 
         if suggestion:
-            t = re.split(r'(\S+\s+)', suggestion.text)
+            t = re.split(r"(\S+\s+)", suggestion.text)
             b.insert_text(next(x for x in t if x))
 
     return key_bindings

@@ -13,11 +13,11 @@ if TYPE_CHECKING:
     from prompt_toolkit.output.defaults import Output
 
 __all__ = [
-    'get_app_session',
-    'get_app',
-    'get_app_or_none',
-    'set_app',
-    'create_app_session',
+    "get_app_session",
+    "get_app",
+    "get_app_or_none",
+    "set_app",
+    "create_app_session",
 ]
 
 
@@ -34,43 +34,48 @@ class AppSession:
         explicitely.
     :param output: Use this as a default output.
     """
-    def __init__(self, input: Optional['Input'] = None,
-                 output: Optional['Output'] = None) -> None:
+
+    def __init__(
+        self, input: Optional["Input"] = None, output: Optional["Output"] = None
+    ) -> None:
 
         self._input = input
         self._output = output
 
         # The application will be set dynamically by the `set_app` context
         # manager. This is called in the application itself.
-        self.app: Optional['Application[Any]'] = None
+        self.app: Optional["Application[Any]"] = None
 
     def __repr__(self) -> str:
-        return 'AppSession(app=%r)' % (self.app, )
+        return "AppSession(app=%r)" % (self.app,)
 
     @property
-    def input(self) -> 'Input':
+    def input(self) -> "Input":
         if self._input is None:
             from prompt_toolkit.input.defaults import create_input
+
             self._input = create_input()
         return self._input
 
     @property
-    def output(self) -> 'Output':
+    def output(self) -> "Output":
         if self._output is None:
             from prompt_toolkit.output.defaults import create_output
+
             self._output = create_output()
         return self._output
 
 
-_current_app_session: ContextVar['AppSession'] = ContextVar(
-    '_current_app_session', default=AppSession())
+_current_app_session: ContextVar["AppSession"] = ContextVar(
+    "_current_app_session", default=AppSession()
+)
 
 
 def get_app_session() -> AppSession:
     return _current_app_session.get()
 
 
-def get_app() -> 'Application[Any]':
+def get_app() -> "Application[Any]":
     """
     Get the current active (running) Application.
     An :class:`.Application` is active during the
@@ -94,10 +99,11 @@ def get_app() -> 'Application[Any]':
         return session.app
 
     from .dummy import DummyApplication
+
     return DummyApplication()
 
 
-def get_app_or_none() -> Optional['Application[Any]']:
+def get_app_or_none() -> Optional["Application[Any]"]:
     """
     Get the current active (running) Application, or return `None` if no
     application is running.
@@ -107,7 +113,7 @@ def get_app_or_none() -> Optional['Application[Any]']:
 
 
 @contextmanager
-def set_app(app: 'Application[Any]') -> Generator[None, None, None]:
+def set_app(app: "Application[Any]") -> Generator[None, None, None]:
     """
     Context manager that sets the given :class:`.Application` active in an
     `AppSession`.
@@ -130,8 +136,8 @@ def set_app(app: 'Application[Any]') -> Generator[None, None, None]:
 
 @contextmanager
 def create_app_session(
-        input: Optional['Input'] = None,
-        output: Optional['Output'] = None) -> Generator[AppSession, None, None]:
+    input: Optional["Input"] = None, output: Optional["Output"] = None
+) -> Generator[AppSession, None, None]:
     """
     Create a separate AppSession.
 
@@ -140,7 +146,7 @@ def create_app_session(
     contextvars and requires at least Python 3.7.
     """
     if sys.version_info <= (3, 6):
-        raise RuntimeError('Application sessions require Python 3.7.')
+        raise RuntimeError("Application sessions require Python 3.7.")
 
     # If no input/output is specified, fall back to the current input/output,
     # whatever that is.

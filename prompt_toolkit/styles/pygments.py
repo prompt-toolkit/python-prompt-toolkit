@@ -16,13 +16,13 @@ if TYPE_CHECKING:
 
 
 __all__ = [
-    'style_from_pygments_cls',
-    'style_from_pygments_dict',
-    'pygments_token_to_classname',
+    "style_from_pygments_cls",
+    "style_from_pygments_dict",
+    "pygments_token_to_classname",
 ]
 
 
-def style_from_pygments_cls(pygments_style_cls: Type['PygmentsStyle']) -> Style:
+def style_from_pygments_cls(pygments_style_cls: Type["PygmentsStyle"]) -> Style:
     """
     Shortcut to create a :class:`.Style` instance from a Pygments style class
     and a style dictionary.
@@ -37,12 +37,13 @@ def style_from_pygments_cls(pygments_style_cls: Type['PygmentsStyle']) -> Style:
     """
     # Import inline.
     from pygments.style import Style as PygmentsStyle
+
     assert issubclass(pygments_style_cls, PygmentsStyle)
 
     return style_from_pygments_dict(pygments_style_cls.styles)
 
 
-def style_from_pygments_dict(pygments_dict: Dict['Token', str]) -> Style:
+def style_from_pygments_dict(pygments_dict: Dict["Token", str]) -> Style:
     """
     Create a :class:`.Style` instance from a Pygments style dictionary.
     (One that maps Token objects to style strings.)
@@ -55,12 +56,12 @@ def style_from_pygments_dict(pygments_dict: Dict['Token', str]) -> Style:
     return Style(pygments_style)
 
 
-def pygments_token_to_classname(token: 'Token') -> str:
+def pygments_token_to_classname(token: "Token") -> str:
     """
     Turn e.g. `Token.Name.Exception` into `'pygments.name.exception'`.
 
     (Our Pygments lexer will also turn the tokens that pygments produces in a
     prompt_toolkit list of fragments that match these styling rules.)
     """
-    parts = ('pygments', ) + token
-    return '.'.join(parts).lower()
+    parts = ("pygments",) + token
+    return ".".join(parts).lower()

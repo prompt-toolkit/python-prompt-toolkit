@@ -18,21 +18,20 @@ from .formatted_text import ANSI, HTML
 from .shortcuts import PromptSession, print_formatted_text, prompt
 
 # Don't forget to update in `docs/conf.py`!
-__version__ = '3.0.0'
+__version__ = "3.0.2"
 
 # Version tuple.
-VERSION = tuple(__version__.split('.'))
+VERSION = tuple(__version__.split("."))
 
 
 __all__ = [
     # Application.
-    'Application',
-
+    "Application",
     # Shortcuts.
-    'prompt',
-    'PromptSession',
-    'print_formatted_text',
-
+    "prompt",
+    "PromptSession",
+    "print_formatted_text",
     # Formatted text.
-    'HTML', 'ANSI',
+    "HTML",
+    "ANSI",
 ]

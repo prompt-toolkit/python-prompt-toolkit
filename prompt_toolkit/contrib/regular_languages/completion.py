@@ -9,7 +9,7 @@ from prompt_toolkit.document import Document
 from .compiler import Match, _CompiledGrammar
 
 __all__ = [
-    'GrammarCompleter',
+    "GrammarCompleter",
 ]
 
 
@@ -22,26 +22,30 @@ class GrammarCompleter(Completer):
     :param completers: `dict` mapping variable names of the grammar to the
                        `Completer` instances to be used for each variable.
     """
-    def __init__(self, compiled_grammar: _CompiledGrammar,
-                 completers: Dict[str, Completer]) -> None:
+
+    def __init__(
+        self, compiled_grammar: _CompiledGrammar, completers: Dict[str, Completer]
+    ) -> None:
 
         self.compiled_grammar = compiled_grammar
         self.completers = completers
 
-    def get_completions(self, document: Document,
-                        complete_event: CompleteEvent) -> Iterable[Completion]:
+    def get_completions(
+        self, document: Document, complete_event: CompleteEvent
+    ) -> Iterable[Completion]:
         m = self.compiled_grammar.match_prefix(document.text_before_cursor)
 
         if m:
             completions = self._remove_duplicates(
-                self._get_completions_for_match(m, complete_event))
+                self._get_completions_for_match(m, complete_event)
+            )
 
             for c in completions:
                 yield c
 
     def _get_completions_for_match(
-            self, match: Match,
-            complete_event: CompleteEvent) -> Iterable[Completion]:
+        self, match: Match, complete_event: CompleteEvent
+    ) -> Iterable[Completion]:
         """
         Yield all the possible completions for this input string.
         (The completer assumes that the cursor position was at the end of the
@@ -64,14 +68,18 @@ class GrammarCompleter(Completer):
 
                 # Call completer
                 for completion in completer.get_completions(document, complete_event):
-                    new_text = unwrapped_text[:len(text) + completion.start_position] + completion.text
+                    new_text = (
+                        unwrapped_text[: len(text) + completion.start_position]
+                        + completion.text
+                    )
 
                     # Wrap again.
                     yield Completion(
                         text=self.compiled_grammar.escape(varname, new_text),
                         start_position=start - len(match.string),
                         display=completion.display,
-                        display_meta=completion.display_meta)
+                        display_meta=completion.display_meta,
+                    )
 
     def _remove_duplicates(self, items: Iterable[Completion]) -> List[Completion]:
         """

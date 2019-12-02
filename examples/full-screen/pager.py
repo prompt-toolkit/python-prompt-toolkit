@@ -19,26 +19,31 @@ from prompt_toolkit.widgets import SearchToolbar, TextArea
 _pager_py_path = __file__
 
 
-with open(_pager_py_path, 'rb') as f:
-    text = f.read().decode('utf-8')
+with open(_pager_py_path, "rb") as f:
+    text = f.read().decode("utf-8")
 
 
 def get_statusbar_text():
     return [
-        ('class:status', _pager_py_path + ' - '),
-        ('class:status.position', '{}:{}'.format(
-            text_area.document.cursor_position_row + 1,
-            text_area.document.cursor_position_col + 1)),
-        ('class:status', ' - Press '),
-        ('class:status.key', 'Ctrl-C'),
-        ('class:status', ' to exit, '),
-        ('class:status.key', '/'),
-        ('class:status', ' for searching.'),
+        ("class:status", _pager_py_path + " - "),
+        (
+            "class:status.position",
+            "{}:{}".format(
+                text_area.document.cursor_position_row + 1,
+                text_area.document.cursor_position_col + 1,
+            ),
+        ),
+        ("class:status", " - Press "),
+        ("class:status.key", "Ctrl-C"),
+        ("class:status", " to exit, "),
+        ("class:status.key", "/"),
+        ("class:status", " for searching."),
     ]
 
 
-search_field = SearchToolbar(text_if_not_searching=[
-    ('class:not-searching', "Press '/' to start searching.")])
+search_field = SearchToolbar(
+    text_if_not_searching=[("class:not-searching", "Press '/' to start searching.")]
+)
 
 
 text_area = TextArea(
@@ -47,57 +52,60 @@ text_area = TextArea(
     scrollbar=True,
     line_numbers=True,
     search_field=search_field,
-    lexer=PygmentsLexer(PythonLexer))
+    lexer=PygmentsLexer(PythonLexer),
+)
 
 
-root_container = HSplit([
-    # The top toolbar.
-    Window(content=FormattedTextControl(
-        get_statusbar_text),
-        height=D.exact(1),
-        style='class:status'),
-
-    # The main content.
-    text_area,
-    search_field,
-])
+root_container = HSplit(
+    [
+        # The top toolbar.
+        Window(
+            content=FormattedTextControl(get_statusbar_text),
+            height=D.exact(1),
+            style="class:status",
+        ),
+        # The main content.
+        text_area,
+        search_field,
+    ]
+)
 
 
 # Key bindings.
 bindings = KeyBindings()
 
 
-@bindings.add('c-c')
-@bindings.add('q')
+@bindings.add("c-c")
+@bindings.add("q")
 def _(event):
     " Quit. "
     event.app.exit()
 
 
-style = Style.from_dict({
-    'status': 'reverse',
-    'status.position': '#aaaa00',
-    'status.key': '#ffaa00',
-    'not-searching': '#888888',
-})
+style = Style.from_dict(
+    {
+        "status": "reverse",
+        "status.position": "#aaaa00",
+        "status.key": "#ffaa00",
+        "not-searching": "#888888",
+    }
+)
 
 
 # create application.
 application = Application(
-    layout=Layout(
-        root_container,
-        focused_element=text_area,
-    ),
+    layout=Layout(root_container, focused_element=text_area,),
     key_bindings=bindings,
     enable_page_navigation_bindings=True,
     mouse_support=True,
     style=style,
-    full_screen=True)
+    full_screen=True,
+)
 
 
 def run():
     application.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()

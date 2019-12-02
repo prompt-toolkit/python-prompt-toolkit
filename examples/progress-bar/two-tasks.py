@@ -13,11 +13,11 @@ def main():
         # Two parallal tasks.
         def task_1():
             for i in pb(range(100)):
-                time.sleep(.05)
+                time.sleep(0.05)
 
         def task_2():
             for i in pb(range(150)):
-                time.sleep(.08)
+                time.sleep(0.08)
 
         # Start threads.
         t1 = threading.Thread(target=task_1)
@@ -32,8 +32,8 @@ def main():
         # signal.
         for t in [t1, t2]:
             while t.is_alive():
-                t.join(timeout=.5)
+                t.join(timeout=0.5)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

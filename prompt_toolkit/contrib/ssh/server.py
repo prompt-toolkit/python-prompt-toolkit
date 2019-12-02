@@ -13,8 +13,8 @@ from prompt_toolkit.input.posix_pipe import PosixPipeInput
 from prompt_toolkit.output.vt100 import Vt100_Output
 
 __all__ = [
-    'PromptToolkitSession',
-    'PromptToolkitSSHServer',
+    "PromptToolkitSession",
+    "PromptToolkitSSHServer",
 ]
 
 
@@ -34,13 +34,14 @@ class PromptToolkitSession(asyncssh.SSHServerSession):
         class Stdout:
             def write(s, data):
                 if self._chan is not None:
-                    self._chan.write(data.replace('\n', '\r\n'))
+                    self._chan.write(data.replace("\n", "\r\n"))
 
             def flush(s):
                 pass
 
-        self._output = Vt100_Output(cast(TextIO, Stdout()),
-                                    self._get_size, write_binary=False)
+        self._output = Vt100_Output(
+            cast(TextIO, Stdout()), self._get_size, write_binary=False
+        )
 
     def _get_size(self) -> Size:
         """
@@ -64,7 +65,7 @@ class PromptToolkitSession(asyncssh.SSHServerSession):
     async def _interact(self) -> None:
         if self._chan is None:
             # Should not happen.
-            raise Exception('`_interact` called before `connection_made`.')
+            raise Exception("`_interact` called before `connection_made`.")
 
         # Disable the line editing provided by asyncssh. Prompt_toolkit
         # provides the line editing.
@@ -121,6 +122,7 @@ class PromptToolkitSSHServer(asyncssh.SSHServer):
         )
         loop.run_forever()
     """
+
     def __init__(self, interact: Callable[[], Awaitable[None]]) -> None:
         self.interact = interact
 

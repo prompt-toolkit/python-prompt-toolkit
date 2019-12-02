@@ -6,19 +6,49 @@ from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.key_binding import KeyBindings
 
-animal_completer = WordCompleter([
-    'alligator', 'ant', 'ape', 'bat', 'bear', 'beaver', 'bee', 'bison',
-    'butterfly', 'cat', 'chicken', 'crocodile', 'dinosaur', 'dog', 'dolphin',
-    'dove', 'duck', 'eagle', 'elephant', 'fish', 'goat', 'gorilla', 'kangaroo',
-    'leopard', 'lion', 'mouse', 'rabbit', 'rat', 'snake', 'spider', 'turkey',
-    'turtle',
-], ignore_case=True)
+animal_completer = WordCompleter(
+    [
+        "alligator",
+        "ant",
+        "ape",
+        "bat",
+        "bear",
+        "beaver",
+        "bee",
+        "bison",
+        "butterfly",
+        "cat",
+        "chicken",
+        "crocodile",
+        "dinosaur",
+        "dog",
+        "dolphin",
+        "dove",
+        "duck",
+        "eagle",
+        "elephant",
+        "fish",
+        "goat",
+        "gorilla",
+        "kangaroo",
+        "leopard",
+        "lion",
+        "mouse",
+        "rabbit",
+        "rat",
+        "snake",
+        "spider",
+        "turkey",
+        "turtle",
+    ],
+    ignore_case=True,
+)
 
 
 kb = KeyBindings()
 
 
-@kb.add('c-space')
+@kb.add("c-space")
 def _(event):
     """
     Start auto completion. If the menu is showing already, select the next
@@ -32,10 +62,14 @@ def _(event):
 
 
 def main():
-    text = prompt('Give some animals: ', completer=animal_completer,
-                  complete_while_typing=False, key_bindings=kb)
-    print('You said: %s' % text)
+    text = prompt(
+        "Give some animals: ",
+        completer=animal_completer,
+        complete_while_typing=False,
+        key_bindings=kb,
+    )
+    print("You said: %s" % text)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

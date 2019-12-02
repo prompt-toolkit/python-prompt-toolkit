@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-(Python >= 3.5)
+(Python >= 3.6)
 This is an example of how to prompt inside an application that uses the asyncio
 eventloop. The ``prompt_toolkit`` library will make sure that when other
 coroutines are writing to stdout, they write above the prompt, not destroying
@@ -19,18 +19,19 @@ import asyncio
 from prompt_toolkit.patch_stdout import patch_stdout
 from prompt_toolkit.shortcuts import PromptSession
 
-loop = asyncio.get_event_loop()
-
 
 async def print_counter():
     """
     Coroutine that prints counters.
     """
-    i = 0
-    while True:
-        print('Counter: %i' % i)
-        i += 1
-        await asyncio.sleep(3)
+    try:
+        i = 0
+        while True:
+            print("Counter: %i" % i)
+            i += 1
+            await asyncio.sleep(3)
+    except asyncio.CancelledError:
+        print("Background task cancelled.")
 
 
 async def interactive_shell():
@@ -38,27 +39,31 @@ async def interactive_shell():
     Like `interactive_shell`, but doing things manual.
     """
     # Create Prompt.
-    session = PromptSession('Say something: ')
+    session = PromptSession("Say something: ")
 
     # Run echo loop. Read text from stdin, and reply it back.
     while True:
         try:
-            result = await session.prompt(async_=True)
+            result = await session.prompt_async()
             print('You said: "{0}"'.format(result))
         except (EOFError, KeyboardInterrupt):
             return
 
 
-def main():
+async def main():
     with patch_stdout():
-        shell_task = asyncio.ensure_future(interactive_shell())
-        background_task = asyncio.gather(print_counter(), return_exceptions=True)
+        background_task = asyncio.create_task(print_counter())
+        try:
+            await interactive_shell()
+        finally:
+            background_task.cancel()
+        print("Quitting event loop. Bye.")
 
-        loop.run_until_complete(shell_task)
-        background_task.cancel()
-        loop.run_until_complete(background_task)
-        print('Quitting event loop. Bye.')
 
-
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    try:
+        from asyncio import run
+    except ImportError:
+        asyncio.run_until_complete(main())
+    else:
+        asyncio.run(main())

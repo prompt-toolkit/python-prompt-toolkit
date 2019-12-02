@@ -34,19 +34,31 @@ from typing import Callable
 from prompt_toolkit.utils import is_windows
 
 __all__ = [
-    'set_eventloop_with_inputhook',
-    'InputHookSelector',
-    'InputHookContext',
+    "new_eventloop_with_inputhook",
+    "set_eventloop_with_inputhook",
+    "InputHookSelector",
+    "InputHookContext",
 ]
 
 
-def set_eventloop_with_inputhook(
-        inputhook: Callable[['InputHookContext'], None]) -> AbstractEventLoop:
+def new_eventloop_with_inputhook(
+    inputhook: Callable[["InputHookContext"], None]
+) -> AbstractEventLoop:
     """
-    Create a new event loop with the given inputhook, and activate it.
+    Create a new event loop with the given inputhook.
     """
     selector = InputHookSelector(selectors.DefaultSelector(), inputhook)
     loop = asyncio.SelectorEventLoop(selector)  # type: ignore
+    return loop
+
+
+def set_eventloop_with_inputhook(
+    inputhook: Callable[["InputHookContext"], None]
+) -> AbstractEventLoop:
+    """
+    Create a new event loop with the given inputhook, and activate it.
+    """
+    loop = new_eventloop_with_inputhook(inputhook)
     asyncio.set_event_loop(loop)
     return loop
 
@@ -59,7 +71,10 @@ class InputHookSelector(BaseSelector):
         loop = asyncio.SelectorEventLoop(InputHookSelector(selector, inputhook))
         asyncio.set_event_loop(loop)
     """
-    def __init__(self, selector: BaseSelector, inputhook: Callable[['InputHookContext'], None]) -> None:
+
+    def __init__(
+        self, selector: BaseSelector, inputhook: Callable[["InputHookContext"], None]
+    ) -> None:
         self.selector = selector
         self.inputhook = inputhook
         self._r, self._w = os.pipe()
@@ -86,8 +101,9 @@ class InputHookSelector(BaseSelector):
         def run_selector() -> None:
             nonlocal ready, result
             result = self.selector.select(timeout=timeout)
-            os.write(self._w, b'x')
+            os.write(self._w, b"x")
             ready = True
+
         th = threading.Thread(target=run_selector)
         th.start()
 
@@ -145,6 +161,7 @@ class InputHookContext:
     """
     Given as a parameter to the inputhook.
     """
+
     def __init__(self, fileno: int, input_is_ready: Callable[[], bool]) -> None:
         self._fileno = fileno
         self.input_is_ready = input_is_ready

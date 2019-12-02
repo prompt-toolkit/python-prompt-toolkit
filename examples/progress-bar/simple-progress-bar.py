@@ -11,8 +11,8 @@ from prompt_toolkit.shortcuts import ProgressBar
 def main():
     with ProgressBar() as pb:
         for i in pb(range(800)):
-            time.sleep(.01)
+            time.sleep(0.01)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

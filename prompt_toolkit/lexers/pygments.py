@@ -29,10 +29,10 @@ if TYPE_CHECKING:
     from pygments.lexer import Lexer as PygmentsLexerCls
 
 __all__ = [
-    'PygmentsLexer',
-    'SyntaxSync',
-    'SyncFromStart',
-    'RegexSync',
+    "PygmentsLexer",
+    "SyntaxSync",
+    "SyncFromStart",
+    "RegexSync",
 ]
 
 
@@ -43,9 +43,11 @@ class SyntaxSync(metaclass=ABCMeta):
     want to start the highlighting by running the lexer from the beginning of
     the file. That is very slow when editing.
     """
+
     @abstractmethod
     def get_sync_start_position(
-            self, document: Document, lineno: int) -> Tuple[int, int]:
+        self, document: Document, lineno: int
+    ) -> Tuple[int, int]:
         """
         Return the position from where we can start lexing as a (row, column)
         tuple.
@@ -60,8 +62,10 @@ class SyncFromStart(SyntaxSync):
     """
     Always start the syntax highlighting from the beginning.
     """
+
     def get_sync_start_position(
-            self, document: Document, lineno: int) -> Tuple[int, int]:
+        self, document: Document, lineno: int
+    ) -> Tuple[int, int]:
         return 0, 0
 
 
@@ -69,6 +73,7 @@ class RegexSync(SyntaxSync):
     """
     Synchronize by starting at a line that matches the given regex pattern.
     """
+
     # Never go more than this amount of lines backwards for synchronisation.
     # That would be too CPU intensive.
     MAX_BACKWARDS = 500
@@ -81,7 +86,8 @@ class RegexSync(SyntaxSync):
         self._compiled_pattern = re.compile(pattern)
 
     def get_sync_start_position(
-            self, document: Document, lineno: int) -> Tuple[int, int]:
+        self, document: Document, lineno: int
+    ) -> Tuple[int, int]:
         """
         Scan backwards, and find a possible position to start.
         """
@@ -104,25 +110,22 @@ class RegexSync(SyntaxSync):
             return lineno, 0
 
     @classmethod
-    def from_pygments_lexer_cls(cls, lexer_cls: 'PygmentsLexerCls') -> 'RegexSync':
+    def from_pygments_lexer_cls(cls, lexer_cls: "PygmentsLexerCls") -> "RegexSync":
         """
         Create a :class:`.RegexSync` instance for this Pygments lexer class.
         """
         patterns = {
             # For Python, start highlighting at any class/def block.
-            'Python':   r'^\s*(class|def)\s+',
-            'Python 3': r'^\s*(class|def)\s+',
-
+            "Python": r"^\s*(class|def)\s+",
+            "Python 3": r"^\s*(class|def)\s+",
             # For HTML, start at any open/close tag definition.
-            'HTML': r'<[/a-zA-Z]',
-
+            "HTML": r"<[/a-zA-Z]",
             # For javascript, start at a function.
-            'JavaScript': r'\bfunction\b'
-
+            "JavaScript": r"\bfunction\b"
             # TODO: Add definitions for other languages.
             #       By default, we start at every possible line.
         }
-        p = patterns.get(lexer_cls.name, '^')
+        p = patterns.get(lexer_cls.name, "^")
         return cls(p)
 
 
@@ -133,8 +136,9 @@ class _TokenCache(Dict[Tuple[str, ...], str]):
     ``Token.A.B.C`` will be converted into:
     ``class:pygments,pygments.A,pygments.A.B,pygments.A.B.C``
     """
+
     def __missing__(self, key: Tuple[str, ...]) -> str:
-        result = 'class:' + pygments_token_to_classname(key)
+        result = "class:" + pygments_token_to_classname(key)
         self[key] = result
         return result
 
@@ -166,6 +170,7 @@ class PygmentsLexer(Lexer):
         than 1,000 lines.
     :param syntax_sync: `SyntaxSync` object.
     """
+
     # Minimum amount of lines to go backwards when starting the parser.
     # This is important when the lines are retrieved in reverse order, or when
     # scrolling upwards. (Due to the complexity of calculating the vertical
@@ -178,25 +183,30 @@ class PygmentsLexer(Lexer):
     # (This should probably be bigger than MIN_LINES_BACKWARDS.)
     REUSE_GENERATOR_MAX_DISTANCE = 100
 
-    def __init__(self, pygments_lexer_cls: Type['PygmentsLexerCls'],
-                 sync_from_start: FilterOrBool = True,
-                 syntax_sync: Optional[SyntaxSync] = None) -> None:
+    def __init__(
+        self,
+        pygments_lexer_cls: Type["PygmentsLexerCls"],
+        sync_from_start: FilterOrBool = True,
+        syntax_sync: Optional[SyntaxSync] = None,
+    ) -> None:
 
         self.pygments_lexer_cls = pygments_lexer_cls
         self.sync_from_start = to_filter(sync_from_start)
 
         # Instantiate the Pygments lexer.
         self.pygments_lexer = pygments_lexer_cls(
-            stripnl=False,
-            stripall=False,
-            ensurenl=False)
+            stripnl=False, stripall=False, ensurenl=False
+        )
 
         # Create syntax sync instance.
-        self.syntax_sync = syntax_sync or RegexSync.from_pygments_lexer_cls(pygments_lexer_cls)
+        self.syntax_sync = syntax_sync or RegexSync.from_pygments_lexer_cls(
+            pygments_lexer_cls
+        )
 
     @classmethod
-    def from_filename(cls, filename: str,
-                      sync_from_start: FilterOrBool = True) -> 'Lexer':
+    def from_filename(
+        cls, filename: str, sync_from_start: FilterOrBool = True
+    ) -> "Lexer":
         """
         Create a `Lexer` from a filename.
         """
@@ -244,8 +254,9 @@ class PygmentsLexer(Lexer):
             Create a generator that yields the lexed lines.
             Each iteration it yields a (line_number, [(style_str, text), ...]) tuple.
             """
+
             def get_text_fragments() -> Iterable[Tuple[str, str]]:
-                text = '\n'.join(document.lines[start_lineno:])[column:]
+                text = "\n".join(document.lines[start_lineno:])[column:]
 
                 # We call `get_text_fragments_unprocessed`, because `get_tokens` will
                 # still replace \r\n and \r by \n.  (We don't want that,

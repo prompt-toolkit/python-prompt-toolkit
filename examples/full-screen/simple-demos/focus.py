@@ -35,73 +35,64 @@ right_top = Window(BufferControl(Buffer(document=Document(LIPSUM))))
 right_bottom = Window(BufferControl(Buffer(document=Document(LIPSUM))))
 
 
-body = HSplit([
-    Window(FormattedTextControl(top_text), height=2, style='reverse'),
-    Window(height=1, char='-'),  # Horizontal line in the middle.
-    VSplit([
-        left_top,
-        Window(width=1, char='|'),
-        right_top
-    ]),
-    Window(height=1, char='-'),  # Horizontal line in the middle.
-    VSplit([
-        left_bottom,
-        Window(width=1, char='|'),
-        right_bottom
-    ]),
-])
+body = HSplit(
+    [
+        Window(FormattedTextControl(top_text), height=2, style="reverse"),
+        Window(height=1, char="-"),  # Horizontal line in the middle.
+        VSplit([left_top, Window(width=1, char="|"), right_top]),
+        Window(height=1, char="-"),  # Horizontal line in the middle.
+        VSplit([left_bottom, Window(width=1, char="|"), right_bottom]),
+    ]
+)
 
 
 # 2. Key bindings
 kb = KeyBindings()
 
 
-@kb.add('q')
+@kb.add("q")
 def _(event):
     " Quit application. "
     event.app.exit()
 
 
-@kb.add('a')
+@kb.add("a")
 def _(event):
     event.app.layout.focus(left_top)
 
 
-@kb.add('b')
+@kb.add("b")
 def _(event):
     event.app.layout.focus(right_top)
 
 
-@kb.add('c')
+@kb.add("c")
 def _(event):
     event.app.layout.focus(left_bottom)
 
 
-@kb.add('d')
+@kb.add("d")
 def _(event):
     event.app.layout.focus(right_bottom)
 
 
-@kb.add('tab')
+@kb.add("tab")
 def _(event):
     event.app.layout.focus_next()
 
 
-@kb.add('s-tab')
+@kb.add("s-tab")
 def _(event):
     event.app.layout.focus_previous()
 
 
 # 3. The `Application`
-application = Application(
-    layout=Layout(body),
-    key_bindings=kb,
-    full_screen=True)
+application = Application(layout=Layout(body), key_bindings=kb, full_screen=True)
 
 
 def run():
     application.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()

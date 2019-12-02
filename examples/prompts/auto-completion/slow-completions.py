@@ -18,11 +18,38 @@ from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.shortcuts import CompleteStyle, prompt
 
 WORDS = [
-    'alligator', 'ant', 'ape', 'bat', 'bear', 'beaver', 'bee', 'bison',
-    'butterfly', 'cat', 'chicken', 'crocodile', 'dinosaur', 'dog', 'dolphin',
-    'dove', 'duck', 'eagle', 'elephant', 'fish', 'goat', 'gorilla', 'kangaroo',
-    'leopard', 'lion', 'mouse', 'rabbit', 'rat', 'snake', 'spider', 'turkey',
-    'turtle',
+    "alligator",
+    "ant",
+    "ape",
+    "bat",
+    "bear",
+    "beaver",
+    "bee",
+    "bison",
+    "butterfly",
+    "cat",
+    "chicken",
+    "crocodile",
+    "dinosaur",
+    "dog",
+    "dolphin",
+    "dove",
+    "duck",
+    "eagle",
+    "elephant",
+    "fish",
+    "goat",
+    "gorilla",
+    "kangaroo",
+    "leopard",
+    "lion",
+    "mouse",
+    "rabbit",
+    "rat",
+    "snake",
+    "spider",
+    "turkey",
+    "turtle",
 ]
 
 
@@ -30,6 +57,7 @@ class SlowCompleter(Completer):
     """
     This is a completer that's very slow.
     """
+
     def __init__(self):
         self.loading = 0
 
@@ -41,7 +69,7 @@ class SlowCompleter(Completer):
         try:
             for word in WORDS:
                 if word.startswith(word_before_cursor):
-                    time.sleep(.2)  # Simulate slowness.
+                    time.sleep(0.2)  # Simulate slowness.
                     yield Completion(word, -len(word_before_cursor))
 
         finally:
@@ -57,15 +85,19 @@ def main():
 
     # Add a bottom toolbar that display when completions are loading.
     def bottom_toolbar():
-        return ' Loading completions... ' if slow_completer.loading > 0 else ''
+        return " Loading completions... " if slow_completer.loading > 0 else ""
 
     # Display prompt.
-    text = prompt('Give some animals: ', completer=slow_completer,
-                  complete_in_thread=True, complete_while_typing=True,
-                  bottom_toolbar=bottom_toolbar,
-                  complete_style=CompleteStyle.MULTI_COLUMN)
-    print('You said: %s' % text)
+    text = prompt(
+        "Give some animals: ",
+        completer=slow_completer,
+        complete_in_thread=True,
+        complete_while_typing=True,
+        bottom_toolbar=bottom_toolbar,
+        complete_style=CompleteStyle.MULTI_COLUMN,
+    )
+    print("You said: %s" % text)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

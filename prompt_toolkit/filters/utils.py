@@ -3,8 +3,8 @@ from typing import Dict
 from .base import Always, Filter, FilterOrBool, Never
 
 __all__ = [
-    'to_filter',
-    'is_true',
+    "to_filter",
+    "is_true",
 ]
 
 
@@ -29,7 +29,7 @@ def to_filter(bool_or_filter: FilterOrBool) -> Filter:
     if isinstance(bool_or_filter, Filter):
         return bool_or_filter
 
-    raise TypeError('Expecting a bool or a Filter instance. Got %r' % bool_or_filter)
+    raise TypeError("Expecting a bool or a Filter instance. Got %r" % bool_or_filter)
 
 
 def is_true(value: FilterOrBool) -> bool:

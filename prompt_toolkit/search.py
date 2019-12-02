@@ -17,15 +17,15 @@ if TYPE_CHECKING:
     from prompt_toolkit.layout.layout import Layout
 
 __all__ = [
-    'SearchDirection',
-    'start_search',
-    'stop_search',
+    "SearchDirection",
+    "start_search",
+    "stop_search",
 ]
 
 
 class SearchDirection(Enum):
-    FORWARD = 'FORWARD'
-    BACKWARD = 'BACKWARD'
+    FORWARD = "FORWARD"
+    BACKWARD = "BACKWARD"
 
 
 class SearchState:
@@ -43,21 +43,29 @@ class SearchState:
     they can have a different `SearchState` each (if they have a different
     search control).
     """
-    __slots__ = ('text', 'direction', 'ignore_case')
 
-    def __init__(self, text: str = '',
-                 direction: SearchDirection = SearchDirection.FORWARD,
-                 ignore_case: FilterOrBool = False) -> None:
+    __slots__ = ("text", "direction", "ignore_case")
+
+    def __init__(
+        self,
+        text: str = "",
+        direction: SearchDirection = SearchDirection.FORWARD,
+        ignore_case: FilterOrBool = False,
+    ) -> None:
 
         self.text = text
         self.direction = direction
         self.ignore_case = to_filter(ignore_case)
 
     def __repr__(self) -> str:
-        return '%s(%r, direction=%r, ignore_case=%r)' % (
-            self.__class__.__name__, self.text, self.direction, self.ignore_case)
+        return "%s(%r, direction=%r, ignore_case=%r)" % (
+            self.__class__.__name__,
+            self.text,
+            self.direction,
+            self.ignore_case,
+        )
 
-    def __invert__(self) -> 'SearchState':
+    def __invert__(self) -> "SearchState":
         """
         Create a new SearchState where backwards becomes forwards and the other
         way around.
@@ -67,12 +75,15 @@ class SearchState:
         else:
             direction = SearchDirection.BACKWARD
 
-        return SearchState(text=self.text, direction=direction,
-                           ignore_case=self.ignore_case)
+        return SearchState(
+            text=self.text, direction=direction, ignore_case=self.ignore_case
+        )
 
 
-def start_search(buffer_control: Optional['BufferControl'] = None,
-                 direction: SearchDirection = SearchDirection.FORWARD) -> None:
+def start_search(
+    buffer_control: Optional["BufferControl"] = None,
+    direction: SearchDirection = SearchDirection.FORWARD,
+) -> None:
     """
     Start search through the given `buffer_control` using the
     `search_buffer_control`.
@@ -81,6 +92,7 @@ def start_search(buffer_control: Optional['BufferControl'] = None,
         search through the current control.
     """
     from prompt_toolkit.layout.controls import BufferControl
+
     assert buffer_control is None or isinstance(buffer_control, BufferControl)
 
     layout = get_app().layout
@@ -107,7 +119,7 @@ def start_search(buffer_control: Optional['BufferControl'] = None,
         get_app().vi_state.input_mode = InputMode.INSERT
 
 
-def stop_search(buffer_control: Optional['BufferControl'] = None) -> None:
+def stop_search(buffer_control: Optional["BufferControl"] = None) -> None:
     """
     Stop search through the given `buffer_control`.
     """
@@ -148,6 +160,7 @@ def do_incremental_search(direction: SearchDirection, count: int = 1) -> None:
 
     # Only search if the current control is a `BufferControl`.
     from prompt_toolkit.layout.controls import BufferControl
+
     search_control = layout.current_control
     if not isinstance(search_control, BufferControl):
         return
@@ -166,7 +179,8 @@ def do_incremental_search(direction: SearchDirection, count: int = 1) -> None:
     # Apply search to current buffer.
     if not direction_changed:
         prev_control.buffer.apply_search(
-            search_state, include_current_position=False, count=count)
+            search_state, include_current_position=False, count=count
+        )
 
 
 def accept_search() -> None:
@@ -179,6 +193,7 @@ def accept_search() -> None:
     target_buffer_control = layout.search_target_buffer_control
 
     from prompt_toolkit.layout.controls import BufferControl
+
     if not isinstance(search_control, BufferControl):
         return
     if target_buffer_control is None:
@@ -191,7 +206,9 @@ def accept_search() -> None:
         search_state.text = search_control.buffer.text
 
     # Apply search.
-    target_buffer_control.buffer.apply_search(search_state, include_current_position=True)
+    target_buffer_control.buffer.apply_search(
+        search_state, include_current_position=True
+    )
 
     # Add query to history of search line.
     search_control.buffer.append_to_history()
@@ -201,7 +218,8 @@ def accept_search() -> None:
 
 
 def _get_reverse_search_links(
-        layout: 'Layout') -> Dict['BufferControl', 'SearchBufferControl']:
+    layout: "Layout",
+) -> Dict["BufferControl", "SearchBufferControl"]:
     """
     Return mapping from BufferControl to SearchBufferControl.
     """

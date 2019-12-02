@@ -22,18 +22,18 @@ if TYPE_CHECKING:
     from .base import ProgressBar, ProgressBarCounter
 
 __all__ = [
-    'Formatter',
-    'Text',
-    'Label',
-    'Percentage',
-    'Bar',
-    'Progress',
-    'TimeElapsed',
-    'TimeLeft',
-    'IterationsPerSecond',
-    'SpinningWheel',
-    'Rainbow',
-    'create_default_formatters',
+    "Formatter",
+    "Text",
+    "Label",
+    "Percentage",
+    "Bar",
+    "Progress",
+    "TimeElapsed",
+    "TimeLeft",
+    "IterationsPerSecond",
+    "SpinningWheel",
+    "Rainbow",
+    "create_default_formatters",
 ]
 
 
@@ -41,13 +41,17 @@ class Formatter(metaclass=ABCMeta):
     """
     Base class for any formatter.
     """
+
     @abstractmethod
-    def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter[object]',
-               width: int) -> AnyFormattedText:
+    def format(
+        self,
+        progress_bar: "ProgressBar",
+        progress: "ProgressBarCounter[object]",
+        width: int,
+    ) -> AnyFormattedText:
         pass
 
-    def get_width(self, progress_bar: 'ProgressBar') -> AnyDimension:
+    def get_width(self, progress_bar: "ProgressBar") -> AnyDimension:
         return D()
 
 
@@ -55,15 +59,19 @@ class Text(Formatter):
     """
     Display plain text.
     """
-    def __init__(self, text: AnyFormattedText, style: str = '') -> None:
+
+    def __init__(self, text: AnyFormattedText, style: str = "") -> None:
         self.text = to_formatted_text(text, style=style)
 
-    def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter[object]',
-               width: int) -> AnyFormattedText:
+    def format(
+        self,
+        progress_bar: "ProgressBar",
+        progress: "ProgressBarCounter[object]",
+        width: int,
+    ) -> AnyFormattedText:
         return self.text
 
-    def get_width(self, progress_bar: 'ProgressBar') -> AnyDimension:
+    def get_width(self, progress_bar: "ProgressBar") -> AnyDimension:
         return fragment_list_width(self.text)
 
 
@@ -76,17 +84,21 @@ class Label(Formatter):
     :param suffix: String suffix to be added after the task name, e.g. ': '.
         If no task name was given, no suffix will be added.
     """
-    def __init__(self, width: AnyDimension = None, suffix: str = '') -> None:
+
+    def __init__(self, width: AnyDimension = None, suffix: str = "") -> None:
         self.width = width
         self.suffix = suffix
 
     def _add_suffix(self, label: AnyFormattedText) -> StyleAndTextTuples:
-        label = to_formatted_text(label, style='class:label')
-        return label + [('', self.suffix)]
+        label = to_formatted_text(label, style="class:label")
+        return label + [("", self.suffix)]
 
-    def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter[object]',
-               width: int) -> AnyFormattedText:
+    def format(
+        self,
+        progress_bar: "ProgressBar",
+        progress: "ProgressBarCounter[object]",
+        width: int,
+    ) -> AnyFormattedText:
 
         label = self._add_suffix(progress.label)
         cwidth = fragment_list_width(label)
@@ -100,7 +112,7 @@ class Label(Formatter):
 
         return label
 
-    def get_width(self, progress_bar: 'ProgressBar') -> AnyDimension:
+    def get_width(self, progress_bar: "ProgressBar") -> AnyDimension:
         if self.width:
             return self.width
 
@@ -116,16 +128,19 @@ class Percentage(Formatter):
     """
     Display the progress as a percentage.
     """
-    template = '<percentage>{percentage:>5}%</percentage>'
 
-    def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter[object]',
-               width: int) -> AnyFormattedText:
+    template = "<percentage>{percentage:>5}%</percentage>"
 
-        return HTML(self.template).format(
-            percentage=round(progress.percentage, 1))
+    def format(
+        self,
+        progress_bar: "ProgressBar",
+        progress: "ProgressBarCounter[object]",
+        width: int,
+    ) -> AnyFormattedText:
 
-    def get_width(self, progress_bar: 'ProgressBar') -> AnyDimension:
+        return HTML(self.template).format(percentage=round(progress.percentage, 1))
+
+    def get_width(self, progress_bar: "ProgressBar") -> AnyDimension:
         return D.exact(6)
 
 
@@ -133,10 +148,18 @@ class Bar(Formatter):
     """
     Display the progress bar itself.
     """
-    template = '<bar>{start}<bar-a>{bar_a}</bar-a><bar-b>{bar_b}</bar-b><bar-c>{bar_c}</bar-c>{end}</bar>'
 
-    def __init__(self, start: str = '[', end: str = ']', sym_a: str = '=',
-                 sym_b: str = '>', sym_c: str = ' ', unknown: str = '#') -> None:
+    template = "<bar>{start}<bar-a>{bar_a}</bar-a><bar-b>{bar_b}</bar-b><bar-c>{bar_c}</bar-c>{end}</bar>"
+
+    def __init__(
+        self,
+        start: str = "[",
+        end: str = "]",
+        sym_a: str = "=",
+        sym_b: str = ">",
+        sym_c: str = " ",
+        unknown: str = "#",
+    ) -> None:
 
         assert len(sym_a) == 1 and get_cwidth(sym_a) == 1
         assert len(sym_c) == 1 and get_cwidth(sym_c) == 1
@@ -148,9 +171,12 @@ class Bar(Formatter):
         self.sym_c = sym_c
         self.unknown = unknown
 
-    def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter[object]',
-               width: int) -> AnyFormattedText:
+    def format(
+        self,
+        progress_bar: "ProgressBar",
+        progress: "ProgressBarCounter[object]",
+        width: int,
+    ) -> AnyFormattedText:
 
         # Subtract left, bar_b and right.
         width -= get_cwidth(self.start + self.sym_b + self.end)
@@ -162,19 +188,16 @@ class Bar(Formatter):
             bar_c = self.sym_c * (width - pb_a)
         else:
             # Total is unknown.
-            pb_a = int(time.time() * 20  % 100 * width / 100)
+            pb_a = int(time.time() * 20 % 100 * width / 100)
             bar_a = self.sym_c * pb_a
             bar_b = self.unknown
             bar_c = self.sym_c * (width - pb_a)
 
         return HTML(self.template).format(
-            start=self.start,
-            end=self.end,
-            bar_a=bar_a,
-            bar_b=bar_b,
-            bar_c=bar_c)
+            start=self.start, end=self.end, bar_a=bar_a, bar_b=bar_b, bar_c=bar_c
+        )
 
-    def get_width(self, progress_bar: 'ProgressBar') -> AnyDimension:
+    def get_width(self, progress_bar: "ProgressBar") -> AnyDimension:
         return D(min=9)
 
 
@@ -182,18 +205,24 @@ class Progress(Formatter):
     """
     Display the progress as text.  E.g. "8/20"
     """
-    template = '<current>{current:>3}</current>/<total>{total:>3}</total>'
 
-    def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter[object]',
-               width: int) -> AnyFormattedText:
+    template = "<current>{current:>3}</current>/<total>{total:>3}</total>"
+
+    def format(
+        self,
+        progress_bar: "ProgressBar",
+        progress: "ProgressBarCounter[object]",
+        width: int,
+    ) -> AnyFormattedText:
 
         return HTML(self.template).format(
-            current=progress.items_completed,
-            total=progress.total or '?')
+            current=progress.items_completed, total=progress.total or "?"
+        )
 
-    def get_width(self, progress_bar: 'ProgressBar') -> AnyDimension:
-        all_lengths = [len('{0:>3}'.format(c.total or '?')) for c in progress_bar.counters]
+    def get_width(self, progress_bar: "ProgressBar") -> AnyDimension:
+        all_lengths = [
+            len("{0:>3}".format(c.total or "?")) for c in progress_bar.counters
+        ]
         all_lengths.append(1)
         return D.exact(max(all_lengths) * 2 + 1)
 
@@ -202,8 +231,8 @@ def _format_timedelta(timedelta: datetime.timedelta) -> str:
     """
     Return hh:mm:ss, or mm:ss if the amount of hours is zero.
     """
-    result = '{0}'.format(timedelta).split('.')[0]
-    if result.startswith('0:'):
+    result = "{0}".format(timedelta).split(".")[0]
+    if result.startswith("0:"):
         result = result[2:]
     return result
 
@@ -212,15 +241,23 @@ class TimeElapsed(Formatter):
     """
     Display the elapsed time.
     """
-    def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter[object]',
-               width: int) -> AnyFormattedText:
+
+    def format(
+        self,
+        progress_bar: "ProgressBar",
+        progress: "ProgressBarCounter[object]",
+        width: int,
+    ) -> AnyFormattedText:
 
         text = _format_timedelta(progress.time_elapsed).rjust(width)
-        return HTML('<time-elapsed>{time_elapsed}</time-elapsed>').format(time_elapsed=text)
+        return HTML("<time-elapsed>{time_elapsed}</time-elapsed>").format(
+            time_elapsed=text
+        )
 
-    def get_width(self, progress_bar: 'ProgressBar') -> AnyDimension:
-        all_values = [len(_format_timedelta(c.time_elapsed)) for c in progress_bar.counters]
+    def get_width(self, progress_bar: "ProgressBar") -> AnyDimension:
+        all_values = [
+            len(_format_timedelta(c.time_elapsed)) for c in progress_bar.counters
+        ]
         if all_values:
             return max(all_values)
         return 0
@@ -230,12 +267,16 @@ class TimeLeft(Formatter):
     """
     Display the time left.
     """
-    template = '<time-left>{time_left}</time-left>'
-    unknown = '?:??:??'
 
-    def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter[object]',
-               width: int) -> AnyFormattedText:
+    template = "<time-left>{time_left}</time-left>"
+    unknown = "?:??:??"
+
+    def format(
+        self,
+        progress_bar: "ProgressBar",
+        progress: "ProgressBarCounter[object]",
+        width: int,
+    ) -> AnyFormattedText:
 
         time_left = progress.time_left
         if time_left is not None:
@@ -245,9 +286,11 @@ class TimeLeft(Formatter):
 
         return HTML(self.template).format(time_left=formatted_time_left.rjust(width))
 
-    def get_width(self, progress_bar: 'ProgressBar') -> AnyDimension:
-        all_values = [len(_format_timedelta(c.time_left)) if c.time_left is not None else 7
-                      for c in progress_bar.counters]
+    def get_width(self, progress_bar: "ProgressBar") -> AnyDimension:
+        all_values = [
+            len(_format_timedelta(c.time_left)) if c.time_left is not None else 7
+            for c in progress_bar.counters
+        ]
         if all_values:
             return max(all_values)
         return 0
@@ -257,18 +300,26 @@ class IterationsPerSecond(Formatter):
     """
     Display the iterations per second.
     """
-    template = '<iterations-per-second>{iterations_per_second:.2f}</iterations-per-second>'
 
-    def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter[object]',
-               width: int) -> AnyFormattedText:
+    template = (
+        "<iterations-per-second>{iterations_per_second:.2f}</iterations-per-second>"
+    )
+
+    def format(
+        self,
+        progress_bar: "ProgressBar",
+        progress: "ProgressBarCounter[object]",
+        width: int,
+    ) -> AnyFormattedText:
 
         value = progress.items_completed / progress.time_elapsed.total_seconds()
         return HTML(self.template.format(iterations_per_second=value))
 
-    def get_width(self, progress_bar: 'ProgressBar') -> AnyDimension:
-        all_values = [len('{0:.2f}'.format(c.items_completed / c.time_elapsed.total_seconds()))
-                      for c in progress_bar.counters]
+    def get_width(self, progress_bar: "ProgressBar") -> AnyDimension:
+        all_values = [
+            len("{0:.2f}".format(c.items_completed / c.time_elapsed.total_seconds()))
+            for c in progress_bar.counters
+        ]
         if all_values:
             return max(all_values)
         return 0
@@ -278,16 +329,22 @@ class SpinningWheel(Formatter):
     """
     Display a spinning wheel.
     """
-    characters = r'/-\|'
 
-    def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter[object]',
-               width: int) -> AnyFormattedText:
+    characters = r"/-\|"
+
+    def format(
+        self,
+        progress_bar: "ProgressBar",
+        progress: "ProgressBarCounter[object]",
+        width: int,
+    ) -> AnyFormattedText:
 
         index = int(time.time() * 3) % len(self.characters)
-        return HTML('<spinning-wheel>{0}</spinning-wheel>').format(self.characters[index])
+        return HTML("<spinning-wheel>{0}</spinning-wheel>").format(
+            self.characters[index]
+        )
 
-    def get_width(self, progress_bar: 'ProgressBar') -> AnyDimension:
+    def get_width(self, progress_bar: "ProgressBar") -> AnyDimension:
         return D.exact(1)
 
 
@@ -295,11 +352,11 @@ def _hue_to_rgb(hue: float) -> Tuple[int, int, int]:
     """
     Take hue between 0 and 1, return (r, g, b).
     """
-    i = int(hue * 6.)
-    f = (hue * 6.) - i
+    i = int(hue * 6.0)
+    f = (hue * 6.0) - i
 
-    q = int(255 * (1. - f))
-    t = int(255 * (1. - (1. - f)))
+    q = int(255 * (1.0 - f))
+    t = int(255 * (1.0 - (1.0 - f)))
 
     i %= 6
 
@@ -317,14 +374,18 @@ class Rainbow(Formatter):
     """
     For the fun. Add rainbow colors to any of the other formatters.
     """
-    colors = ['#%.2x%.2x%.2x' % _hue_to_rgb(h / 100.) for h in range(0, 100)]
+
+    colors = ["#%.2x%.2x%.2x" % _hue_to_rgb(h / 100.0) for h in range(0, 100)]
 
     def __init__(self, formatter: Formatter) -> None:
         self.formatter = formatter
 
-    def format(self, progress_bar: 'ProgressBar',
-               progress: 'ProgressBarCounter[object]',
-               width: int) -> AnyFormattedText:
+    def format(
+        self,
+        progress_bar: "ProgressBar",
+        progress: "ProgressBarCounter[object]",
+        width: int,
+    ) -> AnyFormattedText:
 
         # Get formatted text from nested formatter, and explode it in
         # text/style tuples.
@@ -336,10 +397,12 @@ class Rainbow(Formatter):
         shift = int(time.time() * 3) % len(self.colors)
 
         for i, (style, text, *_) in enumerate(result):
-            result2.append((style + ' ' + self.colors[(i + shift) % len(self.colors)], text))
+            result2.append(
+                (style + " " + self.colors[(i + shift) % len(self.colors)], text)
+            )
         return result2
 
-    def get_width(self, progress_bar: 'ProgressBar') -> AnyDimension:
+    def get_width(self, progress_bar: "ProgressBar") -> AnyDimension:
         return self.formatter.get_width(progress_bar)
 
 
@@ -349,15 +412,15 @@ def create_default_formatters() -> List[Formatter]:
     """
     return [
         Label(),
-        Text(' '),
+        Text(" "),
         Percentage(),
-        Text(' '),
+        Text(" "),
         Bar(),
-        Text(' '),
+        Text(" "),
         Progress(),
-        Text(' '),
-        Text('eta [', style='class:time-left'),
+        Text(" "),
+        Text("eta [", style="class:time-left"),
         TimeLeft(),
-        Text(']', style='class:time-left'),
-        Text(' '),
+        Text("]", style="class:time-left"),
+        Text(" "),
     ]

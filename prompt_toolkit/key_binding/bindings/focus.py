@@ -1,8 +1,8 @@
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 
 __all__ = [
-    'focus_next',
-    'focus_previous',
+    "focus_next",
+    "focus_previous",
 ]
 
 E = KeyPressEvent

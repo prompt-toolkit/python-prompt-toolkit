@@ -3,10 +3,10 @@ from typing import Iterable, List, TypeVar, Union, cast, overload
 from prompt_toolkit.formatted_text.base import OneStyleAndTextTuple
 
 __all__ = [
-    'explode_text_fragments',
+    "explode_text_fragments",
 ]
 
-_T = TypeVar('_T', bound=OneStyleAndTextTuple)
+_T = TypeVar("_T", bound=OneStyleAndTextTuple)
 
 
 class _ExplodedList(List[_T]):
@@ -16,6 +16,7 @@ class _ExplodedList(List[_T]):
     As soon as items are added or the list is extended, the new items are
     automatically exploded as well.
     """
+
     exploded = True
 
     def append(self, item: _T) -> None:
@@ -37,7 +38,9 @@ class _ExplodedList(List[_T]):
     def __setitem__(self, index: slice, value: Iterable[_T]) -> None:
         ...
 
-    def __setitem__(self, index: Union[int, slice], value: Union[_T, Iterable[_T]]) -> None:
+    def __setitem__(
+        self, index: Union[int, slice], value: Union[_T, Iterable[_T]]
+    ) -> None:
         """
         Ensure that when `(style_str, 'long string')` is set, the string will be
         exploded.
@@ -45,9 +48,9 @@ class _ExplodedList(List[_T]):
         if not isinstance(index, slice):
             index = slice(index, index + 1)
         if isinstance(value, tuple):  # In case of `OneStyleAndTextTuple`.
-            value = cast('List[_T]', [value])
+            value = cast("List[_T]", [value])
 
-        super().__setitem__(index, explode_text_fragments(value))
+        super().__setitem__(index, explode_text_fragments(cast("Iterable[_T]", value)))
 
 
 def explode_text_fragments(fragments: Iterable[_T]) -> _ExplodedList[_T]:

@@ -23,13 +23,13 @@ if TYPE_CHECKING:
     from .buffer import Buffer
 
 __all__ = [
-    'Suggestion',
-    'AutoSuggest',
-    'ThreadedAutoSuggest',
-    'DummyAutoSuggest',
-    'AutoSuggestFromHistory',
-    'ConditionalAutoSuggest',
-    'DynamicAutoSuggest',
+    "Suggestion",
+    "AutoSuggest",
+    "ThreadedAutoSuggest",
+    "DummyAutoSuggest",
+    "AutoSuggestFromHistory",
+    "ConditionalAutoSuggest",
+    "DynamicAutoSuggest",
 ]
 
 
@@ -39,11 +39,12 @@ class Suggestion:
 
     :param text: The suggestion text.
     """
+
     def __init__(self, text: str) -> None:
         self.text = text
 
     def __repr__(self) -> str:
-        return 'Suggestion(%s)' % self.text
+        return "Suggestion(%s)" % self.text
 
     def __len__(self) -> int:
         return len(self.text)
@@ -53,8 +54,11 @@ class AutoSuggest(metaclass=ABCMeta):
     """
     Base class for auto suggestion implementations.
     """
+
     @abstractmethod
-    def get_suggestion(self, buffer: 'Buffer', document: Document) -> Optional[Suggestion]:
+    def get_suggestion(
+        self, buffer: "Buffer", document: Document
+    ) -> Optional[Suggestion]:
         """
         Return `None` or a :class:`.Suggestion` instance.
 
@@ -70,7 +74,9 @@ class AutoSuggest(metaclass=ABCMeta):
         :param document: The :class:`~prompt_toolkit.document.Document` instance.
         """
 
-    async def get_suggestion_async(self, buff: 'Buffer', document: Document) -> Optional[Suggestion]:
+    async def get_suggestion_async(
+        self, buff: "Buffer", document: Document
+    ) -> Optional[Suggestion]:
         """
         Return a :class:`.Future` which is set when the suggestions are ready.
         This function can be overloaded in order to provide an asynchronous
@@ -85,16 +91,22 @@ class ThreadedAutoSuggest(AutoSuggest):
     (Use this to prevent the user interface from becoming unresponsive if the
     generation of suggestions takes too much time.)
     """
+
     def __init__(self, auto_suggest: AutoSuggest) -> None:
         self.auto_suggest = auto_suggest
 
-    def get_suggestion(self, buff: 'Buffer', document: Document) -> Optional[Suggestion]:
+    def get_suggestion(
+        self, buff: "Buffer", document: Document
+    ) -> Optional[Suggestion]:
         return self.auto_suggest.get_suggestion(buff, document)
 
-    async def get_suggestion_async(self, buff: 'Buffer', document: Document) -> Optional[Suggestion]:
+    async def get_suggestion_async(
+        self, buff: "Buffer", document: Document
+    ) -> Optional[Suggestion]:
         """
         Run the `get_suggestion` function in a thread.
         """
+
         def run_get_suggestion_thread() -> Optional[Suggestion]:
             return self.get_suggestion(buff, document)
 
@@ -105,7 +117,10 @@ class DummyAutoSuggest(AutoSuggest):
     """
     AutoSuggest class that doesn't return any suggestion.
     """
-    def get_suggestion(self, buffer: 'Buffer', document: Document) -> Optional[Suggestion]:
+
+    def get_suggestion(
+        self, buffer: "Buffer", document: Document
+    ) -> Optional[Suggestion]:
         return None  # No suggestion
 
 
@@ -113,11 +128,14 @@ class AutoSuggestFromHistory(AutoSuggest):
     """
     Give suggestions based on the lines in the history.
     """
-    def get_suggestion(self, buffer: 'Buffer', document: Document) -> Optional[Suggestion]:
+
+    def get_suggestion(
+        self, buffer: "Buffer", document: Document
+    ) -> Optional[Suggestion]:
         history = buffer.history
 
         # Consider only the last line for the suggestion.
-        text = document.text.rsplit('\n', 1)[-1]
+        text = document.text.rsplit("\n", 1)[-1]
 
         # Only create a suggestion when this is not an empty line.
         if text.strip():
@@ -125,7 +143,7 @@ class AutoSuggestFromHistory(AutoSuggest):
             for string in reversed(list(history.get_strings())):
                 for line in reversed(string.splitlines()):
                     if line.startswith(text):
-                        return Suggestion(line[len(text):])
+                        return Suggestion(line[len(text) :])
 
         return None
 
@@ -134,13 +152,15 @@ class ConditionalAutoSuggest(AutoSuggest):
     """
     Auto suggest that can be turned on and of according to a certain condition.
     """
-    def __init__(self, auto_suggest: AutoSuggest,
-                 filter: Union[bool, Filter]) -> None:
+
+    def __init__(self, auto_suggest: AutoSuggest, filter: Union[bool, Filter]) -> None:
 
         self.auto_suggest = auto_suggest
         self.filter = to_filter(filter)
 
-    def get_suggestion(self, buffer: 'Buffer', document: Document) -> Optional[Suggestion]:
+    def get_suggestion(
+        self, buffer: "Buffer", document: Document
+    ) -> Optional[Suggestion]:
         if self.filter():
             return self.auto_suggest.get_suggestion(buffer, document)
 
@@ -153,13 +173,18 @@ class DynamicAutoSuggest(AutoSuggest):
 
     :param get_validator: Callable that returns a :class:`.Validator` instance.
     """
+
     def __init__(self, get_auto_suggest: Callable[[], Optional[AutoSuggest]]) -> None:
         self.get_auto_suggest = get_auto_suggest
 
-    def get_suggestion(self, buff: 'Buffer', document: Document) -> Optional[Suggestion]:
+    def get_suggestion(
+        self, buff: "Buffer", document: Document
+    ) -> Optional[Suggestion]:
         auto_suggest = self.get_auto_suggest() or DummyAutoSuggest()
         return auto_suggest.get_suggestion(buff, document)
 
-    async def get_suggestion_async(self, buff: 'Buffer', document: Document) -> Optional[Suggestion]:
+    async def get_suggestion_async(
+        self, buff: "Buffer", document: Document
+    ) -> Optional[Suggestion]:
         auto_suggest = self.get_auto_suggest() or DummyAutoSuggest()
         return await auto_suggest.get_suggestion_async(buff, document)

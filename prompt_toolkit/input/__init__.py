@@ -3,9 +3,8 @@ from .defaults import create_input
 
 __all__ = [
     # Base.
-    'Input',
-    'DummyInput',
-
+    "Input",
+    "DummyInput",
     # Defaults.
-    'create_input',
+    "create_input",
 ]

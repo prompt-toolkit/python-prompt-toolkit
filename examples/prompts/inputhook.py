@@ -35,7 +35,7 @@ def hello_world_window():
 
     # Clicking the button prints some text.
     def clicked(data):
-        print('Button clicked!')
+        print("Button clicked!")
 
     button.connect("clicked", clicked)
 
@@ -53,6 +53,7 @@ def inputhook(context):
 
     :param context: An `InputHookContext` instance.
     """
+
     def _main_quit(*a, **kw):
         gtk.main_quit()
         return False
@@ -72,12 +73,12 @@ def main():
     # We use `patch_stdout`, because clicking the button will print something;
     # and that should print nicely 'above' the input line.
     with patch_stdout():
-        session = PromptSession('Python >>> ',
-                                inputhook=inputhook,
-                                lexer=PygmentsLexer(PythonLexer))
+        session = PromptSession(
+            "Python >>> ", inputhook=inputhook, lexer=PygmentsLexer(PythonLexer)
+        )
         result = session.prompt()
-    print('You said: %s' % result)
+    print("You said: %s" % result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

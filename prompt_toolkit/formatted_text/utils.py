@@ -11,10 +11,10 @@ from prompt_toolkit.utils import get_cwidth
 from .base import OneStyleAndTextTuple, StyleAndTextTuples
 
 __all__ = [
-    'fragment_list_len',
-    'fragment_list_width',
-    'fragment_list_to_text',
-    'split_lines',
+    "fragment_list_len",
+    "fragment_list_width",
+    "fragment_list_to_text",
+    "split_lines",
 ]
 
 
@@ -25,7 +25,7 @@ def fragment_list_len(fragments: StyleAndTextTuples) -> int:
     :param fragments: List of ``(style_str, text)`` or
         ``(style_str, text, mouse_handler)`` tuples.
     """
-    ZeroWidthEscape = '[ZeroWidthEscape]'
+    ZeroWidthEscape = "[ZeroWidthEscape]"
     return sum(len(item[1]) for item in fragments if ZeroWidthEscape not in item[0])
 
 
@@ -37,8 +37,13 @@ def fragment_list_width(fragments: StyleAndTextTuples) -> int:
     :param fragments: List of ``(style_str, text)`` or
         ``(style_str, text, mouse_handler)`` tuples.
     """
-    ZeroWidthEscape = '[ZeroWidthEscape]'
-    return sum(get_cwidth(c) for item in fragments for c in item[1] if ZeroWidthEscape not in item[0])
+    ZeroWidthEscape = "[ZeroWidthEscape]"
+    return sum(
+        get_cwidth(c)
+        for item in fragments
+        for c in item[1]
+        if ZeroWidthEscape not in item[0]
+    )
 
 
 def fragment_list_to_text(fragments: StyleAndTextTuples) -> str:
@@ -48,8 +53,8 @@ def fragment_list_to_text(fragments: StyleAndTextTuples) -> str:
     :param fragments: List of ``(style_str, text)`` or
         ``(style_str, text, mouse_handler)`` tuples.
     """
-    ZeroWidthEscape = '[ZeroWidthEscape]'
-    return ''.join(item[1] for item in fragments if ZeroWidthEscape not in item[0])
+    ZeroWidthEscape = "[ZeroWidthEscape]"
+    return "".join(item[1] for item in fragments if ZeroWidthEscape not in item[0])
 
 
 def split_lines(fragments: StyleAndTextTuples) -> Iterable[StyleAndTextTuples]:
@@ -63,17 +68,15 @@ def split_lines(fragments: StyleAndTextTuples) -> Iterable[StyleAndTextTuples]:
     line: StyleAndTextTuples = []
 
     for style, string, *mouse_handler in fragments:
-        parts = string.split('\n')
+        parts = string.split("\n")
 
         for part in parts[:-1]:
             if part:
-                line.append(cast(OneStyleAndTextTuple,
-                                 (style, part, *mouse_handler)))
+                line.append(cast(OneStyleAndTextTuple, (style, part, *mouse_handler)))
             yield line
             line = []
 
-        line.append(cast(OneStyleAndTextTuple,
-                         (style, parts[-1], *mouse_handler)))
+        line.append(cast(OneStyleAndTextTuple, (style, parts[-1], *mouse_handler)))
 
     # Always yield the last line, even when this is an empty line. This ensures
     # that when `fragments` ends with a newline character, an additional empty

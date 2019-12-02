@@ -5,16 +5,7 @@ Renders the command line on the console.
 from asyncio import FIRST_COMPLETED, Future, sleep, wait
 from collections import deque
 from enum import Enum
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Deque,
-    Dict,
-    Hashable,
-    Optional,
-    Tuple,
-)
+from typing import TYPE_CHECKING, Any, Callable, Deque, Dict, Hashable, Optional, Tuple
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.data_structures import Point, Size
@@ -38,24 +29,25 @@ if TYPE_CHECKING:
 
 
 __all__ = [
-    'Renderer',
-    'print_formatted_text',
+    "Renderer",
+    "print_formatted_text",
 ]
 
 
 def _output_screen_diff(
-        app: 'Application[Any]',
-        output: Output,
-        screen: Screen,
-        current_pos: Point,
-        color_depth: ColorDepth,
-        previous_screen: Optional[Screen],
-        last_style: Optional[str],
-        is_done: bool,  # XXX: drop is_done
-        full_screen: bool,
-        attrs_for_style_string: '_StyleStringToAttrsCache',
-        size: Size,
-        previous_width: int) -> Tuple[Point, Optional[str]]:
+    app: "Application[Any]",
+    output: Output,
+    screen: Screen,
+    current_pos: Point,
+    color_depth: ColorDepth,
+    previous_screen: Optional[Screen],
+    last_style: Optional[str],
+    is_done: bool,  # XXX: drop is_done
+    full_screen: bool,
+    attrs_for_style_string: "_StyleStringToAttrsCache",
+    size: Size,
+    previous_width: int,
+) -> Tuple[Point, Optional[str]]:
     """
     Render the diff between this screen and the previous screen.
 
@@ -108,7 +100,7 @@ def _output_screen_diff(
             # Also reset attributes, otherwise the newline could draw a
             # background color.
             reset_attributes()
-            write('\r\n' * (new.y - current_y))
+            write("\r\n" * (new.y - current_y))
             current_x = 0
             _output_cursor_forward(new.x)
             return new
@@ -116,7 +108,7 @@ def _output_screen_diff(
             _output_cursor_up(current_y - new.y)
 
         if current_x >= width - 1:
-            write('\r')
+            write("\r")
             _output_cursor_forward(new.x)
         elif new.x < current_x or current_x >= width - 1:
             _output_cursor_backward(current_x - new.x)
@@ -160,7 +152,9 @@ def _output_screen_diff(
 
     # When the previous screen has a different size, redraw everything anyway.
     # Also when we are done. (We might take up less rows, so clearing is important.)
-    if is_done or not previous_screen or previous_width != width:  # XXX: also consider height??
+    if (
+        is_done or not previous_screen or previous_width != width
+    ):  # XXX: also consider height??
         current_pos = move_cursor(Point(x=0, y=0))
         reset_attributes()
         output.erase_down()
@@ -182,14 +176,16 @@ def _output_screen_diff(
         zero_width_escapes_row = screen.zero_width_escapes[y]
 
         new_max_line_len = min(width - 1, max(new_row.keys()) if new_row else 0)
-        previous_max_line_len = min(width - 1, max(previous_row.keys()) if previous_row else 0)
+        previous_max_line_len = min(
+            width - 1, max(previous_row.keys()) if previous_row else 0
+        )
 
         # Loop over the columns.
         c = 0
         while c < new_max_line_len + 1:
             new_char = new_row[c]
             old_char = previous_row[c]
-            char_width = (new_char.width or 1)
+            char_width = new_char.width or 1
 
             # When the old and new character at this position are different,
             # draw the output. (Because of the performance, we don't call
@@ -230,8 +226,7 @@ def _output_screen_diff(
         current_pos = move_cursor(Point(x=0, y=current_height))
         output.erase_down()
     else:
-        current_pos = move_cursor(
-            screen.get_cursor_position(app.layout.current_window))
+        current_pos = move_cursor(screen.get_cursor_position(app.layout.current_window))
 
     if is_done or not full_screen:
         output.enable_autowrap()
@@ -257,8 +252,12 @@ class _StyleStringToAttrsCache(Dict[str, Attrs]):
     A cache structure that maps style strings to :class:`.Attr`.
     (This is an important speed up.)
     """
-    def __init__(self, get_attrs_for_style_str: Callable[['str'], Attrs],
-                 style_transformation: StyleTransformation) -> None:
+
+    def __init__(
+        self,
+        get_attrs_for_style_str: Callable[["str"], Attrs],
+        style_transformation: StyleTransformation,
+    ) -> None:
 
         self.get_attrs_for_style_str = get_attrs_for_style_str
         self.style_transformation = style_transformation
@@ -273,9 +272,9 @@ class _StyleStringToAttrsCache(Dict[str, Attrs]):
 
 class CPR_Support(Enum):
     " Enum: whether or not CPR is supported. "
-    SUPPORTED = 'SUPPORTED'
-    NOT_SUPPORTED = 'NOT_SUPPORTED'
-    UNKNOWN = 'UNKNOWN'
+    SUPPORTED = "SUPPORTED"
+    NOT_SUPPORTED = "NOT_SUPPORTED"
+    UNKNOWN = "UNKNOWN"
 
 
 class Renderer:
@@ -288,16 +287,18 @@ class Renderer:
         r = Renderer(style, output)
         r.render(app, layout=...)
     """
+
     CPR_TIMEOUT = 2  # Time to wait until we consider CPR to be not supported.
 
     def __init__(
-            self,
-            style: BaseStyle,
-            output: Output,
-            input: Input,
-            full_screen: bool = False,
-            mouse_support: FilterOrBool = False,
-            cpr_not_supported_callback: Optional[Callable[[], None]] = None) -> None:
+        self,
+        style: BaseStyle,
+        output: Output,
+        input: Input,
+        full_screen: bool = False,
+        mouse_support: FilterOrBool = False,
+        cpr_not_supported_callback: Optional[Callable[[], None]] = None,
+    ) -> None:
 
         self.style = style
         self.output = output
@@ -324,8 +325,7 @@ class Renderer:
 
         self.reset(_scroll=True)
 
-    def reset(self, _scroll: bool = False,
-              leave_alternate_screen: bool = True) -> None:
+    def reset(self, _scroll: bool = False, leave_alternate_screen: bool = True) -> None:
 
         # Reset position
         self._cursor_pos = Point(x=0, y=0)
@@ -383,8 +383,9 @@ class Renderer:
         is known. (It's often nicer to draw bottom toolbars only if the height
         is known, in order to avoid flickering when the CPR response arrives.)
         """
-        return self.full_screen or self._min_available_height > 0 or \
-            is_windows()  # On Windows, we don't have to wait for a CPR.
+        return (
+            self.full_screen or self._min_available_height > 0 or is_windows()
+        )  # On Windows, we don't have to wait for a CPR.
 
     @property
     def rows_above_layout(self) -> int:
@@ -398,7 +399,7 @@ class Renderer:
             last_screen_height = self._last_screen.height if self._last_screen else 0
             return total_rows - max(self._min_available_height, last_screen_height)
         else:
-            raise HeightIsUnknownError('Rows above layout is unknown.')
+            raise HeightIsUnknownError("Rows above layout is unknown.")
 
     def request_absolute_cursor_position(self) -> None:
         """
@@ -512,8 +513,9 @@ class Renderer:
         ]
         await wait(coroutines, return_when=FIRST_COMPLETED)
 
-    def render(self, app: 'Application[Any]', layout: 'Layout',
-               is_done: bool = False) -> None:
+    def render(
+        self, app: "Application[Any]", layout: "Layout", is_done: bool = False
+    ) -> None:
         """
         Render the current interface to the output.
 
@@ -547,7 +549,7 @@ class Renderer:
         size = output.get_size()
         screen = Screen()
         screen.show_cursor = False  # Hide cursor by default, unless one of the
-                                    # containers decides to display it.
+        # containers decides to display it.
         mouse_handlers = MouseHandlers()
 
         # Calculate height.
@@ -555,12 +557,16 @@ class Renderer:
             height = size.rows
         elif is_done:
             # When we are done, we don't necessary want to fill up until the bottom.
-            height = layout.container.preferred_height(size.columns, size.rows).preferred
+            height = layout.container.preferred_height(
+                size.columns, size.rows
+            ).preferred
         else:
             last_height = self._last_screen.height if self._last_screen else 0
-            height = max(self._min_available_height,
-                         last_height,
-                         layout.container.preferred_height(size.columns, size.rows).preferred)
+            height = max(
+                self._min_available_height,
+                last_height,
+                layout.container.preferred_height(size.columns, size.rows).preferred,
+            )
 
         height = min(height, size.rows)
 
@@ -571,27 +577,32 @@ class Renderer:
         # When we render using another style or another color depth, do a full
         # repaint. (Forget about the previous rendered screen.)
         # (But note that we still use _last_screen to calculate the height.)
-        if (self.style.invalidation_hash() != self._last_style_hash or
-                app.style_transformation.invalidation_hash() != self._last_transformation_hash or
-                app.color_depth != self._last_color_depth):
+        if (
+            self.style.invalidation_hash() != self._last_style_hash
+            or app.style_transformation.invalidation_hash()
+            != self._last_transformation_hash
+            or app.color_depth != self._last_color_depth
+        ):
             self._last_screen = None
             self._attrs_for_style = None
 
         if self._attrs_for_style is None:
             self._attrs_for_style = _StyleStringToAttrsCache(
-                self.style.get_attrs_for_style_str,
-                app.style_transformation)
+                self.style.get_attrs_for_style_str, app.style_transformation
+            )
 
         self._last_style_hash = self.style.invalidation_hash()
         self._last_transformation_hash = app.style_transformation.invalidation_hash()
         self._last_color_depth = app.color_depth
 
-        layout.container.write_to_screen(screen, mouse_handlers, WritePosition(
-            xpos=0,
-            ypos=0,
-            width=size.columns,
-            height=height,
-        ), parent_style='', erase_bg=False, z_index=None)
+        layout.container.write_to_screen(
+            screen,
+            mouse_handlers,
+            WritePosition(xpos=0, ypos=0, width=size.columns, height=height,),
+            parent_style="",
+            erase_bg=False,
+            z_index=None,
+        )
         screen.draw_all_floats()
 
         # When grayed. Replace all styles in the new screen.
@@ -600,11 +611,19 @@ class Renderer:
 
         # Process diff and write to output.
         self._cursor_pos, self._last_style = _output_screen_diff(
-            app, output, screen, self._cursor_pos, app.color_depth,
-            self._last_screen, self._last_style, is_done,
+            app,
+            output,
+            screen,
+            self._cursor_pos,
+            app.color_depth,
+            self._last_screen,
+            self._last_style,
+            is_done,
             full_screen=self.full_screen,
-            attrs_for_style_string=self._attrs_for_style, size=size,
-            previous_width=(self._last_size.columns if self._last_size else 0))
+            attrs_for_style_string=self._attrs_for_style,
+            size=size,
+            previous_width=(self._last_size.columns if self._last_size else 0),
+        )
         self._last_screen = screen
         self._last_size = size
         self.mouse_handlers = mouse_handlers
@@ -655,11 +674,12 @@ class Renderer:
 
 
 def print_formatted_text(
-        output: Output,
-        formatted_text: AnyFormattedText,
-        style: BaseStyle,
-        style_transformation: Optional[StyleTransformation] = None,
-        color_depth: Optional[ColorDepth] = None) -> None:
+    output: Output,
+    formatted_text: AnyFormattedText,
+    style: BaseStyle,
+    style_transformation: Optional[StyleTransformation] = None,
+    color_depth: Optional[ColorDepth] = None,
+) -> None:
     """
     Print a list of (style_str, text) tuples in the given style to the output.
     """
@@ -673,8 +693,8 @@ def print_formatted_text(
 
     # Print all (style_str, text) tuples.
     attrs_for_style_string = _StyleStringToAttrsCache(
-        style.get_attrs_for_style_str,
-        style_transformation)
+        style.get_attrs_for_style_str, style_transformation
+    )
 
     for style_str, text, *_ in fragments:
         attrs = attrs_for_style_string[style_str]
@@ -685,11 +705,11 @@ def print_formatted_text(
             output.reset_attributes()
 
         # Eliminate carriage returns
-        text = text.replace('\r', '')
+        text = text.replace("\r", "")
 
         # Assume that the output is raw, and insert a carriage return before
         # every newline. (Also important when the front-end is a telnet client.)
-        output.write(text.replace('\n', '\r\n'))
+        output.write(text.replace("\n", "\r\n"))
 
     # Reset again.
     output.reset_attributes()

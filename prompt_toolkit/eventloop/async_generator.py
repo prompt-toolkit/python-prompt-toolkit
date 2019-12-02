@@ -7,11 +7,11 @@ from typing import AsyncGenerator, Callable, Iterable, TypeVar, Union
 from .utils import run_in_executor_with_context
 
 __all__ = [
-    'generator_to_async_generator',
+    "generator_to_async_generator",
 ]
 
 
-_T = TypeVar('_T')
+_T = TypeVar("_T")
 
 
 class _Done:
@@ -19,7 +19,8 @@ class _Done:
 
 
 async def generator_to_async_generator(
-        get_iterable: Callable[[], Iterable[_T]]) -> AsyncGenerator[_T, None]:
+    get_iterable: Callable[[], Iterable[_T]]
+) -> AsyncGenerator[_T, None]:
     """
     Turn a generator or iterable into an async generator.
 

@@ -5,13 +5,13 @@ dimensions for containers and controls.
 from typing import Any, Callable, List, Optional, Union
 
 __all__ = [
-    'Dimension',
-    'D',
-    'sum_layout_dimensions',
-    'max_layout_dimensions',
-    'AnyDimension',
-    'to_dimension',
-    'is_dimension',
+    "Dimension",
+    "D",
+    "sum_layout_dimensions",
+    "max_layout_dimensions",
+    "AnyDimension",
+    "to_dimension",
+    "is_dimension",
 ]
 
 
@@ -32,15 +32,16 @@ class Dimension:
                    twice as big as the first, if the min/max values allow it.
     :param preferred: Preferred size.
     """
+
     def __init__(
         self,
         min: Optional[int] = None,
         max: Optional[int] = None,
         weight: Optional[int] = None,
-        preferred: Optional[int] = None
+        preferred: Optional[int] = None,
     ):
         if weight is not None:
-            assert weight >= 0   # Also cannot be a float.
+            assert weight >= 0  # Also cannot be a float.
 
         assert min is None or min >= 0
         assert max is None or max >= 0
@@ -67,7 +68,7 @@ class Dimension:
 
         # Don't allow situations where max < min. (This would be a bug.)
         if max < min:
-            raise ValueError('Invalid Dimension: max < min.')
+            raise ValueError("Invalid Dimension: max < min.")
 
         # Make sure that the 'preferred' size is always in the min..max range.
         if self.preferred < self.min:
@@ -77,7 +78,7 @@ class Dimension:
             self.preferred = self.max
 
     @classmethod
-    def exact(cls, amount: int) -> 'Dimension':
+    def exact(cls, amount: int) -> "Dimension":
         """
         Return a :class:`.Dimension` with an exact size. (min, max and
         preferred set to ``amount``).
@@ -85,7 +86,7 @@ class Dimension:
         return cls(min=amount, max=amount, preferred=amount)
 
     @classmethod
-    def zero(cls) -> 'Dimension':
+    def zero(cls) -> "Dimension":
         """
         Create a dimension that represents a zero size. (Used for 'invisible'
         controls.)
@@ -99,15 +100,15 @@ class Dimension:
     def __repr__(self) -> str:
         fields = []
         if self.min_specified:
-            fields.append('min=%r' % self.min)
+            fields.append("min=%r" % self.min)
         if self.max_specified:
-            fields.append('max=%r' % self.max)
+            fields.append("max=%r" % self.max)
         if self.preferred_specified:
-            fields.append('preferred=%r' % self.preferred)
+            fields.append("preferred=%r" % self.preferred)
         if self.weight_specified:
-            fields.append('weight=%r' % self.weight)
+            fields.append("weight=%r" % self.weight)
 
-        return 'Dimension(%s)' % ', '.join(fields)
+        return "Dimension(%s)" % ", ".join(fields)
 
 
 def sum_layout_dimensions(dimensions: List[Dimension]) -> Dimension:
@@ -172,7 +173,7 @@ AnyDimension = Union[
     int,
     Dimension,
     # Callable[[], 'AnyDimension']  # Recursive definition not supported by mypy.
-    Callable[[], Any]
+    Callable[[], Any],
 ]
 
 
@@ -189,7 +190,7 @@ def to_dimension(value: AnyDimension) -> Dimension:
     if callable(value):
         return to_dimension(value())
 
-    raise ValueError('Not an integer or Dimension object.')
+    raise ValueError("Not an integer or Dimension object.")
 
 
 def is_dimension(value: object) -> bool:

@@ -58,16 +58,16 @@ if TYPE_CHECKING:
 
 
 __all__ = [
-    'Binding',
-    'KeyBindingsBase',
-    'KeyBindings',
-    'ConditionalKeyBindings',
-    'merge_key_bindings',
-    'DynamicKeyBindings',
-    'GlobalOnlyKeyBindings',
+    "Binding",
+    "KeyBindingsBase",
+    "KeyBindings",
+    "ConditionalKeyBindings",
+    "merge_key_bindings",
+    "DynamicKeyBindings",
+    "GlobalOnlyKeyBindings",
 ]
 
-KeyHandlerCallable = Callable[['KeyPressEvent'], None]
+KeyHandlerCallable = Callable[["KeyPressEvent"], None]
 
 
 class Binding:
@@ -78,14 +78,16 @@ class Binding:
     :param record_in_macro: When True, don't record this key binding when a
         macro is recorded.
     """
+
     def __init__(
-            self, keys: Tuple[Union[Keys, str], ...],
-            handler: KeyHandlerCallable,
-            filter: FilterOrBool = True,
-            eager: FilterOrBool = False,
-            is_global: FilterOrBool = False,
-            save_before: Callable[['KeyPressEvent'], bool] = (lambda e: True),
-            record_in_macro: FilterOrBool = True
+        self,
+        keys: Tuple[Union[Keys, str], ...],
+        handler: KeyHandlerCallable,
+        filter: FilterOrBool = True,
+        eager: FilterOrBool = False,
+        is_global: FilterOrBool = False,
+        save_before: Callable[["KeyPressEvent"], bool] = (lambda e: True),
+        record_in_macro: FilterOrBool = True,
     ) -> None:
         self.keys = keys
         self.handler = handler
@@ -95,12 +97,15 @@ class Binding:
         self.save_before = save_before
         self.record_in_macro = to_filter(record_in_macro)
 
-    def call(self, event: 'KeyPressEvent') -> None:
+    def call(self, event: "KeyPressEvent") -> None:
         self.handler(event)
 
     def __repr__(self) -> str:
-        return '%s(keys=%r, handler=%r)' % (
-            self.__class__.__name__, self.keys, self.handler)
+        return "%s(keys=%r, handler=%r)" % (
+            self.__class__.__name__,
+            self.keys,
+            self.handler,
+        )
 
 
 # Sequence of keys presses.
@@ -111,6 +116,7 @@ class KeyBindingsBase(metaclass=ABCMeta):
     """
     Interface for a KeyBindings.
     """
+
     @abstractproperty
     def _version(self) -> Hashable:
         """
@@ -154,7 +160,7 @@ class KeyBindingsBase(metaclass=ABCMeta):
     # `add` and `remove` don't have to be part of this interface.
 
 
-T = TypeVar('T', bound=Union[KeyHandlerCallable, Binding])
+T = TypeVar("T", bound=Union[KeyHandlerCallable, Binding])
 
 
 class KeyBindings(KeyBindingsBase):
@@ -178,12 +184,15 @@ class KeyBindings(KeyBindingsBase):
             print('Control-X pressed')  # Works only if we are searching.
 
     """
+
     def __init__(self) -> None:
         self._bindings: List[Binding] = []
-        self._get_bindings_for_keys_cache: SimpleCache[KeysTuple, List[Binding]] = \
-            SimpleCache(maxsize=10000)
-        self._get_bindings_starting_with_keys_cache: SimpleCache[KeysTuple, List[Binding]] = \
-            SimpleCache(maxsize=1000)
+        self._get_bindings_for_keys_cache: SimpleCache[
+            KeysTuple, List[Binding]
+        ] = SimpleCache(maxsize=10000)
+        self._get_bindings_starting_with_keys_cache: SimpleCache[
+            KeysTuple, List[Binding]
+        ] = SimpleCache(maxsize=1000)
         self.__version = 0  # For cache invalidation.
 
     def _clear_cache(self) -> None:
@@ -199,13 +208,15 @@ class KeyBindings(KeyBindingsBase):
     def _version(self) -> Hashable:
         return self.__version
 
-    def add(self,
-            *keys: Union[Keys, str],
-            filter: FilterOrBool = True,
-            eager: FilterOrBool = False,
-            is_global: FilterOrBool = False,
-            save_before: Callable[['KeyPressEvent'], bool] = (lambda e: True),
-            record_in_macro: FilterOrBool = True) -> Callable[[T], T]:
+    def add(
+        self,
+        *keys: Union[Keys, str],
+        filter: FilterOrBool = True,
+        eager: FilterOrBool = False,
+        is_global: FilterOrBool = False,
+        save_before: Callable[["KeyPressEvent"], bool] = (lambda e: True),
+        record_in_macro: FilterOrBool = True,
+    ) -> Callable[[T], T]:
         """
         Decorator for adding a key bindings.
 
@@ -234,27 +245,39 @@ class KeyBindings(KeyBindingsBase):
             # down every key press otherwise.
             def decorator(func: T) -> T:
                 return func
+
         else:
+
             def decorator(func: T) -> T:
                 if isinstance(func, Binding):
                     # We're adding an existing Binding object.
                     self.bindings.append(
                         Binding(
-                            keys, func.handler,
+                            keys,
+                            func.handler,
                             filter=func.filter & to_filter(filter),
                             eager=to_filter(eager) | func.eager,
-                            is_global = to_filter(is_global) | func.is_global,
+                            is_global=to_filter(is_global) | func.is_global,
                             save_before=func.save_before,
-                            record_in_macro=func.record_in_macro))
+                            record_in_macro=func.record_in_macro,
+                        )
+                    )
                 else:
                     self.bindings.append(
-                        Binding(keys, cast(KeyHandlerCallable, func),
-                                filter=filter, eager=eager, is_global=is_global,
-                                save_before=save_before,
-                                record_in_macro=record_in_macro))
+                        Binding(
+                            keys,
+                            cast(KeyHandlerCallable, func),
+                            filter=filter,
+                            eager=eager,
+                            is_global=is_global,
+                            save_before=save_before,
+                            record_in_macro=record_in_macro,
+                        )
+                    )
                 self._clear_cache()
 
                 return func
+
         return decorator
 
     def remove(self, *args: Union[Keys, str, KeyHandlerCallable]) -> None:
@@ -299,7 +322,7 @@ class KeyBindings(KeyBindingsBase):
             self._clear_cache()
         else:
             # No key binding found for this function. Raise ValueError.
-            raise ValueError('Binding not found: %r' % (function, ))
+            raise ValueError("Binding not found: %r" % (function,))
 
     # For backwards-compatibility.
     add_binding = add
@@ -313,6 +336,7 @@ class KeyBindings(KeyBindingsBase):
 
         :param keys: tuple of keys.
         """
+
         def get() -> List[Binding]:
             result: List[Tuple[int, Binding]] = []
 
@@ -348,6 +372,7 @@ class KeyBindings(KeyBindingsBase):
 
         :param keys: tuple of keys.
         """
+
         def get() -> List[Binding]:
             result = []
             for b in self.bindings:
@@ -376,8 +401,8 @@ def _parse_key(key: Union[Keys, str]) -> Union[str, Keys]:
     key = KEY_ALIASES.get(key, key)
 
     # Replace 'space' by ' '
-    if key == 'space':
-        key = ' '
+    if key == "space":
+        key = " "
 
     # Return as `Key` object when it's a special key.
     try:
@@ -387,17 +412,18 @@ def _parse_key(key: Union[Keys, str]) -> Union[str, Keys]:
 
     # Final validation.
     if len(key) != 1:
-        raise ValueError('Invalid key: %s' % (key, ))
+        raise ValueError("Invalid key: %s" % (key,))
 
     return key
 
 
 def key_binding(
-        filter: FilterOrBool = True,
-        eager: FilterOrBool = False,
-        is_global: FilterOrBool = False,
-        save_before: Callable[['KeyPressEvent'], bool] = (lambda event: True),
-        record_in_macro: FilterOrBool = True) -> Callable[[KeyHandlerCallable], Binding]:
+    filter: FilterOrBool = True,
+    eager: FilterOrBool = False,
+    is_global: FilterOrBool = False,
+    save_before: Callable[["KeyPressEvent"], bool] = (lambda event: True),
+    record_in_macro: FilterOrBool = True,
+) -> Callable[[KeyHandlerCallable], Binding]:
     """
     Decorator that turn a function into a `Binding` object. This can be added
     to a `KeyBindings` object when a key binding is assigned.
@@ -412,9 +438,15 @@ def key_binding(
     keys = ()
 
     def decorator(function: KeyHandlerCallable) -> Binding:
-        return Binding(keys, function, filter=filter, eager=eager,
-                        is_global=is_global, save_before=save_before,
-                        record_in_macro=record_in_macro)
+        return Binding(
+            keys,
+            function,
+            filter=filter,
+            eager=eager,
+            is_global=is_global,
+            save_before=save_before,
+            record_in_macro=record_in_macro,
+        )
 
     return decorator
 
@@ -423,6 +455,7 @@ class _Proxy(KeyBindingsBase):
     """
     Common part for ConditionalKeyBindings and _MergedKeyBindings.
     """
+
     def __init__(self) -> None:
         # `KeyBindings` to be synchronized with all the others.
         self._bindings2: KeyBindingsBase = KeyBindings()
@@ -473,8 +506,10 @@ class ConditionalKeyBindings(_Proxy):
     :param registries: List of :class:`.KeyBindings` objects.
     :param filter: :class:`~prompt_toolkit.filters.Filter` object.
     """
-    def __init__(self, key_bindings: KeyBindingsBase,
-                 filter: FilterOrBool = True) -> None:
+
+    def __init__(
+        self, key_bindings: KeyBindingsBase, filter: FilterOrBool = True
+    ) -> None:
 
         _Proxy.__init__(self)
 
@@ -498,7 +533,9 @@ class ConditionalKeyBindings(_Proxy):
                         eager=b.eager,
                         is_global=b.is_global,
                         save_before=b.save_before,
-                        record_in_macro=b.record_in_macro))
+                        record_in_macro=b.record_in_macro,
+                    )
+                )
 
             self._bindings2 = bindings2
             self._last_version = expected_version
@@ -513,6 +550,7 @@ class _MergedKeyBindings(_Proxy):
 
     :param registries: List of :class:`.KeyBindings` objects.
     """
+
     def __init__(self, registries: Sequence[KeyBindingsBase]) -> None:
         _Proxy.__init__(self)
         self.registries = registries
@@ -551,7 +589,10 @@ class DynamicKeyBindings(_Proxy):
 
     :param get_key_bindings: Callable that returns a :class:`.KeyBindings` instance.
     """
-    def __init__(self, get_key_bindings: Callable[[], Optional[KeyBindingsBase]]) -> None:
+
+    def __init__(
+        self, get_key_bindings: Callable[[], Optional[KeyBindingsBase]]
+    ) -> None:
         self.get_key_bindings = get_key_bindings
         self.__version = 0
         self._last_child_version = None
@@ -571,6 +612,7 @@ class GlobalOnlyKeyBindings(_Proxy):
     Wrapper around a :class:`.KeyBindings` object that only exposes the global
     key bindings.
     """
+
     def __init__(self, key_bindings: KeyBindingsBase) -> None:
         _Proxy.__init__(self)
         self.key_bindings = key_bindings

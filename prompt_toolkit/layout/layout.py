@@ -15,9 +15,9 @@ from .containers import (
 from .controls import BufferControl, SearchBufferControl, UIControl
 
 __all__ = [
-    'Layout',
-    'InvalidLayoutError',
-    'walk',
+    "Layout",
+    "InvalidLayoutError",
+    "walk",
 ]
 
 FocusableElement = Union[str, Buffer, UIControl, AnyContainer]
@@ -33,9 +33,12 @@ class Layout:
     :param focused_element: element to be focused initially. (Can be anything
         the `focus` function accepts.)
     """
+
     def __init__(
-            self, container: AnyContainer,
-            focused_element: Optional[FocusableElement] = None):
+        self,
+        container: AnyContainer,
+        focused_element: Optional[FocusableElement] = None,
+    ):
 
         self.container = to_container(container)
         self._stack: List[Window] = []
@@ -57,7 +60,9 @@ class Layout:
             try:
                 self._stack.append(next(self.find_all_windows()))
             except StopIteration:
-                raise InvalidLayoutError('Invalid layout. The layout does not contain any Window object.')
+                raise InvalidLayoutError(
+                    "Invalid layout. The layout does not contain any Window object."
+                )
         else:
             self.focus(focused_element)
 
@@ -65,8 +70,7 @@ class Layout:
         self.visible_windows: List[Window] = []  # List of `Window` objects.
 
     def __repr__(self) -> str:
-        return 'Layout(%r, current_window=%r)' % (
-            self.container, self.current_window)
+        return "Layout(%r, current_window=%r)" % (self.container, self.current_window)
 
     def find_all_windows(self) -> Generator[Window, None, None]:
         """
@@ -99,7 +103,9 @@ class Layout:
                 if isinstance(control, BufferControl) and control.buffer.name == value:
                     self.focus(control)
                     return
-            raise ValueError("Couldn't find Buffer in the current layout: %r." % (value, ))
+            raise ValueError(
+                "Couldn't find Buffer in the current layout: %r." % (value,)
+            )
 
         # BufferControl by buffer object.
         elif isinstance(value, Buffer):
@@ -107,14 +113,18 @@ class Layout:
                 if isinstance(control, BufferControl) and control.buffer == value:
                     self.focus(control)
                     return
-            raise ValueError("Couldn't find Buffer in the current layout: %r." % (value, ))
+            raise ValueError(
+                "Couldn't find Buffer in the current layout: %r." % (value,)
+            )
 
         # Focus UIControl.
         elif isinstance(value, UIControl):
             if value not in self.find_all_controls():
-                raise ValueError('Invalid value. Container does not appear in the layout.')
+                raise ValueError(
+                    "Invalid value. Container does not appear in the layout."
+                )
             if not value.is_focusable():
-                raise ValueError('Invalid value. UIControl is not focusable.')
+                raise ValueError("Invalid value. UIControl is not focusable.")
 
             self.current_control = value
 
@@ -125,8 +135,10 @@ class Layout:
             if isinstance(value, Window):
                 # This is a `Window`: focus that.
                 if value not in self.find_all_windows():
-                    raise ValueError('Invalid value. Window does not appear in the layout: %r' %
-                            (value, ))
+                    raise ValueError(
+                        "Invalid value. Window does not appear in the layout: %r"
+                        % (value,)
+                    )
 
                 self.current_window = value
             else:
@@ -151,7 +163,9 @@ class Layout:
                     self.current_window = windows[0]
                     return
 
-                raise ValueError('Invalid value. Container cannot be focused: %r' % (value, ))
+                raise ValueError(
+                    "Invalid value. Container cannot be focused: %r" % (value,)
+                )
 
     def has_focus(self, value: FocusableElement) -> bool:
         """
@@ -195,7 +209,7 @@ class Layout:
                 self.current_window = window
                 return
 
-        raise ValueError('Control not found in the user interface.')
+        raise ValueError("Control not found in the user interface.")
 
     @property
     def current_window(self) -> Window:
@@ -389,7 +403,11 @@ def walk(container: Container, skip_hidden: bool = False) -> Iterable[Container]
     Walk through layout, starting at this container.
     """
     # When `skip_hidden` is set, don't go into disabled ConditionalContainer containers.
-    if skip_hidden and isinstance(container, ConditionalContainer) and not container.filter():
+    if (
+        skip_hidden
+        and isinstance(container, ConditionalContainer)
+        and not container.filter()
+    ):
         return
 
     yield container

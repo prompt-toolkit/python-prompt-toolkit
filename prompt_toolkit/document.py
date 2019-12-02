@@ -5,23 +5,14 @@ import bisect
 import re
 import string
 import weakref
-from typing import (
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Pattern,
-    Tuple,
-    cast,
-)
+from typing import Callable, Dict, Iterable, List, Optional, Pattern, Tuple, cast
 
 from .clipboard import ClipboardData
 from .filters import vi_mode
 from .selection import PasteMode, SelectionState, SelectionType
 
 __all__ = [
-    'Document',
+    "Document",
 ]
 
 
@@ -29,23 +20,25 @@ __all__ = [
 # characters a word, but also a group of special characters a word, as long as
 # it doesn't contain a space.)
 # (This is a 'word' in Vi.)
-_FIND_WORD_RE = re.compile(r'([a-zA-Z0-9_]+|[^a-zA-Z0-9_\s]+)')
-_FIND_CURRENT_WORD_RE = re.compile(r'^([a-zA-Z0-9_]+|[^a-zA-Z0-9_\s]+)')
-_FIND_CURRENT_WORD_INCLUDE_TRAILING_WHITESPACE_RE = re.compile(r'^(([a-zA-Z0-9_]+|[^a-zA-Z0-9_\s]+)\s*)')
+_FIND_WORD_RE = re.compile(r"([a-zA-Z0-9_]+|[^a-zA-Z0-9_\s]+)")
+_FIND_CURRENT_WORD_RE = re.compile(r"^([a-zA-Z0-9_]+|[^a-zA-Z0-9_\s]+)")
+_FIND_CURRENT_WORD_INCLUDE_TRAILING_WHITESPACE_RE = re.compile(
+    r"^(([a-zA-Z0-9_]+|[^a-zA-Z0-9_\s]+)\s*)"
+)
 
 # Regex for finding "WORDS" in documents.
 # (This is a 'WORD in Vi.)
-_FIND_BIG_WORD_RE = re.compile(r'([^\s]+)')
-_FIND_CURRENT_BIG_WORD_RE = re.compile(r'^([^\s]+)')
-_FIND_CURRENT_BIG_WORD_INCLUDE_TRAILING_WHITESPACE_RE = re.compile(r'^([^\s]+\s*)')
+_FIND_BIG_WORD_RE = re.compile(r"([^\s]+)")
+_FIND_CURRENT_BIG_WORD_RE = re.compile(r"^([^\s]+)")
+_FIND_CURRENT_BIG_WORD_INCLUDE_TRAILING_WHITESPACE_RE = re.compile(r"^([^\s]+\s*)")
 
 # Share the Document._cache between all Document instances.
 # (Document instances are considered immutable. That means that if another
 # `Document` is constructed with the same text, it should have the same
 # `_DocumentCache`.)
-_text_to_document_cache: Dict[str, '_DocumentCache'] = cast(
-    Dict[str, '_DocumentCache'],
-    weakref.WeakValueDictionary()  # Maps document.text to DocumentCache instance.
+_text_to_document_cache: Dict[str, "_DocumentCache"] = cast(
+    Dict[str, "_DocumentCache"],
+    weakref.WeakValueDictionary(),  # Maps document.text to DocumentCache instance.
 )
 
 
@@ -54,8 +47,9 @@ class _ImmutableLineList(list):
     Some protection for our 'lines' list, which is assumed to be immutable in the cache.
     (Useful for detecting obvious bugs.)
     """
+
     def _error(self, *a: object, **kw: object) -> None:
-        raise NotImplementedError('Attempt to modify an immutable list.')
+        raise NotImplementedError("Attempt to modify an immutable list.")
 
     __setitem__ = _error  # type: ignore
     append = _error
@@ -89,15 +83,21 @@ class Document:
     :param cursor_position: int
     :param selection: :class:`.SelectionState`
     """
-    __slots__ = ('_text', '_cursor_position', '_selection', '_cache')
 
-    def __init__(self, text: str = '', cursor_position: Optional[int] = None,
-                 selection: Optional[SelectionState] = None) -> None:
+    __slots__ = ("_text", "_cursor_position", "_selection", "_cache")
+
+    def __init__(
+        self,
+        text: str = "",
+        cursor_position: Optional[int] = None,
+        selection: Optional[SelectionState] = None,
+    ) -> None:
 
         # Check cursor position. It can also be right after the end. (Where we
         # insert text.)
         assert cursor_position is None or cursor_position <= len(text), AssertionError(
-                'cursor_position=%r, len_text=%r' % (cursor_position, len(text)))
+            "cursor_position=%r, len_text=%r" % (cursor_position, len(text))
+        )
 
         # By default, if no cursor position was given, make sure to put the
         # cursor position is at the end of the document. This is what makes
@@ -127,15 +127,17 @@ class Document:
         # assert self._cache
 
     def __repr__(self) -> str:
-        return '%s(%r, %r)' % (self.__class__.__name__, self.text, self.cursor_position)
+        return "%s(%r, %r)" % (self.__class__.__name__, self.text, self.cursor_position)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Document):
             return False
 
-        return (self.text == other.text and
-                self.cursor_position == other.cursor_position and
-                self.selection == other.selection)
+        return (
+            self.text == other.text
+            and self.cursor_position == other.cursor_position
+            and self.selection == other.selection
+        )
 
     @property
     def text(self) -> str:
@@ -155,31 +157,31 @@ class Document:
     @property
     def current_char(self) -> str:
         """ Return character under cursor or an empty string. """
-        return self._get_char_relative_to_cursor(0) or ''
+        return self._get_char_relative_to_cursor(0) or ""
 
     @property
     def char_before_cursor(self) -> str:
         """ Return character before the cursor or an empty string. """
-        return self._get_char_relative_to_cursor(-1) or ''
+        return self._get_char_relative_to_cursor(-1) or ""
 
     @property
     def text_before_cursor(self) -> str:
-        return self.text[:self.cursor_position:]
+        return self.text[: self.cursor_position :]
 
     @property
     def text_after_cursor(self) -> str:
-        return self.text[self.cursor_position:]
+        return self.text[self.cursor_position :]
 
     @property
     def current_line_before_cursor(self) -> str:
         """ Text from the start of the line until the cursor. """
-        _, _, text = self.text_before_cursor.rpartition('\n')
+        _, _, text = self.text_before_cursor.rpartition("\n")
         return text
 
     @property
     def current_line_after_cursor(self) -> str:
         """ Text from the cursor until the end of the line. """
-        text, _, _ = self.text_after_cursor.partition('\n')
+        text, _, _ = self.text_after_cursor.partition("\n")
         return text
 
     @property
@@ -189,7 +191,7 @@ class Document:
         """
         # Cache, because this one is reused very often.
         if self._cache.lines is None:
-            self._cache.lines = _ImmutableLineList(self.text.split('\n'))
+            self._cache.lines = _ImmutableLineList(self.text.split("\n"))
 
         return self._cache.lines
 
@@ -226,7 +228,7 @@ class Document:
         """
         Array of the lines starting from the current line, until the last line.
         """
-        return self.lines[self.cursor_position_row:]
+        return self.lines[self.cursor_position_row :]
 
     @property
     def line_count(self) -> int:
@@ -254,7 +256,7 @@ class Document:
         try:
             return self.text[self.cursor_position + offset]
         except IndexError:
-            return ''
+            return ""
 
     @property
     def on_first_line(self) -> bool:
@@ -345,7 +347,7 @@ class Document:
     @property
     def is_cursor_at_the_end_of_line(self) -> bool:
         """ True when the cursor is at the end of this line. """
-        return self.current_char in ('\n', '')
+        return self.current_char in ("\n", "")
 
     def has_match_at_current_position(self, sub: str) -> bool:
         """
@@ -353,11 +355,14 @@ class Document:
         """
         return self.text.find(sub, self.cursor_position) == self.cursor_position
 
-    def find(self, sub: str,
-             in_current_line: bool = False,
-             include_current_position: bool = False,
-             ignore_case: bool = False,
-             count: int = 1) -> Optional[int]:
+    def find(
+        self,
+        sub: str,
+        in_current_line: bool = False,
+        include_current_position: bool = False,
+        ignore_case: bool = False,
+        count: int = 1,
+    ) -> Optional[int]:
         """
         Find `text` after the cursor, return position relative to the cursor
         position. Return `None` if nothing was found.
@@ -399,10 +404,13 @@ class Document:
         flags = re.IGNORECASE if ignore_case else 0
         return [a.start() for a in re.finditer(re.escape(sub), self.text, flags)]
 
-    def find_backwards(self, sub: str,
-                       in_current_line: bool = False,
-                       ignore_case: bool = False,
-                       count: int = 1) -> Optional[int]:
+    def find_backwards(
+        self,
+        sub: str,
+        in_current_line: bool = False,
+        ignore_case: bool = False,
+        count: int = 1,
+    ) -> Optional[int]:
         """
         Find `text` before the cursor, return position relative to the cursor
         position. Return `None` if nothing was found.
@@ -420,13 +428,14 @@ class Document:
         try:
             for i, match in enumerate(iterator):
                 if i + 1 == count:
-                    return - match.start(0) - len(sub)
+                    return -match.start(0) - len(sub)
         except StopIteration:
             pass
         return None
 
-    def get_word_before_cursor(self, WORD: bool = False,
-                               pattern: Optional[Pattern[str]] = None) -> str:
+    def get_word_before_cursor(
+        self, WORD: bool = False, pattern: Optional[Pattern[str]] = None
+    ) -> str:
         """
         Give the word before the cursor.
         If we have whitespace before the cursor this returns an empty string.
@@ -436,23 +445,26 @@ class Document:
         """
         if self._is_word_before_cursor_complete(WORD=WORD, pattern=pattern):
             # Space before the cursor or no text before cursor.
-            return ''
+            return ""
 
         text_before_cursor = self.text_before_cursor
         start = self.find_start_of_previous_word(WORD=WORD, pattern=pattern) or 0
 
-        return text_before_cursor[len(text_before_cursor) + start:]
+        return text_before_cursor[len(text_before_cursor) + start :]
 
     def _is_word_before_cursor_complete(
-            self, WORD: bool = False, pattern: Optional[Pattern[str]] = None) -> bool:
+        self, WORD: bool = False, pattern: Optional[Pattern[str]] = None
+    ) -> bool:
         if pattern:
             return self.find_start_of_previous_word(pattern=pattern) is None
         else:
-            return self.text_before_cursor == '' or self.text_before_cursor[-1:].isspace()
+            return (
+                self.text_before_cursor == "" or self.text_before_cursor[-1:].isspace()
+            )
 
     def find_start_of_previous_word(
-            self, count: int = 1, WORD: bool = False,
-            pattern: Optional[Pattern[str]] = None) -> Optional[int]:
+        self, count: int = 1, WORD: bool = False, pattern: Optional[Pattern[str]] = None
+    ) -> Optional[int]:
         """
         Return an index relative to the cursor position pointing to the start
         of the previous word. Return `None` if nothing was found.
@@ -478,14 +490,17 @@ class Document:
         try:
             for i, match in enumerate(iterator):
                 if i + 1 == count:
-                    return - match.end(0)
+                    return -match.end(0)
         except StopIteration:
             pass
         return None
 
     def find_boundaries_of_current_word(
-            self, WORD: bool = False, include_leading_whitespace: bool = False,
-            include_trailing_whitespace: bool = False) -> Tuple[int, int]:
+        self,
+        WORD: bool = False,
+        include_leading_whitespace: bool = False,
+        include_trailing_whitespace: bool = False,
+    ) -> Tuple[int, int]:
         """
         Return the relative boundaries (startpos, endpos) of the current word under the
         cursor. (This is at the current line, because line boundaries obviously
@@ -513,14 +528,14 @@ class Document:
         if not WORD and match_before and match_after:
             c1 = self.text[self.cursor_position - 1]
             c2 = self.text[self.cursor_position]
-            alphabet = string.ascii_letters + '0123456789_'
+            alphabet = string.ascii_letters + "0123456789_"
 
             if (c1 in alphabet) != (c2 in alphabet):
                 match_before = None
 
         return (
-            - match_before.end(1) if match_before else 0,
-            match_after.end(1) if match_after else 0
+            -match_before.end(1) if match_before else 0,
+            match_after.end(1) if match_after else 0,
         )
 
     def get_word_under_cursor(self, WORD: bool = False) -> str:
@@ -529,10 +544,11 @@ class Document:
         This returns an empty string when the cursor is on a whitespace region.
         """
         start, end = self.find_boundaries_of_current_word(WORD=WORD)
-        return self.text[self.cursor_position + start: self.cursor_position + end]
+        return self.text[self.cursor_position + start : self.cursor_position + end]
 
     def find_next_word_beginning(
-            self, count: int = 1, WORD: bool = False) -> Optional[int]:
+        self, count: int = 1, WORD: bool = False
+    ) -> Optional[int]:
         """
         Return an index relative to the cursor position pointing to the start
         of the next word. Return `None` if nothing was found.
@@ -556,8 +572,8 @@ class Document:
         return None
 
     def find_next_word_ending(
-            self, include_current_position: bool = False, count: int = 1,
-            WORD: bool = False) -> Optional[int]:
+        self, include_current_position: bool = False, count: int = 1, WORD: bool = False
+    ) -> Optional[int]:
         """
         Return an index relative to the cursor position pointing to the end
         of the next word. Return `None` if nothing was found.
@@ -588,7 +604,8 @@ class Document:
         return None
 
     def find_previous_word_beginning(
-            self, count: int = 1, WORD: bool = False) -> Optional[int]:
+        self, count: int = 1, WORD: bool = False
+    ) -> Optional[int]:
         """
         Return an index relative to the cursor position pointing to the start
         of the previous word. Return `None` if nothing was found.
@@ -602,13 +619,14 @@ class Document:
         try:
             for i, match in enumerate(iterator):
                 if i + 1 == count:
-                    return - match.end(1)
+                    return -match.end(1)
         except StopIteration:
             pass
         return None
 
     def find_previous_word_ending(
-            self, count: int = 1, WORD: bool = False) -> Optional[int]:
+        self, count: int = 1, WORD: bool = False
+    ) -> Optional[int]:
         """
         Return an index relative to the cursor position pointing to the end
         of the previous word. Return `None` if nothing was found.
@@ -634,15 +652,15 @@ class Document:
         return None
 
     def find_next_matching_line(
-            self, match_func: Callable[[str], bool],
-            count: int = 1) -> Optional[int]:
+        self, match_func: Callable[[str], bool], count: int = 1
+    ) -> Optional[int]:
         """
         Look downwards for empty lines.
         Return the line index, relative to the current line.
         """
         result = None
 
-        for index, line in enumerate(self.lines[self.cursor_position_row + 1:]):
+        for index, line in enumerate(self.lines[self.cursor_position_row + 1 :]):
             if match_func(line):
                 result = 1 + index
                 count -= 1
@@ -653,15 +671,15 @@ class Document:
         return result
 
     def find_previous_matching_line(
-            self, match_func: Callable[[str], bool],
-            count: int = 1) -> Optional[int]:
+        self, match_func: Callable[[str], bool], count: int = 1
+    ) -> Optional[int]:
         """
         Look upwards for empty lines.
         Return the line index, relative to the current line.
         """
         result = None
 
-        for index, line in enumerate(self.lines[:self.cursor_position_row][::-1]):
+        for index, line in enumerate(self.lines[: self.cursor_position_row][::-1]):
             if match_func(line):
                 result = -1 - index
                 count -= 1
@@ -678,7 +696,7 @@ class Document:
         if count < 0:
             return self.get_cursor_right_position(-count)
 
-        return - min(self.cursor_position_col, count)
+        return -min(self.cursor_position_col, count)
 
     def get_cursor_right_position(self, count: int = 1) -> int:
         """
@@ -690,7 +708,8 @@ class Document:
         return min(count, len(self.current_line_after_cursor))
 
     def get_cursor_up_position(
-            self, count: int = 1, preferred_column: Optional[int] = None) -> int:
+        self, count: int = 1, preferred_column: Optional[int] = None
+    ) -> int:
         """
         Return the relative cursor position (character index) where we would be if the
         user pressed the arrow-up button.
@@ -699,13 +718,20 @@ class Document:
                                  staying at the current column.
         """
         assert count >= 1
-        column = self.cursor_position_col if preferred_column is None else preferred_column
+        column = (
+            self.cursor_position_col if preferred_column is None else preferred_column
+        )
 
-        return self.translate_row_col_to_index(
-            max(0, self.cursor_position_row - count), column) - self.cursor_position
+        return (
+            self.translate_row_col_to_index(
+                max(0, self.cursor_position_row - count), column
+            )
+            - self.cursor_position
+        )
 
     def get_cursor_down_position(
-            self, count: int = 1, preferred_column: Optional[int] = None) -> int:
+        self, count: int = 1, preferred_column: Optional[int] = None
+    ) -> int:
         """
         Return the relative cursor position (character index) where we would be if the
         user pressed the arrow-down button.
@@ -714,13 +740,18 @@ class Document:
                                  staying at the current column.
         """
         assert count >= 1
-        column = self.cursor_position_col if preferred_column is None else preferred_column
+        column = (
+            self.cursor_position_col if preferred_column is None else preferred_column
+        )
 
-        return self.translate_row_col_to_index(
-            self.cursor_position_row + count, column) - self.cursor_position
+        return (
+            self.translate_row_col_to_index(self.cursor_position_row + count, column)
+            - self.cursor_position
+        )
 
     def find_enclosing_bracket_right(
-            self, left_ch: str, right_ch: str, end_pos: Optional[int] = None) -> Optional[int]:
+        self, left_ch: str, right_ch: str, end_pos: Optional[int] = None
+    ) -> Optional[int]:
         """
         Find the right bracket enclosing current position. Return the relative
         position to the cursor position.
@@ -752,8 +783,8 @@ class Document:
         return None
 
     def find_enclosing_bracket_left(
-            self, left_ch: str, right_ch: str, start_pos: Optional[int] = None
-        ) -> Optional[int]:
+        self, left_ch: str, right_ch: str, start_pos: Optional[int] = None
+    ) -> Optional[int]:
         """
         Find the left bracket enclosing current position. Return the relative
         position to the cursor position.
@@ -785,7 +816,8 @@ class Document:
         return None
 
     def find_matching_bracket_position(
-            self, start_pos: Optional[int] = None, end_pos: Optional[int] = None) -> int:
+        self, start_pos: Optional[int] = None, end_pos: Optional[int] = None
+    ) -> int:
         """
         Return relative cursor position of matching [, (, { or < bracket.
 
@@ -793,7 +825,7 @@ class Document:
         """
 
         # Look for a match.
-        for A, B in '()', '[]', '{}', '<>':
+        for A, B in "()", "[]", "{}", "<>":
             if self.current_char == A:
                 return self.find_enclosing_bracket_right(A, B, end_pos=end_pos) or 0
             elif self.current_char == B:
@@ -803,7 +835,7 @@ class Document:
 
     def get_start_of_document_position(self) -> int:
         """ Relative position for the start of the document. """
-        return - self.cursor_position
+        return -self.cursor_position
 
     def get_end_of_document_position(self) -> int:
         """ Relative position for the end of the document. """
@@ -813,9 +845,13 @@ class Document:
         """ Relative position for the start of this line. """
         if after_whitespace:
             current_line = self.current_line
-            return len(current_line) - len(current_line.lstrip()) - self.cursor_position_col
+            return (
+                len(current_line)
+                - len(current_line.lstrip())
+                - self.cursor_position_col
+            )
         else:
-            return - len(self.current_line_before_cursor)
+            return -len(self.current_line_before_cursor)
 
     def get_end_of_line_position(self) -> int:
         """ Relative position for the end of this line. """
@@ -839,7 +875,11 @@ class Document:
 
         return column - current_column
 
-    def selection_range(self) -> Tuple[int, int]:  # XXX: shouldn't this return `None` if there is no selection???
+    def selection_range(
+        self,
+    ) -> Tuple[
+        int, int
+    ]:  # XXX: shouldn't this return `None` if there is no selection???
         """
         Return (from, to) tuple of the selection.
         start and end position are included.
@@ -848,7 +888,9 @@ class Document:
         `selection_ranges` instead.
         """
         if self.selection:
-            from_, to = sorted([self.cursor_position, self.selection.original_cursor_position])
+            from_, to = sorted(
+                [self.cursor_position, self.selection.original_cursor_position]
+            )
         else:
             from_, to = self.cursor_position, self.cursor_position
 
@@ -864,7 +906,9 @@ class Document:
         selection.
         """
         if self.selection:
-            from_, to = sorted([self.cursor_position, self.selection.original_cursor_position])
+            from_, to = sorted(
+                [self.cursor_position, self.selection.original_cursor_position]
+            )
 
             if self.selection.type == SelectionType.BLOCK:
                 from_line, from_column = self.translate_index_to_position(from_)
@@ -879,15 +923,19 @@ class Document:
                     line_length = len(lines[l])
 
                     if from_column <= line_length:
-                        yield (self.translate_row_col_to_index(l, from_column),
-                               self.translate_row_col_to_index(l, min(line_length, to_column)))
+                        yield (
+                            self.translate_row_col_to_index(l, from_column),
+                            self.translate_row_col_to_index(
+                                l, min(line_length, to_column)
+                            ),
+                        )
             else:
                 # In case of a LINES selection, go to the start/end of the lines.
                 if self.selection.type == SelectionType.LINES:
-                    from_ = max(0, self.text.rfind('\n', 0, from_) + 1)
+                    from_ = max(0, self.text.rfind("\n", 0, from_) + 1)
 
-                    if self.text.find('\n', to) >= 0:
-                        to = self.text.find('\n', to)
+                    if self.text.find("\n", to) >= 0:
+                        to = self.text.find("\n", to)
                     else:
                         to = len(self.text) - 1
 
@@ -913,7 +961,9 @@ class Document:
             row_start = self.translate_row_col_to_index(row, 0)
             row_end = self.translate_row_col_to_index(row, len(line))
 
-            from_, to = sorted([self.cursor_position, self.selection.original_cursor_position])
+            from_, to = sorted(
+                [self.cursor_position, self.selection.original_cursor_position]
+            )
 
             # Take the intersection of the current line and the selection.
             intersection_start = max(row_start, from_)
@@ -946,7 +996,7 @@ class Document:
                 return from_column, to_column
         return None
 
-    def cut_selection(self) -> Tuple['Document', ClipboardData]:
+    def cut_selection(self) -> Tuple["Document", ClipboardData]:
         """
         Return a (:class:`.Document`, :class:`.ClipboardData`) tuple, where the
         document represents the new document when the selection is cut, and the
@@ -968,21 +1018,26 @@ class Document:
 
             remaining_parts.append(self.text[last_to:])
 
-            cut_text = '\n'.join(cut_parts)
-            remaining_text = ''.join(remaining_parts)
+            cut_text = "\n".join(cut_parts)
+            remaining_text = "".join(remaining_parts)
 
             # In case of a LINES selection, don't include the trailing newline.
-            if self.selection.type == SelectionType.LINES and cut_text.endswith('\n'):
+            if self.selection.type == SelectionType.LINES and cut_text.endswith("\n"):
                 cut_text = cut_text[:-1]
 
-            return (Document(text=remaining_text, cursor_position=new_cursor_position),
-                    ClipboardData(cut_text, self.selection.type))
+            return (
+                Document(text=remaining_text, cursor_position=new_cursor_position),
+                ClipboardData(cut_text, self.selection.type),
+            )
         else:
-            return self, ClipboardData('')
+            return self, ClipboardData("")
 
     def paste_clipboard_data(
-            self, data: ClipboardData, paste_mode: PasteMode = PasteMode.EMACS,
-            count: int = 1) -> 'Document':
+        self,
+        data: ClipboardData,
+        paste_mode: PasteMode = PasteMode.EMACS,
+        count: int = 1,
+    ) -> "Document":
         """
         Return a new :class:`.Document` instance which contains the result if
         we would paste this data at the current cursor position.
@@ -990,15 +1045,20 @@ class Document:
         :param paste_mode: Where to paste. (Before/after/emacs.)
         :param count: When >1, Paste multiple times.
         """
-        before = (paste_mode == PasteMode.VI_BEFORE)
-        after = (paste_mode == PasteMode.VI_AFTER)
+        before = paste_mode == PasteMode.VI_BEFORE
+        after = paste_mode == PasteMode.VI_AFTER
 
         if data.type == SelectionType.CHARACTERS:
             if after:
-                new_text = (self.text[:self.cursor_position + 1] + data.text * count +
-                            self.text[self.cursor_position + 1:])
+                new_text = (
+                    self.text[: self.cursor_position + 1]
+                    + data.text * count
+                    + self.text[self.cursor_position + 1 :]
+                )
             else:
-                new_text = self.text_before_cursor + data.text * count + self.text_after_cursor
+                new_text = (
+                    self.text_before_cursor + data.text * count + self.text_after_cursor
+                )
 
             new_cursor_position = self.cursor_position + len(data.text) * count
             if before:
@@ -1008,27 +1068,31 @@ class Document:
             l = self.cursor_position_row
             if before:
                 lines = self.lines[:l] + [data.text] * count + self.lines[l:]
-                new_text = '\n'.join(lines)
-                new_cursor_position = len(''.join(self.lines[:l])) + l
+                new_text = "\n".join(lines)
+                new_cursor_position = len("".join(self.lines[:l])) + l
             else:
-                lines = self.lines[:l + 1] + [data.text] * count + self.lines[l + 1:]
-                new_cursor_position = len(''.join(self.lines[:l + 1])) + l + 1
-                new_text = '\n'.join(lines)
+                lines = self.lines[: l + 1] + [data.text] * count + self.lines[l + 1 :]
+                new_cursor_position = len("".join(self.lines[: l + 1])) + l + 1
+                new_text = "\n".join(lines)
 
         elif data.type == SelectionType.BLOCK:
             lines = self.lines[:]
             start_line = self.cursor_position_row
             start_column = self.cursor_position_col + (0 if before else 1)
 
-            for i, line in enumerate(data.text.split('\n')):
+            for i, line in enumerate(data.text.split("\n")):
                 index = i + start_line
                 if index >= len(lines):
-                    lines.append('')
+                    lines.append("")
 
                 lines[index] = lines[index].ljust(start_column)
-                lines[index] = lines[index][:start_column] + line * count + lines[index][start_column:]
+                lines[index] = (
+                    lines[index][:start_column]
+                    + line * count
+                    + lines[index][start_column:]
+                )
 
-            new_text = '\n'.join(lines)
+            new_text = "\n".join(lines)
             new_cursor_position = self.cursor_position + (0 if before else 1)
 
         return Document(text=new_text, cursor_position=new_cursor_position)
@@ -1050,10 +1114,13 @@ class Document:
         """
         Return the start of the current paragraph. (Relative cursor position.)
         """
+
         def match_func(text: str) -> bool:
             return not text or text.isspace()
 
-        line_index = self.find_previous_matching_line(match_func=match_func, count=count)
+        line_index = self.find_previous_matching_line(
+            match_func=match_func, count=count
+        )
 
         if line_index:
             add = 0 if before else 1
@@ -1065,6 +1132,7 @@ class Document:
         """
         Return the end of the current paragraph. (Relative cursor position.)
         """
+
         def match_func(text: str) -> bool:
             return not text or text.isspace()
 
@@ -1078,17 +1146,18 @@ class Document:
 
     # Modifiers.
 
-    def insert_after(self, text: str) -> 'Document':
+    def insert_after(self, text: str) -> "Document":
         """
         Create a new document, with this text inserted after the buffer.
         It keeps selection ranges and cursor position in sync.
         """
         return Document(
-                text=self.text + text,
-                cursor_position=self.cursor_position,
-                selection=self.selection)
+            text=self.text + text,
+            cursor_position=self.cursor_position,
+            selection=self.selection,
+        )
 
-    def insert_before(self, text: str) -> 'Document':
+    def insert_before(self, text: str) -> "Document":
         """
         Create a new document, with this text inserted before the buffer.
         It keeps selection ranges and cursor position in sync.
@@ -1097,10 +1166,13 @@ class Document:
 
         if selection_state:
             selection_state = SelectionState(
-                original_cursor_position=selection_state.original_cursor_position + len(text),
-                type=selection_state.type)
+                original_cursor_position=selection_state.original_cursor_position
+                + len(text),
+                type=selection_state.type,
+            )
 
         return Document(
-                text=text + self.text,
-                cursor_position=self.cursor_position + len(text),
-                selection=selection_state)
+            text=text + self.text,
+            cursor_position=self.cursor_position + len(text),
+            selection=selection_state,
+        )

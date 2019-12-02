@@ -20,8 +20,8 @@ def data():
 def main():
     with ProgressBar() as pb:
         for i in pb(data()):
-            time.sleep(.1)
+            time.sleep(0.1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

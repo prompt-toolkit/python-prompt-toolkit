@@ -6,8 +6,8 @@ from prompt_toolkit.output.vt100 import _256_colors as _256_colors_table
 from .base import StyleAndTextTuples
 
 __all__ = [
-    'ANSI',
-    'ansi_escape',
+    "ANSI",
+    "ansi_escape",
 ]
 
 
@@ -25,6 +25,7 @@ class ANSI:
     be used for instance, for inserting Final Term prompt commands.  They will
     be translated into a prompt_toolkit '[ZeroWidthEscape]' fragment.
     """
+
     def __init__(self, value: str) -> None:
         self.value = value
         self._formatted_text: StyleAndTextTuples = []
@@ -49,7 +50,7 @@ class ANSI:
         """
         Coroutine that parses the ANSI escape sequences.
         """
-        style = ''
+        style = ""
         formatted_text = self._formatted_text
 
         while True:
@@ -57,30 +58,30 @@ class ANSI:
             c = yield
 
             # Everything between \001 and \002 should become a ZeroWidthEscape.
-            if c == '\001':
-                escaped_text = ''
-                while c != '\002':
+            if c == "\001":
+                escaped_text = ""
+                while c != "\002":
                     c = yield
-                    if c == '\002':
-                        formatted_text.append(('[ZeroWidthEscape]', escaped_text))
+                    if c == "\002":
+                        formatted_text.append(("[ZeroWidthEscape]", escaped_text))
                         c = yield
                         break
                     else:
                         escaped_text += c
 
-            if c == '\x1b':
+            if c == "\x1b":
                 # Start of color escape sequence.
                 square_bracket = yield
-                if square_bracket == '[':
+                if square_bracket == "[":
                     csi = True
                 else:
                     continue
-            elif c == '\x9b':
+            elif c == "\x9b":
                 csi = True
 
             if csi:
                 # Got a CSI sequence. Color codes are following.
-                current = ''
+                current = ""
                 params = []
                 while True:
                     char = yield
@@ -88,9 +89,9 @@ class ANSI:
                         current += char
                     else:
                         params.append(min(int(current or 0), 9999))
-                        if char == ';':
-                            current = ''
-                        elif char == 'm':
+                        if char == ";":
+                            current = ""
+                        elif char == "m":
                             # Set attributes and token.
                             self._select_graphic_rendition(params)
                             style = self._create_style_string()
@@ -172,8 +173,11 @@ class ANSI:
                 # True colors.
                 if n == 2 and len(attrs) >= 3:
                     try:
-                        color_str = '%02x%02x%02x' % (
-                            attrs.pop(), attrs.pop(), attrs.pop())
+                        color_str = "%02x%02x%02x" % (
+                            attrs.pop(),
+                            attrs.pop(),
+                            attrs.pop(),
+                        )
                     except IndexError:
                         pass
                     else:
@@ -190,29 +194,29 @@ class ANSI:
         if self._color:
             result.append(self._color)
         if self._bgcolor:
-            result.append('bg:' + self._bgcolor)
+            result.append("bg:" + self._bgcolor)
         if self._bold:
-            result.append('bold')
+            result.append("bold")
         if self._underline:
-            result.append('underline')
+            result.append("underline")
         if self._italic:
-            result.append('italic')
+            result.append("italic")
         if self._blink:
-            result.append('blink')
+            result.append("blink")
         if self._reverse:
-            result.append('reverse')
+            result.append("reverse")
         if self._hidden:
-            result.append('hidden')
+            result.append("hidden")
 
-        return ' '.join(result)
+        return " ".join(result)
 
     def __repr__(self) -> str:
-        return 'ANSI(%r)' % (self.value, )
+        return "ANSI(%r)" % (self.value,)
 
     def __pt_formatted_text__(self) -> StyleAndTextTuples:
         return self._formatted_text
 
-    def format(self, *args: str, **kwargs: str) -> 'ANSI':
+    def format(self, *args: str, **kwargs: str) -> "ANSI":
         """
         Like `str.format`, but make sure that the arguments are properly
         escaped. (No ANSI escapes can be injected.)
@@ -232,11 +236,11 @@ _bg_colors = {v: k for k, v in BG_ANSI_COLORS.items()}
 _256_colors = {}
 
 for i, (r, g, b) in enumerate(_256_colors_table.colors):
-    _256_colors[i] = '#%02x%02x%02x' % (r, g, b)
+    _256_colors[i] = "#%02x%02x%02x" % (r, g, b)
 
 
 def ansi_escape(text: str) -> str:
     """
     Replace characters with a special meaning.
     """
-    return text.replace('\x1b', '?').replace('\b', '?')
+    return text.replace("\x1b", "?").replace("\b", "?")

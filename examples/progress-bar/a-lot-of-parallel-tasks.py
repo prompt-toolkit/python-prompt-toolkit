@@ -12,8 +12,9 @@ from prompt_toolkit.shortcuts import ProgressBar
 
 def main():
     with ProgressBar(
-            title=HTML('<b>Example of many parallel tasks.</b>'),
-            bottom_toolbar=HTML('<b>[Control-L]</b> clear  <b>[Control-C]</b> abort')) as pb:
+        title=HTML("<b>Example of many parallel tasks.</b>"),
+        bottom_toolbar=HTML("<b>[Control-L]</b> clear  <b>[Control-C]</b> abort"),
+    ) as pb:
 
         def run_task(label, total, sleep_time):
             for i in pb(range(total), label=label):
@@ -22,11 +23,13 @@ def main():
         threads = []
 
         for i in range(160):
-            label = 'Task %i' % i
+            label = "Task %i" % i
             total = random.randrange(50, 200)
-            sleep_time = random.randrange(5, 20) / 100.
+            sleep_time = random.randrange(5, 20) / 100.0
 
-            threads.append(threading.Thread(target=run_task, args=(label, total, sleep_time)))
+            threads.append(
+                threading.Thread(target=run_task, args=(label, total, sleep_time))
+            )
 
         for t in threads:
             t.daemon = True
@@ -37,8 +40,8 @@ def main():
         # signal.
         for t in threads:
             while t.is_alive():
-                t.join(timeout=.5)
+                t.join(timeout=0.5)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

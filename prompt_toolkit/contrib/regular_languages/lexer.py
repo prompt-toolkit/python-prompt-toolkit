@@ -12,7 +12,7 @@ from prompt_toolkit.lexers import Lexer
 from .compiler import _CompiledGrammar
 
 __all__ = [
-    'GrammarLexer',
+    "GrammarLexer",
 ]
 
 
@@ -30,9 +30,13 @@ class GrammarLexer(Lexer):
                    grammar to just get one fragment, use a
                    `prompt_toolkit.lexers.SimpleLexer`.
     """
-    def __init__(self, compiled_grammar: _CompiledGrammar,
-                 default_style: str = '',
-                 lexers: Optional[Dict[str, Lexer]] = None) -> None:
+
+    def __init__(
+        self,
+        compiled_grammar: _CompiledGrammar,
+        default_style: str = "",
+        lexers: Optional[Dict[str, Lexer]] = None,
+    ) -> None:
 
         self.compiled_grammar = compiled_grammar
         self.default_style = default_style
@@ -50,12 +54,12 @@ class GrammarLexer(Lexer):
                 lexer = self.lexers.get(v.varname)
 
                 if lexer:
-                    document = Document(text[v.start:v.stop])
+                    document = Document(text[v.start : v.stop])
                     lexer_tokens_for_line = lexer.lex_document(document)
                     text_fragments: StyleAndTextTuples = []
                     for i in range(len(document.lines)):
                         text_fragments.extend(lexer_tokens_for_line(i))
-                        text_fragments.append(('', '\n'))
+                        text_fragments.append(("", "\n"))
                     if text_fragments:
                         text_fragments.pop()
 
@@ -70,11 +74,11 @@ class GrammarLexer(Lexer):
             trailing_input = m.trailing_input()
             if trailing_input:
                 for i in range(trailing_input.start, trailing_input.stop):
-                    characters[i] = ('class:trailing-input', characters[i][1])
+                    characters[i] = ("class:trailing-input", characters[i][1])
 
             return characters
         else:
-            return [('', text)]
+            return [("", text)]
 
     def lex_document(self, document: Document) -> Callable[[int], StyleAndTextTuples]:
         lines = list(split_lines(self._get_text_fragments(document.text)))

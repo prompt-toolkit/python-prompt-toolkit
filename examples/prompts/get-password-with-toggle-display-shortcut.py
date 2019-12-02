@@ -12,17 +12,17 @@ def main():
     hidden = [True]  # Nonlocal
     bindings = KeyBindings()
 
-    @bindings.add('c-t')
+    @bindings.add("c-t")
     def _(event):
-        ' When ControlT has been pressed, toggle visibility. '
+        " When ControlT has been pressed, toggle visibility. "
         hidden[0] = not hidden[0]
 
-    print('Type Control-T to toggle password visible.')
-    password = prompt('Password: ',
-                      is_password=Condition(lambda: hidden[0]),
-                      key_bindings=bindings)
-    print('You said: %s' % password)
+    print("Type Control-T to toggle password visible.")
+    password = prompt(
+        "Password: ", is_password=Condition(lambda: hidden[0]), key_bindings=bindings
+    )
+    print("You said: %s" % password)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

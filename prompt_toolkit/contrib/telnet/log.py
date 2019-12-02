@@ -6,5 +6,5 @@ import logging
 logger = logging.getLogger(__package__)
 
 __all__ = [
-    'logger',
+    "logger",
 ]

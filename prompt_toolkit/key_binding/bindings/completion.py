@@ -1,4 +1,3 @@
-# type: ignore[no-redef]
 """
 Key binding handlers for displaying completions.
 """
@@ -23,8 +22,8 @@ if TYPE_CHECKING:
     from prompt_toolkit.shortcuts import PromptSession
 
 __all__ = [
-    'generate_completions',
-    'display_completions_like_readline',
+    "generate_completions",
+    "display_completions_like_readline",
 ]
 
 E = KeyPressEvent
@@ -81,7 +80,8 @@ def display_completions_like_readline(event: E) -> None:
 
 
 def _display_completions_like_readline(
-        app: 'Application', completions: List[Completion]) -> 'asyncio.Task[None]':
+    app: "Application", completions: List[Completion]
+) -> "asyncio.Task[None]":
     """
     Display the list of completions in columns above the prompt.
     This will ask for a confirmation if there are too many completions to fit
@@ -98,21 +98,25 @@ def _display_completions_like_readline(
     # Calculate amount of required columns/rows for displaying the
     # completions. (Keep in mind that completions are displayed
     # alphabetically column-wise.)
-    max_compl_width = min(term_width,
-        max(get_cwidth(c.display_text) for c in completions) + 1)
+    max_compl_width = min(
+        term_width, max(get_cwidth(c.display_text) for c in completions) + 1
+    )
     column_count = max(1, term_width // max_compl_width)
     completions_per_page = column_count * (term_height - 1)
     page_count = int(math.ceil(len(completions) / float(completions_per_page)))
-        # Note: math.ceil can return float on Python2.
+    # Note: math.ceil can return float on Python2.
 
     def display(page: int) -> None:
         # Display completions.
-        page_completions = completions[page * completions_per_page:
-                                       (page + 1) * completions_per_page]
+        page_completions = completions[
+            page * completions_per_page : (page + 1) * completions_per_page
+        ]
 
         page_row_count = int(math.ceil(len(page_completions) / float(column_count)))
-        page_columns = [page_completions[i * page_row_count:(i + 1) * page_row_count]
-                   for i in range(column_count)]
+        page_columns = [
+            page_completions[i * page_row_count : (i + 1) * page_row_count]
+            for i in range(column_count)
+        ]
 
         result: StyleAndTextTuples = []
 
@@ -120,18 +124,20 @@ def _display_completions_like_readline(
             for c in range(column_count):
                 try:
                     completion = page_columns[c][r]
-                    style = 'class:readline-like-completions.completion ' + (completion.style or '')
+                    style = "class:readline-like-completions.completion " + (
+                        completion.style or ""
+                    )
 
                     result.extend(to_formatted_text(completion.display, style=style))
 
                     # Add padding.
                     padding = max_compl_width - get_cwidth(completion.display_text)
-                    result.append((completion.style, ' ' * padding,))
+                    result.append((completion.style, " " * padding,))
                 except IndexError:
                     pass
-            result.append(('', '\n'))
+            result.append(("", "\n"))
 
-        app.print_text(to_formatted_text(result, 'class:readline-like-completions'))
+        app.print_text(to_formatted_text(result, "class:readline-like-completions"))
 
     # User interaction through an application generator function.
     async def run_compl() -> None:
@@ -140,8 +146,8 @@ def _display_completions_like_readline(
             if len(completions) > completions_per_page:
                 # Ask confirmation if it doesn't fit on the screen.
                 confirm = await create_confirm_session(
-                    'Display all {} possibilities?'.format(len(completions)),
-                    ).prompt_async()
+                    "Display all {} possibilities?".format(len(completions)),
+                ).prompt_async()
 
                 if confirm:
                     # Display pages.
@@ -150,7 +156,9 @@ def _display_completions_like_readline(
 
                         if page != page_count - 1:
                             # Display --MORE-- and go to the next page.
-                            show_more = await _create_more_session('--MORE--').prompt_async()
+                            show_more = await _create_more_session(
+                                "--MORE--"
+                            ).prompt_async()
 
                             if not show_more:
                                 return
@@ -163,26 +171,27 @@ def _display_completions_like_readline(
     return app.create_background_task(run_compl())
 
 
-def _create_more_session(message: str = '--MORE--') -> 'PromptSession':
+def _create_more_session(message: str = "--MORE--") -> "PromptSession":
     """
     Create a `PromptSession` object for displaying the "--MORE--".
     """
     from prompt_toolkit.shortcuts import PromptSession
+
     bindings = KeyBindings()
 
-    @bindings.add(' ')
-    @bindings.add('y')
-    @bindings.add('Y')
+    @bindings.add(" ")
+    @bindings.add("y")
+    @bindings.add("Y")
     @bindings.add(Keys.ControlJ)
     @bindings.add(Keys.ControlM)
     @bindings.add(Keys.ControlI)  # Tab.
     def _(event: E) -> None:
         event.app.exit(result=True)
 
-    @bindings.add('n')
-    @bindings.add('N')
-    @bindings.add('q')
-    @bindings.add('Q')
+    @bindings.add("n")
+    @bindings.add("N")
+    @bindings.add("q")
+    @bindings.add("Q")
     @bindings.add(Keys.ControlC)
     def _(event: E) -> None:
         event.app.exit(result=False)
@@ -191,7 +200,4 @@ def _create_more_session(message: str = '--MORE--') -> 'PromptSession':
     def _(event: E) -> None:
         " Disable inserting of text. "
 
-    return PromptSession(
-        message,
-        key_bindings=bindings,
-        erase_when_done=True)
+    return PromptSession(message, key_bindings=bindings, erase_when_done=True)

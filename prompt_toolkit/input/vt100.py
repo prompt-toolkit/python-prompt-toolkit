@@ -24,9 +24,9 @@ from .posix_utils import PosixStdinReader
 from .vt100_parser import Vt100Parser
 
 __all__ = [
-    'Vt100Input',
-    'raw_mode',
-    'cooked_mode',
+    "Vt100Input",
+    "raw_mode",
+    "cooked_mode",
 ]
 
 
@@ -35,6 +35,7 @@ class Vt100Input(Input):
     Vt100 input for Posix systems.
     (This uses a posix file descriptor that can be registered in the event loop.)
     """
+
     # For the error messages. Only display "Input is not a terminal" once per
     # file descriptor.
     _fds_not_a_terminal: Set[int] = set()
@@ -46,11 +47,12 @@ class Vt100Input(Input):
             # This should not raise, but can return 0.
             stdin.fileno()
         except io.UnsupportedOperation:
-            if 'idlelib.run' in sys.modules:
+            if "idlelib.run" in sys.modules:
                 raise io.UnsupportedOperation(
-                    'Stdin is not a terminal. Running from Idle is not supported.')
+                    "Stdin is not a terminal. Running from Idle is not supported."
+                )
             else:
-                raise io.UnsupportedOperation('Stdin is not a terminal.')
+                raise io.UnsupportedOperation("Stdin is not a terminal.")
 
         # Even when we have a file descriptor, it doesn't mean it's a TTY.
         # Normally, this requires a real TTY device, but people instantiate
@@ -61,7 +63,7 @@ class Vt100Input(Input):
         fd = stdin.fileno()
 
         if not isatty and fd not in Vt100Input._fds_not_a_terminal:
-            msg = 'Warning: Input is not to a terminal (fd=%r).\n'
+            msg = "Warning: Input is not a terminal (fd=%r).\n"
             sys.stderr.write(msg % fd)
             Vt100Input._fds_not_a_terminal.add(fd)
 
@@ -75,13 +77,14 @@ class Vt100Input(Input):
         self._buffer: List[KeyPress] = []  # Buffer to collect the Key objects.
         self.stdin_reader = PosixStdinReader(self._fileno)
         self.vt100_parser = Vt100Parser(
-            lambda key_press: self._buffer.append(key_press))
+            lambda key_press: self._buffer.append(key_press)
+        )
 
     @property
     def responds_to_cpr(self) -> bool:
         # When the input is a tty, we assume that CPR is supported.
         # It's not when the input is piped from Pexpect.
-        if os.environ.get('PROMPT_TOOLKIT_NO_CPR', '') == '1':
+        if os.environ.get("PROMPT_TOOLKIT_NO_CPR", "") == "1":
             return False
         try:
             return self.stdin.isatty()
@@ -143,14 +146,18 @@ class Vt100Input(Input):
         return self.stdin.fileno()
 
     def typeahead_hash(self) -> str:
-        return 'fd-%s' % (self._fileno, )
+        return "fd-%s" % (self._fileno,)
 
 
-_current_callbacks: Dict[Tuple[AbstractEventLoop, int], Optional[Callable[[], None]]] = {}  # (loop, fd) -> current callback
+_current_callbacks: Dict[
+    Tuple[AbstractEventLoop, int], Optional[Callable[[], None]]
+] = {}  # (loop, fd) -> current callback
 
 
 @contextlib.contextmanager
-def _attached_input(input: Vt100Input, callback: Callable[[], None]) -> Generator[None, None, None]:
+def _attached_input(
+    input: Vt100Input, callback: Callable[[], None]
+) -> Generator[None, None, None]:
     """
     Context manager that makes this input active in the current event loop.
 
@@ -203,6 +210,7 @@ class raw_mode:
 
     We ignore errors when executing `tcgetattr` fails.
     """
+
     # There are several reasons for ignoring errors:
     # 1. To avoid the "Inappropriate ioctl for device" crash if somebody would
     #    execute this code (In a Python REPL, for instance):
@@ -246,7 +254,7 @@ class raw_mode:
             termios.tcsetattr(self.fileno, termios.TCSANOW, newattr)
 
             # Put the terminal in cursor mode. (Instead of application mode.)
-            os.write(self.fileno, b'\x1b[?1l')
+            os.write(self.fileno, b"\x1b[?1l")
 
     @classmethod
     def _patch_lflag(cls, attrs):
@@ -258,10 +266,13 @@ class raw_mode:
             # Disable XON/XOFF flow control on output and input.
             # (Don't capture Ctrl-S and Ctrl-Q.)
             # Like executing: "stty -ixon."
-            termios.IXON | termios.IXOFF |
-
+            termios.IXON
+            | termios.IXOFF
+            |
             # Don't translate carriage return into newline on input.
-            termios.ICRNL | termios.INLCR | termios.IGNCR
+            termios.ICRNL
+            | termios.INLCR
+            | termios.IGNCR
         )
 
     def __exit__(self, *a: object) -> None:
@@ -283,6 +294,7 @@ class cooked_mode(raw_mode):
         with cooked_mode(stdin):
             ''' the pseudo-terminal stdin is now used in cooked mode. '''
     """
+
     @classmethod
     def _patch_lflag(cls, attrs):
         return attrs | (termios.ECHO | termios.ICANON | termios.IEXTEN | termios.ISIG)

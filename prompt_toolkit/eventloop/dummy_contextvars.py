@@ -7,11 +7,11 @@ real contextvars. So, stuff like the telnet-server and so on requires 3.7.
 from typing import Any, Callable, Generic, Optional, TypeVar
 
 
-def copy_context() -> 'Context':
+def copy_context() -> "Context":
     return Context()
 
 
-_T = TypeVar('_T')
+_T = TypeVar("_T")
 
 
 class Context:

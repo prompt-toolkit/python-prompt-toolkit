@@ -8,8 +8,8 @@ from typing import Callable, ContextManager, Generator, List
 from prompt_toolkit.key_binding import KeyPress
 
 __all__ = [
-    'Input',
-    'DummyInput',
+    "Input",
+    "DummyInput",
 ]
 
 
@@ -21,6 +21,7 @@ class Input(metaclass=ABCMeta):
     :class:`~prompt_toolkit.application.Application` and will also be
     passed to the :class:`~prompt_toolkit.eventloop.base.EventLoop`.
     """
+
     @abstractmethod
     def fileno(self) -> int:
         """
@@ -98,11 +99,12 @@ class DummyInput(Input):
     """
     Input for use in a `DummyApplication`
     """
+
     def fileno(self) -> int:
         raise NotImplementedError
 
     def typeahead_hash(self) -> str:
-        return 'dummy-%s' % id(self)
+        return "dummy-%s" % id(self)
 
     def read_keys(self) -> List[KeyPress]:
         return []

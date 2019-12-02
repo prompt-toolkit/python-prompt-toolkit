@@ -9,8 +9,8 @@ from prompt_toolkit.styles import Attrs
 from .color_depth import ColorDepth
 
 __all__ = [
-    'Output',
-    'DummyOutput',
+    "Output",
+    "DummyOutput",
 ]
 
 
@@ -23,6 +23,7 @@ class Output(metaclass=ABCMeta):
     :class:`~prompt_toolkit.output.vt100.Vt100_Output` and
     :class:`~prompt_toolkit.output.win32.Win32Output`.
     """
+
     @abstractmethod
     def fileno(self) -> int:
         " Return the file descriptor to which we can write for the output. "
@@ -167,41 +168,97 @@ class DummyOutput(Output):
     """
     For testing. An output class that doesn't render anything.
     """
+
     def fileno(self) -> int:
         " There is no sensible default for fileno(). "
         raise NotImplementedError
 
     def encoding(self) -> str:
-        return 'utf-8'
+        return "utf-8"
 
-    def write(self, data: str) -> None: pass
-    def write_raw(self, data: str) -> None: pass
-    def set_title(self, title: str) -> None: pass
-    def clear_title(self) -> None: pass
-    def flush(self) -> None: pass
-    def erase_screen(self) -> None: pass
-    def enter_alternate_screen(self) -> None: pass
-    def quit_alternate_screen(self) -> None: pass
-    def enable_mouse_support(self) -> None: pass
-    def disable_mouse_support(self) -> None: pass
-    def erase_end_of_line(self) -> None: pass
-    def erase_down(self) -> None: pass
-    def reset_attributes(self) -> None: pass
-    def set_attributes(self, attrs: Attrs, color_depth: ColorDepth) -> None: pass
-    def disable_autowrap(self) -> None: pass
-    def enable_autowrap(self) -> None: pass
-    def cursor_goto(self, row: int = 0, column: int = 0) -> None: pass
-    def cursor_up(self, amount: int) -> None: pass
-    def cursor_down(self, amount: int) -> None: pass
-    def cursor_forward(self, amount: int) -> None: pass
-    def cursor_backward(self, amount: int) -> None: pass
-    def hide_cursor(self) -> None: pass
-    def show_cursor(self) -> None: pass
-    def ask_for_cpr(self) -> None: pass
-    def bell(self) -> None: pass
-    def enable_bracketed_paste(self) -> None: pass
-    def disable_bracketed_paste(self) -> None: pass
-    def scroll_buffer_to_prompt(self) -> None: pass
+    def write(self, data: str) -> None:
+        pass
+
+    def write_raw(self, data: str) -> None:
+        pass
+
+    def set_title(self, title: str) -> None:
+        pass
+
+    def clear_title(self) -> None:
+        pass
+
+    def flush(self) -> None:
+        pass
+
+    def erase_screen(self) -> None:
+        pass
+
+    def enter_alternate_screen(self) -> None:
+        pass
+
+    def quit_alternate_screen(self) -> None:
+        pass
+
+    def enable_mouse_support(self) -> None:
+        pass
+
+    def disable_mouse_support(self) -> None:
+        pass
+
+    def erase_end_of_line(self) -> None:
+        pass
+
+    def erase_down(self) -> None:
+        pass
+
+    def reset_attributes(self) -> None:
+        pass
+
+    def set_attributes(self, attrs: Attrs, color_depth: ColorDepth) -> None:
+        pass
+
+    def disable_autowrap(self) -> None:
+        pass
+
+    def enable_autowrap(self) -> None:
+        pass
+
+    def cursor_goto(self, row: int = 0, column: int = 0) -> None:
+        pass
+
+    def cursor_up(self, amount: int) -> None:
+        pass
+
+    def cursor_down(self, amount: int) -> None:
+        pass
+
+    def cursor_forward(self, amount: int) -> None:
+        pass
+
+    def cursor_backward(self, amount: int) -> None:
+        pass
+
+    def hide_cursor(self) -> None:
+        pass
+
+    def show_cursor(self) -> None:
+        pass
+
+    def ask_for_cpr(self) -> None:
+        pass
+
+    def bell(self) -> None:
+        pass
+
+    def enable_bracketed_paste(self) -> None:
+        pass
+
+    def disable_bracketed_paste(self) -> None:
+        pass
+
+    def scroll_buffer_to_prompt(self) -> None:
+        pass
 
     def get_size(self) -> Size:
         return Size(rows=40, columns=80)

@@ -1,4 +1,3 @@
-# type: ignore[no-redef]
 import asyncio
 import os
 import re
@@ -61,10 +60,7 @@ from prompt_toolkit.key_binding.key_bindings import (
     KeysTuple,
     merge_key_bindings,
 )
-from prompt_toolkit.key_binding.key_processor import (
-    KeyPressEvent,
-    KeyProcessor,
-)
+from prompt_toolkit.key_binding.key_processor import KeyPressEvent, KeyProcessor
 from prompt_toolkit.key_binding.vi_state import ViState
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout.containers import Container, Window
@@ -92,17 +88,17 @@ from .run_in_terminal import in_terminal, run_in_terminal
 try:
     import contextvars
 except ImportError:
-    import prompt_toolkit.eventloop.dummy_contextvars as contextvars
+    import prompt_toolkit.eventloop.dummy_contextvars as contextvars  # type: ignore
 
 
 __all__ = [
-    'Application',
+    "Application",
 ]
 
 
 E = KeyPressEvent
-_AppResult = TypeVar('_AppResult')
-ApplicationEventHandler = Callable[['Application[_AppResult]'], None]
+_AppResult = TypeVar("_AppResult")
+ApplicationEventHandler = Callable[["Application[_AppResult]"], None]
 
 
 class Application(Generic[_AppResult]):
@@ -179,36 +175,42 @@ class Application(Generic[_AppResult]):
 
         app = Application(...)
         app.run()
+
+        # Or
+        await app.run_async()
     """
-    def __init__(self,
-                 layout: Optional[Layout] = None,
-                 style: Optional[BaseStyle] = None,
-                 include_default_pygments_style: FilterOrBool = True,
-                 style_transformation: Optional[StyleTransformation] = None,
-                 key_bindings: Optional[KeyBindingsBase] = None,
-                 clipboard: Optional[Clipboard] = None,
-                 full_screen: bool = False,
-                 color_depth: Union[ColorDepth, Callable[[], Union[ColorDepth, None]], None] = None,
-                 mouse_support: FilterOrBool = False,
 
-                 enable_page_navigation_bindings: Optional[FilterOrBool] = None,  # Can be None, True or False.
-
-                 paste_mode: FilterOrBool = False,
-                 editing_mode: EditingMode = EditingMode.EMACS,
-                 erase_when_done: bool = False,
-                 reverse_vi_search_direction: FilterOrBool = False,
-                 min_redraw_interval: Union[float, int, None] = None,
-                 max_render_postpone_time: Union[float, int, None] = .01,
-                 refresh_interval: Optional[float] = None,
-
-                 on_reset: Optional[ApplicationEventHandler] = None,
-                 on_invalidate: Optional[ApplicationEventHandler] = None,
-                 before_render: Optional[ApplicationEventHandler] = None,
-                 after_render: Optional[ApplicationEventHandler] = None,
-
-                 # I/O.
-                 input: Optional[Input] = None,
-                 output: Optional[Output] = None):
+    def __init__(
+        self,
+        layout: Optional[Layout] = None,
+        style: Optional[BaseStyle] = None,
+        include_default_pygments_style: FilterOrBool = True,
+        style_transformation: Optional[StyleTransformation] = None,
+        key_bindings: Optional[KeyBindingsBase] = None,
+        clipboard: Optional[Clipboard] = None,
+        full_screen: bool = False,
+        color_depth: Union[
+            ColorDepth, Callable[[], Union[ColorDepth, None]], None
+        ] = None,
+        mouse_support: FilterOrBool = False,
+        enable_page_navigation_bindings: Optional[
+            FilterOrBool
+        ] = None,  # Can be None, True or False.
+        paste_mode: FilterOrBool = False,
+        editing_mode: EditingMode = EditingMode.EMACS,
+        erase_when_done: bool = False,
+        reverse_vi_search_direction: FilterOrBool = False,
+        min_redraw_interval: Union[float, int, None] = None,
+        max_render_postpone_time: Union[float, int, None] = 0.01,
+        refresh_interval: Optional[float] = None,
+        on_reset: Optional[ApplicationEventHandler] = None,
+        on_invalidate: Optional[ApplicationEventHandler] = None,
+        before_render: Optional[ApplicationEventHandler] = None,
+        after_render: Optional[ApplicationEventHandler] = None,
+        # I/O.
+        input: Optional[Input] = None,
+        output: Optional[Output] = None,
+    ):
 
         # If `enable_page_navigation_bindings` is not specified, enable it in
         # case of full screen applications only. This can be overridden by the user.
@@ -282,7 +284,7 @@ class Application(Generic[_AppResult]):
         #: after "\x1b". This little timer will consider "\x1b" to be escape if
         #: nothing did follow in this time span.
         #: This seems to work like the `ttimeoutlen` option in Vim.
-        self.ttimeoutlen = .5  # Seconds.
+        self.ttimeoutlen = 0.5  # Seconds.
 
         #: Like Vim's `timeoutlen` option. This can be `None` or a float.  For
         #: instance, suppose that we have a key binding AB and a second key
@@ -303,7 +305,8 @@ class Application(Generic[_AppResult]):
             self.input,
             full_screen=full_screen,
             mouse_support=mouse_support,
-            cpr_not_supported_callback=self.cpr_not_supported_callback)
+            cpr_not_supported_callback=self.cpr_not_supported_callback,
+        )
 
         #: Render counter. This one is increased every time the UI is rendered.
         #: It can be used as a key for caching certain information during one
@@ -312,9 +315,11 @@ class Application(Generic[_AppResult]):
 
         # Invalidate flag. When 'True', a repaint has been scheduled.
         self._invalidated = False
-        self._invalidate_events: List[Event[object]] = []  # Collection of 'invalidate' Event objects.
+        self._invalidate_events: List[
+            Event[object]
+        ] = []  # Collection of 'invalidate' Event objects.
         self._last_redraw_time = 0.0  # Unix timestamp of last redraw. Used when
-                                      # `min_redraw_interval` is given.
+        # `min_redraw_interval` is given.
 
         #: The `InputProcessor` instance.
         self.key_processor = KeyProcessor(_CombinedRegistry(self))
@@ -342,11 +347,13 @@ class Application(Generic[_AppResult]):
             else:
                 return dummy_style
 
-        return merge_styles([
-            default_ui_style(),
-            conditional_pygments_style,
-            DynamicStyle(lambda: self.style),
-        ])
+        return merge_styles(
+            [
+                default_ui_style(),
+                conditional_pygments_style,
+                DynamicStyle(lambda: self.style),
+            ]
+        )
 
     @property
     def color_depth(self) -> ColorDepth:
@@ -372,7 +379,9 @@ class Application(Generic[_AppResult]):
         has the focus. In this case, it's really not practical to check for
         `None` values or catch exceptions every time.)
         """
-        return self.layout.current_buffer or Buffer(name='dummy-buffer')  # Dummy buffer.
+        return self.layout.current_buffer or Buffer(
+            name="dummy-buffer"
+        )  # Dummy buffer.
 
     @property
     def current_search_state(self) -> SearchState:
@@ -395,7 +404,7 @@ class Application(Generic[_AppResult]):
         # content in the other buffers to remain unchanged between several
         # calls of `run`. (And the same is true for the focus stack.)
 
-        self.exit_style = ''
+        self.exit_style = ""
 
         self.background_tasks: List[Task] = []
 
@@ -439,17 +448,19 @@ class Application(Generic[_AppResult]):
 
         def schedule_redraw() -> None:
             call_soon_threadsafe(
-                redraw, max_postpone_time=self.max_render_postpone_time,
-                loop=self.loop)
+                redraw, max_postpone_time=self.max_render_postpone_time, loop=self.loop
+            )
 
         if self.min_redraw_interval:
             # When a minimum redraw interval is set, wait minimum this amount
             # of time between redraws.
             diff = time.time() - self._last_redraw_time
             if diff < self.min_redraw_interval:
+
                 async def redraw_in_future() -> None:
                     await sleep(cast(float, self.min_redraw_interval) - diff)
                     schedule_redraw()
+
                 self.create_background_task(redraw_in_future())
             else:
                 schedule_redraw()
@@ -468,6 +479,7 @@ class Application(Generic[_AppResult]):
 
         :param render_as_done: make sure to put the cursor after the UI.
         """
+
         def run_in_context() -> None:
             # Only draw when no sub application was started.
             if self._is_running and not self._running_in_terminal:
@@ -506,6 +518,7 @@ class Application(Generic[_AppResult]):
         Start a while/true loop in the background for automatic invalidation of
         the UI.
         """
+
         async def auto_refresh():
             while True:
                 await sleep(self.refresh_interval)
@@ -568,27 +581,28 @@ class Application(Generic[_AppResult]):
             c()
         del self.pre_run_callables[:]
 
-    async def run_async(self, pre_run: Optional[Callable[[], None]] = None) -> _AppResult:
+    async def run_async(
+        self,
+        pre_run: Optional[Callable[[], None]] = None,
+        set_exception_handler: bool = True,
+    ) -> _AppResult:
         """
-        Run asynchronous. Return a prompt_toolkit
-        :class:`~prompt_toolkit.eventloop.Future` object.
+        Run the prompt_toolkit :class:`~prompt_toolkit.application.Application`
+        until :meth:`~prompt_toolkit.application.Application.exit` has been
+        called. Return the value that was passed to
+        :meth:`~prompt_toolkit.application.Application.exit`.
 
-        If you wish to run on top of asyncio, remember that a prompt_toolkit
-        `Future` needs to be converted to an asyncio `Future`. The cleanest way
-        is to call :meth:`~prompt_toolkit.eventloop.Future.to_asyncio_future`.
-        Also make sure to tell prompt_toolkit to use the asyncio event loop.
+        This is the main entry point for a prompt_toolkit
+        :class:`~prompt_toolkit.application.Application` and usually the only
+        place where the event loop is actually running.
 
-        .. code:: python
-
-            from prompt_toolkit.eventloop import use_asyncio_event_loop
-            from asyncio import get_event_loop
-
-            use_asyncio_event_loop()
-            get_event_loop().run_until_complete(
-                application.run_async().to_asyncio_future())
-
+        :param pre_run: Optional callable, which is called right after the
+            "reset" of the application.
+        :param set_exception_handler: When set, in case of an exception, go out
+            of the alternate screen and hide the application, display the
+            exception, and wait for the user to press ENTER.
         """
-        assert not self._is_running, 'Application is already running.'
+        assert not self._is_running, "Application is already running."
 
         async def _run_async() -> _AppResult:
             " Coroutine. "
@@ -666,7 +680,7 @@ class Application(Generic[_AppResult]):
                     self._redraw()
                     self._start_auto_refresh_task()
 
-                    has_sigwinch = hasattr(signal, 'SIGWINCH') and in_main_thread()
+                    has_sigwinch = hasattr(signal, "SIGWINCH") and in_main_thread()
                     if has_sigwinch:
                         previous_winch_handler = signal.getsignal(signal.SIGWINCH)
                         loop.add_signal_handler(signal.SIGWINCH, self._on_resize)
@@ -713,78 +727,93 @@ class Application(Generic[_AppResult]):
                                 await previous_run_in_terminal_f
 
                             # Store unprocessed input as typeahead for next time.
-                            store_typeahead(self.input, self.key_processor.empty_queue())
+                            store_typeahead(
+                                self.input, self.key_processor.empty_queue()
+                            )
 
                 return result
 
         async def _run_async2() -> _AppResult:
             self._is_running = True
-            with set_app(self):
-                try:
-                    result = await _run_async()
-                finally:
-                    # Wait for the background tasks to be done. This needs to
-                    # go in the finally! If `_run_async` raises
-                    # `KeyboardInterrupt`, we still want to wait for the
-                    # background tasks.
-                    await self.cancel_and_wait_for_background_tasks()
 
-                    # Set the `_is_running` flag to `False`. Normally this
-                    # happened already in the finally block in `run_async`
-                    # above, but in case of exceptions, that's not always the
-                    # case.
-                    self._is_running = False
-                return result
+            # Make sure to set `_invalidated` to `False` to begin with,
+            # otherwise we're not going to paint anything. This can happen if
+            # this application had run before on a different event loop, and a
+            # paint was scheduled using `call_soon_threadsafe` with
+            # `max_postpone_time`.
+            self._invalidated = False
+
+            loop = get_event_loop()
+            if set_exception_handler:
+                previous_exc_handler = loop.get_exception_handler()
+                loop.set_exception_handler(self._handle_exception)
+
+            try:
+                with set_app(self):
+                    try:
+                        result = await _run_async()
+                    finally:
+                        # Wait for the background tasks to be done. This needs to
+                        # go in the finally! If `_run_async` raises
+                        # `KeyboardInterrupt`, we still want to wait for the
+                        # background tasks.
+                        await self.cancel_and_wait_for_background_tasks()
+
+                        # Set the `_is_running` flag to `False`. Normally this
+                        # happened already in the finally block in `run_async`
+                        # above, but in case of exceptions, that's not always the
+                        # case.
+                        self._is_running = False
+                    return result
+            finally:
+                if set_exception_handler:
+                    loop.set_exception_handler(previous_exc_handler)
 
         return await _run_async2()
 
-    def run(self, pre_run: Optional[Callable[[], None]] = None,
-            set_exception_handler: bool = True) -> _AppResult:
+    def run(
+        self,
+        pre_run: Optional[Callable[[], None]] = None,
+        set_exception_handler: bool = True,
+    ) -> _AppResult:
         """
         A blocking 'run' call that waits until the UI is finished.
 
+        :param pre_run: Optional callable, which is called right after the
+            "reset" of the application.
         :param set_exception_handler: When set, in case of an exception, go out
             of the alternate screen and hide the application, display the
             exception, and wait for the user to press ENTER.
         """
-        loop = get_event_loop()
+        return get_event_loop().run_until_complete(self.run_async(pre_run=pre_run))
 
-        def run() -> _AppResult:
-            coro = self.run_async(pre_run=pre_run)
-            return get_event_loop().run_until_complete(coro)
+    def _handle_exception(self, loop, context: Dict[str, Any]) -> None:
+        """
+        Handler for event loop exceptions.
+        This will print the exception, using run_in_terminal.
+        """
+        # For Python 2: we have to get traceback at this point, because
+        # we're still in the 'except:' block of the event loop where the
+        # traceback is still available. Moving this code in the
+        # 'print_exception' coroutine will loose the exception.
+        tb = get_traceback_from_context(context)
+        formatted_tb = "".join(format_tb(tb))
 
-        def handle_exception(loop, context: Dict[str, Any]) -> None:
-            " Print the exception, using run_in_terminal. "
-            # For Python 2: we have to get traceback at this point, because
-            # we're still in the 'except:' block of the event loop where the
-            # traceback is still available. Moving this code in the
-            # 'print_exception' coroutine will loose the exception.
-            tb = get_traceback_from_context(context)
-            formatted_tb = ''.join(format_tb(tb))
+        async def in_term() -> None:
+            async with in_terminal():
+                # Print output. Similar to 'loop.default_exception_handler',
+                # but don't use logger. (This works better on Python 2.)
+                print("\nUnhandled exception in event loop:")
+                print(formatted_tb)
+                print("Exception %s" % (context.get("exception"),))
 
-            async def in_term() -> None:
-                async with in_terminal():
-                    # Print output. Similar to 'loop.default_exception_handler',
-                    # but don't use logger. (This works better on Python 2.)
-                    print('\nUnhandled exception in event loop:')
-                    print(formatted_tb)
-                    print('Exception %s' % (context.get('exception'), ))
+                await _do_wait_for_enter("Press ENTER to continue...")
 
-                    await _do_wait_for_enter('Press ENTER to continue...')
-            ensure_future(in_term())
+        ensure_future(in_term())
 
-        if set_exception_handler:
-            # Run with patched exception handler.
-            previous_exc_handler = loop.get_exception_handler()
-            loop.set_exception_handler(handle_exception)
-            try:
-                return run()
-            finally:
-                loop.set_exception_handler(previous_exc_handler)
-        else:
-            return run()
-
-    def create_background_task(self, coroutine: Awaitable[None]) -> 'asyncio.Task[None]':
+    def create_background_task(
+        self, coroutine: Awaitable[None]
+    ) -> "asyncio.Task[None]":
         """
         Start a background task (coroutine) for the running application.
         If asyncio had nurseries like Trio, we would create a nursery in
@@ -821,8 +850,10 @@ class Application(Generic[_AppResult]):
 
         def in_terminal() -> None:
             self.output.write(
-                "WARNING: your terminal doesn't support cursor position requests (CPR).\r\n")
+                "WARNING: your terminal doesn't support cursor position requests (CPR).\r\n"
+            )
             self.output.flush()
+
         run_in_terminal(in_terminal)
 
     @overload
@@ -830,17 +861,21 @@ class Application(Generic[_AppResult]):
         " Exit without arguments. "
 
     @overload
-    def exit(self, *, result: _AppResult, style: str = '') -> None:
+    def exit(self, *, result: _AppResult, style: str = "") -> None:
         " Exit with `_AppResult`. "
 
     @overload
-    def exit(self, *, exception: Union[BaseException, Type[BaseException]],
-             style: str = '') -> None:
+    def exit(
+        self, *, exception: Union[BaseException, Type[BaseException]], style: str = ""
+    ) -> None:
         " Exit with exception. "
 
-    def exit(self, result: Optional[_AppResult] = None,
-             exception: Optional[Union[BaseException, Type[BaseException]]] = None,
-             style: str = '') -> None:
+    def exit(
+        self,
+        result: Optional[_AppResult] = None,
+        exception: Optional[Union[BaseException, Type[BaseException]]] = None,
+        style: str = "",
+    ) -> None:
         """
         Exit application.
 
@@ -854,12 +889,10 @@ class Application(Generic[_AppResult]):
         assert result is None or exception is None
 
         if self.future is None:
-            raise Exception(
-                'Application is not running. Application.exit() failed.')
+            raise Exception("Application is not running. Application.exit() failed.")
 
         if self.future.done():
-            raise Exception(
-                'Return value already set. Application.exit() failed.')
+            raise Exception("Return value already set. Application.exit() failed.")
 
         self.exit_style = style
 
@@ -879,10 +912,12 @@ class Application(Generic[_AppResult]):
             self.renderer.request_absolute_cursor_position()
 
     async def run_system_command(
-            self, command: str,
-            wait_for_enter: bool = True,
-            display_before_text: str = '',
-            wait_text: str = 'Press ENTER to continue...') -> None:
+        self,
+        command: str,
+        wait_for_enter: bool = True,
+        display_before_text: str = "",
+        wait_text: str = "Press ENTER to continue...",
+    ) -> None:
         """
         Run system command (While hiding the prompt. When finished, all the
         output will scroll above the prompt.)
@@ -909,9 +944,9 @@ class Application(Generic[_AppResult]):
             # Run sub process.
             def run_command() -> None:
                 self.print_text(display_before_text)
-                p = Popen(command, shell=True,
-                          stdin=input_fd, stdout=output_fd)
+                p = Popen(command, shell=True, stdin=input_fd, stdout=output_fd)
                 p.wait()
+
             await run_in_executor_with_context(run_command)
 
             # Wait for the user to press enter.
@@ -928,7 +963,8 @@ class Application(Generic[_AppResult]):
         """
         # Only suspend when the operating system supports it.
         # (Not on Windows.)
-        if hasattr(signal, 'SIGTSTP'):
+        if hasattr(signal, "SIGTSTP"):
+
             def run() -> None:
                 # Send `SIGSTP` to own process.
                 # This will cause it to suspend.
@@ -942,8 +978,9 @@ class Application(Generic[_AppResult]):
 
             run_in_terminal(run)
 
-    def print_text(self, text: AnyFormattedText,
-                   style: Optional[BaseStyle] = None) -> None:
+    def print_text(
+        self, text: AnyFormattedText, style: Optional[BaseStyle] = None
+    ) -> None:
         """
         Print a list of (style_str, text) tuples to the output.
         (When the UI is running, this method has to be called through
@@ -957,7 +994,8 @@ class Application(Generic[_AppResult]):
             formatted_text=text,
             style=style or self._merged_style,
             color_depth=self.color_depth,
-            style_transformation=self.style_transformation)
+            style_transformation=self.style_transformation,
+        )
 
     @property
     def is_running(self) -> bool:
@@ -978,9 +1016,12 @@ class Application(Generic[_AppResult]):
         attrs_for_style = self.renderer._attrs_for_style
 
         if attrs_for_style:
-            return sorted([
-                re.sub(r'\s+', ' ', style_str).strip()
-                for style_str in attrs_for_style.keys()])
+            return sorted(
+                [
+                    re.sub(r"\s+", " ", style_str).strip()
+                    for style_str in attrs_for_style.keys()
+                ]
+            )
 
         return []
 
@@ -991,11 +1032,11 @@ class _CombinedRegistry(KeyBindingsBase):
     This merges the global key bindings with the one of the current user
     control.
     """
+
     def __init__(self, app: Application[_AppResult]) -> None:
         self.app = app
         self._cache: SimpleCache[
-            Tuple[Window, FrozenSet[UIControl]],
-            KeyBindingsBase
+            Tuple[Window, FrozenSet[UIControl]], KeyBindingsBase
         ] = SimpleCache()
 
     @property
@@ -1009,8 +1050,9 @@ class _CombinedRegistry(KeyBindingsBase):
         KeyBindings object. """
         raise NotImplementedError
 
-    def _create_key_bindings(self, current_window: Window,
-                             other_controls: List[UIControl]) -> KeyBindingsBase:
+    def _create_key_bindings(
+        self, current_window: Window, other_controls: List[UIControl]
+    ) -> KeyBindingsBase:
         """
         Create a `KeyBindings` object that merges the `KeyBindings` from the
         `UIControl` with all the parent controls and the global key bindings.
@@ -1048,9 +1090,12 @@ class _CombinedRegistry(KeyBindingsBase):
             key_bindings.append(self.app.key_bindings)
 
         # Add mouse bindings.
-        key_bindings.append(ConditionalKeyBindings(
-            self.app._page_navigation_bindings,
-            self.app.enable_page_navigation_bindings))
+        key_bindings.append(
+            ConditionalKeyBindings(
+                self.app._page_navigation_bindings,
+                self.app.enable_page_navigation_bindings,
+            )
+        )
         key_bindings.append(self.app._default_bindings)
 
         # Reverse this list. The current control's key bindings should come
@@ -1066,7 +1111,8 @@ class _CombinedRegistry(KeyBindingsBase):
         key = current_window, frozenset(other_controls)
 
         return self._cache.get(
-            key, lambda: self._create_key_bindings(current_window, other_controls))
+            key, lambda: self._create_key_bindings(current_window, other_controls)
+        )
 
     def get_bindings_for_keys(self, keys: KeysTuple) -> List[Binding]:
         return self._key_bindings.get_bindings_for_keys(keys)
@@ -1086,7 +1132,7 @@ async def _do_wait_for_enter(wait_text: AnyFormattedText) -> None:
 
     key_bindings = KeyBindings()
 
-    @key_bindings.add('enter')
+    @key_bindings.add("enter")
     def _(event: E) -> None:
         event.app.exit()
 
@@ -1096,6 +1142,6 @@ async def _do_wait_for_enter(wait_text: AnyFormattedText) -> None:
         pass
 
     session: PromptSession[None] = PromptSession(
-        message=wait_text,
-        key_bindings=key_bindings)
+        message=wait_text, key_bindings=key_bindings
+    )
     await session.app.run_async()

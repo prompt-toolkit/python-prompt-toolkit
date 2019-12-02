@@ -38,9 +38,9 @@ from ..key_binding import KeyPress
 from .base import Input
 
 __all__ = [
-    'store_typeahead',
-    'get_typeahead',
-    'clear_typeahead',
+    "store_typeahead",
+    "get_typeahead",
+    "clear_typeahead",
 ]
 
 _buffer: Dict[str, List[KeyPress]] = defaultdict(list)

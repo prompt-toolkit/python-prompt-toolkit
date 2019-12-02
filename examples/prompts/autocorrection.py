@@ -9,8 +9,8 @@ from prompt_toolkit.key_binding import KeyBindings
 
 # Database of words to be replaced by typing.
 corrections = {
-    'impotr': 'import',
-    'wolrd': 'world',
+    "impotr": "import",
+    "wolrd": "world",
 }
 
 
@@ -19,7 +19,7 @@ def main():
     bindings = KeyBindings()
 
     # We add a custom key binding to space.
-    @bindings.add(' ')
+    @bindings.add(" ")
     def _(event):
         """
         When space is pressed, we check the word before the cursor, and
@@ -33,12 +33,12 @@ def main():
                 b.delete_before_cursor(count=len(w))
                 b.insert_text(corrections[w])
 
-        b.insert_text(' ')
+        b.insert_text(" ")
 
     # Read input.
-    text = prompt('Say something: ', key_bindings=bindings)
-    print('You said: %s' % text)
+    text = prompt("Say something: ", key_bindings=bindings)
+    print("You said: %s" % text)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
