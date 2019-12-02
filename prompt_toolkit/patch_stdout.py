@@ -41,6 +41,11 @@ def patch_stdout(raw: bool = False) -> Generator[None, None, None]:
     application is curring, the behaviour should be identical to writing to
     `sys.stdout` directly.
 
+    Warning: If a new event loop is installed using `asyncio.set_event_loop()`,
+        then make sure that the context manager is applied after the event loop
+        is changed. Printing to stdout will be scheduled in the event loop
+        that's active when the context manager is created.
+
     :param raw: (`bool`) When True, vt100 terminal escape sequences are not
                 removed/escaped.
     """
