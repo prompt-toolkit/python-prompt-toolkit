@@ -173,7 +173,7 @@ class ANSI:
                 # True colors.
                 if n == 2 and len(attrs) >= 3:
                     try:
-                        color_str = "%02x%02x%02x" % (
+                        color_str = "#%02x%02x%02x" % (
                             attrs.pop(),
                             attrs.pop(),
                             attrs.pop(),
