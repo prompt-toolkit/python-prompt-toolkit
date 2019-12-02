@@ -31,6 +31,7 @@ def load_auto_suggest_bindings() -> KeyBindings:
         app = get_app()
         return (
             app.current_buffer.suggestion is not None
+            and app.current_buffer.suggestion.text
             and app.current_buffer.document.is_cursor_at_the_end
         )
 
