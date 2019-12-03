@@ -431,6 +431,12 @@ class Application(Generic[_AppResult]):
         """
         Thread safe way of sending a repaint trigger to the input event loop.
         """
+        if not self._is_running:
+            # Don't schedule a redraw if we're not running.
+            # Otherwise, `get_event_loop()` in `call_soon_threadsafe` can fail.
+            # See: https://github.com/dbcli/mycli/issues/797
+            return
+
         # Never schedule a second redraw, when a previous one has not yet been
         # executed. (This should protect against other threads calling
         # 'invalidate' many times, resulting in 100% CPU.)
