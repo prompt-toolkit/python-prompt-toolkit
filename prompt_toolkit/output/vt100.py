@@ -436,6 +436,7 @@ class Vt100_Output(Output):
             ColorDepth.DEPTH_24_BIT: _EscapeCodeCache(ColorDepth.DEPTH_24_BIT),
         }
 
+    @classmethod
     def from_pty(cls, stdout: TextIO, term: Optional[str] = None) -> "Vt100_Output":
         """
         Create an Output class from a pseudo terminal.
