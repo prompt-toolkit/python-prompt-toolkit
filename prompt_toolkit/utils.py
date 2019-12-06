@@ -28,6 +28,7 @@ __all__ = [
     "take_using_weights",
     "to_str",
     "to_int",
+    "AnyFloat",
     "to_float",
 ]
 
@@ -284,7 +285,10 @@ def to_int(value: Union[Callable[[], int], int]) -> int:
         return int(value)
 
 
-def to_float(value: Union[Callable[[], float], float]) -> float:
+AnyFloat = Union[Callable[[], float], float]
+
+
+def to_float(value: AnyFloat) -> float:
     " Turn callable or float into float. "
     if callable(value):
         return to_float(value())
