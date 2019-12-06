@@ -15,7 +15,7 @@ from typing import Callable, Hashable, Optional, Sequence, Tuple, Union
 
 from prompt_toolkit.cache import memoized
 from prompt_toolkit.filters import FilterOrBool, to_filter
-from prompt_toolkit.utils import to_float, to_str
+from prompt_toolkit.utils import AnyFloat, to_float, to_str
 
 from .base import ANSI_COLOR_NAMES, Attrs
 from .style import parse_color
@@ -153,7 +153,7 @@ class AdjustBrightnessStyleTransformation(StyleTransformation):
     """
 
     def __init__(
-        self, min_brightness: float = 0.0, max_brightness: float = 1.0
+        self, min_brightness: AnyFloat = 0.0, max_brightness: AnyFloat = 1.0
     ) -> None:
 
         self.min_brightness = min_brightness

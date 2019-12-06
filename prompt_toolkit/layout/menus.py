@@ -1,6 +1,17 @@
 import math
 from itertools import zip_longest
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple, TypeVar, cast
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+)
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import CompletionState
@@ -261,7 +272,7 @@ class CompletionsMenu(ConditionalContainer):
     def __init__(
         self,
         max_height: Optional[int] = None,
-        scroll_offset: int = 0,
+        scroll_offset: Union[int, Callable[[], int]] = 0,
         extra_filter: FilterOrBool = True,
         display_arrows: FilterOrBool = False,
         z_index: int = 10 ** 8,
