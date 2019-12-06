@@ -436,7 +436,6 @@ class Vt100_Output(Output):
             ColorDepth.DEPTH_24_BIT: _EscapeCodeCache(ColorDepth.DEPTH_24_BIT),
         }
 
-    @classmethod
     def from_pty(cls, stdout: TextIO, term: Optional[str] = None) -> "Vt100_Output":
         """
         Create an Output class from a pseudo terminal.
@@ -446,10 +445,9 @@ class Vt100_Output(Output):
         # Normally, this requires a real TTY device, but people instantiate
         # this class often during unit tests as well. For convenience, we print
         # an error message, use standard dimensions, and go on.
-        isatty = stdout.isatty()
         fd = stdout.fileno()
 
-        if not isatty and fd not in cls._fds_not_a_terminal:
+        if not stdout.isatty() and fd not in cls._fds_not_a_terminal:
             msg = "Warning: Output is not a terminal (fd=%r).\n"
             sys.stderr.write(msg % fd)
             cls._fds_not_a_terminal.add(fd)
@@ -460,7 +458,7 @@ class Vt100_Output(Output):
             # https://github.com/ipython/ipython/issues/10071
             rows, columns = (None, None)
 
-            if isatty:
+            if stdout.isatty():
                 rows, columns = _get_size(stdout.fileno())
             return Size(rows=rows or 24, columns=columns or 80)
 
