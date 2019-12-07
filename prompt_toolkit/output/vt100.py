@@ -459,8 +459,14 @@ class Vt100_Output(Output):
             # https://github.com/ipython/ipython/issues/10071
             rows, columns = (None, None)
 
-            if stdout.isatty():
+            # It is possible that `stdout` is no longer a TTY device at this
+            # point. In that case we get an `OSError` in the ioctl call in
+            # `get_size`. See:
+            # https://github.com/prompt-toolkit/python-prompt-toolkit/pull/1021
+            try:
                 rows, columns = _get_size(stdout.fileno())
+            except OSError:
+                pass
             return Size(rows=rows or 24, columns=columns or 80)
 
         return cls(stdout, get_size, term=term)
