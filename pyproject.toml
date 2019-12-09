@@ -1,6 +1,6 @@
 [tool.black]
 target-version = ['py36']
-
+line-length = 150
 
 [tool.isort]
 # isort configuration that is compatible with Black.
