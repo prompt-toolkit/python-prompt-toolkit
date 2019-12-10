@@ -15,6 +15,7 @@ import threading
 import traceback
 from asyncio import get_event_loop, new_event_loop, set_event_loop
 from typing import (
+    Callable,
     Generic,
     Iterable,
     List,
@@ -23,11 +24,13 @@ from typing import (
     Sized,
     TextIO,
     TypeVar,
+    Union,
     cast,
 )
 
-from prompt_toolkit.application import Application
+from prompt_toolkit.application import Application, get_app
 from prompt_toolkit.application.current import get_app_session
+from prompt_toolkit.eventloop import run_in_executor_with_context
 from prompt_toolkit.filters import Condition, is_done, renderer_height_is_known
 from prompt_toolkit.formatted_text import (
     AnyFormattedText,
@@ -56,12 +59,12 @@ from .formatters import Formatter, create_default_formatters
 try:
     import contextvars
 except ImportError:
-    from prompt_toolkit.eventloop import dummy_contextvars as contextvars  # type: ignore
+    from prompt_toolkit.eventloop import (
+        dummy_contextvars as contextvars,
+    )  # type: ignore
 
 
-__all__ = [
-    "ProgressBar",
-]
+__all__ = ["ProgressBar"]
 
 E = KeyPressEvent
 
@@ -250,7 +253,7 @@ class ProgressBar:
         self,
         data: Optional[Iterable[_T]] = None,
         label: AnyFormattedText = "",
-        remove_when_done: bool = False,
+        remove_when_done: Union[Callable[[], bool], bool] = False,
         total: Optional[int] = None,
     ) -> "ProgressBarCounter[_T]":
         """
@@ -258,7 +261,9 @@ class ProgressBar:
 
         :param label: Title text or description for this progress. (This can be
             formatted text as well).
-        :param remove_when_done: When `True`, hide this progress bar.
+        :param remove_when_done: When `True`, hide this progress bar. Can be a
+            callable accepting a ProgressBarCounter instance. The callable is
+            run in the background allowing for delayed removals.
         :param total: Specify the maximum value if it can't be calculated by
             calling ``len``.
         """
@@ -319,7 +324,7 @@ class ProgressBarCounter(Generic[_CounterItem]):
         progress_bar: ProgressBar,
         data: Optional[Iterable[_CounterItem]] = None,
         label: AnyFormattedText = "",
-        remove_when_done: bool = False,
+        remove_when_done: Union[Callable[[], bool], bool] = False,
         total: Optional[int] = None,
     ) -> None:
 
@@ -359,6 +364,13 @@ class ProgressBarCounter(Generic[_CounterItem]):
         self.items_completed += 1
         self.progress_bar.invalidate()
 
+    async def _remove_when_done_async(self):
+        def run_remove_when_done_thread() -> None:
+            return self.remove_when_done(self)
+
+        if await run_in_executor_with_context(run_remove_when_done_thread):
+            self.progress_bar.counters.remove(self)
+
     @property
     def done(self) -> bool:
         return self._done
@@ -370,8 +382,13 @@ class ProgressBarCounter(Generic[_CounterItem]):
         # If done then store the stop_time, otherwise clear.
         self.stop_time = datetime.datetime.now() if value else None
 
-        if value and self.remove_when_done:
-            self.progress_bar.counters.remove(self)
+        if value:
+            if callable(self.remove_when_done):
+                # Register a background task to run the remove_when_done callable.
+                get_app().create_background_task(self._remove_when_done_async())
+            elif self.remove_when_done:
+                # Non-callable that is True, remove bar.
+                self.progress_bar.counters.remove(self)
 
     @property
     def percentage(self) -> float:
