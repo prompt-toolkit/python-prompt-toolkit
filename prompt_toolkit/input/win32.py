@@ -6,7 +6,7 @@ from asyncio import get_event_loop
 from contextlib import contextmanager
 from ctypes import pointer, windll
 from ctypes.wintypes import DWORD, HANDLE
-from typing import Callable, ContextManager, Dict, Iterable, Optional
+from typing import Callable, ContextManager, Dict, Iterable, Optional, TextIO
 
 from prompt_toolkit.eventloop import run_in_executor_with_context
 from prompt_toolkit.eventloop.win32 import wait_for_handles
@@ -53,16 +53,15 @@ class Win32Input(_Win32InputBase):
     `Input` class that reads from the Windows console.
     """
 
-    def __init__(self, stdin=None):
+    def __init__(self, stdin: Optional[TextIO] = None) -> None:
         super().__init__()
         self.console_input_reader = ConsoleInputReader()
 
-    def attach(self, input_ready_callback):
+    def attach(self, input_ready_callback: Callable[[], None]) -> ContextManager[None]:
         """
         Return a context manager that makes this input active in the current
         event loop.
         """
-        assert callable(input_ready_callback)
         return attach_win32_input(self, input_ready_callback)
 
     def detach(self) -> ContextManager[None]:
