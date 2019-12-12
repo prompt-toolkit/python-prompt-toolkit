@@ -11,6 +11,8 @@ from asyncio import (
     Task,
     ensure_future,
     get_event_loop,
+    new_event_loop,
+    set_event_loop,
     sleep,
 )
 from subprocess import Popen
@@ -785,13 +787,30 @@ class Application(Generic[_AppResult]):
         """
         A blocking 'run' call that waits until the UI is finished.
 
+        This will start the current asyncio event loop. If no loop is set for
+        the current thread, then it will create a new loop.
+
         :param pre_run: Optional callable, which is called right after the
             "reset" of the application.
         :param set_exception_handler: When set, in case of an exception, go out
             of the alternate screen and hide the application, display the
             exception, and wait for the user to press ENTER.
         """
-        return get_event_loop().run_until_complete(self.run_async(pre_run=pre_run))
+        # We don't create a new event loop by default, because we want to be
+        # sure that when this is called multiple times, each call of `run()`
+        # goes through the same event loop. This way, users can schedule
+        # background-tasks that keep running across multiple prompts.
+        try:
+            loop = get_event_loop()
+        except RuntimeError:
+            # Possibly we are not running in the main thread, where no event
+            # loop is set by default. Or somebody called `asyncio.run()`
+            # before, which closes the existing event loop. We can create a new
+            # loop.
+            loop = new_event_loop()
+            set_event_loop(loop)
+
+        return loop.run_until_complete(self.run_async(pre_run=pre_run))
 
     def _handle_exception(self, loop, context: Dict[str, Any]) -> None:
         """
