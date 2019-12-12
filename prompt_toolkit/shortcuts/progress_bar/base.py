@@ -385,7 +385,9 @@ class ProgressBarCounter(Generic[_CounterItem]):
         if value:
             if callable(self.remove_when_done):
                 # Register a background task to run the remove_when_done callable.
-                get_app().create_background_task(self._remove_when_done_async())
+                self.progress_bar.app.create_background_task(
+                    self._remove_when_done_async(), loop=self.progress_bar._app_loop
+                )
             elif self.remove_when_done:
                 # Non-callable that is True, remove bar.
                 self.progress_bar.counters.remove(self)

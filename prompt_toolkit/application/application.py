@@ -91,9 +91,7 @@ except ImportError:
     import prompt_toolkit.eventloop.dummy_contextvars as contextvars  # type: ignore
 
 
-__all__ = [
-    "Application",
-]
+__all__ = ["Application"]
 
 
 E = KeyPressEvent
@@ -818,14 +816,15 @@ class Application(Generic[_AppResult]):
         ensure_future(in_term())
 
     def create_background_task(
-        self, coroutine: Awaitable[None]
+        self, coroutine: Awaitable[None], *, loop: Optional[AbstractEventLoop] = None
     ) -> "asyncio.Task[None]":
         """
         Start a background task (coroutine) for the running application.
         If asyncio had nurseries like Trio, we would create a nursery in
         `Application.run_async`, and run the given coroutine in that nursery.
         """
-        task = get_event_loop().create_task(coroutine)
+        loop = loop or get_event_loop()
+        task = loop.create_task(coroutine)
         self.background_tasks.append(task)
         return task
 
