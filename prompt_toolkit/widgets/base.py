@@ -747,7 +747,7 @@ class _DialogList(Generic[_T]):
             result.append(("", "\n"))
 
         # Add mouse handler to all fragments.
-        for i in range(len(result)):
+        for i, _ in enumerate(result):
             result[i] = (result[i][0], result[i][1], mouse_handler)
 
         result.pop()  # Remove last newline.

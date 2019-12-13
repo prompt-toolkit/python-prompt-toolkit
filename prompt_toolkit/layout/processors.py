@@ -636,7 +636,7 @@ class ShowLeadingWhiteSpaceProcessor(Processor):
             t = (self.style, self.get_char())
             fragments = explode_text_fragments(fragments)
 
-            for i in range(len(fragments)):
+            for i, _ in enumerate(fragments):
                 if fragments[i][1] == " ":
                     fragments[i] = t
                 else:

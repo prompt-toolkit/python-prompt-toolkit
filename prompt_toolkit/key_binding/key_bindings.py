@@ -346,7 +346,7 @@ class KeyBindings(KeyBindingsBase):
                     any_count = 0
 
                     for i, j in zip(b.keys, keys):
-                        if i != j and i != Keys.Any:
+                        if i not in (j, Keys.Any):
                             match = False
                             break
 
@@ -379,7 +379,7 @@ class KeyBindings(KeyBindingsBase):
                 if len(keys) < len(b.keys):
                     match = True
                     for i, j in zip(b.keys, keys):
-                        if i != j and i != Keys.Any:
+                        if i not in (j, Keys.Any):
                             match = False
                             break
                     if match:
