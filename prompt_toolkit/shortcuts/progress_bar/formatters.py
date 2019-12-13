@@ -177,21 +177,31 @@ class Bar(Formatter):
         progress: "ProgressBarCounter[object]",
         width: int,
     ) -> AnyFormattedText:
+        if progress.done or progress.total or progress.stopped:
+            sym_a, sym_b, sym_c = self.sym_a, self.sym_b, self.sym_c
 
-        # Subtract left, bar_b and right.
-        width -= get_cwidth(self.start + self.sym_b + self.end)
-
-        if progress.total:
-            pb_a = int(progress.percentage * width / 100)
-            bar_a = self.sym_a * pb_a
-            bar_b = self.sym_b
-            bar_c = self.sym_c * (width - pb_a)
+            # Compute pb_a based on done, total, or stopped states.
+            if progress.done:
+                # 100% completed irrelevant of how much was actually marked as completed.
+                percent = 1.0
+            else:
+                # Show percentage completed.
+                percent = progress.percentage / 100
         else:
-            # Total is unknown.
-            pb_a = int(time.time() * 20 % 100 * width / 100)
-            bar_a = self.sym_c * pb_a
-            bar_b = self.unknown
-            bar_c = self.sym_c * (width - pb_a)
+            # Total is unknown and bar is still running.
+            sym_a, sym_b, sym_c = self.sym_c, self.unknown, self.sym_c
+
+            # Compute percent based on the time.
+            percent = time.time() * 20 % 100 / 100
+
+        # Subtract left, sym_b, and right.
+        width -= get_cwidth(self.start + sym_b + self.end)
+
+        # Scale percent by width
+        pb_a = int(percent * width)
+        bar_a = sym_a * pb_a
+        bar_b = sym_b
+        bar_c = sym_c * (width - pb_a)
 
         return HTML(self.template).format(
             start=self.start, end=self.end, bar_a=bar_a, bar_b=bar_b, bar_c=bar_c

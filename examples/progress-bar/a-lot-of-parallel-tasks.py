@@ -17,7 +17,22 @@ def main():
     ) as pb:
 
         def run_task(label, total, sleep_time):
+            """Complete a normal run."""
             for i in pb(range(total), label=label):
+                time.sleep(sleep_time)
+
+        def stop_task(label, total, sleep_time):
+            """Stop at some random index.
+
+            Breaking out of iteration at some stop index mimics how progress
+            bars behave in cases where errors are raised.
+            """
+            stop_i = random.randrange(total)
+            bar = pb(range(total), label=label)
+            for i in bar:
+                if stop_i == i:
+                    bar.label = f"{label} BREAK"
+                    break
                 time.sleep(sleep_time)
 
         threads = []
@@ -28,7 +43,10 @@ def main():
             sleep_time = random.randrange(5, 20) / 100.0
 
             threads.append(
-                threading.Thread(target=run_task, args=(label, total, sleep_time))
+                threading.Thread(
+                    target=random.choice((run_task, stop_task)),
+                    args=(label, total, sleep_time),
+                )
             )
 
         for t in threads:
