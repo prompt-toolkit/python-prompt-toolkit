@@ -56,12 +56,12 @@ from .formatters import Formatter, create_default_formatters
 try:
     import contextvars
 except ImportError:
-    from prompt_toolkit.eventloop import dummy_contextvars as contextvars  # type: ignore
+    from prompt_toolkit.eventloop import (  # type: ignore
+        dummy_contextvars as contextvars,
+    )
 
 
-__all__ = [
-    "ProgressBar",
-]
+__all__ = ["ProgressBar"]
 
 E = KeyPressEvent
 
@@ -342,13 +342,20 @@ class ProgressBarCounter(Generic[_CounterItem]):
             self.total = total
 
     def __iter__(self) -> Iterable[_CounterItem]:
-        try:
-            if self.data is not None:
+        if self.data is not None:
+            try:
                 for item in self.data:
                     yield item
                     self.item_completed()
-        finally:
-            self.done = True
+
+                # Only done if we iterate to the very end.
+                self.done = True
+            finally:
+                # Ensure counter has stopped even if we did not iterate to the
+                # end (e.g. break or exceptions).
+                self.stopped = True
+        else:
+            raise NotImplementedError("No data defined to iterate over.")
 
     def item_completed(self) -> None:
         """
@@ -361,17 +368,51 @@ class ProgressBarCounter(Generic[_CounterItem]):
 
     @property
     def done(self) -> bool:
+        """Whether a counter has been completed.
+
+        Done counter have been stopped (see stopped) and removed depending on
+        remove_when_done value.
+
+        Contrast this with stopped. A stopped counter may be terminated before
+        100% completion. A done counter has reached its 100% completion.
+        """
         return self._done
 
     @done.setter
     def done(self, value: bool) -> None:
         self._done = value
-
-        # If done then store the stop_time, otherwise clear.
-        self.stop_time = datetime.datetime.now() if value else None
+        self.stopped = value
 
         if value and self.remove_when_done:
             self.progress_bar.counters.remove(self)
+
+    @property
+    def stopped(self) -> bool:
+        """Whether a counter has been stopped.
+
+        Stopped counters no longer have increasing time_elapsed. This distinction is
+        also used to prevent the Bar formatter with unknown totals from continuing to run.
+
+        A stopped counter (but not done) can be used to signal that a given counter has
+        encountered an error but allows other counters to continue
+        (e.g. download X of Y failed). Given how only done counters are removed
+        (see remove_when_done) this can help aggregate failures from a large number of
+        successes.
+
+        Contrast this with done. A done counter has reached its 100% completion.
+        A stopped counter may be terminated before 100% completion.
+        """
+        return self.stop_time is not None
+
+    @stopped.setter
+    def stopped(self, value: bool):
+        if value:
+            # This counter has not already been stopped.
+            if not self.stop_time:
+                self.stop_time = datetime.datetime.now()
+        else:
+            # Clearing any previously set stop_time.
+            self.stop_time = None
 
     @property
     def percentage(self) -> float:
