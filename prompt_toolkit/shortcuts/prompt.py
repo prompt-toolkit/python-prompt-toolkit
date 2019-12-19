@@ -24,6 +24,7 @@ Example::
         s = PromptSession()
         result = s.prompt('Say something: ')
 """
+import os
 from asyncio import get_event_loop
 from enum import Enum
 from functools import partial
@@ -983,6 +984,11 @@ class PromptSession(Generic[_T]):
         )
         self.app.refresh_interval = self.refresh_interval  # This is not reactive.
 
+        # If we are using the default output, and we have a dumb terminal, use
+        # the normal input function, instead of a prompt_toolkit prompt.
+        if self._output is None and os.environ.get("TERM") in ["dumb", "unknown"]:
+            return input(fragment_list_to_text(to_formatted_text(self.message)))
+
         return self.app.run()
 
     async def prompt_async(
@@ -1109,6 +1115,13 @@ class PromptSession(Generic[_T]):
             default if isinstance(default, Document) else Document(default)
         )
         self.app.refresh_interval = self.refresh_interval  # This is not reactive.
+
+        # If we are using the default output, and we have a dumb terminal, use
+        # the normal input function, instead of a prompt_toolkit prompt.
+        if self._output is None and os.environ.get("TERM") in ["dumb", "unknown"]:
+            return await get_event_loop().run_until_complete(
+                lambda: input(fragment_list_to_text(to_formatted_text(self.message)))
+            )
 
         return await self.app.run_async()
 
