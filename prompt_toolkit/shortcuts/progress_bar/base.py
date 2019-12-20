@@ -405,7 +405,7 @@ class ProgressBarCounter(Generic[_CounterItem]):
         return self.stop_time is not None
 
     @stopped.setter
-    def stopped(self, value: bool):
+    def stopped(self, value: bool) -> None:
         if value:
             # This counter has not already been stopped.
             if not self.stop_time:

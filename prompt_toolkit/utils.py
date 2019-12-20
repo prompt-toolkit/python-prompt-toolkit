@@ -5,6 +5,7 @@ import threading
 from collections import deque
 from typing import (
     Callable,
+    ContextManager,
     Deque,
     Dict,
     Generator,
@@ -105,7 +106,7 @@ class Event(Generic[_Sender]):
         return self
 
 
-class DummyContext:
+class DummyContext(ContextManager[None]):
     """
     (contextlib.nested is not available on Py3)
     """
