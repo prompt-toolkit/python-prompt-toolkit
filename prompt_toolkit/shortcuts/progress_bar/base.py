@@ -438,5 +438,7 @@ class ProgressBarCounter(Generic[_CounterItem]):
         """
         if self.total is None or not self.percentage:
             return None
+        elif self.done or self.stopped:
+            return datetime.timedelta(0)
         else:
             return self.time_elapsed * (100 - self.percentage) / self.percentage
