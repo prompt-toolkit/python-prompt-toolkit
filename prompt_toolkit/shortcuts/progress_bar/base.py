@@ -59,9 +59,7 @@ from .formatters import Formatter, create_default_formatters
 try:
     import contextvars
 except ImportError:
-    from prompt_toolkit.eventloop import (
-        dummy_contextvars as contextvars,
-    )  # type: ignore
+    import prompt_toolkit.eventloop.dummy_contextvars as contextvars  # type: ignore
 
 
 __all__ = ["ProgressBar"]
@@ -253,7 +251,9 @@ class ProgressBar:
         self,
         data: Optional[Iterable[_T]] = None,
         label: AnyFormattedText = "",
-        remove_when_done: Union[Callable[[], bool], bool] = False,
+        remove_when_done: Union[
+            Callable[["ProgressBarCounter[_T]"], bool], bool
+        ] = False,
         total: Optional[int] = None,
     ) -> "ProgressBarCounter[_T]":
         """
@@ -324,7 +324,9 @@ class ProgressBarCounter(Generic[_CounterItem]):
         progress_bar: ProgressBar,
         data: Optional[Iterable[_CounterItem]] = None,
         label: AnyFormattedText = "",
-        remove_when_done: Union[Callable[[], bool], bool] = False,
+        remove_when_done: Union[
+            Callable[["ProgressBarCounter[_CounterItem]"], bool], bool
+        ] = False,
         total: Optional[int] = None,
     ) -> None:
 
@@ -364,8 +366,8 @@ class ProgressBarCounter(Generic[_CounterItem]):
         self.items_completed += 1
         self.progress_bar.invalidate()
 
-    async def _remove_when_done_async(self):
-        def run_remove_when_done_thread() -> None:
+    async def _remove_when_done_async(self) -> None:
+        def run_remove_when_done_thread() -> bool:
             return self.remove_when_done(self)
 
         if await run_in_executor_with_context(run_remove_when_done_thread):
@@ -385,8 +387,10 @@ class ProgressBarCounter(Generic[_CounterItem]):
         if value:
             if callable(self.remove_when_done):
                 # Register a background task to run the remove_when_done callable.
-                self.progress_bar.app.create_background_task(
-                    self._remove_when_done_async(), loop=self.progress_bar._app_loop
+                self.progress_bar._app_loop.call_soon_threadsafe(
+                    lambda: self.progress_bar.app.create_background_task(
+                        self._remove_when_done_async()
+                    )
                 )
             elif self.remove_when_done:
                 # Non-callable that is True, remove bar.

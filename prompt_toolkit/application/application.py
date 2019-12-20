@@ -816,15 +816,14 @@ class Application(Generic[_AppResult]):
         ensure_future(in_term())
 
     def create_background_task(
-        self, coroutine: Awaitable[None], *, loop: Optional[AbstractEventLoop] = None
+        self, coroutine: Awaitable[None]
     ) -> "asyncio.Task[None]":
         """
         Start a background task (coroutine) for the running application.
         If asyncio had nurseries like Trio, we would create a nursery in
         `Application.run_async`, and run the given coroutine in that nursery.
         """
-        loop = loop or get_event_loop()
-        task = loop.create_task(coroutine)
+        task = get_event_loop().create_task(coroutine)
         self.background_tasks.append(task)
         return task
 
