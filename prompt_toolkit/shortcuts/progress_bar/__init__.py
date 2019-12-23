@@ -1,4 +1,6 @@
 from .base import ProgressBar
+from .current import get_counter, get_progress_bar
+from .dummy import DummyProgressBar, DummyProgressBarCounter
 from .formatters import (
     Bar,
     Formatter,
@@ -27,4 +29,10 @@ __all__ = [
     "IterationsPerSecond",
     "SpinningWheel",
     "Rainbow",
+    # Current.
+    "get_progress_bar",
+    "get_counter",
+    # Dummy.
+    "DummyProgressBar",
+    "DummyProgressBarCounter",
 ]
