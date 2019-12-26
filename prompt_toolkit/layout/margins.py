@@ -90,7 +90,7 @@ class NumberedMargin(Margin):
         relative = self.relative()
 
         style = "class:line-number"
-        style_current = "class:line-number,current-line-number"
+        style_current = "class:line-number.current"
 
         # Get current line number.
         current_lineno = window_render_info.ui_content.cursor_position.y
