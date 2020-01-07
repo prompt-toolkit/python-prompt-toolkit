@@ -54,17 +54,16 @@ named group will test the captured string.
 
 There is one tricky bit:
 
-    Ofter we operate on incomplete input (this is by definition the case for
+    Often we operate on incomplete input (this is by definition the case for
     autocompletion) and we have to decide for the cursor position in which
     possible state the grammar it could be and in which way variables could be
     matched up to that point.
 
 To solve this problem, the compiler takes the original regular expression and
-translates it into a set of other regular expressions which each match prefixes
-of strings that would match the first expression. (We translate it into
-multiple expression, because we want to have each possible state the regex
-could be in -- in case there are several or-clauses with each different
-completers.)
+translates it into a set of other regular expressions which each match certain
+prefixes of the original regular expression. We generate one prefix regular
+expression for every named variable (with this variable being the end of that
+expression).
 
 
 TODO: some examples of:

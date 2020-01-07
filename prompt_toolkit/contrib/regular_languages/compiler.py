@@ -175,10 +175,20 @@ class _CompiledGrammar:
 
             # `Repeat`.
             elif isinstance(node, Repeat):
-                return "(?:%s){%i,%s}%s" % (
+                if node.max_repeat is None:
+                    if node.min_repeat == 0:
+                        repeat_sign = "*"
+                    elif node.min_repeat == 1:
+                        repeat_sign = "+"
+                else:
+                    repeat_sign = "{%i,%s}" % (
+                        node.min_repeat,
+                        ("" if node.max_repeat is None else str(node.max_repeat)),
+                    )
+
+                return "(?:%s)%s%s" % (
                     transform(node.childnode),
-                    node.min_repeat,
-                    ("" if node.max_repeat is None else str(node.max_repeat)),
+                    repeat_sign,
                     ("" if node.greedy else "?"),
                 )
             else:
@@ -194,39 +204,113 @@ class _CompiledGrammar:
         Yield all the regular expressions matching a prefix of the grammar
         defined by the `Node` instance.
 
-        This can yield multiple expressions, because in the case of on OR
-        operation in the grammar, we can have another outcome depending on
-        which clause would appear first. E.g. "(A|B)C" is not the same as
-        "(B|A)C" because the regex engine is lazy and takes the first match.
-        However, because we the current input is actually a prefix of the
-        grammar which might not yet contain the data for "C", we need to know
-        both intermediate states, in order to call the appropriate
-        autocompletion for both cases.
+        For each `Variable`, one regex pattern will be generated, with this
+        named group at the end. This is required because a regex engine will
+        terminate once a match is found. For autocompletion however, we need
+        the matches for all possible paths, so that we can provide completions
+        for each `Variable`.
+
+        - So, in the case of an `Any` (`A|B|C)', we generate a pattern for each
+          clause. This is one for `A`, one for `B` and one for `C`. Unless some
+          groups don't contain a `Variable`, then these can be merged together.
+        - In the case of a `NodeSequence` (`ABC`), we generate a pattern for
+          each prefix that ends with a variable, and one pattern for the whole
+          sequence. So, that's one for `A`, one for `AB` and one for `ABC`.
 
         :param root_node: The :class:`Node` instance for which we generate the grammar.
         :param create_group_func: A callable which takes a `Node` and returns the next
             free name for this node.
         """
 
+        def contains_variable(node: Node) -> bool:
+            if isinstance(node, Regex):
+                return False
+            elif isinstance(node, Variable):
+                return True
+            elif isinstance(node, (Lookahead, Repeat)):
+                return contains_variable(node.childnode)
+            elif isinstance(node, (NodeSequence, AnyNode)):
+                return any(contains_variable(child) for child in node.children)
+
+            return False
+
         def transform(node: Node) -> Iterable[str]:
-            # Generate regexes for all permutations of this OR. Each node
-            # should be in front once.
+            # Generate separate pattern for all terms that contain variables
+            # within this OR. Terms that don't contain a variable can be merged
+            # together in one pattern.
             if isinstance(node, AnyNode):
+                # If we have a definition like:
+                #           (?P<name> .*)  | (?P<city> .*)
+                # Then we want to be able to generate completions for both the
+                # name as well as the city. We do this by yielding two
+                # different regular expressions, because the engine won't
+                # follow multiple paths, if multiple are possible.
+                children_with_variable = []
+                children_without_variable = []
                 for c in node.children:
-                    for r in transform(c):
-                        yield "(?:%s)?" % r
+                    if contains_variable(c):
+                        children_with_variable.append(c)
+                    else:
+                        children_without_variable.append(c)
 
-            # For a sequence. We can either have a match for the sequence
-            # of all the children, or for an exact match of the first X
-            # children, followed by a partial match of the next children.
+                for c in children_with_variable:
+                    yield from transform(c)
+
+                # Merge options without variable together.
+                if children_without_variable:
+                    yield "|".join(
+                        r for c in children_without_variable for r in transform(c)
+                    )
+
+            # For a sequence, generate a pattern for each prefix that ends with
+            # a variable + one pattern of the complete sequence.
+            # (This is because, for autocompletion, we match the text before
+            # the cursor, and completions are given for the variable that we
+            # match right before the cursor.)
             elif isinstance(node, NodeSequence):
-                for i in range(len(node.children)):
-                    a = [
-                        cls._transform(c, create_group_func) for c in node.children[:i]
-                    ]
+                # For all components in the sequence, compute prefix patterns,
+                # as well as full patterns.
+                complete = [cls._transform(c, create_group_func) for c in node.children]
+                prefixes = [list(transform(c)) for c in node.children]
+                variable_nodes = [contains_variable(c) for c in node.children]
 
-                    for c_str in transform(node.children[i]):
-                        yield "(?:%s)" % ("".join(a) + c_str)
+                # If any child is contains a variable, we should yield a
+                # pattern up to that point, so that we are sure this will be
+                # matched.
+                for i in range(len(node.children)):
+                    if variable_nodes[i]:
+                        for c_str in prefixes[i]:
+                            yield "".join(complete[:i]) + c_str
+
+                # If there are non-variable nodes, merge all the prefixes into
+                # one pattern. If the input is: "[part1] [part2] [part3]", then
+                # this gets compiled into:
+                #  (complete1 + (complete2 + (complete3  | partial3) | partial2) | partial1 )
+                # For nodes that contain a variable, we skip the "|partial"
+                # part here, because thees are matched with the previous
+                # patterns.
+                if not all(variable_nodes):
+                    result = []
+
+                    # Start with complete patterns.
+                    for i in range(len(node.children)):
+                        result.append("(?:")
+                        result.append(complete[i])
+
+                    # Add prefix patterns.
+                    for i in range(len(node.children) - 1, -1, -1):
+                        if variable_nodes[i]:
+                            # No need to yield a prefix for this one, we did
+                            # the variable prefixes earlier.
+                            result.append(")")
+                        else:
+                            result.append("|(?:")
+                            # If this yields multiple, we should yield all combinations.
+                            assert len(prefixes[i]) == 1
+                            result.append(prefixes[i][0])
+                            result.append("))")
+
+                    yield "".join(result)
 
             elif isinstance(node, Regex):
                 yield "(?:%s)?" % node.regex
@@ -251,23 +335,26 @@ class _CompiledGrammar:
                 # match, followed by a partial match.
                 prefix = cls._transform(node.childnode, create_group_func)
 
-                for c_str in transform(node.childnode):
-                    if node.max_repeat:
-                        repeat_sign = "{,%i}" % (node.max_repeat - 1)
-                    else:
-                        repeat_sign = "*"
-                    yield "(?:%s)%s%s(?:%s)?" % (
-                        prefix,
-                        repeat_sign,
-                        ("" if node.greedy else "?"),
-                        c_str,
-                    )
+                if node.max_repeat == 1:
+                    yield from transform(node.childnode)
+                else:
+                    for c_str in transform(node.childnode):
+                        if node.max_repeat:
+                            repeat_sign = "{,%i}" % (node.max_repeat - 1)
+                        else:
+                            repeat_sign = "*"
+                        yield "(?:%s)%s%s%s" % (
+                            prefix,
+                            repeat_sign,
+                            ("" if node.greedy else "?"),
+                            c_str,
+                        )
 
             else:
                 raise TypeError("Got %r" % node)
 
         for r in transform(root_node):
-            yield "^%s$" % r
+            yield "^(?:%s)$" % r
 
     def match(self, string: str) -> Optional["Match"]:
         """
@@ -303,6 +390,7 @@ class _CompiledGrammar:
                 return Match(
                     string, matches2, self._group_names_to_nodes, self.unescape_funcs
                 )
+
         return None
 
 
@@ -343,7 +431,7 @@ class Match:
 
     def _nodes_to_values(self) -> List[Tuple[str, str, Tuple[int, int]]]:
         """
-        Returns list of list of (Node, string_value) tuples.
+        Returns list of (Node, string_value) tuples.
         """
 
         def is_none(sl: Tuple[int, int]) -> bool:
