@@ -7,6 +7,7 @@ import pytest
 
 from prompt_toolkit import print_formatted_text as pt_print
 from prompt_toolkit.formatted_text import HTML, FormattedText, to_formatted_text
+from prompt_toolkit.output import ColorDepth
 from prompt_toolkit.styles import Style
 from prompt_toolkit.utils import is_windows
 
@@ -53,17 +54,20 @@ def test_print_formatted_text_backslash_r():
 
 
 @pytest.mark.skipif(is_windows(), reason="Doesn't run on Windows yet.")
-def test_with_style():
+def test_formatted_text_with_style():
     f = _Capture()
     style = Style.from_dict({"hello": "#ff0066", "world": "#44ff44 italic",})
     tokens = FormattedText([("class:hello", "Hello "), ("class:world", "world"),])
-    pt_print(tokens, style=style, file=f)
+
+    # NOTE: We pass the default (8bit) color depth, so that the unit tests
+    #       don't start failing when environment variables change.
+    pt_print(tokens, style=style, file=f, color_depth=ColorDepth.DEFAULT)
     assert b"\x1b[0;38;5;197mHello" in f.data
     assert b"\x1b[0;38;5;83;3mworld" in f.data
 
 
 @pytest.mark.skipif(is_windows(), reason="Doesn't run on Windows yet.")
-def test_with_style():
+def test_html_with_style():
     """
     Text `print_formatted_text` with `HTML` wrapped in `to_formatted_text`.
     """
@@ -71,7 +75,7 @@ def test_with_style():
 
     html = HTML("<ansigreen>hello</ansigreen> <b>world</b>")
     formatted_text = to_formatted_text(html, style="class:myhtml")
-    pt_print(formatted_text, file=f)
+    pt_print(formatted_text, file=f, color_depth=ColorDepth.DEFAULT)
 
     assert (
         f.data
