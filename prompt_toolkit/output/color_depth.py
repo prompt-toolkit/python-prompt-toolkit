@@ -1,5 +1,6 @@
 import os
 from enum import Enum
+from typing import Optional
 
 from prompt_toolkit.utils import is_windows
 
@@ -34,10 +35,26 @@ class ColorDepth(str, Enum):
     TRUE_COLOR = DEPTH_24_BIT
 
     @classmethod
-    def default(cls, term: str = "") -> "ColorDepth":
+    def default(cls, term: Optional[str] = None) -> "ColorDepth":
         """
-        If the user doesn't specify a color depth, use this as a default.
+        Return the default color depth, according to the $TERM value.
+
+        We prefer 256 colors almost always, because this is what most terminals
+        support these days, and is a good default.
+
+        The $PROMPT_TOOLKIT_COLOR_DEPTH environment variable can be used to
+        override this outcome. This is a way to enforce a certain color depth
+        in all prompt_toolkit applications.
+
+        If no `term` parameter is given, we use the $TERM environment variable.
         """
+        # Take `TERM` value from environment variable if nothing was passed.
+        if term is None:
+            term = os.environ.get("TERM", "")
+
+        if term == "dumb":
+            return cls.DEPTH_1_BIT
+
         if term in ("linux", "eterm-color"):
             return cls.DEPTH_4_BIT
 
