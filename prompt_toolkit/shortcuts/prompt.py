@@ -25,7 +25,7 @@ Example::
         result = s.prompt('Say something: ')
 """
 import os
-from asyncio import get_event_loop
+from asyncio import Future, get_event_loop
 from enum import Enum
 from functools import partial
 from typing import (
@@ -107,7 +107,7 @@ from prompt_toolkit.layout.processors import (
 )
 from prompt_toolkit.layout.utils import explode_text_fragments
 from prompt_toolkit.lexers import DynamicLexer, Lexer
-from prompt_toolkit.output import ColorDepth, Output
+from prompt_toolkit.output import ColorDepth, DummyOutput, Output
 from prompt_toolkit.styles import (
     BaseStyle,
     ConditionalStyleTransformation,
@@ -480,7 +480,7 @@ class PromptSession(Generic[_T]):
         def accept(buff: Buffer) -> bool:
             """ Accept the content of the default buffer. This is called when
             the validation succeeds. """
-            cast(Application[str], self.app).exit(result=buff.document.text)
+            cast(Application[str], get_app()).exit(result=buff.document.text)
             return True  # Keep text, we call 'reset' later on.
 
         return Buffer(
@@ -984,12 +984,55 @@ class PromptSession(Generic[_T]):
         )
         self.app.refresh_interval = self.refresh_interval  # This is not reactive.
 
-        # If we are using the default output, and we have a dumb terminal, use
-        # the normal input function, instead of a prompt_toolkit prompt.
+        # If we are using the default output, and have a dumb terminal. Use the
+        # dumb prompt.
         if self._output is None and os.environ.get("TERM") in ["dumb", "unknown"]:
-            return input(fragment_list_to_text(to_formatted_text(self.message)))
+            return get_event_loop().run_until_complete(self._dumb_prompt(self.message))
 
         return self.app.run()
+
+    async def _dumb_prompt(self, message: str = "") -> str:
+        """
+        Prompt function for dumb terminals.
+
+        Dumb terminals have minimum rendering capabilities. We can only print
+        text to the screen. We can't use colors, and we can't do cursor
+        movements. The Emacs inferior shell is an example of a dumb terminal.
+
+        We will show the prompt, and wait for the input. We still handle arrow
+        keys, and all custom key bindings, but we don't really render the
+        cursor movements. Instead we only print the typed character that's
+        right before the cursor.
+        """
+        # Send prompt to output.
+        self.output.write(fragment_list_to_text(to_formatted_text(self.message)))
+        self.output.flush()
+
+        # Key bindings for the dumb prompt: mostly the same as the full prompt.
+        key_bindings = self._create_prompt_bindings()
+        if self.key_bindings:
+            key_bindings = merge_key_bindings([self.key_bindings, key_bindings])
+
+        # Create and run application.
+        application = Application(
+            input=self.input,
+            output=DummyOutput(),
+            layout=self.layout,
+            key_bindings=key_bindings,
+        )
+
+        def on_text_changed(_) -> None:
+            self.output.write(self.default_buffer.document.text_before_cursor[-1:])
+            self.output.flush()
+
+        self.default_buffer.on_text_changed += on_text_changed
+        result = await application.run_async()
+
+        # Render line ending.
+        self.output.write("\r\n")
+        self.output.flush()
+
+        return result
 
     async def prompt_async(
         self,
@@ -1116,12 +1159,10 @@ class PromptSession(Generic[_T]):
         )
         self.app.refresh_interval = self.refresh_interval  # This is not reactive.
 
-        # If we are using the default output, and we have a dumb terminal, use
-        # the normal input function, instead of a prompt_toolkit prompt.
+        # If we are using the default output, and have a dumb terminal. Use the
+        # dumb prompt.
         if self._output is None and os.environ.get("TERM") in ["dumb", "unknown"]:
-            return await get_event_loop().run_until_complete(
-                lambda: input(fragment_list_to_text(to_formatted_text(self.message)))
-            )
+            return await self._dumb_prompt(self.message)
 
         return await self.app.run_async()
 

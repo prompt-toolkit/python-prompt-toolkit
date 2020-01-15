@@ -86,6 +86,8 @@ class Vt100Input(Input):
         # It's not when the input is piped from Pexpect.
         if os.environ.get("PROMPT_TOOLKIT_NO_CPR", "") == "1":
             return False
+        if os.environ.get("TERM", "") == "dumb":
+            return False
         try:
             return self.stdin.isatty()
         except ValueError:
