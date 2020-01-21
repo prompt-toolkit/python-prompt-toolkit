@@ -996,7 +996,7 @@ class PromptSession(Generic[_T]):
 
         return self.app.run()
 
-    async def _dumb_prompt(self, message: str = "") -> str:
+    async def _dumb_prompt(self, message: AnyFormattedText = "") -> _T:
         """
         Prompt function for dumb terminals.
 
@@ -1014,16 +1014,19 @@ class PromptSession(Generic[_T]):
         self.output.flush()
 
         # Key bindings for the dumb prompt: mostly the same as the full prompt.
-        key_bindings = self._create_prompt_bindings()
+        key_bindings: KeyBindingsBase = self._create_prompt_bindings()
         if self.key_bindings:
             key_bindings = merge_key_bindings([self.key_bindings, key_bindings])
 
         # Create and run application.
-        application = Application(
-            input=self.input,
-            output=DummyOutput(),
-            layout=self.layout,
-            key_bindings=key_bindings,
+        application = cast(
+            Application[_T],
+            Application(
+                input=self.input,
+                output=DummyOutput(),
+                layout=self.layout,
+                key_bindings=key_bindings,
+            ),
         )
 
         def on_text_changed(_) -> None:
