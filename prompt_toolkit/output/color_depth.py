@@ -2,7 +2,7 @@ import os
 from enum import Enum
 from typing import Optional
 
-from prompt_toolkit.utils import is_windows
+from prompt_toolkit.utils import is_dumb_terminal, is_windows
 
 __all__ = [
     "ColorDepth",
@@ -52,7 +52,7 @@ class ColorDepth(str, Enum):
         if term is None:
             term = os.environ.get("TERM", "")
 
-        if term == "dumb":
+        if is_dumb_terminal(term):
             return cls.DEPTH_1_BIT
 
         if term in ("linux", "eterm-color"):

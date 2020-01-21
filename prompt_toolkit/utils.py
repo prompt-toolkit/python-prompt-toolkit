@@ -31,6 +31,7 @@ __all__ = [
     "to_int",
     "AnyFloat",
     "to_float",
+    "is_dumb_terminal",
 ]
 
 _Sender = TypeVar("_Sender", covariant=True)
@@ -295,3 +296,16 @@ def to_float(value: AnyFloat) -> float:
         return to_float(value())
     else:
         return float(value)
+
+
+def is_dumb_terminal(term: Optional[str] = None) -> bool:
+    """
+    True if this terminal type is considered "dumb".
+
+    If so, we should fall back to the simplest possible form of line editing,
+    without cursor positioning and color support.
+    """
+    if term is None:
+        term = os.environ.get("TERM", "")
+
+    return term in ["dumb", "unknown"]

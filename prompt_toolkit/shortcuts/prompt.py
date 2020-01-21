@@ -117,7 +117,12 @@ from prompt_toolkit.styles import (
     SwapLightAndDarkStyleTransformation,
     merge_style_transformations,
 )
-from prompt_toolkit.utils import get_cwidth, suspend_to_background_supported, to_str
+from prompt_toolkit.utils import (
+    get_cwidth,
+    is_dumb_terminal,
+    suspend_to_background_supported,
+    to_str,
+)
 from prompt_toolkit.validation import DynamicValidator, Validator
 from prompt_toolkit.widgets.toolbars import (
     SearchToolbar,
@@ -986,7 +991,7 @@ class PromptSession(Generic[_T]):
 
         # If we are using the default output, and have a dumb terminal. Use the
         # dumb prompt.
-        if self._output is None and os.environ.get("TERM") in ["dumb", "unknown"]:
+        if self._output is None and is_dumb_terminal():
             return get_event_loop().run_until_complete(self._dumb_prompt(self.message))
 
         return self.app.run()
@@ -1161,7 +1166,7 @@ class PromptSession(Generic[_T]):
 
         # If we are using the default output, and have a dumb terminal. Use the
         # dumb prompt.
-        if self._output is None and os.environ.get("TERM") in ["dumb", "unknown"]:
+        if self._output is None and is_dumb_terminal():
             return await self._dumb_prompt(self.message)
 
         return await self.app.run_async()
