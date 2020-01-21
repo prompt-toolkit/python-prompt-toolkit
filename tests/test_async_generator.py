@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from asyncio import get_event_loop
 
 from prompt_toolkit.eventloop import generator_to_async_generator
