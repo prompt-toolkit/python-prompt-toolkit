@@ -18,6 +18,8 @@ from typing import (
     Union,
 )
 
+from prompt_toolkit.utils import is_dumb_terminal
+
 from ..key_binding import KeyPress
 from .base import Input
 from .posix_utils import PosixStdinReader
@@ -86,7 +88,7 @@ class Vt100Input(Input):
         # It's not when the input is piped from Pexpect.
         if os.environ.get("PROMPT_TOOLKIT_NO_CPR", "") == "1":
             return False
-        if os.environ.get("TERM", "") == "dumb":
+        if is_dumb_terminal():
             return False
         try:
             return self.stdin.isatty()
