@@ -2,8 +2,6 @@
 """
 Example of a checkbox-list-based dialog.
 """
-from __future__ import unicode_literals
-
 from prompt_toolkit.shortcuts import checkboxlist_dialog, message_dialog
 from prompt_toolkit.styles import Style
 

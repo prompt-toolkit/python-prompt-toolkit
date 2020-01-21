@@ -22,7 +22,6 @@ and returns the text. Just like ``(raw_)input``.
 
 .. code:: python
 
-    from __future__ import unicode_literals
     from prompt_toolkit import prompt
 
     text = prompt('Give me some input: ')
@@ -34,14 +33,6 @@ What we get here is a simple prompt that supports the Emacs key bindings like
 readline, but further nothing special. However,
 :func:`~prompt_toolkit.shortcuts.prompt` has a lot of configuration options.
 In the following sections, we will discover all these parameters.
-
-.. note::
-
-    `prompt_toolkit` expects unicode strings everywhere. If you are using
-    Python 2, make sure that all strings which are passed to `prompt_toolkit`
-    are unicode strings (and not bytes). Either use
-    ``from __future__ import unicode_literals`` or explicitly put a small
-    ``'u'`` in front of every string.
 
 
 The `PromptSession` object

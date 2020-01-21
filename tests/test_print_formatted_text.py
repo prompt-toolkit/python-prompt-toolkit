@@ -1,8 +1,6 @@
 """
 Test the `print` function.
 """
-from __future__ import print_function, unicode_literals
-
 import pytest
 
 from prompt_toolkit import print_formatted_text as pt_print

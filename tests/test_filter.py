@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import pytest
 
 from prompt_toolkit.filters import Always, Condition, Filter, Never, to_filter
