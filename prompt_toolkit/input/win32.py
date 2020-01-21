@@ -554,6 +554,9 @@ class _Win32Handles:
         Remove a Win32 handle from the event loop.
         Return either the registered handler or `None`.
         """
+        if handle.value is None:
+            return None  # Ignore.
+
         # Trigger remove events, so that the reader knows to stop.
         try:
             event = self._remove_events.pop(handle.value)
