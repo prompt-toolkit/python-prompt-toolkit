@@ -29,6 +29,9 @@ def wait_for_handles(
         in function arguments. On 64-bit Windows, HANDLE is 8-byte and usually
         a small integer. Depending on whether the extra 4 bytes are zero-ed out
         or not, things can happen to work, or break. '''
+
+    This function returns either `None` or one of the given `HANDLE` objects.
+    (The return value can be tested with the `is` operator.)
     """
     arrtype = HANDLE * len(handles)
     handle_array = arrtype(*handles)
@@ -40,8 +43,7 @@ def wait_for_handles(
     if ret == WAIT_TIMEOUT:
         return None
     else:
-        h = handle_array[ret]
-        return HANDLE(h)
+        return handles[ret]
 
 
 def create_win32_event() -> HANDLE:
