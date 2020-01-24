@@ -7,7 +7,7 @@ The `KeyProcessor` will according to the implemented keybindings call the
 correct callbacks when new key presses are feed through `feed`.
 """
 import weakref
-from asyncio import sleep
+from asyncio import Task, sleep
 from collections import deque
 from typing import TYPE_CHECKING, Any, Deque, Generator, List, Optional, Union
 
@@ -93,7 +93,7 @@ class KeyProcessor:
         self.before_key_press = Event(self)
         self.after_key_press = Event(self)
 
-        self._keys_pressed = 0  # Monotonically increasing counter.
+        self._flush_wait_task: Optional[Task] = None
 
         self.reset()
 
@@ -210,8 +210,6 @@ class KeyProcessor:
 
         :param first: If true, insert before everything else.
         """
-        self._keys_pressed += 1
-
         if first:
             self.input_queue.appendleft(key_press)
         else:
@@ -221,8 +219,6 @@ class KeyProcessor:
         """
         :param first: If true, insert before everything else.
         """
-        self._keys_pressed += len(key_presses)
-
         if first:
             self.input_queue.extendleft(reversed(key_presses))
         else:
@@ -394,9 +390,9 @@ class KeyProcessor:
         """
         Start auto flush timeout. Similar to Vim's `timeoutlen` option.
 
-        Start a background thread with a timer. When this timeout expires and
-        no key was pressed in the meantime, we flush all data in the queue and
-        call the appropriate key binding handlers.
+        Start a background coroutine with a timer. When this timeout expires
+        and no key was pressed in the meantime, we flush all data in the queue
+        and call the appropriate key binding handlers.
         """
         app = get_app()
         timeout = app.timeoutlen
@@ -404,13 +400,12 @@ class KeyProcessor:
         if timeout is None:
             return
 
-        counter = self._keys_pressed
-
         async def wait() -> None:
             " Wait for timeout. "
+            # This sleep can be cancelled. In that case we don't flush.
             await sleep(timeout)
 
-            if len(self.key_buffer) > 0 and counter == self._keys_pressed:
+            if len(self.key_buffer) > 0:
                 # (No keys pressed in the meantime.)
                 flush_keys()
 
@@ -420,9 +415,9 @@ class KeyProcessor:
             self.process_keys()
 
         # Automatically flush keys.
-        # (_daemon needs to be set, otherwise, this will hang the
-        # application for .5 seconds before exiting.)
-        app.create_background_task(wait())
+        if self._flush_wait_task:
+            self._flush_wait_task.cancel()
+        self._flush_wait_task = app.create_background_task(wait())
 
 
 class KeyPressEvent:

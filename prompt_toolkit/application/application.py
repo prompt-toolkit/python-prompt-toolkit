@@ -624,7 +624,7 @@ class Application(Generic[_AppResult]):
             # pressed, we start a 'flush' timer for flushing our escape key. But
             # when any subsequent input is received, a new timer is started and
             # the current timer will be ignored.
-            flush_counter = 0
+            flush_task: Optional[asyncio.Task] = None
 
             # Reset.
             self.reset()
@@ -635,7 +635,7 @@ class Application(Generic[_AppResult]):
             self.key_processor.process_keys()
 
             def read_from_input() -> None:
-                nonlocal flush_counter
+                nonlocal flush_task
 
                 # Ignore when we aren't running anymore. This callback will
                 # removed from the loop next time. (It could be that it was
@@ -655,20 +655,17 @@ class Application(Generic[_AppResult]):
                 if self.input.closed:
                     f.set_exception(EOFError)
                 else:
-                    # Increase this flush counter.
-                    flush_counter += 1
-                    counter = flush_counter
-
                     # Automatically flush keys.
-                    self.create_background_task(auto_flush_input(counter))
+                    if flush_task:
+                        flush_task.cancel()
+                    flush_task = self.create_background_task(auto_flush_input())
 
-            async def auto_flush_input(counter: int) -> None:
+            async def auto_flush_input() -> None:
                 # Flush input after timeout.
                 # (Used for flushing the enter key.)
+                # This sleep can be cancelled, in that case we won't flush yet.
                 await sleep(self.ttimeoutlen)
-
-                if flush_counter == counter:
-                    flush_input()
+                flush_input()
 
             def flush_input() -> None:
                 if not self.is_done:
