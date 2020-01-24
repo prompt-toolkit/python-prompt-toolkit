@@ -65,7 +65,7 @@ def test_special_double_keys(processor, stream):
     assert processor.keys[0].key == Keys.Escape
     assert processor.keys[1].key == Keys.Left
     assert processor.keys[0].data == "\x1b[1;3D"
-    assert processor.keys[1].data == "\x1b[1;3D"
+    assert processor.keys[1].data == ""
 
 
 def test_flush_1(processor, stream):

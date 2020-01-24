@@ -174,8 +174,12 @@ class Vt100Parser:
         Callback to handler.
         """
         if isinstance(key, tuple):
-            for k in key:
-                self._call_handler(k, insert_text)
+            # Received ANSI sequence that corresponds with multiple keys
+            # (probably alt+something). Handle keys individually, but only pass
+            # data payload to first KeyPress (so that we won't insert it
+            # multiple times).
+            for i, k in enumerate(key):
+                self._call_handler(k, insert_text if i == 0 else "")
         else:
             if key == Keys.BracketedPaste:
                 self._in_bracketed_paste = True
