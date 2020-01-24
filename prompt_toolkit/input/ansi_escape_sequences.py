@@ -163,6 +163,13 @@ ANSI_SEQUENCES: Dict[str, Union[Keys, Tuple[Keys, ...]]] = {
     # appear in 'infocmp'. Just ignore.
     "\x1b[E": Keys.Ignore,  # Xterm.
     "\x1b[G": Keys.Ignore,  # Linux console.
+    # Alt + home/end/page-up/page-down/insert.
+    "\x1b[1;3H": (Keys.Escape, Keys.Home),
+    "\x1b[1;3F": (Keys.Escape, Keys.End),
+    "\x1b[5;3~": (Keys.Escape, Keys.PageUp),
+    "\x1b[6;3~": (Keys.Escape, Keys.PageDown),
+    "\x1b[2;3~": (Keys.Escape, Keys.Insert),
+    "\x1b[3;3~": (Keys.Escape, Keys.Delete),
 }
 
 
