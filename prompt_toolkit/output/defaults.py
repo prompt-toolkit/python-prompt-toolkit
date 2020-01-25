@@ -15,22 +15,29 @@ __all__ = [
 ]
 
 
-def create_output(stdout: Optional[TextIO] = None) -> Output:
+def create_output(
+    stdout: Optional[TextIO] = None, always_prefer_tty: bool = True
+) -> Output:
     """
     Return an :class:`~prompt_toolkit.output.Output` instance for the command
     line.
 
     :param stdout: The stdout object
+    :param always_prefer_tty: When set, look for `sys.stderr` if `sys.stdout`
+        is not a TTY. (The prompt_toolkit render output is not meant to be
+        consumed by something other then a terminal, so this is a reasonable
+        default.)
     """
     if stdout is None:
         # By default, render to stdout. If the output is piped somewhere else,
-        # render to stderr. The prompt_toolkit render output is not meant to be
-        # consumed by something other then a terminal, so this is a reasonable
-        # default.
-        if sys.stdout.isatty():
-            stdout = sys.stdout
-        else:
-            stdout = sys.stderr
+        # render to stderr.
+        stdout = sys.stdout
+
+        if always_prefer_tty:
+            for io in [sys.stdout, sys.stderr]:
+                if io.isatty():
+                    stdout = io
+                    break
 
     # If the patch_stdout context manager has been used, then sys.stdout is
     # replaced by this proxy. For prompt_toolkit applications, we want to use
