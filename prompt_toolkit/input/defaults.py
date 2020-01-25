@@ -11,9 +11,17 @@ __all__ = [
 ]
 
 
-def create_input(stdin: Optional[TextIO] = None) -> Input:
+def create_input(
+    stdin: Optional[TextIO] = None, always_prefer_tty: bool = False
+) -> Input:
     """
     Create the appropriate `Input` object for the current os/environment.
+
+    :param always_prefer_tty: When set, if `sys.stdin` is connected to a Unix
+        `pipe`, check whether `sys.stdout` or `sys.stderr` are connected to a
+        pseudo terminal. If so, open the tty for reading instead of reading for
+        `sys.stdin`. (We can open `stdout` or `stderr` for reading, this is how
+        a `$PAGER` works.)
     """
     if is_windows():
         from .win32 import Win32Input
@@ -24,18 +32,13 @@ def create_input(stdin: Optional[TextIO] = None) -> Input:
 
         # If no input TextIO is given, use stdin/stdout.
         if stdin is None:
-            # Try stdin first, if it's a TTY.
-            if sys.stdin.isatty():
-                stdin = sys.stdin
-            # If stdin is not a TTY, it's possible we're piping something into
-            # stdin. Use stdout instead if stdout is a TTY. (We can actually
-            # use stdout to read input from, this is how a $PAGER works.)
-            elif sys.stdout.isatty():
-                stdin = sys.stdout
-            # If stdout is also not a tty, then use stdin. (This will print a
-            # "Input is not a terminal" warning in `Vt100Input`.)
-            else:
-                stdin = sys.stdin
+            stdin = sys.stdin
+
+            if always_prefer_tty:
+                for io in [sys.stdin, sys.stdout, sys.stderr]:
+                    if io.isatty():
+                        stdin = io
+                        break
 
         return Vt100Input(stdin)
 

@@ -451,6 +451,7 @@ class Vt100_Output(Output):
         if not stdout.isatty() and fd not in cls._fds_not_a_terminal:
             msg = "Warning: Output is not a terminal (fd=%r).\n"
             sys.stderr.write(msg % fd)
+            sys.stderr.flush()
             cls._fds_not_a_terminal.add(fd)
 
         def get_size() -> Size:

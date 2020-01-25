@@ -67,6 +67,7 @@ class Vt100Input(Input):
         if not isatty and fd not in Vt100Input._fds_not_a_terminal:
             msg = "Warning: Input is not a terminal (fd=%r).\n"
             sys.stderr.write(msg % fd)
+            sys.stderr.flush()
             Vt100Input._fds_not_a_terminal.add(fd)
 
         #
