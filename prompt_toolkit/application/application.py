@@ -807,7 +807,9 @@ class Application(Generic[_AppResult]):
             loop = new_event_loop()
             set_event_loop(loop)
 
-        return loop.run_until_complete(self.run_async(pre_run=pre_run, set_exception_handler=set_exception_handler))
+        return loop.run_until_complete(
+            self.run_async(pre_run=pre_run, set_exception_handler=set_exception_handler)
+        )
 
     def _handle_exception(self, loop, context: Dict[str, Any]) -> None:
         """

@@ -870,6 +870,7 @@ class PromptSession(Generic[_T]):
         default: Union[str, Document] = "",
         accept_default: bool = False,
         pre_run: Optional[Callable[[], None]] = None,
+        set_exception_handler: bool = True,
     ) -> _T:
         """
         Display the prompt.
@@ -994,7 +995,7 @@ class PromptSession(Generic[_T]):
         if self._output is None and is_dumb_terminal():
             return get_event_loop().run_until_complete(self._dumb_prompt(self.message))
 
-        return self.app.run()
+        return self.app.run(set_exception_handler=set_exception_handler)
 
     async def _dumb_prompt(self, message: AnyFormattedText = "") -> _T:
         """
@@ -1088,6 +1089,7 @@ class PromptSession(Generic[_T]):
         default: Union[str, Document] = "",
         accept_default: bool = False,
         pre_run: Optional[Callable[[], None]] = None,
+        set_exception_handler: bool = True,
     ) -> _T:
 
         if message is not None:
@@ -1172,7 +1174,7 @@ class PromptSession(Generic[_T]):
         if self._output is None and is_dumb_terminal():
             return await self._dumb_prompt(self.message)
 
-        return await self.app.run_async()
+        return await self.app.run_async(set_exception_handler=set_exception_handler)
 
     def _add_pre_run_callables(
         self, pre_run: Optional[Callable[[], None]], accept_default: bool
