@@ -1,6 +1,38 @@
 CHANGELOG
 =========
 
+3.0.3: 2020-01-26
+-----------------
+
+New features:
+- Improved support for "dumb" terminals.
+- Added support for new keys (vt100 ANSI sequences): Alt +
+  home/end/page-up/page-down/insert.
+- Better performance for the "regular languages compiler". Generate fewer and
+  better regular expressions. This should improve the start-up time for
+  applications using this feature.
+- Better detection of default color depth.
+- Improved the progress bar:
+  * Set "time left" to 0 when done or stopped.
+  * Added `ProgressBarCounter.stopped`.
+- Accept callables for `scroll_offset`, `min_brightness` and `max_brightness`.
+- Added `always_prefer_tty` parameters to `create_input()` and `create_output()`.
+- Create a new event loop in `Application.run()` if `get_event_loop()` raises
+  `Runtimeerror`.
+
+Fixes:
+- Correct cancellation of flush timers for input. (Fixes resource leak where
+  too many useless coroutines were created.)
+- Improved the Win32 input event loop. This fixes a bug where the
+  prompt_toolkit application is stopped by something other than user input. (In
+  that case, the application would hang, waiting for input.) This also fixes a
+  `RuntimeError` in the progress bar code.
+- Fixed `line-number.current` style. (was `current-line-number`.)
+- Handle situation where stdout is no longer a tty (fix bug in `get_size`).
+- Fix parsing of true color in ANSI strings.
+- Ignore `invalidate()` if the application is not running.
+
+
 3.0.2: 2019-11-30
 -----------------
 
