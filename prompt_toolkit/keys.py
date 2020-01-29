@@ -18,6 +18,7 @@ class Keys(str, Enum):
     value: str
 
     Escape = "escape"  # Also Control-[
+    ShiftEscape = "s-escape"
 
     ControlAt = "c-@"  # Also Control-Space.
 
@@ -63,6 +64,8 @@ class Keys(str, Enum):
 
     ShiftControlLeft = "s-c-left"
     ShiftControlRight = "s-c-right"
+    ShiftControlUp = "s-c-up"
+    ShiftControlDown = "s-c-down"
     ShiftControlHome = "s-c-home"
     ShiftControlEnd = "s-c-end"
 
