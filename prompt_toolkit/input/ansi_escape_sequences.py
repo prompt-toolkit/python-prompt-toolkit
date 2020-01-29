@@ -42,6 +42,7 @@ ANSI_SEQUENCES: Dict[str, Union[Keys, Tuple[Keys, ...]]] = {
     "\x19": Keys.ControlY,  # Control-Y (25)
     "\x1a": Keys.ControlZ,  # Control-Z
     "\x1b": Keys.Escape,  # Also Control-[
+    "\x9b": Keys.ShiftEscape,
     "\x1c": Keys.ControlBackslash,  # Both Control-\ (also Ctrl-| )
     "\x1d": Keys.ControlSquareClose,  # Control-]
     "\x1e": Keys.ControlCircumflex,  # Control-^
@@ -119,10 +120,14 @@ ANSI_SEQUENCES: Dict[str, Union[Keys, Tuple[Keys, ...]]] = {
     "\x1b[1;5B": Keys.ControlDown,  # Cursor Mode
     "\x1b[1;5C": Keys.ControlRight,  # Cursor Mode
     "\x1b[1;5D": Keys.ControlLeft,  # Cursor Mode
+    "\x1b[1;5H": Keys.ControlHome,
+    "\x1b[1;5F": Keys.ControlEnd,
     "\x1b[1;2A": Keys.ShiftUp,
     "\x1b[1;2B": Keys.ShiftDown,
     "\x1b[1;2C": Keys.ShiftRight,
     "\x1b[1;2D": Keys.ShiftLeft,
+    "\x1b[1;2H": Keys.ShiftHome,
+    "\x1b[1;2F": Keys.ShiftEnd,
     # Tmux sends following keystrokes when control+arrow is pressed, but for
     # Emacs ansi-term sends the same sequences for normal arrow keys. Consider
     # it a normal arrow press, because that's more important.
@@ -170,6 +175,13 @@ ANSI_SEQUENCES: Dict[str, Union[Keys, Tuple[Keys, ...]]] = {
     "\x1b[6;3~": (Keys.Escape, Keys.PageDown),
     "\x1b[2;3~": (Keys.Escape, Keys.Insert),
     "\x1b[3;3~": (Keys.Escape, Keys.Delete),
+    # Control+Shift in mintty/wsltty
+    "\x1b[1;6D": Keys.ShiftControlLeft,
+    "\x1b[1;6C": Keys.ShiftControlRight,
+    "\x1b[1;6B": Keys.ShiftControlUp,
+    "\x1b[1;6A": Keys.ShiftControlDown,
+    "\x1b[1;6H": Keys.ShiftControlHome,
+    "\x1b[1;6F": Keys.ShiftControlEnd,
 }
 
 
