@@ -62,22 +62,22 @@ class MenuContainer:
         # Navigation through the main menu.
 
         @kb.add("left", filter=in_main_menu)
-        def _(event: E) -> None:
+        def _left(event: E) -> None:
             self.selected_menu[0] = max(0, self.selected_menu[0] - 1)
 
         @kb.add("right", filter=in_main_menu)
-        def _(event: E) -> None:
+        def _right(event: E) -> None:
             self.selected_menu[0] = min(
                 len(self.menu_items) - 1, self.selected_menu[0] + 1
             )
 
         @kb.add("down", filter=in_main_menu)
-        def _(event: E) -> None:
+        def _down(event: E) -> None:
             self.selected_menu.append(0)
 
         @kb.add("c-c", filter=in_main_menu)
         @kb.add("c-g", filter=in_main_menu)
-        def _(event: E) -> None:
+        def _cancel(event: E) -> None:
             " Leave menu. "
             event.app.layout.focus_last()
 
@@ -86,13 +86,13 @@ class MenuContainer:
         @kb.add("left", filter=in_sub_menu)
         @kb.add("c-g", filter=in_sub_menu)
         @kb.add("c-c", filter=in_sub_menu)
-        def _(event: E) -> None:
+        def _back(event: E) -> None:
             " Go back to parent menu. "
             if len(self.selected_menu) > 1:
                 self.selected_menu.pop()
 
         @kb.add("right", filter=in_sub_menu)
-        def _(event: E) -> None:
+        def _submenu(event: E) -> None:
             " go into sub menu. "
             if self._get_menu(len(self.selected_menu) - 1).children:
                 self.selected_menu.append(0)
@@ -109,7 +109,7 @@ class MenuContainer:
                     self.selected_menu.append(0)
 
         @kb.add("up", filter=in_sub_menu)
-        def _(event: E) -> None:
+        def _up_in_submenu(event: E) -> None:
             " Select previous (enabled) menu item or return to main menu. "
             # Look for previous enabled items in this sub menu.
             menu = self._get_menu(len(self.selected_menu) - 2)
@@ -128,7 +128,7 @@ class MenuContainer:
                 self.selected_menu.pop()
 
         @kb.add("down", filter=in_sub_menu)
-        def _(event: E) -> None:
+        def _down_in_submenu(event: E) -> None:
             " Select next (enabled) menu item. "
             menu = self._get_menu(len(self.selected_menu) - 2)
             index = self.selected_menu[-1]
@@ -143,7 +143,7 @@ class MenuContainer:
                 self.selected_menu[-1] = next_indexes[0]
 
         @kb.add("enter")
-        def _(event: E) -> None:
+        def _click(event: E) -> None:
             " Click the selected menu item. "
             item = self._get_menu(len(self.selected_menu) - 1)
             if item.handler:

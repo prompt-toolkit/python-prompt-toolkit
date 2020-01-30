@@ -117,7 +117,7 @@ def load_basic_bindings() -> KeyBindings:
     @handle("s-insert")
     @handle("c-insert")
     @handle(Keys.Ignore)
-    def _(event: E) -> None:
+    def _ignore(event: E) -> None:
         """
         First, for any of these keys, Don't do anything by default. Also don't
         catch them in the 'Any' handler which will insert them as data.
@@ -173,14 +173,14 @@ def load_basic_bindings() -> KeyBindings:
     )
 
     @handle("enter", filter=insert_mode & is_multiline)
-    def _(event: E) -> None:
+    def _newline(event: E) -> None:
         """
         Newline (in case of multiline input.
         """
         event.current_buffer.newline(copy_margin=not in_paste_mode())
 
     @handle("c-j")
-    def _(event: E) -> None:
+    def _newline2(event: E) -> None:
         r"""
         By default, handle \n as if it were a \r (enter).
         (It appears that some terminals send \n instead of \r when pressing
@@ -191,22 +191,22 @@ def load_basic_bindings() -> KeyBindings:
     # Delete the word before the cursor.
 
     @handle("up")
-    def _(event: E) -> None:
+    def _go_up(event: E) -> None:
         event.current_buffer.auto_up(count=event.arg)
 
     @handle("down")
-    def _(event: E) -> None:
+    def _go_down(event: E) -> None:
         event.current_buffer.auto_down(count=event.arg)
 
     @handle("delete", filter=has_selection)
-    def _(event: E) -> None:
+    def _cut(event: E) -> None:
         data = event.current_buffer.cut_selection()
         event.app.clipboard.set_data(data)
 
     # Global bindings.
 
     @handle("c-z")
-    def _(event: E) -> None:
+    def _insert_ctrl_z(event: E) -> None:
         """
         By default, control-Z should literally insert Ctrl-Z.
         (Ansi Ctrl-Z, code 26 in MSDOS means End-Of-File.
@@ -219,7 +219,7 @@ def load_basic_bindings() -> KeyBindings:
         event.current_buffer.insert_text(event.data)
 
     @handle(Keys.BracketedPaste)
-    def _(event: E) -> None:
+    def _paste(event: E) -> None:
         """
         Pasting from clipboard.
         """
@@ -238,7 +238,7 @@ def load_basic_bindings() -> KeyBindings:
         return get_app().quoted_insert
 
     @handle(Keys.Any, filter=in_quoted_insert, eager=True)
-    def _(event: E) -> None:
+    def _insert_text(event: E) -> None:
         """
         Handle quoted insert.
         """

@@ -776,7 +776,7 @@ class PromptSession(Generic[_T]):
             )
 
         @handle("enter", filter=do_accept & default_focused)
-        def _(event: E) -> None:
+        def _accept_input(event: E) -> None:
             " Accept input when enter has been pressed. "
             self.default_buffer.validate_and_handle()
 
@@ -785,12 +785,12 @@ class PromptSession(Generic[_T]):
             return self.complete_style == CompleteStyle.READLINE_LIKE
 
         @handle("tab", filter=readline_complete_style & default_focused)
-        def _(event: E) -> None:
+        def _complete_like_readline(event: E) -> None:
             " Display completions (like Readline). "
             display_completions_like_readline(event)
 
         @handle("c-c", filter=default_focused)
-        def _(event: E) -> None:
+        def _keyboard_interrupt(event: E) -> None:
             " Abort when Control-C has been pressed. "
             event.app.exit(exception=KeyboardInterrupt, style="class:aborting")
 
@@ -805,7 +805,7 @@ class PromptSession(Generic[_T]):
             )
 
         @handle("c-d", filter=ctrl_d_condition & default_focused)
-        def _(event: E) -> None:
+        def _eof(event: E) -> None:
             " Exit when Control-D has been pressed. "
             event.app.exit(exception=EOFError, style="class:exiting")
 
@@ -816,7 +816,7 @@ class PromptSession(Generic[_T]):
             return to_filter(self.enable_suspend)()
 
         @handle("c-z", filter=suspend_supported & enable_suspend)
-        def _(event: E) -> None:
+        def _suspend(event: E) -> None:
             """
             Suspend process to background.
             """

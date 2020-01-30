@@ -44,7 +44,7 @@ def load_emacs_bindings() -> KeyBindingsBase:
     insert_mode = emacs_insert_mode
 
     @handle("escape")
-    def _(event: E) -> None:
+    def _esc(event: E) -> None:
         """
         By default, ignore escape key.
 
@@ -104,12 +104,12 @@ def load_emacs_bindings() -> KeyBindingsBase:
     handle("c-x", "e")(get_by_name("call-last-kbd-macro"))
 
     @handle("c-n")
-    def _(event: E) -> None:
+    def _next(event: E) -> None:
         " Next line. "
         event.current_buffer.auto_down()
 
     @handle("c-p")
-    def _(event: E) -> None:
+    def _prev(event: E) -> None:
         " Previous line. "
         event.current_buffer.auto_up(count=event.arg)
 
@@ -128,14 +128,14 @@ def load_emacs_bindings() -> KeyBindingsBase:
         handle_digit(c)
 
     @handle("escape", "-", filter=~has_arg)
-    def _(event: E) -> None:
+    def _meta_dash(event: E) -> None:
         """
         """
         if event._arg is None:
             event.append_to_arg_count("-")
 
     @handle("-", filter=Condition(lambda: get_app().key_processor.arg == "-"))
-    def _(event: E) -> None:
+    def _dash(event: E) -> None:
         """
         When '-' is typed again, after exactly '-' has been given as an
         argument, ignore this.
@@ -168,36 +168,36 @@ def load_emacs_bindings() -> KeyBindingsBase:
             buff.cursor_position += match
 
     @handle("c-]", Keys.Any)
-    def _(event: E) -> None:
+    def _goto_char(event: E) -> None:
         " When Ctl-] + a character is pressed. go to that character. "
         # Also named 'character-search'
         character_search(event.current_buffer, event.data, event.arg)
 
     @handle("escape", "c-]", Keys.Any)
-    def _(event: E) -> None:
+    def _goto_char_backwards(event: E) -> None:
         " Like Ctl-], but backwards. "
         # Also named 'character-search-backward'
         character_search(event.current_buffer, event.data, -event.arg)
 
     @handle("escape", "a")
-    def _(event: E) -> None:
+    def _prev_sentence(event: E) -> None:
         " Previous sentence. "
         # TODO:
 
     @handle("escape", "e")
-    def _(event: E) -> None:
+    def _end_of_sentence(event: E) -> None:
         " Move to end of sentence. "
         # TODO:
 
     @handle("escape", "t", filter=insert_mode)
-    def _(event: E) -> None:
+    def _swap_characters(event: E) -> None:
         """
         Swap the last two words before the cursor.
         """
         # TODO
 
     @handle("escape", "*", filter=insert_mode)
-    def _(event: E) -> None:
+    def _insert_all_completions(event: E) -> None:
         """
         `meta-*`: Insert all possible completions of the preceding text.
         """
@@ -214,7 +214,7 @@ def load_emacs_bindings() -> KeyBindingsBase:
         buff.insert_text(text_to_insert)
 
     @handle("c-x", "c-x")
-    def _(event: E) -> None:
+    def _toggle_start_end(event: E) -> None:
         """
         Move cursor back and forth between the start and end of the current
         line.
@@ -229,7 +229,7 @@ def load_emacs_bindings() -> KeyBindingsBase:
             buffer.cursor_position += buffer.document.get_end_of_line_position()
 
     @handle("c-@")  # Control-space or Control-@
-    def _(event: E) -> None:
+    def _start_selection(event: E) -> None:
         """
         Start of the selection (if the current buffer is not empty).
         """
@@ -239,7 +239,7 @@ def load_emacs_bindings() -> KeyBindingsBase:
             buff.start_selection(selection_type=SelectionType.CHARACTERS)
 
     @handle("c-g", filter=~has_selection)
-    def _(event: E) -> None:
+    def _cancel(event: E) -> None:
         """
         Control + G: Cancel completion menu and validation state.
         """
@@ -247,7 +247,7 @@ def load_emacs_bindings() -> KeyBindingsBase:
         event.current_buffer.validation_error = None
 
     @handle("c-g", filter=has_selection)
-    def _(event: E) -> None:
+    def _cancel_selection(event: E) -> None:
         """
         Cancel selection.
         """
@@ -255,7 +255,7 @@ def load_emacs_bindings() -> KeyBindingsBase:
 
     @handle("c-w", filter=has_selection)
     @handle("c-x", "r", "k", filter=has_selection)
-    def _(event: E) -> None:
+    def _cut(event: E) -> None:
         """
         Cut selected text.
         """
@@ -263,7 +263,7 @@ def load_emacs_bindings() -> KeyBindingsBase:
         event.app.clipboard.set_data(data)
 
     @handle("escape", "w", filter=has_selection)
-    def _(event: E) -> None:
+    def _copy(event: E) -> None:
         """
         Copy selected text.
         """
@@ -271,7 +271,7 @@ def load_emacs_bindings() -> KeyBindingsBase:
         event.app.clipboard.set_data(data)
 
     @handle("escape", "left")
-    def _(event: E) -> None:
+    def _start_of_word(event: E) -> None:
         """
         Cursor to start of previous word.
         """
@@ -281,7 +281,7 @@ def load_emacs_bindings() -> KeyBindingsBase:
         )
 
     @handle("escape", "right")
-    def _(event: E) -> None:
+    def _start_next_word(event: E) -> None:
         """
         Cursor to start of next word.
         """
@@ -292,7 +292,7 @@ def load_emacs_bindings() -> KeyBindingsBase:
         )
 
     @handle("escape", "/", filter=insert_mode)
-    def _(event: E) -> None:
+    def _complete(event: E) -> None:
         """
         M-/: Complete.
         """
@@ -303,7 +303,7 @@ def load_emacs_bindings() -> KeyBindingsBase:
             b.start_completion(select_first=True)
 
     @handle("c-c", ">", filter=has_selection)
-    def _(event: E) -> None:
+    def _indent(event: E) -> None:
         """
         Indent selected text.
         """
@@ -320,7 +320,7 @@ def load_emacs_bindings() -> KeyBindingsBase:
         indent(buffer, from_, to + 1, count=event.arg)
 
     @handle("c-c", "<", filter=has_selection)
-    def _(event: E) -> None:
+    def _unindent(event: E) -> None:
         """
         Unindent selected text.
         """
@@ -381,7 +381,7 @@ def load_emacs_search_bindings() -> KeyBindingsBase:
     )
 
     @handle("n", filter=is_read_only)
-    def _(event: E) -> None:
+    def _jump_next(event: E) -> None:
         " Jump to next match. "
         event.current_buffer.apply_search(
             event.app.current_search_state,
@@ -390,7 +390,7 @@ def load_emacs_search_bindings() -> KeyBindingsBase:
         )
 
     @handle("N", filter=is_read_only)
-    def _(event: E) -> None:
+    def _jump_prev(event: E) -> None:
         " Jump to previous match. "
         event.current_buffer.apply_search(
             ~event.app.current_search_state,
@@ -457,7 +457,7 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
     @handle("s-c-right", filter=~has_selection)
     @handle("s-c-home", filter=~has_selection)
     @handle("s-c-end", filter=~has_selection)
-    def _(event: E) -> None:
+    def _start_selection(event: E) -> None:
         """
         Start selection with shift + movement.
         """
@@ -484,7 +484,7 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
     @handle("s-c-right", filter=shift_selection_mode)
     @handle("s-c-home", filter=shift_selection_mode)
     @handle("s-c-end", filter=shift_selection_mode)
-    def _(event: E) -> None:
+    def _extend_selection(event: E) -> None:
         """
         Extend the selection
         """
@@ -496,7 +496,7 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
             buff.exit_selection()
 
     @handle(Keys.Any, filter=shift_selection_mode)
-    def _(event: E) -> None:
+    def _replace_selection(event: E) -> None:
         """
         Replace selection by what is typed
         """
@@ -504,7 +504,7 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
         get_by_name("self-insert")(event)
 
     @handle("enter", filter=shift_selection_mode & is_multiline)
-    def _(event: E) -> None:
+    def _newline(event: E) -> None:
         """
         A newline replaces the selection
         """
@@ -512,14 +512,14 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
         event.current_buffer.newline(copy_margin=not in_paste_mode())
 
     @handle("backspace", filter=shift_selection_mode)
-    def _(event: E) -> None:
+    def _delete(event: E) -> None:
         """
         Delete selection.
         """
         event.current_buffer.cut_selection()
 
     @handle("c-y", filter=shift_selection_mode)
-    def _(event: E) -> None:
+    def _yank(event: E) -> None:
         """
         In shift selection mode, yanking (pasting) replace the selection.
         """
@@ -539,7 +539,7 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
     @handle("c-right", filter=shift_selection_mode)
     @handle("c-home", filter=shift_selection_mode)
     @handle("c-end", filter=shift_selection_mode)
-    def _(event: E) -> None:
+    def _cancel(event: E) -> None:
         """
         Cancel selection.
         """
