@@ -597,11 +597,11 @@ class MultiColumnCompletionMenuControl(UIControl):
         #       never be focussed.
 
         @kb.add("left", is_global=True, filter=filter)
-        def _(event: E) -> None:
+        def _left(event: E) -> None:
             move()
 
         @kb.add("right", is_global=True, filter=filter)
-        def _(event: E) -> None:
+        def _right(event: E) -> None:
             move(True)
 
         return kb

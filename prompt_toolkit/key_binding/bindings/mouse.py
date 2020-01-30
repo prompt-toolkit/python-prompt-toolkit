@@ -98,7 +98,7 @@ def load_mouse_bindings() -> KeyBindings:
             handler(MouseEvent(position=Point(x=x, y=y), event_type=mouse_event))
 
     @key_bindings.add(Keys.ScrollUp)
-    def _(event: E) -> None:
+    def _scroll_up(event: E) -> None:
         """
         Scroll up event without cursor position.
         """
@@ -107,14 +107,14 @@ def load_mouse_bindings() -> KeyBindings:
         event.key_processor.feed(KeyPress(Keys.Up), first=True)
 
     @key_bindings.add(Keys.ScrollDown)
-    def _(event: E) -> None:
+    def _scroll_down(event: E) -> None:
         """
         Scroll down event without cursor position.
         """
         event.key_processor.feed(KeyPress(Keys.Down), first=True)
 
     @key_bindings.add(Keys.WindowsMouseEvent)
-    def _(event: E) -> None:
+    def _mouse(event: E) -> None:
         """
         Handling of mouse events for Windows.
         """

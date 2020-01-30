@@ -1155,11 +1155,11 @@ async def _do_wait_for_enter(wait_text: AnyFormattedText) -> None:
     key_bindings = KeyBindings()
 
     @key_bindings.add("enter")
-    def _(event: E) -> None:
+    def _ok(event: E) -> None:
         event.app.exit()
 
     @key_bindings.add(Keys.Any)
-    def _(event: E) -> None:
+    def _ignore(event: E) -> None:
         " Disallow typing. "
         pass
 

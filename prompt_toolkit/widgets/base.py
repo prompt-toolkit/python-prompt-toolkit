@@ -628,6 +628,9 @@ _T = TypeVar("_T")
 
 
 class _DialogList(Generic[_T]):
+    """
+    Common code for `RadioList` and `CheckboxList`.
+    """
     open_character: str = ""
     close_character: str = ""
     container_style: str = ""
@@ -650,22 +653,22 @@ class _DialogList(Generic[_T]):
         kb = KeyBindings()
 
         @kb.add("up")
-        def _(event: E) -> None:
+        def _up(event: E) -> None:
             self._selected_index = max(0, self._selected_index - 1)
 
         @kb.add("down")
-        def _(event: E) -> None:
+        def _down(event: E) -> None:
             self._selected_index = min(len(self.values) - 1, self._selected_index + 1)
 
         @kb.add("pageup")
-        def _(event: E) -> None:
+        def _pageup(event: E) -> None:
             w = event.app.layout.current_window
             self._selected_index = max(
                 0, self._selected_index - len(w.render_info.displayed_lines)
             )
 
         @kb.add("pagedown")
-        def _(event: E) -> None:
+        def _pagedown(event: E) -> None:
             w = event.app.layout.current_window
             self._selected_index = min(
                 len(self.values) - 1,
@@ -674,11 +677,11 @@ class _DialogList(Generic[_T]):
 
         @kb.add("enter")
         @kb.add(" ")
-        def _(event: E) -> None:
+        def _click(event: E) -> None:
             self._handle_enter()
 
         @kb.add(Keys.Any)
-        def _(event: E) -> None:
+        def _find(event: E) -> None:
             # We first check values after the selected value, then all values.
             for value in self.values[self._selected_index + 1 :] + self.values:
                 if value[1].startswith(event.data):

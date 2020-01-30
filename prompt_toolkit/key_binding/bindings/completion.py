@@ -185,7 +185,7 @@ def _create_more_session(message: str = "--MORE--") -> "PromptSession":
     @bindings.add(Keys.ControlJ)
     @bindings.add(Keys.ControlM)
     @bindings.add(Keys.ControlI)  # Tab.
-    def _(event: E) -> None:
+    def _yes(event: E) -> None:
         event.app.exit(result=True)
 
     @bindings.add("n")
@@ -193,11 +193,11 @@ def _create_more_session(message: str = "--MORE--") -> "PromptSession":
     @bindings.add("q")
     @bindings.add("Q")
     @bindings.add(Keys.ControlC)
-    def _(event: E) -> None:
+    def _no(event: E) -> None:
         event.app.exit(result=False)
 
     @bindings.add(Keys.Any)
-    def _(event: E) -> None:
+    def _ignore(event: E) -> None:
         " Disable inserting of text. "
 
     return PromptSession(message, key_bindings=bindings, erase_when_done=True)
