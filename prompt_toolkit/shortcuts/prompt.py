@@ -24,8 +24,7 @@ Example::
         s = PromptSession()
         result = s.prompt('Say something: ')
 """
-import os
-from asyncio import Future, get_event_loop
+from asyncio import get_event_loop
 from enum import Enum
 from functools import partial
 from typing import (
@@ -887,9 +886,6 @@ class PromptSession(Generic[_T]):
 
         Additional arguments, specific for this prompt:
 
-        :param _async: (internal, please call `prompt_async` instead). When
-            `True` return a `Future` instead of waiting for the prompt to
-            finish.
         :param default: The default input text to be shown. (This can be edited
             by the user).
         :param accept_default: When `True`, automatically accept the default

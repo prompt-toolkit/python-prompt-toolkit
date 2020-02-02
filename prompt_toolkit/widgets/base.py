@@ -631,6 +631,7 @@ class _DialogList(Generic[_T]):
     """
     Common code for `RadioList` and `CheckboxList`.
     """
+
     open_character: str = ""
     close_character: str = ""
     container_style: str = ""
@@ -663,17 +664,19 @@ class _DialogList(Generic[_T]):
         @kb.add("pageup")
         def _pageup(event: E) -> None:
             w = event.app.layout.current_window
-            self._selected_index = max(
-                0, self._selected_index - len(w.render_info.displayed_lines)
-            )
+            if w.render_info:
+                self._selected_index = max(
+                    0, self._selected_index - len(w.render_info.displayed_lines)
+                )
 
         @kb.add("pagedown")
         def _pagedown(event: E) -> None:
             w = event.app.layout.current_window
-            self._selected_index = min(
-                len(self.values) - 1,
-                self._selected_index + len(w.render_info.displayed_lines),
-            )
+            if w.render_info:
+                self._selected_index = min(
+                    len(self.values) - 1,
+                    self._selected_index + len(w.render_info.displayed_lines),
+                )
 
         @kb.add("enter")
         @kb.add(" ")
@@ -683,8 +686,11 @@ class _DialogList(Generic[_T]):
         @kb.add(Keys.Any)
         def _find(event: E) -> None:
             # We first check values after the selected value, then all values.
-            for value in self.values[self._selected_index + 1 :] + self.values:
-                if value[1].startswith(event.data):
+            values = list(self.values)
+            for value in values[self._selected_index + 1 :] + values:
+                text = fragment_list_to_text(to_formatted_text(value[1])).lower()
+
+                if text.startswith(event.data.lower()):
                     self._selected_index = self.values.index(value)
                     return
 

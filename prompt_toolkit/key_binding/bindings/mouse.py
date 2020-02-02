@@ -33,7 +33,7 @@ def load_mouse_bindings() -> KeyBindings:
         if event.data[2] == "M":
             # Typical.
             mouse_event, x, y = map(ord, event.data[3:])
-            mouse_event = {
+            mouse_event_type = {
                 32: MouseEventType.MOUSE_DOWN,
                 35: MouseEventType.MOUSE_UP,
                 96: MouseEventType.SCROLL_UP,
@@ -65,14 +65,14 @@ def load_mouse_bindings() -> KeyBindings:
 
             # Parse event type.
             if sgr:
-                mouse_event = {
+                mouse_event_type = {
                     (0, "M"): MouseEventType.MOUSE_DOWN,
                     (0, "m"): MouseEventType.MOUSE_UP,
                     (64, "M"): MouseEventType.SCROLL_UP,
                     (65, "M"): MouseEventType.SCROLL_DOWN,
                 }.get((mouse_event, m))
             else:
-                mouse_event = {
+                mouse_event_type = {
                     32: MouseEventType.MOUSE_DOWN,
                     35: MouseEventType.MOUSE_UP,
                     96: MouseEventType.SCROLL_UP,
@@ -83,7 +83,7 @@ def load_mouse_bindings() -> KeyBindings:
         y -= 1
 
         # Only handle mouse events when we know the window height.
-        if event.app.renderer.height_is_known and mouse_event is not None:
+        if event.app.renderer.height_is_known and mouse_event_type is not None:
             # Take region above the layout into account. The reported
             # coordinates are absolute to the visible part of the terminal.
             from prompt_toolkit.renderer import HeightIsUnknownError
@@ -95,7 +95,7 @@ def load_mouse_bindings() -> KeyBindings:
 
             # Call the mouse handler from the renderer.
             handler = event.app.renderer.mouse_handlers.mouse_handlers[x, y]
-            handler(MouseEvent(position=Point(x=x, y=y), event_type=mouse_event))
+            handler(MouseEvent(position=Point(x=x, y=y), event_type=mouse_event_type))
 
     @key_bindings.add(Keys.ScrollUp)
     def _scroll_up(event: E) -> None:
@@ -121,19 +121,26 @@ def load_mouse_bindings() -> KeyBindings:
         assert is_windows()  # This key binding should only exist for Windows.
 
         # Parse data.
-        event_type, x, y = event.data.split(";")
-        x = int(x)
-        y = int(y)
+        pieces = event.data.split(";")
+
+        event_type = MouseEventType(pieces[0])
+        x = int(pieces[1])
+        y = int(pieces[2])
 
         # Make coordinates absolute to the visible part of the terminal.
-        screen_buffer_info = event.app.renderer.output.get_win32_screen_buffer_info()
-        rows_above_cursor = (
-            screen_buffer_info.dwCursorPosition.Y - event.app.renderer._cursor_pos.y
-        )
-        y -= rows_above_cursor
+        output = event.app.renderer.output
 
-        # Call the mouse event handler.
-        handler = event.app.renderer.mouse_handlers.mouse_handlers[x, y]
-        handler(MouseEvent(position=Point(x=x, y=y), event_type=event_type))
+        from prompt_toolkit.output.win32 import Win32Output
+
+        if isinstance(output, Win32Output):
+            screen_buffer_info = output.get_win32_screen_buffer_info()
+            rows_above_cursor = (
+                screen_buffer_info.dwCursorPosition.Y - event.app.renderer._cursor_pos.y
+            )
+            y -= rows_above_cursor
+
+            # Call the mouse event handler.
+            handler = event.app.renderer.mouse_handlers.mouse_handlers[x, y]
+            handler(MouseEvent(position=Point(x=x, y=y), event_type=event_type))
 
     return key_bindings

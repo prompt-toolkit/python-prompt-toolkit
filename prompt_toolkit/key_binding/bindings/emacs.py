@@ -465,7 +465,12 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
         buff = event.current_buffer
         if buff.text:
             buff.start_selection(selection_type=SelectionType.CHARACTERS)
-            buff.selection_state.enter_shift_mode()
+
+            if buff.selection_state is not None:
+                # (`selection_state` should never be `None`, it is created by
+                # `start_selection`.)
+                buff.selection_state.enter_shift_mode()
+
             # Then move the cursor
             original_position = buff.cursor_position
             unshift_move(event)
@@ -491,9 +496,11 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
         # Just move the cursor, like shift was not pressed
         unshift_move(event)
         buff = event.current_buffer
-        if buff.cursor_position == buff.selection_state.original_cursor_position:
-            # selection is now empty, so cancel selection
-            buff.exit_selection()
+
+        if buff.selection_state is not None:
+            if buff.cursor_position == buff.selection_state.original_cursor_position:
+                # selection is now empty, so cancel selection
+                buff.exit_selection()
 
     @handle(Keys.Any, filter=shift_selection_mode)
     def _replace_selection(event: E) -> None:
@@ -501,7 +508,7 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
         Replace selection by what is typed
         """
         event.current_buffer.cut_selection()
-        get_by_name("self-insert")(event)
+        get_by_name("self-insert").call(event)
 
     @handle("enter", filter=shift_selection_mode & is_multiline)
     def _newline(event: E) -> None:
@@ -526,7 +533,7 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
         buff = event.current_buffer
         if buff.selection_state:
             buff.cut_selection()
-        get_by_name("yank")(event)
+        get_by_name("yank").call(event)
 
     # moving the cursor in shift selection mode cancels the selection
     @handle("left", filter=shift_selection_mode)
