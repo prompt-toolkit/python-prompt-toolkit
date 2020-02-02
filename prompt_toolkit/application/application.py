@@ -24,6 +24,7 @@ from typing import (
     Dict,
     FrozenSet,
     Generic,
+    Hashable,
     Iterable,
     List,
     Optional,
@@ -408,7 +409,7 @@ class Application(Generic[_AppResult]):
 
         self.exit_style = ""
 
-        self.background_tasks: List[Task] = []
+        self.background_tasks: List[Task[None]] = []
 
         self.renderer.reset()
         self.key_processor.reset()
@@ -526,13 +527,14 @@ class Application(Generic[_AppResult]):
         Start a while/true loop in the background for automatic invalidation of
         the UI.
         """
+        if self.refresh_interval is not None:
+            refresh_interval = self.refresh_interval
 
-        async def auto_refresh():
-            while True:
-                await sleep(self.refresh_interval)
-                self.invalidate()
+            async def auto_refresh() -> None:
+                while True:
+                    await sleep(refresh_interval)
+                    self.invalidate()
 
-        if self.refresh_interval:
             self.create_background_task(auto_refresh())
 
     def _update_invalidate_events(self) -> None:
@@ -624,7 +626,7 @@ class Application(Generic[_AppResult]):
             # pressed, we start a 'flush' timer for flushing our escape key. But
             # when any subsequent input is received, a new timer is started and
             # the current timer will be ignored.
-            flush_task: Optional[asyncio.Task] = None
+            flush_task: Optional[asyncio.Task[None]] = None
 
             # Reset.
             self.reset()
@@ -811,7 +813,9 @@ class Application(Generic[_AppResult]):
             self.run_async(pre_run=pre_run, set_exception_handler=set_exception_handler)
         )
 
-    def _handle_exception(self, loop, context: Dict[str, Any]) -> None:
+    def _handle_exception(
+        self, loop: AbstractEventLoop, context: Dict[str, Any]
+    ) -> None:
         """
         Handler for event loop exceptions.
         This will print the exception, using run_in_terminal.
@@ -939,7 +943,7 @@ class Application(Generic[_AppResult]):
         self,
         command: str,
         wait_for_enter: bool = True,
-        display_before_text: str = "",
+        display_before_text: AnyFormattedText = "",
         wait_text: str = "Press ENTER to continue...",
     ) -> None:
         """
@@ -1064,7 +1068,7 @@ class _CombinedRegistry(KeyBindingsBase):
         ] = SimpleCache()
 
     @property
-    def _version(self):
+    def _version(self) -> Hashable:
         """ Not needed - this object is not going to be wrapped in another
         KeyBindings object. """
         raise NotImplementedError

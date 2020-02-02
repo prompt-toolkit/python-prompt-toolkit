@@ -1,5 +1,6 @@
 from typing import Callable, Optional
 
+from prompt_toolkit.formatted_text import AnyFormattedText
 from prompt_toolkit.input import DummyInput
 from prompt_toolkit.output import DummyOutput
 
@@ -37,7 +38,7 @@ class DummyApplication(Application[None]):
         self,
         command: str,
         wait_for_enter: bool = True,
-        display_before_text: str = "",
+        display_before_text: AnyFormattedText = "",
         wait_text: str = "",
     ) -> None:
         raise NotImplementedError

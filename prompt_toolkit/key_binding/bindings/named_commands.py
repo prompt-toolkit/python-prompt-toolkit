@@ -3,7 +3,7 @@ Key bindings which are also known by GNU Readline by the given names.
 
 See: http://www.delorie.com/gnu/docs/readline/rlman_13.html
 """
-from typing import Callable, Dict, TypeVar, Union
+from typing import Callable, Dict, TypeVar, Union, cast
 
 from prompt_toolkit.document import Document
 from prompt_toolkit.enums import EditingMode
@@ -29,7 +29,7 @@ E = KeyPressEvent
 
 
 # Registry that maps the Readline command names to their handlers.
-_readline_commands: Dict[str, _HandlerOrBinding] = {}
+_readline_commands: Dict[str, Binding] = {}
 
 
 def register(name: str) -> Callable[[_T], _T]:
@@ -38,14 +38,18 @@ def register(name: str) -> Callable[[_T], _T]:
     """
 
     def decorator(handler: _T) -> _T:
-        " `handler` is a callable or _Binding. "
-        _readline_commands[name] = handler
+        " `handler` is a callable or Binding. "
+        if isinstance(handler, Binding):
+            _readline_commands[name] = handler
+        else:
+            _readline_commands[name] = key_binding()(cast(_Handler, handler))
+
         return handler
 
     return decorator
 
 
-def get_by_name(name: str) -> _HandlerOrBinding:
+def get_by_name(name: str) -> Binding:
     """
     Return the handler for the (Readline) command with the given name.
     """

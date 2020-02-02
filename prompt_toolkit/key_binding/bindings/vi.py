@@ -33,7 +33,7 @@ from prompt_toolkit.filters.app import (
 )
 from prompt_toolkit.input.vt100_parser import Vt100Parser
 from prompt_toolkit.key_binding.digraphs import DIGRAPHS
-from prompt_toolkit.key_binding.key_processor import KeyPressEvent
+from prompt_toolkit.key_binding.key_processor import KeyPress, KeyPressEvent
 from prompt_toolkit.key_binding.vi_state import CharacterFind, InputMode
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.search import SearchDirection
@@ -295,7 +295,7 @@ _OF = TypeVar("_OF", bound=OperatorFunction)
 
 
 def create_operator_decorator(
-    key_bindings: KeyBindingsBase,
+    key_bindings: KeyBindings,
 ) -> Callable[..., Callable[[_OF], _OF]]:
     """
     Create a decorator that can be used for registering Vi operators.
@@ -342,24 +342,25 @@ def create_operator_decorator(
                 buff = event.current_buffer
                 selection_state = buff.selection_state
 
-                # Create text object from selection.
-                if selection_state.type == SelectionType.LINES:
-                    text_obj_type = TextObjectType.LINEWISE
-                elif selection_state.type == SelectionType.BLOCK:
-                    text_obj_type = TextObjectType.BLOCK
-                else:
-                    text_obj_type = TextObjectType.INCLUSIVE
+                if selection_state is not None:
+                    # Create text object from selection.
+                    if selection_state.type == SelectionType.LINES:
+                        text_obj_type = TextObjectType.LINEWISE
+                    elif selection_state.type == SelectionType.BLOCK:
+                        text_obj_type = TextObjectType.BLOCK
+                    else:
+                        text_obj_type = TextObjectType.INCLUSIVE
 
-                text_object = TextObject(
-                    selection_state.original_cursor_position - buff.cursor_position,
-                    type=text_obj_type,
-                )
+                    text_object = TextObject(
+                        selection_state.original_cursor_position - buff.cursor_position,
+                        type=text_obj_type,
+                    )
 
-                # Execute operator.
-                operator_func(event, text_object)
+                    # Execute operator.
+                    operator_func(event, text_object)
 
-                # Quit selection mode.
-                buff.selection_state = None
+                    # Quit selection mode.
+                    buff.selection_state = None
 
             return operator_func
 
@@ -684,7 +685,7 @@ def load_vi_bindings() -> KeyBindingsBase:
         )
 
     @handle("I", filter=in_block_selection & ~is_read_only)
-    def go_to_block_selection(event: E, after: bool = False) -> None:
+    def insert_in_block_selection(event: E, after: bool = False) -> None:
         """
         Insert in block selection mode.
         """
@@ -715,8 +716,8 @@ def load_vi_bindings() -> KeyBindingsBase:
         buff.exit_selection()
 
     @handle("A", filter=in_block_selection & ~is_read_only)
-    def _A(event: E) -> None:
-        go_to_block_selection(event, after=True)
+    def _append_after_block(event: E) -> None:
+        insert_in_block_selection(event, after=True)
 
     @handle("J", filter=vi_navigation_mode & ~is_read_only)
     def _join(event: E) -> None:
@@ -848,10 +849,11 @@ def load_vi_bindings() -> KeyBindingsBase:
         """
         selection_state = event.current_buffer.selection_state
 
-        if selection_state.type != SelectionType.LINES:
-            selection_state.type = SelectionType.LINES
-        else:
-            event.current_buffer.exit_selection()
+        if selection_state is not None:
+            if selection_state.type != SelectionType.LINES:
+                selection_state.type = SelectionType.LINES
+            else:
+                event.current_buffer.exit_selection()
 
     @handle("v", filter=vi_navigation_mode)
     def _visual(event: E) -> None:
@@ -868,10 +870,11 @@ def load_vi_bindings() -> KeyBindingsBase:
         """
         selection_state = event.current_buffer.selection_state
 
-        if selection_state.type != SelectionType.CHARACTERS:
-            selection_state.type = SelectionType.CHARACTERS
-        else:
-            event.current_buffer.exit_selection()
+        if selection_state is not None:
+            if selection_state.type != SelectionType.CHARACTERS:
+                selection_state.type = SelectionType.CHARACTERS
+            else:
+                event.current_buffer.exit_selection()
 
     @handle("c-v", filter=vi_selection_mode)
     def _visual_block2(event: E) -> None:
@@ -881,10 +884,11 @@ def load_vi_bindings() -> KeyBindingsBase:
         """
         selection_state = event.current_buffer.selection_state
 
-        if selection_state.type != SelectionType.BLOCK:
-            selection_state.type = SelectionType.BLOCK
-        else:
-            event.current_buffer.exit_selection()
+        if selection_state is not None:
+            if selection_state.type != SelectionType.BLOCK:
+                selection_state.type = SelectionType.BLOCK
+            else:
+                event.current_buffer.exit_selection()
 
     @handle("a", "w", filter=vi_selection_mode)
     @handle("a", "W", filter=vi_selection_mode)
@@ -1625,7 +1629,7 @@ def load_vi_bindings() -> KeyBindingsBase:
         return TextObject(cursor_position - buff.cursor_position)
 
     @handle("n", filter=vi_navigation_mode)
-    def _search_next2(event: E) -> TextObject:
+    def _search_next2(event: E) -> None:
         """
         Search next in navigation mode. (This goes through the history.)
         """
@@ -2071,7 +2075,10 @@ def load_vi_bindings() -> KeyBindingsBase:
         """
         try:
             # Lookup.
-            code = (event.app.vi_state.digraph_symbol1, event.data)
+            code: Tuple[str, str] = (
+                event.app.vi_state.digraph_symbol1 or "",
+                event.data,
+            )
             if code not in DIGRAPHS:
                 code = code[::-1]  # Try reversing.
             symbol = DIGRAPHS[code]
@@ -2114,11 +2121,12 @@ def load_vi_bindings() -> KeyBindingsBase:
         vi_state = event.app.vi_state
 
         # Store and stop recording.
-        vi_state.named_registers[vi_state.recording_register] = ClipboardData(
-            vi_state.current_recording
-        )
-        vi_state.recording_register = None
-        vi_state.current_recording = ""
+        if vi_state.recording_register:
+            vi_state.named_registers[vi_state.recording_register] = ClipboardData(
+                vi_state.current_recording
+            )
+            vi_state.recording_register = None
+            vi_state.current_recording = ""
 
     @handle("@", Keys.Any, filter=vi_navigation_mode, record_in_macro=False)
     def _execute_macro(event: E) -> None:
@@ -2140,7 +2148,7 @@ def load_vi_bindings() -> KeyBindingsBase:
 
         # Expand macro (which is a string in the register), in individual keys.
         # Use vt100 parser for this.
-        keys = []
+        keys: List[KeyPress] = []
 
         parser = Vt100Parser(keys.append)
         parser.feed(macro.text)

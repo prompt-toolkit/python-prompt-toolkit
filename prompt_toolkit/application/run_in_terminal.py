@@ -9,7 +9,7 @@ from prompt_toolkit.eventloop import run_in_executor_with_context
 from .current import get_app_or_none
 
 try:
-    from contextlib import asynccontextmanager
+    from contextlib import asynccontextmanager  # type: ignore
 except ImportError:
     from prompt_toolkit.eventloop.async_context_manager import asynccontextmanager
 
