@@ -432,6 +432,10 @@ def test_nested_completer():
     completions = completer.get_completions(Document("show i"), CompleteEvent())
     assert {c.text for c in completions} == {"ip", "interfaces"}
 
+    # One space + one word + space + one character.
+    completions = completer.get_completions(Document(" show i"), CompleteEvent())
+    assert {c.text for c in completions} == {"ip", "interfaces"}
+
     # Test nested set.
     completions = completer.get_completions(
         Document("show ip interface br"), CompleteEvent()
