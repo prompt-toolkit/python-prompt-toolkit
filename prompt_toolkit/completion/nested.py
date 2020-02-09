@@ -79,6 +79,7 @@ class NestedCompleter(Completer):
     ) -> Iterable[Completion]:
         # Split document.
         text = document.text_before_cursor.lstrip()
+        stripped_len = len(document.text_before_cursor) - len(text)
 
         # If there is a space, check for the first term, and use a
         # subcompleter.
@@ -88,8 +89,8 @@ class NestedCompleter(Completer):
 
             # If we have a sub completer, use this for the completions.
             if completer is not None:
-                remaining_text = document.text[len(first_term) :].lstrip()
-                move_cursor = len(document.text) - len(remaining_text)
+                remaining_text = text[len(first_term) :].lstrip()
+                move_cursor = len(text) - len(remaining_text) + stripped_len
 
                 new_document = Document(
                     remaining_text,
