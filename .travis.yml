@@ -20,7 +20,7 @@ script:
   - coverage run -m pytest
 
   # Run type checker.
-  - ./typecheck.sh || true
+  - mypy prompt_toolkit
 
   # Check wheather the imports were sorted correctly.
   # When this fails, please run ./tools/sort-imports.sh
