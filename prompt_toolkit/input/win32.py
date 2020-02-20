@@ -356,70 +356,50 @@ class ConsoleInputReader:
             and ev.ControlKeyState & self.SHIFT_PRESSED
             and result
         ):
-            if result.key == Keys.Left:
-                result.key = Keys.ControlShiftLeft
-
-            if result.key == Keys.Right:
-                result.key = Keys.ControlShiftRight
-
-            if result.key == Keys.Home:
-                result.key = Keys.ControlShiftHome
-
-            if result.key == Keys.End:
-                result.key = Keys.ControlShiftEnd
+            result.key = {
+                Keys.Left: Keys.ControlShiftLeft,
+                Keys.Right: Keys.ControlShiftRight,
+                Keys.Up: Keys.ControlShiftUp,
+                Keys.Down: Keys.ControlShiftDown,
+                Keys.Home: Keys.ControlShiftHome,
+                Keys.End: Keys.ControlShiftEnd,
+                Keys.Insert: Keys.ControlShiftInsert,
+                Keys.PageUp: Keys.ControlShiftPageUp,
+                Keys.PageDown: Keys.ControlShiftPageDown,
+            }.get(result.key, result.key)
 
         # Correctly handle Control-Arrow/Home/End and Control-Insert keys.
         if (
             ev.ControlKeyState & self.LEFT_CTRL_PRESSED
             or ev.ControlKeyState & self.RIGHT_CTRL_PRESSED
         ) and result:
-            if result.key == Keys.Left:
-                result.key = Keys.ControlLeft
-
-            if result.key == Keys.Right:
-                result.key = Keys.ControlRight
-
-            if result.key == Keys.Up:
-                result.key = Keys.ControlUp
-
-            if result.key == Keys.Down:
-                result.key = Keys.ControlDown
-
-            if result.key == Keys.Home:
-                result.key = Keys.ControlHome
-
-            if result.key == Keys.End:
-                result.key = Keys.ControlEnd
-
-            if result.key == Keys.Insert:
-                result.key = Keys.ControlInsert
+            result.key = {
+                Keys.Left: Keys.ControlLeft,
+                Keys.Right: Keys.ControlRight,
+                Keys.Up: Keys.ControlUp,
+                Keys.Down: Keys.ControlDown,
+                Keys.Home: Keys.ControlHome,
+                Keys.End: Keys.ControlEnd,
+                Keys.Insert: Keys.ControlInsert,
+                Keys.PageUp: Keys.ControlPageUp,
+                Keys.PageDown: Keys.ControlPageDown,
+            }.get(result.key, result.key)
 
         # Turn 'Tab' into 'BackTab' when shift was pressed.
         # Also handle other shift-key combination
         if ev.ControlKeyState & self.SHIFT_PRESSED and result:
-            if result.key == Keys.Tab:
-                result.key = Keys.BackTab
-
-            if result.key == Keys.Left:
-                result.key = Keys.ShiftLeft
-
-            if result.key == Keys.Right:
-                result.key = Keys.ShiftRight
-
-            if result.key == Keys.Up:
-                result.key = Keys.ShiftUp
-
-            if result.key == Keys.Down:
-                result.key = Keys.ShiftDown
-
-            if result.key == Keys.Home:
-                result.key = Keys.ShiftHome
-
-            if result.key == Keys.End:
-                result.key = Keys.ShiftEnd
-
-            if result.key == Keys.Insert:
-                result.key = Keys.ShiftInsert
+            result.key = {
+                Keys.Tab: Keys.BackTab,
+                Keys.Left: Keys.ShiftLeft,
+                Keys.Right: Keys.ShiftRight,
+                Keys.Up: Keys.ShiftUp,
+                Keys.Down: Keys.ShiftDown,
+                Keys.Home: Keys.ShiftHome,
+                Keys.End: Keys.ShiftEnd,
+                Keys.Insert: Keys.ShiftInsert,
+                Keys.PageUp: Keys.ShiftPageUp,
+                Keys.PageDown: Keys.ShiftPageDown,
+            }.get(result.key, result.key)
 
         # Turn 'Space' into 'ControlSpace' when control was pressed.
         if (
