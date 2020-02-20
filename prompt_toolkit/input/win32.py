@@ -357,16 +357,16 @@ class ConsoleInputReader:
             and result
         ):
             if result.key == Keys.Left:
-                result.key = Keys.ShiftControlLeft
+                result.key = Keys.ControlShiftLeft
 
             if result.key == Keys.Right:
-                result.key = Keys.ShiftControlRight
+                result.key = Keys.ControlShiftRight
 
             if result.key == Keys.Home:
-                result.key = Keys.ShiftControlHome
+                result.key = Keys.ControlShiftHome
 
             if result.key == Keys.End:
-                result.key = Keys.ShiftControlEnd
+                result.key = Keys.ControlShiftEnd
 
         # Correctly handle Control-Arrow/Home/End and Control-Insert keys.
         if (

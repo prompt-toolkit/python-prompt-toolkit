@@ -430,10 +430,10 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
             Keys.ShiftRight: "forward-char",
             Keys.ShiftHome: "beginning-of-line",
             Keys.ShiftEnd: "end-of-line",
-            Keys.ShiftControlLeft: "backward-word",
-            Keys.ShiftControlRight: "forward-word",
-            Keys.ShiftControlHome: "beginning-of-buffer",
-            Keys.ShiftControlEnd: "end-of-buffer",
+            Keys.ControlShiftLeft: "backward-word",
+            Keys.ControlShiftRight: "forward-word",
+            Keys.ControlShiftHome: "beginning-of-buffer",
+            Keys.ControlShiftEnd: "end-of-buffer",
         }
 
         try:
@@ -453,10 +453,10 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
     @handle("s-down", filter=~has_selection)
     @handle("s-home", filter=~has_selection)
     @handle("s-end", filter=~has_selection)
-    @handle("s-c-left", filter=~has_selection)
-    @handle("s-c-right", filter=~has_selection)
-    @handle("s-c-home", filter=~has_selection)
-    @handle("s-c-end", filter=~has_selection)
+    @handle("c-s-left", filter=~has_selection)
+    @handle("c-s-right", filter=~has_selection)
+    @handle("c-s-home", filter=~has_selection)
+    @handle("c-s-end", filter=~has_selection)
     def _start_selection(event: E) -> None:
         """
         Start selection with shift + movement.
@@ -485,10 +485,10 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
     @handle("s-down", filter=shift_selection_mode)
     @handle("s-home", filter=shift_selection_mode)
     @handle("s-end", filter=shift_selection_mode)
-    @handle("s-c-left", filter=shift_selection_mode)
-    @handle("s-c-right", filter=shift_selection_mode)
-    @handle("s-c-home", filter=shift_selection_mode)
-    @handle("s-c-end", filter=shift_selection_mode)
+    @handle("c-s-left", filter=shift_selection_mode)
+    @handle("c-s-right", filter=shift_selection_mode)
+    @handle("c-s-home", filter=shift_selection_mode)
+    @handle("c-s-end", filter=shift_selection_mode)
     def _extend_selection(event: E) -> None:
         """
         Extend the selection
