@@ -373,6 +373,11 @@ class ProgressBarCounter(Generic[_CounterItem]):
         self.items_completed += n
         self.progress_bar.invalidate()
 
+    def set_items_completed(self, nb_items: int) -> None:
+        if nb_items != self.items_completed:
+            self.items_completed = nb_items
+            self.progress_bar.invalidate()
+
     @property
     def done(self) -> bool:
         """Whether a counter has been completed.
