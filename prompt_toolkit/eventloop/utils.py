@@ -66,7 +66,9 @@ def call_soon_threadsafe(
     def schedule() -> None:
         # When there are no other tasks scheduled in the event loop. Run it
         # now.
-        if not loop2._ready:  # type: ignore
+        # Notice: uvloop doesn't have this _ready attribute. In that case,
+        #         always call immediately.
+        if not getattr(loop2, "_ready", []):  # type: ignore
             func()
             return
 
