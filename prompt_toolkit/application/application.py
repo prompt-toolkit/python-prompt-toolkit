@@ -527,7 +527,7 @@ class Application(Generic[_AppResult]):
         Start a while/true loop in the background for automatic invalidation of
         the UI.
         """
-        if self.refresh_interval is not None:
+        if self.refresh_interval not in (None, 0):
             refresh_interval = self.refresh_interval
 
             async def auto_refresh() -> None:
