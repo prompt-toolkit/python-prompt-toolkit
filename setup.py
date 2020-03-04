@@ -28,9 +28,10 @@ setup(
     long_description_content_type="text/x-rst",
     packages=find_packages("."),
     install_requires=["wcwidth",],
-    # We require Python 3.6 for two reasons:
+    # We require Python 3.6.1 for two reasons:
     # - Syntax for variable annotations - PEP 526.
     # - Asynchronous generators - PEP 525.
+    # Also, 3.6.0 doesn't have `typing.AsyncGenerator` yet. 3.6.1 does.
     # Python 3.7 is suggested, because:
     # - Context variables - PEP 567
     # (The current application is derived from a context variable.)
@@ -38,7 +39,7 @@ setup(
     # does run fine on any older Python version starting from Python 2.6, and
     # it is possible to write code that runs both against prompt_toolkit
     # version 2 and 3.
-    python_requires=">=3.6",
+    python_requires=">=3.6.1",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
