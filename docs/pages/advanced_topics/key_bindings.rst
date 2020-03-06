@@ -66,6 +66,7 @@ binding:
 | Name              + Possible keys                           |
 +===================+=========================================+
 | Escape            | :kbd:`escape`                           |
+| Shift + escape    | :kbd:`s-escape`                         |
 +-------------------+-----------------------------------------+
 | Arrows            | :kbd:`left`,                            |
 |                   | :kbd:`right`,                           |
@@ -79,7 +80,7 @@ binding:
 |                   | :kbd:`pagedown`,                        |
 |                   | :kbd:`insert`                           |
 +-------------------+-----------------------------------------+
-| Control+lowercase | :kbd:`c-a`, :kbd:`c-b`, :kbd:`c-c`,     |
+| Control+letter    | :kbd:`c-a`, :kbd:`c-b`, :kbd:`c-c`,     |
 |                   | :kbd:`c-d`, :kbd:`c-e`, :kbd:`c-f`,     |
 |                   | :kbd:`c-g`, :kbd:`c-h`, :kbd:`c-i`,     |
 |                   | :kbd:`c-j`, :kbd:`c-k`, :kbd:`c-l`,     |
@@ -91,17 +92,10 @@ binding:
 |                   |                                         |
 |                   | :kbd:`c-y`, :kbd:`c-z`                  |
 +-------------------+-----------------------------------------+
-| Control+uppercase | :kbd:`c-A`, :kbd:`c-B`, :kbd:`c-C`,     |
-|                   | :kbd:`c-D`, :kbd:`c-E`, :kbd:`c-F`,     |
-|                   | :kbd:`c-G`, :kbd:`c-H`, :kbd:`c-I`,     |
-|                   | :kbd:`c-J`, :kbd:`c-K`, :kbd:`c-L`,     |
-|                   |                                         |
-|                   | :kbd:`c-M`, :kbd:`c-N`, :kbd:`c-O`,     |
-|                   | :kbd:`c-P`, :kbd:`c-Q`, :kbd:`c-R`,     |
-|                   | :kbd:`c-S`, :kbd:`c-T`, :kbd:`c-U`,     |
-|                   | :kbd:`c-V`, :kbd:`c-W`, :kbd:`c-X`,     |
-|                   |                                         |
-|                   | :kbd:`c-Y`, :kbd:`c-Z`                  |
+| Control + number  | :kbd:`c-1`, :kbd:`c-2`, :kbd:`c-3`,     |
+|                   | :kbd:`c-4`, :kbd:`c-5`, :kbd:`c-6`,     |
+|                   | :kbd:`c-7`, :kbd:`c-8`, :kbd:`c-9`,     |
+|                   | :kbd:`c-0`                              |
 +-------------------+-----------------------------------------+
 | Control + arrow   | :kbd:`c-left`,                          |
 |                   | :kbd:`c-right`,                         |
@@ -119,6 +113,11 @@ binding:
 |                   | :kbd:`s-right`,                         |
 |                   | :kbd:`s-up`,                            |
 |                   | :kbd:`s-down`                           |
++-------------------+-----------------------------------------+
+| Control + Shift + | :kbd:`c-s-left`,                        |
+| arrow             | :kbd:`c-s-right`,                       |
+|                   | :kbd:`c-s-up`,                          |
+|                   | :kbd:`c-s-down`                         |
 +-------------------+-----------------------------------------+
 | Other shift       | :kbd:`s-delete`,                        |
 | keys              | :kbd:`s-tab`                            |
