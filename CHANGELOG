@@ -1,6 +1,27 @@
 CHANGELOG
 =========
 
+3.0.4: 2020-03-06
+-----------------
+
+New features:
+- Added many more vt100 ANSI sequences and keys.
+- Improved control/shift key support in Windows.
+- No Mypy errors in prompt_toolkit anymore.
+- Added `set_exception_handler` optional argument to `PromptSession.prompt()`.
+
+Fixes:
+- Bugfix in invalidate code. `PromptSession` was invalidating the UI
+  continuously.
+- Add uvloop support (was broken due to an issue in our `call_soon_threadsafe`).
+- Forwarded `set_exception_handler` in `Application.run` to the `run_async` call.
+- Bugfix in `NestedCompleter` when there is a leading space.
+
+Breaking changes:
+- `ShiftControl` has been replaced with `ControlShift` and `s-c` with `c-s` in
+  key bindings. Aliases for backwards-compatibility have been added.
+
+
 3.0.3: 2020-01-26
 -----------------
 
