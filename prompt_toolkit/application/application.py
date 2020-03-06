@@ -528,14 +528,13 @@ class Application(Generic[_AppResult]):
         the UI.
         """
         if self.refresh_interval not in (None, 0):
-            refresh_interval = self.refresh_interval
 
-            async def auto_refresh() -> None:
+            async def auto_refresh(refresh_interval) -> None:
                 while True:
                     await sleep(refresh_interval)
                     self.invalidate()
 
-            self.create_background_task(auto_refresh())
+            self.create_background_task(auto_refresh(self.refresh_interval))
 
     def _update_invalidate_events(self) -> None:
         """
