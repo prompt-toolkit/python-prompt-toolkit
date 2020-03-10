@@ -17,6 +17,7 @@ from prompt_toolkit.layout.screen import Char, Screen, WritePosition
 from prompt_toolkit.output import ColorDepth, Output
 from prompt_toolkit.styles import (
     Attrs,
+    DEFAULT_ATTRS,
     BaseStyle,
     DummyStyleTransformation,
     StyleTransformation,
@@ -139,6 +140,27 @@ def _output_screen_diff(
             write(char.char)
             last_style = char.style
 
+    def get_max_column_index(row: Dict[int, Char]) -> int:
+        """
+        Return max used column index, ignoring whitespace (without style) at
+        the end of the line. This is important for people that copy/paste
+        terminal output.
+
+        There are two reasons we are sometimes seeing whitespace at the end:
+        - `BufferControl` adds a trailing space to each line, because it's a
+          possible cursor position, so that the line wrapping won't change if
+          the cursor position moves around.
+        - The `Window` adds a style class to the current line for highlighting
+          (cursor-line).
+        """
+        numbers = [
+            index
+            for index, cell in row.items()
+            if cell.char != " " or attrs_for_style_string[cell.style] != DEFAULT_ATTRS
+        ]
+        numbers.append(0)
+        return max(numbers)
+
     # Render for the first time: reset styling.
     if not previous_screen:
         reset_attributes()
@@ -175,10 +197,8 @@ def _output_screen_diff(
         previous_row = previous_screen.data_buffer[y]
         zero_width_escapes_row = screen.zero_width_escapes[y]
 
-        new_max_line_len = min(width - 1, max(new_row.keys()) if new_row else 0)
-        previous_max_line_len = min(
-            width - 1, max(previous_row.keys()) if previous_row else 0
-        )
+        new_max_line_len = min(width - 1, get_max_column_index(new_row))
+        previous_max_line_len = min(width - 1, get_max_column_index(previous_row))
 
         # Loop over the columns.
         c = 0
