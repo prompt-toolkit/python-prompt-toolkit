@@ -690,6 +690,11 @@ class Application(Generic[_AppResult]):
                     if has_sigwinch:
                         previous_winch_handler = signal.getsignal(signal.SIGWINCH)
                         loop.add_signal_handler(signal.SIGWINCH, self._on_resize)
+                        if previous_winch_handler is None:
+                            # In some situations we receive `None`. This is
+                            # however not a valid value for passing to
+                            # `signal.signal` at the end of this block.
+                            previous_winch_handler = signal.SIG_DFL
 
                     # Wait for UI to finish.
                     try:
