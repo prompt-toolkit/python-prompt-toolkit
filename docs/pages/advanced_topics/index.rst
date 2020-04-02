@@ -12,6 +12,7 @@ Advanced topics
     filters
     rendering_flow
     asyncio
+    unit_testing
     input_hooks
     architecture
     rendering_pipeline

@@ -1,5 +1,6 @@
 from .application import Application
 from .current import (
+    AppSession,
     create_app_session,
     get_app,
     get_app_or_none,
@@ -13,6 +14,7 @@ __all__ = [
     # Application.
     "Application",
     # Current.
+    "AppSession",
     "get_app_session",
     "create_app_session",
     "get_app",
