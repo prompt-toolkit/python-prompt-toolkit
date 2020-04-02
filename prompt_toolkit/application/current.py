@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from prompt_toolkit.output.defaults import Output
 
 __all__ = [
+    "AppSession",
     "get_app_session",
     "get_app",
     "get_app_or_none",
@@ -28,6 +29,9 @@ class AppSession:
     after the other.
 
     The input/output device is not supposed to change during one session.
+
+    Warning: Always use the `create_app_session` function to create an
+    instance, so that it gets activated correctly.
 
     :param input: Use this as a default input for all applications
         running in this session, unless an input is passed to the `Application`

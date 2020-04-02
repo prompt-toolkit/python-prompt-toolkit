@@ -5,8 +5,9 @@ Application
 -----------
 
 .. automodule:: prompt_toolkit.application
-    :members: Application, get_app, set_app, NoRunningApplicationError,
-        DummyApplication, run_in_terminal, run_coroutine_in_terminal
+    :members: Application, get_app, get_app_or_none, set_app,
+        create_app_session, AppSession, get_app_session, DummyApplication,
+        in_terminal, run_in_terminal,
 
 
 Formatted text
@@ -247,7 +248,7 @@ Input
 -----
 
 .. automodule:: prompt_toolkit.input
-    :members: Input, DummyInput, create_input, get_default_input, set_default_input
+    :members: Input, DummyInput, create_input, create_pipe_input
 
 .. automodule:: prompt_toolkit.input.vt100
     :members:
