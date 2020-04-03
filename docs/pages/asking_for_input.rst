@@ -17,7 +17,7 @@ Hello world
 -----------
 
 The following snippet is the most simple example, it uses the
-:func:`~prompt_toolkit.shortcuts.prompt` function to asks the user for input
+:func:`~prompt_toolkit.shortcuts.prompt` function to ask the user for input
 and returns the text. Just like ``(raw_)input``.
 
 .. code:: python
