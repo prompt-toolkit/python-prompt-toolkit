@@ -2,6 +2,9 @@
 """
 Example of the fancy ZSH prompt that @anki-code was using.
 
+The theme is coming from the xonsh plugin from the xhh project:
+https://github.com/xxh/xxh-plugin-xonsh-theme-bar
+
 See:
 - https://github.com/xonsh/xonsh/issues/3356
 - https://github.com/prompt-toolkit/python-prompt-toolkit/issues/1111
