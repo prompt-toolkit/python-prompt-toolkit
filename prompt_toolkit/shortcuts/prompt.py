@@ -662,7 +662,7 @@ class PromptSession(Generic[_T]):
                         # The right prompt.
                         Float(
                             right=0,
-                            top=0,
+                            bottom=0,
                             hide_when_covering_content=True,
                             content=_RPrompt(lambda: self.rprompt),
                         ),
