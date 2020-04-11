@@ -23,8 +23,9 @@ class WordCompleter(Completer):
         contain spaces. (Can not be used together with the WORD option.)
     :param match_middle: When True, match not only the start, but also in the
                          middle of the word.
-    :param pattern: Optional regex. When given, use this regex
-        pattern instead of default one.
+    :param pattern: Optional compiled regex for finding the word before
+        the cursor to complete. When given, use this regex pattern instead of
+        default one (see document._FIND_WORD_RE)
     """
 
     def __init__(
