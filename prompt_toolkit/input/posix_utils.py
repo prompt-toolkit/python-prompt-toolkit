@@ -33,14 +33,16 @@ class PosixStdinReader:
     # of junk.  One occurrence of this that I had was when using iTerm2 on OS X,
     # with "Option as Meta" checked (You should choose "Option as +Esc".)
 
-    def __init__(self, stdin_fd: int, errors: str = "surrogateescape") -> None:
+    def __init__(
+        self, stdin_fd: int, errors: str = "surrogateescape", encoding: str = "utf-8"
+    ) -> None:
         self.stdin_fd = stdin_fd
         self.errors = errors
 
         # Create incremental decoder for decoding stdin.
         # We can not just do `os.read(stdin.fileno(), 1024).decode('utf-8')`, because
         # it could be that we are in the middle of a utf-8 byte sequence.
-        self._stdin_decoder_cls = getincrementaldecoder("utf-8")
+        self._stdin_decoder_cls = getincrementaldecoder(encoding)
         self._stdin_decoder = self._stdin_decoder_cls(errors=errors)
 
         #: True when there is nothing anymore to read.

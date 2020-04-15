@@ -27,6 +27,8 @@ class PosixPipeInput(Vt100Input):
         self._r, self._w = os.pipe()
 
         class Stdin:
+            encoding = "utf-8"
+
             def isatty(stdin) -> bool:
                 return True
 
