@@ -17,7 +17,6 @@ from prompt_toolkit.layout.screen import Char, Screen, WritePosition
 from prompt_toolkit.output import ColorDepth, Output
 from prompt_toolkit.styles import (
     Attrs,
-    DEFAULT_ATTRS,
     BaseStyle,
     DummyStyleTransformation,
     StyleTransformation,
@@ -46,6 +45,7 @@ def _output_screen_diff(
     is_done: bool,  # XXX: drop is_done
     full_screen: bool,
     attrs_for_style_string: "_StyleStringToAttrsCache",
+    style_string_has_style: "_StyleStringHasStyleCache",
     size: Size,
     previous_width: int,
 ) -> Tuple[Point, Optional[str]]:
@@ -156,7 +156,7 @@ def _output_screen_diff(
         numbers = [
             index
             for index, cell in row.items()
-            if cell.char != " " or attrs_for_style_string[cell.style] != DEFAULT_ATTRS
+            if cell.char != " " or style_string_has_style[cell.style]
         ]
         numbers.append(0)
         return max(numbers)
@@ -202,7 +202,7 @@ def _output_screen_diff(
 
         # Loop over the columns.
         c = 0
-        while c < new_max_line_len + 1:
+        while c <= new_max_line_len:
             new_char = new_row[c]
             old_char = previous_row[c]
             char_width = new_char.width or 1
@@ -290,6 +290,34 @@ class _StyleStringToAttrsCache(Dict[str, Attrs]):
         return attrs
 
 
+class _StyleStringHasStyleCache(Dict[str, bool]):
+    """
+    Cache for remember which style strings don't render the default output
+    style (default fg/bg, no underline and no reverse and no blink). That way
+    we know that we should render these cells, even when they're empty (when
+    they contain a space).
+
+    Note: we don't consider bold/italic/hidden because they don't change the
+    output if there's no text in the cell.
+    """
+
+    def __init__(self, style_string_to_attrs: Dict[str, Attrs]) -> None:
+        self.style_string_to_attrs = style_string_to_attrs
+
+    def __missing__(self, style_str: str) -> bool:
+        attrs = self.style_string_to_attrs[style_str]
+        is_default = bool(
+            attrs.color
+            or attrs.bgcolor
+            or attrs.underline
+            or attrs.blink
+            or attrs.reverse
+        )
+
+        self[style_str] = is_default
+        return is_default
+
+
 class CPR_Support(Enum):
     " Enum: whether or not CPR is supported. "
     SUPPORTED = "SUPPORTED"
@@ -339,6 +367,7 @@ class Renderer:
 
         # Cache for the style.
         self._attrs_for_style: Optional[_StyleStringToAttrsCache] = None
+        self._style_string_has_style: Optional[_StyleStringHasStyleCache] = None
         self._last_style_hash: Optional[Hashable] = None
         self._last_transformation_hash: Optional[Hashable] = None
         self._last_color_depth: Optional[ColorDepth] = None
@@ -605,10 +634,15 @@ class Renderer:
         ):
             self._last_screen = None
             self._attrs_for_style = None
+            self._style_string_has_style = None
 
         if self._attrs_for_style is None:
             self._attrs_for_style = _StyleStringToAttrsCache(
                 self.style.get_attrs_for_style_str, app.style_transformation
+            )
+        if self._style_string_has_style is None:
+            self._style_string_has_style = _StyleStringHasStyleCache(
+                self._attrs_for_style
             )
 
         self._last_style_hash = self.style.invalidation_hash()
@@ -641,6 +675,7 @@ class Renderer:
             is_done,
             full_screen=self.full_screen,
             attrs_for_style_string=self._attrs_for_style,
+            style_string_has_style=self._style_string_has_style,
             size=size,
             previous_width=(self._last_size.columns if self._last_size else 0),
         )
