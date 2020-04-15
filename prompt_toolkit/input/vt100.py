@@ -78,7 +78,7 @@ class Vt100Input(Input):
         self._fileno = stdin.fileno()
 
         self._buffer: List[KeyPress] = []  # Buffer to collect the Key objects.
-        self.stdin_reader = PosixStdinReader(self._fileno)
+        self.stdin_reader = PosixStdinReader(self._fileno, encoding=stdin.encoding)
         self.vt100_parser = Vt100Parser(
             lambda key_press: self._buffer.append(key_press)
         )
