@@ -59,7 +59,11 @@ from prompt_toolkit.layout.controls import (
 from prompt_toolkit.layout.dimension import AnyDimension
 from prompt_toolkit.layout.dimension import Dimension as D
 from prompt_toolkit.layout.dimension import to_dimension
-from prompt_toolkit.layout.margins import NumberedMargin, ScrollbarMargin
+from prompt_toolkit.layout.margins import (
+    ConditionalMargin,
+    NumberedMargin,
+    ScrollbarMargin,
+)
 from prompt_toolkit.layout.processors import (
     AppendAutoSuggestion,
     BeforeInput,
@@ -639,6 +643,7 @@ class _DialogList(Generic[_T]):
     selected_style: str = ""
     checked_style: str = ""
     multiple_selection: bool = False
+    show_scrollbar: bool = True
 
     def __init__(self, values: Sequence[Tuple[_T, AnyFormattedText]]) -> None:
         assert len(values) > 0
@@ -702,7 +707,12 @@ class _DialogList(Generic[_T]):
         self.window = Window(
             content=self.control,
             style=self.container_style,
-            right_margins=[ScrollbarMargin(display_arrows=True),],
+            right_margins=[
+                ConditionalMargin(
+                    margin=ScrollbarMargin(display_arrows=True),
+                    filter=Condition(lambda: self.show_scrollbar),
+                ),
+            ],
             dont_extend_height=True,
         )
 
@@ -804,13 +814,23 @@ class Checkbox(CheckboxList[str]):
     :param text: the text
     """
 
-    def __init__(self, text: AnyFormattedText = "") -> None:
+    show_scrollbar = False
+
+    def __init__(self, text: AnyFormattedText = "", checked: bool = False) -> None:
         values = [("value", text)]
         CheckboxList.__init__(self, values)
+        self.checked = checked
 
     @property
     def checked(self) -> bool:
         return "value" in self.current_values
+
+    @checked.setter
+    def checked(self, value: bool) -> None:
+        if value:
+            self.current_values = ["value"]
+        else:
+            self.current_values = []
 
 
 class VerticalLine(object):
