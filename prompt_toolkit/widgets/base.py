@@ -32,6 +32,7 @@ from prompt_toolkit.formatted_text import (
     AnyFormattedText,
     StyleAndTextTuples,
     Template,
+    merge_formatted_text,
     to_formatted_text,
 )
 from prompt_toolkit.formatted_text.utils import fragment_list_to_text
@@ -833,7 +834,57 @@ class Checkbox(CheckboxList[str]):
             self.current_values = []
 
 
-class VerticalLine(object):
+class ComboBox:
+    """
+    Input field where the user can select one out of multiple entries.
+    """
+
+    def __init__(self, entries: List[AnyFormattedText]) -> None:
+        self.entries = entries
+        self.selected_entry = 0
+        self.container = Window(
+            content=FormattedTextControl(
+                text=self._get_formatted_text,
+                focusable=True,
+                key_bindings=self._get_key_bindings(),
+            ),
+            style="class:select-box",
+            height=D(preferred=5),
+            cursorline=True,
+            right_margins=[ScrollbarMargin(display_arrows=True),],
+        )
+
+    def _get_formatted_text(self) -> AnyFormattedText:
+        result: List[AnyFormattedText] = []
+
+        for i, entry in enumerate(self.entries):
+            if i == self.selected_entry:
+                result.append([("[SetCursorPosition]", "")])
+            result.append(entry)
+            result.append("\n")
+
+        return merge_formatted_text(result)
+
+    def _get_key_bindings(self) -> KeyBindings:
+        kb = KeyBindings()
+
+        @kb.add("up")
+        def _go_up(event) -> None:
+            if len(self.entries):
+                self.selected_entry = (self.selected_entry - 1) % len(self.entries)
+
+        @kb.add("down")
+        def _go_down(event) -> None:
+            if len(self.entries):
+                self.selected_entry = (self.selected_entry + 1) % len(self.entries)
+
+        return kb
+
+    def __pt_container__(self) -> Container:
+        return self.container
+
+
+class VerticalLine:
     """
     A simple vertical line with a width of 1.
     """
