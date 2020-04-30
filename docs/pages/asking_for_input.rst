@@ -165,7 +165,7 @@ Creating a custom style could be done like this:
 .. code:: python
 
     from prompt_toolkit.shortcuts import prompt
-    from prompt_toolkit.styles import style_from_pygments_cls, merge_styles
+    from prompt_toolkit.styles import Style, style_from_pygments_cls, merge_styles
     from prompt_toolkit.lexers import PygmentsLexer
 
     from pygments.styles.tango import TangoStyle
