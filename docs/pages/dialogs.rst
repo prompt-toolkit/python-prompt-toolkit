@@ -90,7 +90,7 @@ each providing the label (first) and return value if clicked (second).
 Radio list dialog
 -----------------
 
-The :func:`~prompt_toolkit.shortcuts.radiolist_dialog` functiom displays a dialog
+The :func:`~prompt_toolkit.shortcuts.radiolist_dialog` function displays a dialog
 with choices offered as a radio list. The values are provided as a list of tuples,
 each providing the return value (first element) and the displayed value (second element).
 
