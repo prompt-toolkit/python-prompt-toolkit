@@ -554,6 +554,8 @@ class Renderer:
             await sleep(timeout)
 
             # Got timeout, erase queue.
+            for response_f in cpr_futures:
+                response_f.cancel()
             self._waiting_for_cpr_futures = deque()
 
         coroutines = [
