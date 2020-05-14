@@ -82,7 +82,7 @@ from prompt_toolkit.key_binding.key_bindings import (
 )
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.keys import Keys
-from prompt_toolkit.layout import Float, FloatContainer, HSplit, Window
+from prompt_toolkit.layout import Float, FloatContainer, HSplit, Window, DummyControl
 from prompt_toolkit.layout.containers import ConditionalContainer, WindowAlign
 from prompt_toolkit.layout.controls import (
     BufferControl,
@@ -401,6 +401,7 @@ class PromptSession(Generic[_T]):
         refresh_interval: float = 0,
         input: Optional[Input] = None,
         output: Optional[Output] = None,
+        prompt_in_toolbar: Optional[bool] = False,
     ) -> None:
 
         history = history or InMemoryHistory()
@@ -413,6 +414,13 @@ class PromptSession(Generic[_T]):
         # Store all settings in this class.
         self._input = input
         self._output = output
+
+        # New option: allow this prompt to display as a bottom toolbar. By
+        # default, erase the content on exit so that the toolbar doesn't stick
+        # around.
+        self.prompt_in_toolbar = prompt_in_toolbar
+        if self.prompt_in_toolbar:
+            erase_when_done = True
 
         # Store attributes.
         # (All except 'editing_mode'.)
@@ -597,6 +605,10 @@ class PromptSession(Generic[_T]):
                 self._get_line_prefix, get_prompt_text_2=get_prompt_text_2
             ),
             wrap_lines=dyncond("wrap_lines"),
+            # Added to match the "toolbar" above if we specified a toolbar
+            # prompt
+            style="class:bottom-toolbar" if self.prompt_in_toolbar else "",
+            dont_extend_height=self.prompt_in_toolbar,
         )
 
         @Condition
@@ -610,6 +622,12 @@ class PromptSession(Generic[_T]):
                 FloatContainer(
                     HSplit(
                         [
+                            # This control fills the output so that our toolbar
+                            # prompt ends up on the last line of the terminal.
+                            ConditionalContainer(
+                                Window(DummyControl()),
+                                Condition(lambda: self.prompt_in_toolbar),
+                            ),
                             ConditionalContainer(
                                 Window(
                                     FormattedTextControl(get_prompt_text_1),
@@ -1345,6 +1363,7 @@ def prompt(
     enable_open_in_editor: Optional[FilterOrBool] = None,
     tempfile_suffix: Optional[Union[str, Callable[[], str]]] = None,
     tempfile: Optional[Union[str, Callable[[], str]]] = None,
+    prompt_in_toolbar: Optional[bool] = False,
     # Following arguments are specific to the current `prompt()` call.
     default: str = "",
     accept_default: bool = False,
@@ -1356,7 +1375,9 @@ def prompt(
     """
     # The history is the only attribute that has to be passed to the
     # `PromptSession`, it can't be passed into the `prompt()` method.
-    session: PromptSession[str] = PromptSession(history=history)
+    session: PromptSession[str] = PromptSession(
+        history=history, prompt_in_toolbar=prompt_in_toolbar
+    )
 
     return session.prompt(
         message,
