@@ -318,6 +318,8 @@ class PromptSession(Generic[_T]):
         every so many seconds.
     :param input: `Input` object. (Note that the preferred way to change the
         input/output is by creating an `AppSession`.)
+    :param prompt_in_toolbar: `bool`. Whether to display the prompt in a
+        toolbar at the bottom of the screen (automatically enables erase_when_done).
     :param output: `Output` object.
     """
 
