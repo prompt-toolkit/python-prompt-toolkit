@@ -742,8 +742,6 @@ class Relative(Enum):
 
     # Not relative to cursor
     NONE = auto()
-    # Position at the cursor
-    OVER = auto()
     # Position before the cursor
     BEFORE = auto()
     # Position after the cursor

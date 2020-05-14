@@ -82,8 +82,8 @@ from prompt_toolkit.key_binding.key_bindings import (
 )
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.keys import Keys
-from prompt_toolkit.layout import Float, FloatContainer, HSplit, Window, DummyControl
-from prompt_toolkit.layout.containers import ConditionalContainer, WindowAlign, Relative
+from prompt_toolkit.layout import DummyControl, Float, FloatContainer, HSplit, Window
+from prompt_toolkit.layout.containers import ConditionalContainer, Relative, WindowAlign
 from prompt_toolkit.layout.controls import (
     BufferControl,
     FormattedTextControl,
@@ -615,12 +615,16 @@ class PromptSession(Generic[_T]):
             # Added to match the "toolbar" above if we specified a toolbar
             # prompt
             style="class:bottom-toolbar" if self.prompt_in_toolbar else "",
-            dont_extend_height=self.prompt_in_toolbar,
+            dont_extend_height=bool(self.prompt_in_toolbar),
         )
 
         @Condition
         def multi_column_complete_style() -> bool:
             return self.complete_style == CompleteStyle.MULTI_COLUMN
+
+        @Condition
+        def is_prompt_in_toolbar() -> bool:
+            return bool(self.prompt_in_toolbar)
 
         # Build the layout.
         layout = HSplit(
@@ -640,7 +644,7 @@ class PromptSession(Generic[_T]):
                                     if self.prompt_in_toolbar
                                     else Dimension(),
                                 ),
-                                Condition(lambda: self.prompt_in_toolbar),
+                                is_prompt_in_toolbar,
                             ),
                             ConditionalContainer(
                                 Window(
