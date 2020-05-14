@@ -83,7 +83,7 @@ from prompt_toolkit.key_binding.key_bindings import (
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout import Float, FloatContainer, HSplit, Window, DummyControl
-from prompt_toolkit.layout.containers import ConditionalContainer, WindowAlign
+from prompt_toolkit.layout.containers import ConditionalContainer, WindowAlign, Relative
 from prompt_toolkit.layout.controls import (
     BufferControl,
     FormattedTextControl,
@@ -600,9 +600,14 @@ class PromptSession(Generic[_T]):
             preview_search=True,
         )
 
+        # Only use "_get_default_buffer_control_height" if we are not on in the
+        # toolbar. This function creates padding, which needs to be above the
+        # prompt, if we are in the toolbar.
         default_buffer_window = Window(
             default_buffer_control,
-            height=self._get_default_buffer_control_height,
+            height=self._get_default_buffer_control_height
+            if not self.prompt_in_toolbar
+            else Dimension(),
             get_line_prefix=partial(
                 self._get_line_prefix, get_prompt_text_2=get_prompt_text_2
             ),
@@ -626,8 +631,15 @@ class PromptSession(Generic[_T]):
                         [
                             # This control fills the output so that our toolbar
                             # prompt ends up on the last line of the terminal.
+                            # We also set height to get_default_buffer_control_height
+                            # here to create padding above the prompt if needed.
                             ConditionalContainer(
-                                Window(DummyControl()),
+                                Window(
+                                    DummyControl(),
+                                    height=self._get_default_buffer_control_height
+                                    if self.prompt_in_toolbar
+                                    else Dimension(),
+                                ),
                                 Condition(lambda: self.prompt_in_toolbar),
                             ),
                             ConditionalContainer(
@@ -660,7 +672,9 @@ class PromptSession(Generic[_T]):
                         #       rectangular due to the meta-text below the menu.
                         Float(
                             xcursor=True,
-                            ycursor=True,
+                            ycursor=Relative.BEFORE
+                            if self.prompt_in_toolbar
+                            else Relative.AFTER,
                             transparent=True,
                             content=CompletionsMenu(
                                 max_height=16,
@@ -671,7 +685,9 @@ class PromptSession(Generic[_T]):
                         ),
                         Float(
                             xcursor=True,
-                            ycursor=True,
+                            ycursor=Relative.BEFORE
+                            if self.prompt_in_toolbar
+                            else Relative.AFTER,
                             transparent=True,
                             content=MultiColumnCompletionsMenu(
                                 show_meta=True,

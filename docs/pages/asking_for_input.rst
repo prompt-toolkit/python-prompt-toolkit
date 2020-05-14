@@ -685,6 +685,10 @@ after completion.
 
     answer = prompt(": ", prompt_in_toolbar=True)
 
+This sort of prompt does not work well with readline-like completers due to the
+floating nature of the toolbar. If you are implementing completers for a
+toolbar-based prompt, it is recommended to use one of the default floating
+completers.
 
 Vi input mode
 -------------
