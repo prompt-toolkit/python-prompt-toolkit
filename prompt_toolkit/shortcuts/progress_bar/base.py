@@ -15,6 +15,7 @@ import threading
 import traceback
 from asyncio import get_event_loop, new_event_loop, set_event_loop
 from typing import (
+    Callable,
     Generic,
     Iterable,
     List,
@@ -23,12 +24,20 @@ from typing import (
     Sized,
     TextIO,
     TypeVar,
+    Union,
     cast,
 )
 
-from prompt_toolkit.application import Application
+from prompt_toolkit.application import Application, get_app
 from prompt_toolkit.application.current import get_app_session
-from prompt_toolkit.filters import Condition, is_done, renderer_height_is_known
+from prompt_toolkit.eventloop import run_in_executor_with_context
+from prompt_toolkit.filters import (
+    Condition,
+    FilterOrBool,
+    is_done,
+    renderer_height_is_known,
+    to_filter,
+)
 from prompt_toolkit.formatted_text import (
     AnyFormattedText,
     StyleAndTextTuples,
@@ -51,14 +60,13 @@ from prompt_toolkit.output import ColorDepth, Output
 from prompt_toolkit.styles import BaseStyle
 from prompt_toolkit.utils import in_main_thread
 
+from .current import get_counter, set_counter, set_progress_bar
 from .formatters import Formatter, create_default_formatters
 
 try:
     import contextvars
 except ImportError:
-    from prompt_toolkit.eventloop import (  # type: ignore
-        dummy_contextvars as contextvars,
-    )
+    import prompt_toolkit.eventloop.dummy_contextvars as contextvars  # type: ignore
 
 
 __all__ = ["ProgressBar"]
@@ -213,7 +221,8 @@ class ProgressBar:
         def run() -> None:
             set_event_loop(self._app_loop)
             try:
-                self.app.run()
+                with set_progress_bar(self):
+                    self.app.run()
             except BaseException as e:
                 traceback.print_exc()
                 print(e)
@@ -250,7 +259,7 @@ class ProgressBar:
         self,
         data: Optional[Iterable[_T]] = None,
         label: AnyFormattedText = "",
-        remove_when_done: bool = False,
+        remove_when_done: FilterOrBool = False,
         total: Optional[int] = None,
     ) -> "ProgressBarCounter[_T]":
         """
@@ -258,7 +267,8 @@ class ProgressBar:
 
         :param label: Title text or description for this progress. (This can be
             formatted text as well).
-        :param remove_when_done: When `True`, hide this progress bar.
+        :param remove_when_done: When `True`, hide this progress bar. :class:`.Filter`
+            instance.
         :param total: Specify the maximum value if it can't be calculated by
             calling ``len``.
         """
@@ -285,12 +295,20 @@ class _ProgressControl(UIControl):
     def create_content(self, width: int, height: int) -> UIContent:
         items: List[StyleAndTextTuples] = []
 
-        for pr in self.progress_bar.counters:
+        for counter in self.progress_bar.counters:
             try:
-                text = self.formatter.format(self.progress_bar, pr, width)
+                text = self.formatter.format(self.progress_bar, counter, width)
             except BaseException:
                 traceback.print_exc()
                 text = "ERROR"
+
+            # Check whether it is time to remove the counter or to keep
+            # displaying counter.
+            if counter.done:
+                with set_counter(counter):
+                    if counter.remove_when_done():
+                        self.progress_bar.counters.remove(counter)
+                        continue
 
             items.append(to_formatted_text(text))
 
@@ -319,7 +337,7 @@ class ProgressBarCounter(Generic[_CounterItem]):
         progress_bar: ProgressBar,
         data: Optional[Iterable[_CounterItem]] = None,
         label: AnyFormattedText = "",
-        remove_when_done: bool = False,
+        remove_when_done: FilterOrBool = False,
         total: Optional[int] = None,
     ) -> None:
 
@@ -329,7 +347,7 @@ class ProgressBarCounter(Generic[_CounterItem]):
         self.data = data
         self.items_completed = 0
         self.label = label
-        self.remove_when_done = remove_when_done
+        self.remove_when_done = to_filter(remove_when_done)
         self._done = False
         self.total: Optional[int]
 
@@ -382,9 +400,6 @@ class ProgressBarCounter(Generic[_CounterItem]):
     def done(self, value: bool) -> None:
         self._done = value
         self.stopped = value
-
-        if value and self.remove_when_done:
-            self.progress_bar.counters.remove(self)
 
     @property
     def stopped(self) -> bool:

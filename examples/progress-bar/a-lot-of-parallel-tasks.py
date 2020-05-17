@@ -2,12 +2,18 @@
 """
 More complex demonstration of what's possible with the progress bar.
 """
+import datetime
 import random
 import threading
 import time
 
 from prompt_toolkit import HTML
-from prompt_toolkit.shortcuts import ProgressBar
+from prompt_toolkit.filters import Condition
+from prompt_toolkit.shortcuts.progress_bar import (
+    ProgressBar,
+    get_counter,
+    get_progress_bar,
+)
 
 
 def main():
@@ -15,10 +21,32 @@ def main():
         title=HTML("<b>Example of many parallel tasks.</b>"),
         bottom_toolbar=HTML("<b>[Control-L]</b> clear  <b>[Control-C]</b> abort"),
     ) as pb:
+        done = set()
+
+        # Remove a completed counter after 5 seconds but keep the last 5.
+        @Condition
+        def ten_seconds_passed():
+            counter = get_counter()
+            delta = datetime.datetime.now() - counter.stop_time
+            if delta.total_seconds() > 10:
+                done.add(counter)
+                return True
+            return False
+
+        @Condition
+        def at_least_five_bars():
+            if len(done) > 5:
+                done.remove(get_counter())
+                return True
+            return False
 
         def run_task(label, total, sleep_time):
             """Complete a normal run."""
-            for i in pb(range(total), label=label):
+            for i in pb(
+                range(total),
+                label=label,
+                remove_when_done=ten_seconds_passed & at_least_five_bars,
+            ):
                 time.sleep(sleep_time)
 
         def stop_task(label, total, sleep_time):
