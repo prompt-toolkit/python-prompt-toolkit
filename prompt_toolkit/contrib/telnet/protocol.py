@@ -36,6 +36,10 @@ NAWS = int2byte(31)
 LINEMODE = int2byte(34)
 SUPPRESS_GO_AHEAD = int2byte(3)
 
+TTYPE = int2byte(24)
+SEND = int2byte(1)
+IS = int2byte(0)
+
 DM = int2byte(242)
 BRK = int2byte(243)
 IP = int2byte(244)
@@ -65,10 +69,12 @@ class TelnetProtocolParser:
         self,
         data_received_callback: Callable[[bytes], None],
         size_received_callback: Callable[[int, int], None],
+        ttype_received_callback: Callable[[str], None],
     ) -> None:
 
         self.data_received_callback = data_received_callback
         self.size_received_callback = size_received_callback
+        self.ttype_received_callback = ttype_received_callback
 
         self._parser = self._parse_coroutine()
         self._parser.send(None)  # type: ignore
@@ -121,6 +127,17 @@ class TelnetProtocolParser:
         else:
             logger.warning("Wrong number of NAWS bytes")
 
+    def ttype(self, data: bytes) -> None:
+        """
+        Received terminal type.
+        """
+        subcmd, data = data[0:1], data[1:]
+        if subcmd == IS:
+            ttype = data.decode("ascii")
+            self.ttype_received_callback(ttype)
+        else:
+            logger.warning("Received a non-IS terminal type Subnegotiation")
+
     def negotiate(self, data: bytes) -> None:
         """
         Got negotiate data.
@@ -129,6 +146,8 @@ class TelnetProtocolParser:
 
         if command == NAWS:
             self.naws(payload)
+        elif command == TTYPE:
+            self.ttype(payload)
         else:
             logger.info("Negotiate (%r got bytes)", len(data))
 
