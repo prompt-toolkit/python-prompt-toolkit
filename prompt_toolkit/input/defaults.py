@@ -43,7 +43,7 @@ def create_input(
         return Vt100Input(stdin)
 
 
-def create_pipe_input() -> Input:
+def create_pipe_input(responds_to_cpr: bool = True) -> Input:
     """
     Create an input pipe.
     This is mostly useful for unit testing.
@@ -51,8 +51,8 @@ def create_pipe_input() -> Input:
     if is_windows():
         from .win32_pipe import Win32PipeInput
 
-        return Win32PipeInput()
+        return Win32PipeInput(responds_to_cpr=responds_to_cpr)
     else:
         from .posix_pipe import PosixPipeInput
 
-        return PosixPipeInput()
+        return PosixPipeInput(responds_to_cpr=responds_to_cpr)

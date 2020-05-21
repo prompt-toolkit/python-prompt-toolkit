@@ -23,7 +23,8 @@ class PosixPipeInput(Vt100Input):
 
     _id = 0
 
-    def __init__(self, text: str = "") -> None:
+    def __init__(self, text: str = "", responds_to_cpr: bool = True) -> None:
+        self._responds_to_cpr = True
         self._r, self._w = os.pipe()
 
         class Stdin:
@@ -44,7 +45,7 @@ class PosixPipeInput(Vt100Input):
 
     @property
     def responds_to_cpr(self) -> bool:
-        return False
+        return self._responds_to_cpr
 
     def send_bytes(self, data: bytes) -> None:
         os.write(self._w, data)
