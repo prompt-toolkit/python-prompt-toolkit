@@ -81,6 +81,7 @@ class _ConnectionStdout:
         self._buffer: List[bytes] = []
 
     def write(self, data: str) -> None:
+        data = data.replace("\n", "\r\n")
         self._buffer.append(data.encode(self._encoding, errors=self._errors))
         self.flush()
 
