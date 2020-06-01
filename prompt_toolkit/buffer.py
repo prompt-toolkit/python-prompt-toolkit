@@ -9,6 +9,7 @@ import shlex
 import shutil
 import subprocess
 import tempfile
+import threading
 from enum import Enum
 from functools import wraps
 from typing import (
@@ -166,6 +167,7 @@ class YankNthArgState:
 BufferEventHandler = Callable[["Buffer"], None]
 BufferAcceptHandler = Callable[["Buffer"], bool]
 
+BufferHistoryLock = threading.Lock()
 
 class Buffer:
     """
@@ -305,14 +307,14 @@ class Buffer:
 
         # Load the history.
         def new_history_item(item: str) -> None:
-            # XXX: Keep in mind that this function can be called in a different
-            #      thread!
             # Insert the new string into `_working_lines`.
-            self._working_lines.insert(0, item)
-            self.__working_index += (
-                1  # Not entirely threadsafe, but probably good enough.
-            )
+            # XXX: This function contains a critical section, may only
+            #      be invoked on the event loop thread if history is 
+            #      loading on another thread.
 
+            self._working_lines.insert(0, item)
+            self.__working_index += 1
+            
         self.history.load(new_history_item)
 
     def __repr__(self) -> str:
@@ -322,6 +324,7 @@ class Buffer:
             text = self.text[:12] + "..."
 
         return "<Buffer(name=%r, text=%r) at %r>" % (self.name, text, id(self))
+
 
     def reset(
         self, document: Optional[Document] = None, append_to_history: bool = False
@@ -413,6 +416,9 @@ class Buffer:
 
     @property
     def text(self) -> str:
+        if self.working_index >= len(self._working_lines):
+            print(f'foo error')
+            pass
         return self._working_lines[self.working_index]
 
     @text.setter
