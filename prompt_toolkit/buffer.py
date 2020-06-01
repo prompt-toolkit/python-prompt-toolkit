@@ -168,7 +168,6 @@ BufferEventHandler = Callable[["Buffer"], None]
 BufferAcceptHandler = Callable[["Buffer"], bool]
 
 
-
 class Buffer:
     """
     The core data structure that holds the text and cursor position of the
