@@ -112,13 +112,11 @@ class ThreadedHistory(History):
         super().__init__()
 
     def load(self, item_loaded_callback: Callable[[str], None]) -> None:
-        """Collect the history strings but run the callback in the event loop.
+        """Collect the history strings on a background thread,
+        but run the callback in the event loop.
 
-        That's the only way to avoid multitasking hazards if the loaded history is large.
-        Callback into `Buffer` tends to get working_index all tangled up.
-
-        Caller of ThreadedHistory must ensure that the prompt ends up running on the same
-        event loop as we create here.
+        Caller of ThreadedHistory must ensure that the Application ends up running on the same
+        event loop as we (probably) create here.
         """
 
         self._item_loaded_callbacks.append(item_loaded_callback)

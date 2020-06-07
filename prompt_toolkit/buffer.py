@@ -167,7 +167,6 @@ class YankNthArgState:
 BufferEventHandler = Callable[["Buffer"], None]
 BufferAcceptHandler = Callable[["Buffer"], bool]
 
-BufferHistoryLock = threading.Lock()
 
 
 class Buffer:
