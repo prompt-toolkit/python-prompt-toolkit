@@ -160,8 +160,12 @@ class ThreadedHistory(History):
         burst_countdown = 10000
         try:
             for item in self.load_history_strings():
-                self._loaded_strings.insert(0, item)    # slowest way to add an element to a list known to man.
-                event_loop.call_soon_threadsafe(item_loaded_callback, item)  # expensive way to dispatch single line.
+                self._loaded_strings.insert(
+                    0, item
+                )  # slowest way to add an element to a list known to man.
+                event_loop.call_soon_threadsafe(
+                    item_loaded_callback, item
+                )  # expensive way to dispatch single line.
                 if burst_countdown:
                     burst_countdown -= 1
                     if burst_countdown == 0:

@@ -415,7 +415,9 @@ class Buffer:
     @property
     def text(self) -> str:
         if self.working_index >= len(self._working_lines):
-            print(f'Buffer: working_index {self.working_index} out of sync with working_lines {len(self._working_lines)}')
+            print(
+                f"Buffer: working_index {self.working_index} out of sync with working_lines {len(self._working_lines)}"
+            )
         return self._working_lines[self.working_index]
 
     @text.setter
