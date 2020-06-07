@@ -5,12 +5,11 @@ Demonstrate bug in threaded history, where asynchronous loading can corrupt Buff
 Seems to happen with very large history being loaded and causing slowdowns.
 
 """
+import re
 import time
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import History, ThreadedHistory
-
-import re
 
 
 class MegaHistory(History):
@@ -20,36 +19,40 @@ class MegaHistory(History):
     Sample designed to exercise existing multitasking hazards, don't add any more.
     """
 
-    def __init__(self, init_request:int = 1000, *args, **kwargs):
+    def __init__(self, init_request: int = 1000, *args, **kwargs):
         super(MegaHistory, self).__init__(*args, **kwargs)
-        self.requested_count = 0        # only modified by main (requesting) thread
-        self.requested_commands = 0     # only modified by main (requesting) thread
-        self.actual_count = 0           # only modified by background thread
+        self.requested_count = 0  # only modified by main (requesting) thread
+        self.requested_commands = 0  # only modified by main (requesting) thread
+        self.actual_count = 0  # only modified by background thread
 
     def load_history_strings(self):
         while True:
             while self.requested_count <= self.actual_count:
-                time.sleep(0.001)   # don't busy loop
+                time.sleep(0.001)  # don't busy loop
 
-            print(f'... starting to load {self.requested_count - self.actual_count:15,d} more items.')
+            print(
+                f"... starting to load {self.requested_count - self.actual_count:15,d} more items."
+            )
             while self.requested_count > self.actual_count:
                 yield f"History item {self.actual_count:15,d}, command number {self.requested_commands}"
                 self.actual_count += 1
-            print('...done.')
+            print("...done.")
 
     def store_string(self, string):
         pass  # Don't store strings.
 
     # called by main thread, watch out for multitasking hazards.
-    def add_request(self, requested:int = 0):
+    def add_request(self, requested: int = 0):
         self.requested_count += requested
         self.requested_commands += 1
 
     def show_request(self):
-        print(f'Have loaded {self.actual_count:15,d} of {self.requested_count:15,d} in {self.requested_commands} commands.')
+        print(
+            f"Have loaded {self.actual_count:15,d} of {self.requested_count:15,d} in {self.requested_commands} commands."
+        )
 
 
-HIST_CMD = re.compile(r'^hist (load (\d+)|show)$', re.IGNORECASE)
+HIST_CMD = re.compile(r"^hist (load (\d+)|show)$", re.IGNORECASE)
 
 
 def main():
@@ -73,17 +76,17 @@ def main():
 
     while True:
         text = session.prompt("Say something: ")
-        if text.startswith('hist'):
+        if text.startswith("hist"):
             m = HIST_CMD.match(text)
             if not m:
-                print('eh?')
+                print("eh?")
             else:
-                if m[1] == 'show':
+                if m[1] == "show":
                     mh.show_request()
-                elif m[1].startswith('load'):
+                elif m[1].startswith("load"):
                     mh.add_request(int(m[2]))
                 else:
-                    print('eh? hist load nnnnnn\nor hist show')
+                    print("eh? hist load nnnnnn\nor hist show")
             pass
         else:
             print("You said: %s" % text)

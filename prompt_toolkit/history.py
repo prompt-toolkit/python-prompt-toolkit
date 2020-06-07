@@ -6,13 +6,13 @@ NOTE: Notice that there is no `DynamicHistory`. This doesn't work well, because
       when a history entry is loaded. This loading can be done asynchronously
       and making the history swappable would probably break this.
 """
+import asyncio
 import datetime
 import os
+import time
 from abc import ABCMeta, abstractmethod
 from threading import Thread
 from typing import Callable, Iterable, List, Optional
-import asyncio
-import time
 
 __all__ = [
     "History",
@@ -39,11 +39,7 @@ class History(metaclass=ABCMeta):
     # Methods expected by `Buffer`.
     #
 
-    def load(
-        self,
-        item_loaded_callback: Callable[[str], None],
-        event_loop: asyncio.BaseEventLoop = None,
-    ) -> None:
+    def load(self, item_loaded_callback: Callable[[str], None],) -> None:
         """
         Load the history and call the callback for every entry in the history.
         This one assumes the callback is only called from same thread as `Buffer` is using.
@@ -112,6 +108,7 @@ class ThreadedHistory(History):
         super().__init__()
 
     def load(self, item_loaded_callback: Callable[[str], None]) -> None:
+
         """Collect the history strings on a background thread,
         but run the callback in the event loop.
 
