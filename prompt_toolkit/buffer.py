@@ -167,7 +167,6 @@ class YankNthArgState:
 BufferEventHandler = Callable[["Buffer"], None]
 BufferAcceptHandler = Callable[["Buffer"], bool]
 
-BufferHistoryLock = threading.Lock()
 
 class Buffer:
     """
@@ -314,7 +313,7 @@ class Buffer:
 
             self._working_lines.insert(0, item)
             self.__working_index += 1
-            
+
         self.history.load(new_history_item)
 
     def __repr__(self) -> str:
@@ -324,7 +323,6 @@ class Buffer:
             text = self.text[:12] + "..."
 
         return "<Buffer(name=%r, text=%r) at %r>" % (self.name, text, id(self))
-
 
     def reset(
         self, document: Optional[Document] = None, append_to_history: bool = False
