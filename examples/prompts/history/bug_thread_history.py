@@ -35,7 +35,7 @@ class MegaHistory(History):
             while self.requested_count > self.actual_count:
                 yield f"History item {self.actual_count:15,d}, command number {self.requested_commands}"
                 self.actual_count += 1
-            print('...done.')            
+            print('...done.')
 
     def store_string(self, string):
         pass  # Don't store strings.
@@ -45,7 +45,7 @@ class MegaHistory(History):
         self.requested_count += requested
         self.requested_commands += 1
 
-    def show(self):
+    def show_request(self):
         print(f'Have loaded {self.actual_count:15,d} of {self.requested_count:15,d} in {self.requested_commands} commands.')
 
 
@@ -54,10 +54,12 @@ HIST_CMD = re.compile(r'^hist (load (\d+)|show)$', re.IGNORECASE)
 
 def main():
     print(
-        "Asynchronous loading of history. Notice that the up-arrow will work "
-        "for as far as the completions are loaded.\n"
-        "Even when the input is accepted, loading will continue in the "
-        "background and when the next prompt is displayed.\n"
+        "Asynchronous loading of history. Designed to exercise multitasking hazard in Buffer.\n"
+        "When started, tries to load 100,000 lines into history with no delay.\n"
+        "Expect to trigger assertion in document.py line 98, though others may fire.\n"
+        "\n"
+        "Can request more lines by `hist load nnnnn`, and can see progress by `hist show`.\n"
+        "\n"
     )
     mh = MegaHistory()
     our_history = ThreadedHistory(mh)
@@ -67,6 +69,8 @@ def main():
     # session.
     session = PromptSession(history=our_history)
 
+    mh.add_request(99999)
+
     while True:
         text = session.prompt("Say something: ")
         if text.startswith('hist'):
@@ -75,7 +79,7 @@ def main():
                 print('eh?')
             else:
                 if m[1] == 'show':
-                    mh.show()
+                    mh.show_request()
                 elif m[1].startswith('load'):
                     mh.add_request(int(m[2]))
                 else:
