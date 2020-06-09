@@ -688,8 +688,8 @@ class Application(Generic[_AppResult]):
 
                     has_sigwinch = hasattr(signal, "SIGWINCH") and in_main_thread()
                     if has_sigwinch:
-                        previous_winch_handler = signal.getsignal(signal.SIGWINCH)
-                        loop.add_signal_handler(signal.SIGWINCH, self._on_resize)
+                        previous_winch_handler = signal.getsignal(signal.SIGWINCH)  # type: ignore[attr-defined]
+                        loop.add_signal_handler(signal.SIGWINCH, self._on_resize)  # type: ignore[attr-defined]
                         if previous_winch_handler is None:
                             # In some situations we receive `None`. This is
                             # however not a valid value for passing to
@@ -728,8 +728,8 @@ class Application(Generic[_AppResult]):
                                 await self.renderer.wait_for_cpr_responses()
 
                             if has_sigwinch:
-                                loop.remove_signal_handler(signal.SIGWINCH)
-                                signal.signal(signal.SIGWINCH, previous_winch_handler)
+                                loop.remove_signal_handler(signal.SIGWINCH)  # type: ignore[attr-defined]
+                                signal.signal(signal.SIGWINCH, previous_winch_handler)  # type: ignore[attr-defined]
 
                             # Wait for the run-in-terminals to terminate.
                             previous_run_in_terminal_f = self._running_in_terminal_f
@@ -1004,9 +1004,9 @@ class Application(Generic[_AppResult]):
                 # Usually we want the whole process group to be suspended. This
                 # handles the case when input is piped from another process.
                 if suspend_group:
-                    os.kill(0, signal.SIGTSTP)
+                    os.kill(0, signal.SIGTSTP)  # type: ignore[attr-defined]
                 else:
-                    os.kill(os.getpid(), signal.SIGTSTP)
+                    os.kill(os.getpid(), signal.SIGTSTP)  # type: ignore[attr-defined]
 
             run_in_terminal(run)
 

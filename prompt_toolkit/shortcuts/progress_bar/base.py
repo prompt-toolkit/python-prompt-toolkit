@@ -143,7 +143,7 @@ class ProgressBar:
         self._loop = get_event_loop()
         self._app_loop = new_event_loop()
         self._previous_winch_handler = (
-            signal.getsignal(signal.SIGWINCH) if hasattr(signal, "SIGWINCH") else None
+            signal.getsignal(signal.SIGWINCH) if hasattr(signal, "SIGWINCH") else None  # type: ignore[attr-defined]
         )
         self._has_sigwinch = False
 
@@ -227,8 +227,8 @@ class ProgressBar:
         # (Interrupt that we receive during resize events.)
         self._has_sigwinch = hasattr(signal, "SIGWINCH") and in_main_thread()
         if self._has_sigwinch:
-            self._previous_winch_handler = signal.getsignal(signal.SIGWINCH)
-            self._loop.add_signal_handler(signal.SIGWINCH, self.invalidate)
+            self._previous_winch_handler = signal.getsignal(signal.SIGWINCH)  # type: ignore[attr-defined]
+            self._loop.add_signal_handler(signal.SIGWINCH, self.invalidate)  # type: ignore[attr-defined]
 
         return self
 
@@ -239,8 +239,8 @@ class ProgressBar:
 
         # Remove WINCH handler.
         if self._has_sigwinch:
-            self._loop.remove_signal_handler(signal.SIGWINCH)
-            signal.signal(signal.SIGWINCH, self._previous_winch_handler)
+            self._loop.remove_signal_handler(signal.SIGWINCH)  # type: ignore[attr-defined]
+            signal.signal(signal.SIGWINCH, self._previous_winch_handler)  # type: ignore[attr-defined]
 
         if self._thread is not None:
             self._thread.join()
