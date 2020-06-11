@@ -53,7 +53,7 @@ class GrammarValidator(Validator):
                         raise ValidationError(
                             cursor_position=v.start + e.cursor_position,
                             message=e.message,
-                        )
+                        ) from e
         else:
             raise ValidationError(
                 cursor_position=len(document.text), message="Invalid command"
