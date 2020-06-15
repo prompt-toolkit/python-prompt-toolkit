@@ -562,7 +562,9 @@ class Renderer:
             wait_for_responses(),
             wait_for_timeout(),
         ]
-        await wait(coroutines, return_when=FIRST_COMPLETED)
+        _, pending = await wait(coroutines, return_when=FIRST_COMPLETED)
+        for task in pending:
+            task.cancel()
 
     def render(
         self, app: "Application[Any]", layout: "Layout", is_done: bool = False
