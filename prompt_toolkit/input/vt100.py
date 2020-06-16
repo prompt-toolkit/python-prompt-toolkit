@@ -48,13 +48,13 @@ class Vt100Input(Input):
         try:
             # This should not raise, but can return 0.
             stdin.fileno()
-        except io.UnsupportedOperation:
+        except io.UnsupportedOperation as e:
             if "idlelib.run" in sys.modules:
                 raise io.UnsupportedOperation(
                     "Stdin is not a terminal. Running from Idle is not supported."
-                )
+                ) from e
             else:
-                raise io.UnsupportedOperation("Stdin is not a terminal.")
+                raise io.UnsupportedOperation("Stdin is not a terminal.") from e
 
         # Even when we have a file descriptor, it doesn't mean it's a TTY.
         # Normally, this requires a real TTY device, but people instantiate
