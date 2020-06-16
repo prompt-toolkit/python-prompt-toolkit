@@ -103,6 +103,9 @@ E = KeyPressEvent
 _AppResult = TypeVar("_AppResult")
 ApplicationEventHandler = Callable[["Application[_AppResult]"], None]
 
+_SIGWINCH = getattr(signal, "SIGWINCH", None)
+_SIGTSTP = getattr(signal, "SIGTSTP", None)
+
 
 class Application(Generic[_AppResult]):
     """
@@ -686,10 +689,9 @@ class Application(Generic[_AppResult]):
                     self._redraw()
                     self._start_auto_refresh_task()
 
-                    has_sigwinch = hasattr(signal, "SIGWINCH") and in_main_thread()
-                    if has_sigwinch:
-                        previous_winch_handler = signal.getsignal(signal.SIGWINCH)
-                        loop.add_signal_handler(signal.SIGWINCH, self._on_resize)
+                    if _SIGWINCH is not None and in_main_thread():
+                        previous_winch_handler = signal.getsignal(_SIGWINCH)
+                        loop.add_signal_handler(_SIGWINCH, self._on_resize)
                         if previous_winch_handler is None:
                             # In some situations we receive `None`. This is
                             # however not a valid value for passing to
@@ -727,9 +729,9 @@ class Application(Generic[_AppResult]):
                             if self.input.responds_to_cpr:
                                 await self.renderer.wait_for_cpr_responses()
 
-                            if has_sigwinch:
-                                loop.remove_signal_handler(signal.SIGWINCH)
-                                signal.signal(signal.SIGWINCH, previous_winch_handler)
+                            if _SIGWINCH is not None:
+                                loop.remove_signal_handler(_SIGWINCH)
+                                signal.signal(_SIGWINCH, previous_winch_handler)
 
                             # Wait for the run-in-terminals to terminate.
                             previous_run_in_terminal_f = self._running_in_terminal_f
@@ -995,18 +997,18 @@ class Application(Generic[_AppResult]):
         """
         # Only suspend when the operating system supports it.
         # (Not on Windows.)
-        if hasattr(signal, "SIGTSTP"):
+        if _SIGTSTP is not None:
 
             def run() -> None:
-                # Send `SIGSTP` to own process.
+                # Send `SIGTSTP` to own process.
                 # This will cause it to suspend.
 
                 # Usually we want the whole process group to be suspended. This
                 # handles the case when input is piped from another process.
                 if suspend_group:
-                    os.kill(0, signal.SIGTSTP)
+                    os.kill(0, _SIGTSTP)
                 else:
-                    os.kill(os.getpid(), signal.SIGTSTP)
+                    os.kill(os.getpid(), _SIGTSTP)
 
             run_in_terminal(run)
 
