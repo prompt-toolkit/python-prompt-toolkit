@@ -825,7 +825,9 @@ class Document:
         """
 
         # Look for a match.
-        for A, B in "()", "[]", "{}", "<>":
+        for pair in "()", "[]", "{}", "<>":
+            A = pair[0]
+            B = pair[1]
             if self.current_char == A:
                 return self.find_enclosing_bracket_right(A, B, end_pos=end_pos) or 0
             elif self.current_char == B:
