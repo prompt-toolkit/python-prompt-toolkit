@@ -95,6 +95,20 @@ class Input(metaclass=ABCMeta):
         pass
 
 
+class PipeInput(Input):
+    """
+    Abstraction for pipe input.
+    """
+
+    @abstractmethod
+    def send_bytes(self, data: bytes) -> None:
+        """Feed byte string into the pipe"""
+
+    @abstractmethod
+    def send_text(self, data: str) -> None:
+        """Feed a text string into the pipe"""
+
+
 class DummyInput(Input):
     """
     Input for use in a `DummyApplication`
