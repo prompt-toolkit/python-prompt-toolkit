@@ -21,7 +21,6 @@ from prompt_toolkit.styles import (
     DummyStyleTransformation,
     StyleTransformation,
 )
-from prompt_toolkit.utils import is_windows
 
 if TYPE_CHECKING:
     from prompt_toolkit.application import Application
@@ -396,7 +395,8 @@ class Renderer:
 
         # In case of Windows, also make sure to scroll to the current cursor
         # position. (Only when rendering the first time.)
-        if is_windows() and _scroll:
+        # It does nothing for vt100 terminals.
+        if _scroll:
             self.output.scroll_buffer_to_prompt()
 
         # Quit alternate screen.
@@ -432,9 +432,13 @@ class Renderer:
         is known. (It's often nicer to draw bottom toolbars only if the height
         is known, in order to avoid flickering when the CPR response arrives.)
         """
-        return (
-            self.full_screen or self._min_available_height > 0 or is_windows()
-        )  # On Windows, we don't have to wait for a CPR.
+        if self.full_screen or self._min_available_height > 0:
+            return True
+        try:
+            self._min_available_height = self.output.get_rows_below_cursor_position()
+            return True
+        except NotImplementedError:
+            return False
 
     @property
     def rows_above_layout(self) -> int:
@@ -468,42 +472,48 @@ class Renderer:
         # In full-screen mode, always use the total height as min-available-height.
         if self.full_screen:
             self._min_available_height = self.output.get_size().rows
+            return
 
         # For Win32, we have an API call to get the number of rows below the
         # cursor.
-        elif is_windows():
+        try:
             self._min_available_height = self.output.get_rows_below_cursor_position()
+            return
+        except NotImplementedError:
+            pass
 
         # Use CPR.
-        else:
-            if self.cpr_support == CPR_Support.NOT_SUPPORTED:
-                return
+        if self.cpr_support == CPR_Support.NOT_SUPPORTED:
+            return
 
-            def do_cpr() -> None:
-                # Asks for a cursor position report (CPR).
-                self._waiting_for_cpr_futures.append(Future())
-                self.output.ask_for_cpr()
+        def do_cpr() -> None:
+            # Asks for a cursor position report (CPR).
+            self._waiting_for_cpr_futures.append(Future())
+            self.output.ask_for_cpr()
 
-            if self.cpr_support == CPR_Support.SUPPORTED:
-                do_cpr()
+        if self.cpr_support == CPR_Support.SUPPORTED:
+            do_cpr()
+            return
 
-            # If we don't know whether CPR is supported, only do a request if
-            # none is pending, and test it, using a timer.
-            elif self.cpr_support == CPR_Support.UNKNOWN and not self.waiting_for_cpr:
-                do_cpr()
+        # If we don't know whether CPR is supported, only do a request if
+        # none is pending, and test it, using a timer.
+        if self.waiting_for_cpr:
+            return
 
-                async def timer() -> None:
-                    await sleep(self.CPR_TIMEOUT)
+        do_cpr()
 
-                    # Not set in the meantime -> not supported.
-                    if self.cpr_support == CPR_Support.UNKNOWN:
-                        self.cpr_support = CPR_Support.NOT_SUPPORTED
+        async def timer() -> None:
+            await sleep(self.CPR_TIMEOUT)
 
-                        if self.cpr_not_supported_callback:
-                            # Make sure to call this callback in the main thread.
-                            self.cpr_not_supported_callback()
+            # Not set in the meantime -> not supported.
+            if self.cpr_support == CPR_Support.UNKNOWN:
+                self.cpr_support = CPR_Support.NOT_SUPPORTED
 
-                get_app().create_background_task(timer())
+                if self.cpr_not_supported_callback:
+                    # Make sure to call this callback in the main thread.
+                    self.cpr_not_supported_callback()
+
+        get_app().create_background_task(timer())
 
     def report_absolute_cursor_row(self, row: int) -> None:
         """
