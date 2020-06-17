@@ -426,7 +426,7 @@ class Vt100_Output(Output):
         self.stdout = stdout
         self.write_binary = write_binary
         self._get_size = get_size
-        self.term = term or "xterm"
+        self.term = term
 
         # Cache for escape codes.
         self._escape_code_caches: Dict[ColorDepth, _EscapeCodeCache] = {
@@ -683,3 +683,6 @@ class Vt100_Output(Output):
         " Sound bell. "
         self.write_raw("\a")
         self.flush()
+
+    def get_default_color_depth(self) -> ColorDepth:
+        return ColorDepth.vt100_default(self.term)

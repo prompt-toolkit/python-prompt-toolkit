@@ -114,7 +114,7 @@ def print_formatted_text(
     assert isinstance(output, Output)
 
     # Get color depth.
-    color_depth = color_depth or ColorDepth.default()
+    color_depth = color_depth or output.get_default_color_depth()
 
     # Merges values.
     def to_text(val: Any) -> StyleAndTextTuples:

@@ -60,6 +60,7 @@ class Windows10_Output:
             "get_win32_screen_buffer_info",
             "enable_bracketed_paste",
             "disable_bracketed_paste",
+            "get_default_color_depth",
         ):
             return getattr(self.win32_output, name)
         else:

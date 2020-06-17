@@ -479,6 +479,9 @@ class Win32Output(Output):
         RDW_INVALIDATE = 0x0001
         windll.user32.RedrawWindow(handle, None, None, c_uint(RDW_INVALIDATE))
 
+    def get_default_color_depth(self) -> ColorDepth:
+        return ColorDepth.windows_default()
+
 
 class FOREGROUND_COLOR:
     BLACK = 0x0000
