@@ -369,10 +369,10 @@ class Application(Generic[_AppResult]):
         depth = self._color_depth
 
         if callable(depth):
-            return depth() or ColorDepth.default()
+            return depth() or self.output.get_default_color_depth()
 
         if depth is None:
-            return ColorDepth.default()
+            return self.output.get_default_color_depth()
 
         return depth
 

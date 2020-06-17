@@ -163,6 +163,10 @@ class Output(metaclass=ABCMeta):
         " For Windows only. "
         raise NotImplementedError
 
+    @abstractmethod
+    def get_default_color_depth(self) -> ColorDepth:
+        " Get default color depth for this output. "
+
 
 class DummyOutput(Output):
     """
@@ -265,3 +269,6 @@ class DummyOutput(Output):
 
     def get_rows_below_cursor_position(self) -> int:
         return 40
+
+    def get_default_color_depth(self) -> ColorDepth:
+        return ColorDepth.DEPTH_1_BIT

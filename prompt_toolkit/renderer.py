@@ -744,7 +744,7 @@ def print_formatted_text(
     """
     fragments = to_formatted_text(formatted_text)
     style_transformation = style_transformation or DummyStyleTransformation()
-    color_depth = color_depth or ColorDepth.default()
+    color_depth = color_depth or output.get_default_color_depth()
 
     # Reset first.
     output.reset_attributes()
