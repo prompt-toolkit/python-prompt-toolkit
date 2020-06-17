@@ -9,7 +9,7 @@ import asyncssh
 from pygments.lexers.html import HtmlLexer
 
 from prompt_toolkit.completion import WordCompleter
-from prompt_toolkit.contrib.ssh import PromptToolkitSSHServer
+from prompt_toolkit.contrib.ssh import PromptToolkitSSHServer, PromptToolkitSSHSession
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.shortcuts import ProgressBar, print_formatted_text
 from prompt_toolkit.shortcuts.dialogs import input_dialog, yes_no_dialog
@@ -54,7 +54,7 @@ animal_completer = WordCompleter(
 )
 
 
-async def interact() -> None:
+async def interact(ssh_session: PromptToolkitSSHSession) -> None:
     """
     The application interaction.
 
