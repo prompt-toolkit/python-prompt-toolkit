@@ -12,14 +12,13 @@ from prompt_toolkit.data_structures import Size
 from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output.vt100 import Vt100_Output
 
-__all__ = [
-    "PromptToolkitSession",
-    "PromptToolkitSSHServer",
-]
+__all__ = ["PromptToolkitSSHSession", "PromptToolkitSSHServer"]
 
 
-class PromptToolkitSession(asyncssh.SSHServerSession):
-    def __init__(self, interact: Callable[[], Awaitable[None]]) -> None:
+class PromptToolkitSSHSession(asyncssh.SSHServerSession):
+    def __init__(
+        self, interact: Callable[["PromptToolkitSSHSession"], Awaitable[None]]
+    ) -> None:
         self.interact = interact
         self._chan = None
         self.app_session: Optional[AppSession] = None
@@ -77,7 +76,7 @@ class PromptToolkitSession(asyncssh.SSHServerSession):
         with create_app_session(input=self._input, output=self._output) as session:
             self.app_session = session
             try:
-                await self.interact()
+                await self.interact(self)
             except BaseException:
                 traceback.print_exc()
             finally:
@@ -106,7 +105,7 @@ class PromptToolkitSSHServer(asyncssh.SSHServer):
 
     .. code:: python
 
-        async def interact() -> None:
+        async def interact(ssh_session: PromptToolkitSSHSession) -> None:
             await yes_no_dialog("my title", "my text").run_async()
 
             prompt_session = PromptSession()
@@ -126,12 +125,14 @@ class PromptToolkitSSHServer(asyncssh.SSHServer):
         loop.run_forever()
     """
 
-    def __init__(self, interact: Callable[[], Awaitable[None]]) -> None:
+    def __init__(
+        self, interact: Callable[[PromptToolkitSSHSession], Awaitable[None]]
+    ) -> None:
         self.interact = interact
 
     def begin_auth(self, username):
         # No authentication.
         return False
 
-    def session_requested(self) -> PromptToolkitSession:
-        return PromptToolkitSession(self.interact)
+    def session_requested(self) -> PromptToolkitSSHSession:
+        return PromptToolkitSSHSession(self.interact)

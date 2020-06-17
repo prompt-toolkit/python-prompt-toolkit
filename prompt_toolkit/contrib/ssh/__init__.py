@@ -1,6 +1,6 @@
-from .server import PromptToolkitSession, PromptToolkitSSHServer
+from .server import PromptToolkitSSHServer, PromptToolkitSSHSession
 
 __all__ = [
-    "PromptToolkitSession",
+    "PromptToolkitSSHSession",
     "PromptToolkitSSHServer",
 ]
