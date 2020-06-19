@@ -148,11 +148,6 @@ class ThreadedHistory(History):
         TODO: extend the callback so it can take a batch of lines in one event_loop dispatch.
         """
 
-        # heuristic: don't flood the event loop with callback events when prompt is just starting up.
-        # let the first 10000 or so history lines go through, then sleep for 3 sec, then continue the flood.
-        # all numbers tuned on my PC.  YMMV.
-
-        burst_countdown = 10000
         try:
             for item in self.load_history_strings():
                 self._loaded_strings.insert(
@@ -161,10 +156,6 @@ class ThreadedHistory(History):
                 event_loop.call_soon_threadsafe(
                     item_loaded_callback, item
                 )  # expensive way to dispatch single line.
-                if burst_countdown:
-                    burst_countdown -= 1
-                    if burst_countdown == 0:
-                        time.sleep(3.0)
         finally:
             self._loaded = True
 
