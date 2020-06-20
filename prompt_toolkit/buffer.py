@@ -9,6 +9,7 @@ import shlex
 import shutil
 import subprocess
 import tempfile
+import threading
 from enum import Enum
 from functools import wraps
 from typing import (
@@ -305,13 +306,13 @@ class Buffer:
 
         # Load the history.
         def new_history_item(item: str) -> None:
-            # XXX: Keep in mind that this function can be called in a different
-            #      thread!
             # Insert the new string into `_working_lines`.
+            # XXX: This function contains a critical section, may only
+            #      be invoked on the event loop thread if history is
+            #      loading on another thread.
+
             self._working_lines.insert(0, item)
-            self.__working_index += (
-                1  # Not entirely threadsafe, but probably good enough.
-            )
+            self.__working_index += 1
 
         self.history.load(new_history_item)
 
@@ -413,6 +414,10 @@ class Buffer:
 
     @property
     def text(self) -> str:
+        if self.working_index >= len(self._working_lines):
+            print(
+                f"Buffer: working_index {self.working_index} out of sync with working_lines {len(self._working_lines)}"
+            )
         return self._working_lines[self.working_index]
 
     @text.setter

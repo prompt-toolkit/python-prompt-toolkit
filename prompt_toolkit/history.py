@@ -6,8 +6,10 @@ NOTE: Notice that there is no `DynamicHistory`. This doesn't work well, because
       when a history entry is loaded. This loading can be done asynchronously
       and making the history swappable would probably break this.
 """
+import asyncio
 import datetime
 import os
+import time
 from abc import ABCMeta, abstractmethod
 from threading import Thread
 from typing import Callable, Iterable, List, Optional
@@ -37,29 +39,12 @@ class History(metaclass=ABCMeta):
     # Methods expected by `Buffer`.
     #
 
-    def load(self, item_loaded_callback: Callable[[str], None]) -> None:
+    def load(self, item_loaded_callback: Callable[[str], None],) -> None:
         """
         Load the history and call the callback for every entry in the history.
+        This one assumes the callback is only called from same thread as `Buffer` is using.
 
-        XXX: The callback can be called from another thread, which happens in
-             case of `ThreadedHistory`.
-
-             We can't assume that an asyncio event loop is running, and
-             schedule the insertion into the `Buffer` using the event loop.
-
-             The reason is that the creation of the :class:`.History` object as
-             well as the start of the loading happens *before*
-             `Application.run()` is called, and it can continue even after
-             `Application.run()` terminates. (Which is useful to have a
-             complete history during the next prompt.)
-
-             Calling `get_event_loop()` right here is also not guaranteed to
-             return the same event loop which is used in `Application.run`,
-             because a new event loop can be created during the `run`. This is
-             useful in Python REPLs, where we want to use one event loop for
-             the prompt, and have another one active during the `eval` of the
-             commands. (Otherwise, the user can schedule a while/true loop and
-             freeze the UI.)
+        See `ThreadedHistory` for another way.
         """
         if self._loaded:
             for item in self._loaded_strings[::-1]:
@@ -123,26 +108,59 @@ class ThreadedHistory(History):
         super().__init__()
 
     def load(self, item_loaded_callback: Callable[[str], None]) -> None:
+
+        """Collect the history strings on a background thread,
+        but run the callback in the event loop.
+
+        Caller of ThreadedHistory must ensure that the Application ends up running on the same
+        event loop as we (probably) create here.
+        """
+
         self._item_loaded_callbacks.append(item_loaded_callback)
+
+        def call_all_callbacks(item: str) -> None:
+            for cb in self._item_loaded_callbacks:
+                cb(item)
+
+        if self._loaded:  # ugly reference to base class internal...
+            for item in self._loaded_strings[::-1]:
+                call_all_callbacks(item)
+            return
 
         # Start the load thread, if we don't have a thread yet.
         if not self._load_thread:
 
-            def call_all_callbacks(item: str) -> None:
-                for cb in self._item_loaded_callbacks:
-                    cb(item)
+            event_loop = asyncio.get_event_loop()
 
             self._load_thread = Thread(
-                target=self.history.load, args=(call_all_callbacks,)
+                target=self.bg_loader, args=(call_all_callbacks, event_loop)
             )
             self._load_thread.daemon = True
             self._load_thread.start()
 
-    def get_strings(self) -> List[str]:
-        return self.history.get_strings()
+    def bg_loader(
+        self,
+        item_loaded_callback: Callable[[str], None],
+        event_loop: asyncio.BaseEventLoop,
+    ) -> None:
+        """
+        Load the history and schedule the callback for every entry in the history.
+        TODO: extend the callback so it can take a batch of lines in one event_loop dispatch.
+        """
 
-    def append_string(self, string: str) -> None:
-        self.history.append_string(string)
+        try:
+            for item in self.load_history_strings():
+                self._loaded_strings.insert(
+                    0, item
+                )  # slowest way to add an element to a list known to man.
+                event_loop.call_soon_threadsafe(
+                    item_loaded_callback, item
+                )  # expensive way to dispatch single line.
+        finally:
+            self._loaded = True
+
+    def __repr__(self) -> str:
+        return "ThreadedHistory(%r)" % (self.history,)
 
     # All of the following are proxied to `self.history`.
 
@@ -151,9 +169,6 @@ class ThreadedHistory(History):
 
     def store_string(self, string: str) -> None:
         self.history.store_string(string)
-
-    def __repr__(self) -> str:
-        return "ThreadedHistory(%r)" % (self.history,)
 
 
 class InMemoryHistory(History):
