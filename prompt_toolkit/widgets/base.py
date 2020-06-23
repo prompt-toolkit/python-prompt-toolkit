@@ -644,15 +644,12 @@ class _DialogList(Generic[_T]):
     checked_style: str = ""
     multiple_selection: bool = False
     show_scrollbar: bool = True
+    values: Sequence[Tuple[_T, AnyFormattedText]] = []
+    current_value: _T
+    current_values: List[_T] = []
 
-    def __init__(self, values: Sequence[Tuple[_T, AnyFormattedText]]) -> None:
-        assert len(values) > 0
+    def __init__(self) -> None:
 
-        self.values = values
-        # current_values will be used in multiple_selection,
-        # current_value will be used otherwise.
-        self.current_values: List[_T] = []
-        self.current_value: _T = values[0][0]
         self._selected_index = 0
 
         # Key bindings.
@@ -791,6 +788,17 @@ class RadioList(_DialogList[_T]):
     checked_style = "class:radio-checked"
     multiple_selection = False
 
+    def __init__(self, values: Sequence[Tuple[_T, AnyFormattedText]], selected: List[_T]) -> None:
+        assert len(values) > 0
+
+        self.values = values
+        # current_values will be used in multiple_selection,
+        # current_value will be used otherwise.
+        self.current_values: List[_T] = selected
+        self.current_value: _T = selected[0]
+        super().__init__()
+
+
 
 class CheckboxList(_DialogList[_T]):
     """
@@ -807,6 +815,16 @@ class CheckboxList(_DialogList[_T]):
     checked_style = "class:checkbox-checked"
     multiple_selection = True
 
+    def __init__(self, values: Sequence[Tuple[_T, AnyFormattedText]], selected: List[_T]) -> None:
+        assert len(values) > 0
+
+        self.values = values
+        # current_values will be used in multiple_selection,
+        # current_value will be used otherwise.
+        self.current_values: List[_T] = selected
+        self.current_value: _T = selected[0]
+        super().__init__()
+
 
 class Checkbox(CheckboxList[str]):
     """Backward compatibility util: creates a 1-sized CheckboxList
@@ -818,7 +836,7 @@ class Checkbox(CheckboxList[str]):
 
     def __init__(self, text: AnyFormattedText = "", checked: bool = False) -> None:
         values = [("value", text)]
-        CheckboxList.__init__(self, values)
+        CheckboxList.__init__(self, values=values, selected=[])
         self.checked = checked
 
     @property
