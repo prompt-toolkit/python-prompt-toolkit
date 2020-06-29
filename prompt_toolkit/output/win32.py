@@ -480,7 +480,17 @@ class Win32Output(Output):
         windll.user32.RedrawWindow(handle, None, None, c_uint(RDW_INVALIDATE))
 
     def get_default_color_depth(self) -> ColorDepth:
-        return ColorDepth.windows_default()
+        """
+        Return the default color depth for a windows terminal.
+
+        Contrary to the Vt100 implementation, this doesn't depend on a $TERM
+        variable.
+        """
+        # For now, always use 4 bit color on Windows 10 by default, even when
+        # vt100 escape sequences with ENABLE_VIRTUAL_TERMINAL_PROCESSING are
+        # supported. We don't have a reliable way yet to know whether our
+        # console supports true color or only 4-bit.
+        return ColorDepth.DEPTH_4_BIT
 
 
 class FOREGROUND_COLOR:

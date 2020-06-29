@@ -73,7 +73,9 @@ class PromptToolkitSSHSession(asyncssh.SSHServerSession):
         self._output = Vt100_Output(
             self.stdout, self._get_size, term=term, write_binary=False
         )
-        with create_app_session(input=self._input, output=self._output) as session:
+        with create_app_session(
+            input=self._input, output=self._output, ignore_environment_variables=True
+        ) as session:
             self.app_session = session
             try:
                 await self.interact(self)

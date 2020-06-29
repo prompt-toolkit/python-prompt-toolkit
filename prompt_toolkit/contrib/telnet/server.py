@@ -186,7 +186,11 @@ class TelnetConnection:
         try:
             # Wait for v100_output to be properly instantiated
             await self._ready.wait()
-            with create_app_session(input=self.vt100_input, output=self.vt100_output):
+            with create_app_session(
+                input=self.vt100_input,
+                output=self.vt100_output,
+                ignore_environment_variables=True,
+            ):
                 self.context = contextvars.copy_context()
                 await self.interact(self)
         except Exception as e:

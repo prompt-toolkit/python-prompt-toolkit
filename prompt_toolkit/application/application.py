@@ -268,6 +268,7 @@ class Application(Generic[_AppResult]):
         session = get_app_session()
         self.output = output or session.output
         self.input = input or session.input
+        self.ignore_environment_variables = session.ignore_environment_variables
 
         # List of 'extra' functions to execute before a Application.run.
         self.pre_run_callables: List[Callable[[], None]] = []
@@ -364,15 +365,27 @@ class Application(Generic[_AppResult]):
     @property
     def color_depth(self) -> ColorDepth:
         """
-        Active :class:`.ColorDepth`.
+        The active :class:`.ColorDepth`.
+
+        The current value is determined as follows:
+        - If a color depth was given explicitely to this application, use that
+          value.
+        - If a color depth was specified in the $PROMPT_TOOLKIT_COLOR_DEPTH
+          environment variable, and `color_depth_from_env` is set, use this
+          color depth.
+        - Finally, fall back to the color depth that is reported by the
+          :class:`.Output` implementation.
         """
         depth = self._color_depth
 
         if callable(depth):
-            return depth() or self.output.get_default_color_depth()
+            depth = depth()
+
+        if depth is None and not self.ignore_environment_variables:
+            depth = ColorDepth.from_env()
 
         if depth is None:
-            return self.output.get_default_color_depth()
+            depth = self.output.get_default_color_depth()
 
         return depth
 

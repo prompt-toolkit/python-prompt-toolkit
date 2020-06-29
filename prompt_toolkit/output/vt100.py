@@ -26,6 +26,7 @@ from typing import (
 from prompt_toolkit.data_structures import Size
 from prompt_toolkit.output import Output
 from prompt_toolkit.styles import ANSI_COLOR_NAMES, Attrs
+from prompt_toolkit.utils import is_dumb_terminal
 
 from .color_depth import ColorDepth
 
@@ -685,4 +686,22 @@ class Vt100_Output(Output):
         self.flush()
 
     def get_default_color_depth(self) -> ColorDepth:
-        return ColorDepth.vt100_default(self.term)
+        """
+        Return the default color depth for a vt100 terminal, according to the
+        our term value.
+
+        We prefer 256 colors almost always, because this is what most terminals
+        support these days, and is a good default.
+        """
+        term = self.term
+
+        if term is None:
+            return ColorDepth.DEFAULT
+
+        if is_dumb_terminal(term):
+            return ColorDepth.DEPTH_1_BIT
+
+        if term in ("linux", "eterm-color"):
+            return ColorDepth.DEPTH_4_BIT
+
+        return ColorDepth.DEFAULT

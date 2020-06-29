@@ -37,14 +37,23 @@ class AppSession:
         running in this session, unless an input is passed to the `Application`
         explicitely.
     :param output: Use this as a default output.
+    :param ignore_environment_variables: Ignore environment
+        variables that don't make sense when running the Application over
+        an SSH/Telnet session. For instance, the $PROMPT_TOOLKIT_COLOR_DEPTH
+        environment variable is used to configure applications that are running
+        locally.
     """
 
     def __init__(
-        self, input: Optional["Input"] = None, output: Optional["Output"] = None
+        self,
+        input: Optional["Input"] = None,
+        output: Optional["Output"] = None,
+        ignore_environment_variables: bool = False,
     ) -> None:
 
         self._input = input
         self._output = output
+        self.ignore_environment_variables = ignore_environment_variables
 
         # The application will be set dynamically by the `set_app` context
         # manager. This is called in the application itself.
@@ -140,7 +149,9 @@ def set_app(app: "Application[Any]") -> Generator[None, None, None]:
 
 @contextmanager
 def create_app_session(
-    input: Optional["Input"] = None, output: Optional["Output"] = None
+    input: Optional["Input"] = None,
+    output: Optional["Output"] = None,
+    ignore_environment_variables: Optional[bool] = None,
 ) -> Generator[AppSession, None, None]:
     """
     Create a separate AppSession.
@@ -158,9 +169,15 @@ def create_app_session(
         input = get_app_session().input
     if output is None:
         output = get_app_session().output
+    if ignore_environment_variables is None:
+        ignore_environment_variables = get_app_session().ignore_environment_variables
 
     # Create new `AppSession` and activate.
-    session = AppSession(input=input, output=output)
+    session = AppSession(
+        input=input,
+        output=output,
+        ignore_environment_variables=ignore_environment_variables,
+    )
 
     token = _current_app_session.set(session)
     try:

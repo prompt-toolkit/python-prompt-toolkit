@@ -165,7 +165,16 @@ class Output(metaclass=ABCMeta):
 
     @abstractmethod
     def get_default_color_depth(self) -> ColorDepth:
-        " Get default color depth for this output. "
+        """
+        Get default color depth for this output.
+
+        This value will be used if no color depth was passed explicitely to the
+        `Application`, and no $PROMPT_TOOLKIT_COLOR_DEPTH environment
+        variable has been set.
+
+        The usage of $PROMPT_TOOLKIT_COLOR_DEPTH can be disabled by setting
+        `Application.color_depth_from_env` to `False`.
+        """
 
 
 class DummyOutput(Output):
