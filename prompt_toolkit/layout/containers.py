@@ -2672,7 +2672,7 @@ def to_container(container: AnyContainer) -> Container:
     elif hasattr(container, "__pt_container__"):
         return to_container(cast("MagicContainer", container).__pt_container__())
     else:
-        raise ValueError("Not a container object.")
+        raise ValueError("Not a container object: %r" % (container,))
 
 
 def to_window(container: AnyContainer) -> Window:
