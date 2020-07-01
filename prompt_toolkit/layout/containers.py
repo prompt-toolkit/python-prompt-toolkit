@@ -354,7 +354,8 @@ class HSplit(_Split):
                         style=self.padding_style,
                     )
                 )
-            result.pop()
+            if result:
+                result.pop()
 
             # Padding right.
             if self.align in (VerticalAlign.CENTER, VerticalAlign.TOP):
@@ -606,7 +607,8 @@ class VSplit(_Split):
                         style=self.padding_style,
                     )
                 )
-            result.pop()
+            if result:
+                result.pop()
 
             # Padding right.
             if self.align in (HorizontalAlign.CENTER, HorizontalAlign.LEFT):
