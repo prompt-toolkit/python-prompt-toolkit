@@ -27,8 +27,8 @@ class Dimension:
     :param max: Maximum size.
     :param weight: For a VSplit/HSplit, the actual size will be determined
                    by taking the proportion of weights from all the children.
-                   E.g. When there are two children, one width a weight of 1,
-                   and the other with a weight of 2. The second will always be
+                   E.g. When there are two children, one with a weight of 1,
+                   and the other with a weight of 2, the second will always be
                    twice as big as the first, if the min/max values allow it.
     :param preferred: Preferred size.
     """
