@@ -161,7 +161,7 @@ class Application(Generic[_AppResult]):
         don't want this for the implementation of a REPL. By default, this is
         enabled if `full_screen` is set.
 
-    Callbacks (all of these should accept a
+    Callbacks (all of these should accept an
     :class:`~prompt_toolkit.application.Application` object as input.)
 
     :param on_reset: Called during reset.

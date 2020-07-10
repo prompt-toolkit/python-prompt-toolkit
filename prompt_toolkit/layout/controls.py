@@ -270,10 +270,10 @@ class FormattedTextControl(UIControl):
     """
     Control that displays formatted text. This can be either plain text, an
     :class:`~prompt_toolkit.formatted_text.HTML` object an
-    :class:`~prompt_toolkit.formatted_text.ANSI` object or a list of
-    ``(style_str, text)`` tuples, depending on how you prefer to do the
-    formatting. See ``prompt_toolkit.layout.formatted_text`` for more
-    information.
+    :class:`~prompt_toolkit.formatted_text.ANSI` object, a list of ``(style_str,
+    text)`` tuples or a callable that takes no argument and returns one of
+    those, depending on how you prefer to do the formatting. See
+    ``prompt_toolkit.layout.formatted_text`` for more information.
 
     (It's mostly optimized for rather small widgets, like toolbars, menus, etc...)
 

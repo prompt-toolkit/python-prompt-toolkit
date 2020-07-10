@@ -1108,7 +1108,7 @@ class Float:
 
 class WindowRenderInfo:
     """
-    Render information, for the last render time of this control.
+    Render information for the last render time of this control.
     It stores mapping information between the input buffers (in case of a
     :class:`~prompt_toolkit.layout.controls.BufferControl`) and the actual
     render position on the output screen.
