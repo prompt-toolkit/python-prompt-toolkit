@@ -27,6 +27,7 @@ from prompt_toolkit.filters.app import (
     vi_navigation_mode,
     vi_recording_macro,
     vi_replace_mode,
+    vi_replace_single_mode,
     vi_search_direction_reversed,
     vi_selection_mode,
     vi_waiting_for_text_object_mode,
@@ -797,13 +798,12 @@ def load_vi_bindings() -> KeyBindingsBase:
                     data, count=event.arg, paste_mode=PasteMode.VI_BEFORE
                 )
 
-    @handle("r", Keys.Any, filter=vi_navigation_mode)
+    @handle("r", filter=vi_navigation_mode)
     def _replace(event: E) -> None:
         """
-        Replace single character under cursor
+        Go to 'replace-single'-mode.
         """
-        event.current_buffer.insert_text(event.data * event.arg, overwrite=True)
-        event.current_buffer.cursor_position -= 1
+        event.app.vi_state.input_mode = InputMode.REPLACE_SINGLE
 
     @handle("R", filter=vi_navigation_mode)
     def _replace_mode(event: E) -> None:
@@ -1882,6 +1882,15 @@ def load_vi_bindings() -> KeyBindingsBase:
         Insert data at cursor position.
         """
         event.current_buffer.insert_text(event.data, overwrite=True)
+
+    @handle(Keys.Any, filter=vi_replace_single_mode)
+    def _replace_single(event: E) -> None:
+        """
+        Replace single character at cursor position.
+        """
+        event.current_buffer.insert_text(event.data, overwrite=True)
+        event.current_buffer.cursor_position -= 1
+        event.app.vi_state.input_mode = InputMode.NAVIGATION
 
     @handle(
         Keys.Any,
