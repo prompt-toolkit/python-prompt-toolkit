@@ -21,6 +21,7 @@ class InputMode(str, Enum):
     INSERT_MULTIPLE = "vi-insert-multiple"
     NAVIGATION = "vi-navigation"  # Normal mode.
     REPLACE = "vi-replace"
+    REPLACE_SINGLE = "vi-replace-single"
 
 
 class CharacterFind:
