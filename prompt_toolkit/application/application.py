@@ -366,15 +366,23 @@ class Application(Generic[_AppResult]):
     @property
     def color_depth(self) -> ColorDepth:
         """
-        Active :class:`.ColorDepth`.
+        The active :class:`.ColorDepth`.
+
+        The current value is determined as follows:
+        - If a color depth was given explicitely to this application, use that
+          value.
+        - Otherwise, fall back to the color depth that is reported by the
+          :class:`.Output` implementation. If the :class:`.Output` class was
+          created using `output.defaults.create_output`, then this value is
+          coming from the $PROMPT_TOOLKIT_COLOR_DEPTH environment variable.
         """
         depth = self._color_depth
 
         if callable(depth):
-            return depth() or self.output.get_default_color_depth()
+            depth = depth()
 
         if depth is None:
-            return self.output.get_default_color_depth()
+            depth = self.output.get_default_color_depth()
 
         return depth
 
