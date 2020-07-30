@@ -2619,7 +2619,7 @@ class ConditionalContainer(Container):
 
 class DynamicContainer(Container):
     """
-    Container class that can dynamically returns any Container.
+    Container class that dynamically returns any Container.
 
     :param get_container: Callable that returns a :class:`.Container` instance
         or any widget with a ``__pt_container__`` method.
