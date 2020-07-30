@@ -11,10 +11,10 @@ There are two ways to know when input is ready. One way is to poll
 `InputHookContext.input_is_ready()`. Another way is to check for
 `InputHookContext.fileno()` to be ready. In this example we do the latter.
 """
-from pygments.lexers.python import PythonLexer
-
 import gobject
 import gtk
+from pygments.lexers.python import PythonLexer
+
 from prompt_toolkit.eventloop.defaults import create_event_loop
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.patch_stdout import patch_stdout

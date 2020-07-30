@@ -57,9 +57,9 @@ from .formatters import Formatter, create_default_formatters
 try:
     import contextvars
 except ImportError:
-    from prompt_toolkit.eventloop import (  # type: ignore
-        dummy_contextvars as contextvars,
-    )
+    from prompt_toolkit.eventloop import dummy_contextvars
+
+    contextvars = dummy_contextvars  # type: ignore
 
 
 __all__ = ["ProgressBar"]

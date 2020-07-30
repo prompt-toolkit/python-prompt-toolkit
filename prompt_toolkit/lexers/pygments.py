@@ -211,8 +211,8 @@ class PygmentsLexer(Lexer):
         Create a `Lexer` from a filename.
         """
         # Inline imports: the Pygments dependency is optional!
-        from pygments.util import ClassNotFound
         from pygments.lexers import get_lexer_for_filename
+        from pygments.util import ClassNotFound
 
         try:
             pygments_lexer = get_lexer_for_filename(filename)
