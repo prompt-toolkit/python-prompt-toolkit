@@ -87,8 +87,8 @@ def _display_completions_like_readline(
     This will ask for a confirmation if there are too many completions to fit
     on a single page and provide a paginator to walk through them.
     """
-    from prompt_toolkit.shortcuts.prompt import create_confirm_session
     from prompt_toolkit.formatted_text import to_formatted_text
+    from prompt_toolkit.shortcuts.prompt import create_confirm_session
 
     # Get terminal dimensions.
     term_size = app.output.get_size()

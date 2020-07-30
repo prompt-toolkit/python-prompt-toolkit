@@ -48,7 +48,7 @@ def create_output(
     if is_windows():
         from .conemu import ConEmuOutput
         from .win32 import Win32Output
-        from .windows10 import is_win_vt100_enabled, Windows10_Output
+        from .windows10 import Windows10_Output, is_win_vt100_enabled
 
         if is_win_vt100_enabled():
             return cast(Output, Windows10_Output(stdout))

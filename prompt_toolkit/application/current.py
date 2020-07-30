@@ -8,9 +8,10 @@ except ImportError:
     from prompt_toolkit.eventloop.dummy_contextvars import ContextVar  # type: ignore
 
 if TYPE_CHECKING:
-    from .application import Application
     from prompt_toolkit.input.defaults import Input
     from prompt_toolkit.output.defaults import Output
+
+    from .application import Application
 
 __all__ = [
     "AppSession",
