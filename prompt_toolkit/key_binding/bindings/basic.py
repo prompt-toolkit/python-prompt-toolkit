@@ -78,6 +78,10 @@ def load_basic_bindings() -> KeyBindings:
     @handle("f18")
     @handle("f19")
     @handle("f20")
+    @handle("f21")
+    @handle("f22")
+    @handle("f23")
+    @handle("f24")
     @handle("c-@")  # Also c-space.
     @handle("c-\\")
     @handle("c-]")
