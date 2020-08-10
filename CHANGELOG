@@ -1,11 +1,45 @@
 CHANGELOG
 =========
 
+3.0.6: 2020-08-10
+-----------------
+
+New features:
+- The SSH/Telnet adaptors have been refactored and improved in several ways.
+  See issues #876 and PR #1150 and #1184 on GitHub.
+  * Handle terminal types for both telnet and SSH sessions.
+  * Added pipe input abstraction. (base class for `PosixPipeInput` and
+    `Win32PipeInput`).
+  * The color depth logic has been refactored and moved to the `Output`
+    implementations. Added `get_default_color_depth` method to `Output`
+    objects.
+  * All line feets are now preceded by a carriage return in the telnet
+    connection stdout.
+- Introduce `REPLACE_SINGLE` input mode for Vi key bindings.
+- Improvements to the checkbox implementation:
+    * Hide the scrollbar for a single checkbox.
+    * Added a "checked" setter to the checkbox.
+- Expose `KeyPressEvent` in key_binding/__init__.py (often used in type
+  annotations).
+- The renderer has been optimized so that no trailing spaces are generated
+  (this improves copying in some terminals).
+
+Fixes:
+- Ignore F21..F24 key bindings by default.
+- Fix auto_suggest key bindings when suggestion text is empty.
+- Bugfix in SIGWINCH handling.
+- Handle bug in HSplit/VSplit when the number of children is zero.
+- Bugfix in CPR handling in renderer. Proper cancellation of pending tasks.
+- Ensure rprompt aligns with input.
+- Use `sys.stdin.encoding` for decoding stdin stream.
+
+
 3.0.5: 2020-03-26
 -----------------
 
 Fixes:
 - Bugfix in mouse handling on Windows.
+
 
 3.0.4: 2020-03-06
 -----------------
