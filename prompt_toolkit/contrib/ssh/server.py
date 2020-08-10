@@ -39,6 +39,10 @@ class PromptToolkitSSHSession(asyncssh.SSHServerSession):
             def flush(s):
                 pass
 
+            @property
+            def encoding(s):
+                return self._chan._orig_chan.get_encoding()[0]
+
         self.stdout = cast(TextIO, Stdout())
 
     def _get_size(self) -> Size:
@@ -65,9 +69,11 @@ class PromptToolkitSSHSession(asyncssh.SSHServerSession):
             # Should not happen.
             raise Exception("`_interact` called before `connection_made`.")
 
-        # Disable the line editing provided by asyncssh. Prompt_toolkit
-        # provides the line editing.
-        self._chan.set_line_mode(False)
+        if hasattr(self._chan, 'set_line_mode') and self._chan._editor is not None:
+            # Disable the line editing provided by asyncssh. Prompt_toolkit
+            # provides the line editing.
+            self._chan.set_line_mode(False)
+
         term = self._chan.get_terminal_type()
 
         self._output = Vt100_Output(
