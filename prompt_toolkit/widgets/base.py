@@ -360,7 +360,9 @@ class Button:
     Clickable button.
 
     :param text: The caption for the button.
-    :param handler: `None` or callable. Called when the button is clicked.
+    :param handler: `None` or callable. Called when the button is clicked. No
+        parameters are passed to this callable. Use for instance Python's
+        `functools.partial` to pass parameters to this callable if needed.
     :param width: Width of the button.
     """
 
