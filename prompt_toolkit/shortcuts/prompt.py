@@ -93,6 +93,7 @@ from prompt_toolkit.layout.dimension import Dimension
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.layout.menus import CompletionsMenu, MultiColumnCompletionsMenu
 from prompt_toolkit.layout.processors import (
+    AfterInput,
     AppendAutoSuggestion,
     ConditionalProcessor,
     DisplayMultipleCursors,
@@ -314,6 +315,10 @@ class PromptSession(Generic[_T]):
         ``CompleteStyle.MULTI_COLUMN`` or ``CompleteStyle.READLINE_LIKE``.
     :param mouse_support: `bool` or :class:`~prompt_toolkit.filters.Filter`
         to enable mouse support.
+    :param placeholder: Text to be displayed when no input has been given
+        yet. Unlike the `default` parameter, this won't be returned as part of
+        the output ever. This can be formatted text or a callable that returns
+        formatted text.
     :param refresh_interval: (number; in seconds) When given, refresh the UI
         every so many seconds.
     :param input: `Input` object. (Note that the preferred way to change the
@@ -351,6 +356,7 @@ class PromptSession(Generic[_T]):
         "validator",
         "refresh_interval",
         "input_processors",
+        "placeholder",
         "enable_system_prompt",
         "enable_suspend",
         "enable_open_in_editor",
@@ -394,6 +400,7 @@ class PromptSession(Generic[_T]):
         bottom_toolbar: AnyFormattedText = None,
         mouse_support: FilterOrBool = False,
         input_processors: Optional[List[Processor]] = None,
+        placeholder: Optional[AnyFormattedText] = None,
         key_bindings: Optional[KeyBindingsBase] = None,
         erase_when_done: bool = False,
         tempfile_suffix: Optional[Union[str, Callable[[], str]]] = ".txt",
@@ -443,6 +450,7 @@ class PromptSession(Generic[_T]):
         self.validator = validator
         self.refresh_interval = refresh_interval
         self.input_processors = input_processors
+        self.placeholder = placeholder
         self.enable_system_prompt = enable_system_prompt
         self.enable_suspend = enable_suspend
         self.enable_open_in_editor = enable_open_in_editor
@@ -533,6 +541,10 @@ class PromptSession(Generic[_T]):
         search_buffer = self.search_buffer
 
         # Create processors list.
+        @Condition
+        def display_placeholder() -> bool:
+            return self.placeholder is not None and self.default_buffer.text == ""
+
         all_input_processors = [
             HighlightIncrementalSearchProcessor(),
             HighlightSelectionProcessor(),
@@ -543,6 +555,9 @@ class PromptSession(Generic[_T]):
             DisplayMultipleCursors(),
             # Users can insert processors here.
             DynamicProcessor(lambda: merge_processors(self.input_processors or [])),
+            ConditionalProcessor(
+                AfterInput(lambda: self.placeholder), filter=display_placeholder,
+            ),
         ]
 
         # Create bottom toolbars.
@@ -859,6 +874,7 @@ class PromptSession(Generic[_T]):
         clipboard: Optional[Clipboard] = None,
         mouse_support: Optional[FilterOrBool] = None,
         input_processors: Optional[List[Processor]] = None,
+        placeholder: Optional[AnyFormattedText] = None,
         reserve_space_for_menu: Optional[int] = None,
         enable_system_prompt: Optional[FilterOrBool] = None,
         enable_suspend: Optional[FilterOrBool] = None,
@@ -967,6 +983,8 @@ class PromptSession(Generic[_T]):
             self.mouse_support = mouse_support
         if input_processors is not None:
             self.input_processors = input_processors
+        if placeholder is not None:
+            self.placeholder = placeholder
         if reserve_space_for_menu is not None:
             self.reserve_space_for_menu = reserve_space_for_menu
         if enable_system_prompt is not None:
@@ -1075,6 +1093,7 @@ class PromptSession(Generic[_T]):
         clipboard: Optional[Clipboard] = None,
         mouse_support: Optional[FilterOrBool] = None,
         input_processors: Optional[List[Processor]] = None,
+        placeholder: Optional[AnyFormattedText] = None,
         reserve_space_for_menu: Optional[int] = None,
         enable_system_prompt: Optional[FilterOrBool] = None,
         enable_suspend: Optional[FilterOrBool] = None,
@@ -1146,6 +1165,8 @@ class PromptSession(Generic[_T]):
             self.mouse_support = mouse_support
         if input_processors is not None:
             self.input_processors = input_processors
+        if placeholder is not None:
+            self.placeholder = placeholder
         if reserve_space_for_menu is not None:
             self.reserve_space_for_menu = reserve_space_for_menu
         if enable_system_prompt is not None:
@@ -1339,6 +1360,7 @@ def prompt(
     clipboard: Optional[Clipboard] = None,
     mouse_support: Optional[FilterOrBool] = None,
     input_processors: Optional[List[Processor]] = None,
+    placeholder: Optional[AnyFormattedText] = None,
     reserve_space_for_menu: Optional[int] = None,
     enable_system_prompt: Optional[FilterOrBool] = None,
     enable_suspend: Optional[FilterOrBool] = None,
@@ -1388,6 +1410,7 @@ def prompt(
         clipboard=clipboard,
         mouse_support=mouse_support,
         input_processors=input_processors,
+        placeholder=placeholder,
         reserve_space_for_menu=reserve_space_for_menu,
         enable_system_prompt=enable_system_prompt,
         enable_suspend=enable_suspend,

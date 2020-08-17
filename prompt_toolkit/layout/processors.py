@@ -566,7 +566,7 @@ class AfterInput(Processor):
     :param style: style to be applied to this prompt/prefix.
     """
 
-    def __init__(self, text: str, style: str = "") -> None:
+    def __init__(self, text: AnyFormattedText, style: str = "") -> None:
         self.text = text
         self.style = style
 
