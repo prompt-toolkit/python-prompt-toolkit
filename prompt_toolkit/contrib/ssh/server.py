@@ -20,6 +20,7 @@ class PromptToolkitSSHSession(asyncssh.SSHServerSession):
         self, interact: Callable[["PromptToolkitSSHSession"], Awaitable[None]]
     ) -> None:
         self.interact = interact
+        self.interact_task: Optional[asyncio.Task[None]] = None
         self._chan = None
         self.app_session: Optional[AppSession] = None
 
@@ -62,7 +63,7 @@ class PromptToolkitSSHSession(asyncssh.SSHServerSession):
         return True
 
     def session_started(self) -> None:
-        asyncio.get_event_loop().create_task(self._interact())
+        self.interact_task = asyncio.get_event_loop().create_task(self._interact())
 
     async def _interact(self) -> None:
         if self._chan is None:
