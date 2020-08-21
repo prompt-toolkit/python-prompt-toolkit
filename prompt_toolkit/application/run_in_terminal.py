@@ -88,7 +88,7 @@ async def in_terminal(render_cli_done: bool = False) -> AsyncGenerator[None, Non
     # Wait for all CPRs to arrive. We don't want to detach the input until
     # all cursor position responses have been arrived. Otherwise, the tty
     # will echo its input and can show stuff like ^[[39;1R.
-    if app.input.responds_to_cpr:
+    if app.output.responds_to_cpr:
         await app.renderer.wait_for_cpr_responses()
 
     # Draw interface in 'done' state, or erase.

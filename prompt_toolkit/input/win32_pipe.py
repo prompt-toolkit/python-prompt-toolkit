@@ -30,7 +30,7 @@ class Win32PipeInput(_Win32InputBase, PipeInput):
 
     _id = 0
 
-    def __init__(self, responds_to_cpr: bool = True) -> None:
+    def __init__(self) -> None:
         super().__init__()
         # Event (handle) for registering this input in the event loop.
         # This event is set when there is data available to read from the pipe.
@@ -40,7 +40,6 @@ class Win32PipeInput(_Win32InputBase, PipeInput):
         self._event = create_win32_event()
 
         self._closed = False
-        self._responds_to_cpr = responds_to_cpr
 
         # Parser for incoming keys.
         self._buffer: List[KeyPress] = []  # Buffer to collect the Key objects.
@@ -104,10 +103,6 @@ class Win32PipeInput(_Win32InputBase, PipeInput):
         result = self._buffer
         self._buffer = []
         return result
-
-    @property
-    def responds_to_cpr(self) -> bool:
-        return self._responds_to_cpr
 
     def send_bytes(self, data: bytes) -> None:
         " Send bytes to the input. "

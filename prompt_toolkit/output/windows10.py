@@ -55,6 +55,10 @@ class Windows10_Output:
             # Restore console mode.
             windll.kernel32.SetConsoleMode(self._hconsole, original_mode)
 
+    @property
+    def responds_to_cpr(self) -> bool:
+        return False  # We don't need this on Windows.
+
     def __getattr__(self, name: str) -> Any:
         if name in (
             "get_size",
