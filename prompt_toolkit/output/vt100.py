@@ -8,6 +8,7 @@ http://pygments.org/
 """
 import array
 import errno
+import os
 import sys
 from typing import (
     IO,
@@ -686,6 +687,20 @@ class Vt100_Output(Output):
         """
         self.write_raw("\x1b[6n")
         self.flush()
+
+    @property
+    def responds_to_cpr(self) -> bool:
+        # When the input is a tty, we assume that CPR is supported.
+        # It's not when the input is piped from Pexpect.
+        if os.environ.get("PROMPT_TOOLKIT_NO_CPR", "") == "1":
+            return False
+
+        if is_dumb_terminal(self.term):
+            return False
+        try:
+            return self.stdout.isatty()
+        except ValueError:
+            return False  # ValueError: I/O operation on closed file
 
     def bell(self) -> None:
         " Sound bell. "

@@ -310,7 +310,6 @@ class Application(Generic[_AppResult]):
         self.renderer = Renderer(
             self._merged_style,
             self.output,
-            self.input,
             full_screen=full_screen,
             mouse_support=mouse_support,
             cpr_not_supported_callback=self.cpr_not_supported_callback,
@@ -729,7 +728,7 @@ class Application(Generic[_AppResult]):
                         self._invalidate_events = []
 
                         # Wait for CPR responses.
-                        if self.input.responds_to_cpr:
+                        if self.output.responds_to_cpr:
                             await self.renderer.wait_for_cpr_responses()
 
                         # Wait for the run-in-terminals to terminate.
@@ -876,7 +875,7 @@ class Application(Generic[_AppResult]):
         """
         Called when we don't receive the cursor position response in time.
         """
-        if not self.input.responds_to_cpr:
+        if not self.output.responds_to_cpr:
             return  # We know about this already.
 
         def in_terminal() -> None:

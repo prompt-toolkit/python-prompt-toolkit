@@ -307,6 +307,6 @@ def is_dumb_terminal(term: Optional[str] = None) -> bool:
     without cursor positioning and color support.
     """
     if term is None:
-        term = os.environ.get("TERM", "")
+        return is_dumb_terminal(os.environ.get("TERM", ""))
 
-    return term in ["dumb", "unknown"]
+    return term.lower() in ["dumb", "unknown"]

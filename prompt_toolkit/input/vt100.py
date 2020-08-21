@@ -18,8 +18,6 @@ from typing import (
     Union,
 )
 
-from prompt_toolkit.utils import is_dumb_terminal
-
 from ..key_binding import KeyPress
 from .base import Input
 from .posix_utils import PosixStdinReader
@@ -82,19 +80,6 @@ class Vt100Input(Input):
         self.vt100_parser = Vt100Parser(
             lambda key_press: self._buffer.append(key_press)
         )
-
-    @property
-    def responds_to_cpr(self) -> bool:
-        # When the input is a tty, we assume that CPR is supported.
-        # It's not when the input is piped from Pexpect.
-        if os.environ.get("PROMPT_TOOLKIT_NO_CPR", "") == "1":
-            return False
-        if is_dumb_terminal():
-            return False
-        try:
-            return self.stdin.isatty()
-        except ValueError:
-            return False  # ValueError: I/O operation on closed file
 
     def attach(self, input_ready_callback: Callable[[], None]) -> ContextManager[None]:
         """

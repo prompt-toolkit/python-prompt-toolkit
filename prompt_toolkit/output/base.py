@@ -143,6 +143,22 @@ class Output(metaclass=ABCMeta):
         (VT100 only.)
         """
 
+    @property
+    def responds_to_cpr(self) -> bool:
+        """
+        `True` if the `Application` can expect to receive a CPR response after
+        calling `ask_for_cpr` (this will come back through the corresponding
+        `Input`).
+
+        This is used to determine the amount of available rows we have below
+        the cursor position. In the first place, we have this so that the drop
+        down autocompletion menus are sized according to the available space.
+
+        On Windows, we don't need this, there we have
+        `get_rows_below_cursor_position`.
+        """
+        return False
+
     @abstractmethod
     def get_size(self) -> Size:
         " Return the size of the output window. "

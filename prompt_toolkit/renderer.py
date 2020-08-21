@@ -11,7 +11,6 @@ from prompt_toolkit.application.current import get_app
 from prompt_toolkit.data_structures import Point, Size
 from prompt_toolkit.filters import FilterOrBool, to_filter
 from prompt_toolkit.formatted_text import AnyFormattedText, to_formatted_text
-from prompt_toolkit.input.base import Input
 from prompt_toolkit.layout.mouse_handlers import MouseHandlers
 from prompt_toolkit.layout.screen import Char, Screen, WritePosition
 from prompt_toolkit.output import ColorDepth, Output
@@ -341,7 +340,6 @@ class Renderer:
         self,
         style: BaseStyle,
         output: Output,
-        input: Input,
         full_screen: bool = False,
         mouse_support: FilterOrBool = False,
         cpr_not_supported_callback: Optional[Callable[[], None]] = None,
@@ -349,7 +347,6 @@ class Renderer:
 
         self.style = style
         self.output = output
-        self.input = input
         self.full_screen = full_screen
         self.mouse_support = to_filter(mouse_support)
         self.cpr_not_supported_callback = cpr_not_supported_callback
@@ -361,7 +358,8 @@ class Renderer:
         # Future set when we are waiting for a CPR flag.
         self._waiting_for_cpr_futures: Deque[Future[None]] = deque()
         self.cpr_support = CPR_Support.UNKNOWN
-        if not input.responds_to_cpr:
+
+        if not output.responds_to_cpr:
             self.cpr_support = CPR_Support.NOT_SUPPORTED
 
         # Cache for the style.

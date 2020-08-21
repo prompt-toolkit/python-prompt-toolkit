@@ -24,8 +24,7 @@ class PosixPipeInput(Vt100Input, PipeInput):
 
     _id = 0
 
-    def __init__(self, text: str = "", responds_to_cpr: bool = True) -> None:
-        self._responds_to_cpr = True
+    def __init__(self, text: str = "") -> None:
         self._r, self._w = os.pipe()
 
         class Stdin:
@@ -43,10 +42,6 @@ class PosixPipeInput(Vt100Input, PipeInput):
         # Identifier for every PipeInput for the hash.
         self.__class__._id += 1
         self._id = self.__class__._id
-
-    @property
-    def responds_to_cpr(self) -> bool:
-        return self._responds_to_cpr
 
     def send_bytes(self, data: bytes) -> None:
         os.write(self._w, data)
