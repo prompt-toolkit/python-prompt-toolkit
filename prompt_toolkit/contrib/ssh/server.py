@@ -34,8 +34,11 @@ class PromptToolkitSSHSession(asyncssh.SSHServerSession):
         # in the SSH channel.
         class Stdout:
             def write(s, data):
-                if self._chan is not None:
-                    self._chan.write(data.replace("\n", "\r\n"))
+                try:
+                    if self._chan is not None:
+                        self._chan.write(data.replace("\n", "\r\n"))
+                except BrokenPipeError:
+                    pass  # Channel not open for sending.
 
             def flush(s):
                 pass
