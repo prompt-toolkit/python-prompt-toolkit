@@ -12,8 +12,8 @@ inspired by `tqdm <https://github.com/tqdm/tqdm>`_
     possibly change in the future. It is usable and tested, but keep this in
     mind when upgrading.
 
-Remember that the examples directory of the prompt_toolkit repository ships
-with many progress bar examples as well.
+Remember that the `examples directory <https://github.com/prompt-toolkit/python-prompt-toolkit/tree/master/examples>`_
+of the prompt_toolkit repository ships with many progress bar examples as well.
 
 
 Simple progress bar
