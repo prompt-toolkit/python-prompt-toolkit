@@ -15,7 +15,7 @@ install:
 
 script:
   - echo "$TRAVIS_PYTHON_VERSION"
-  - flake8 .
+  - flake8 prompt_toolkit
   - coverage run -m pytest
 
   # Run type checker.
