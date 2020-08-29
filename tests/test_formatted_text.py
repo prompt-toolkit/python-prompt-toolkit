@@ -201,7 +201,7 @@ def test_split_lines_3():
     ]
 
     # -2-
-    lines = list(split_lines([("class:a", "\n"),]))
+    lines = list(split_lines([("class:a", "\n")]))
 
     assert lines == [
         [],
@@ -209,7 +209,7 @@ def test_split_lines_3():
     ]
 
     # -3-
-    lines = list(split_lines([("class:a", ""),]))
+    lines = list(split_lines([("class:a", "")]))
 
     assert lines == [
         [("class:a", "")],

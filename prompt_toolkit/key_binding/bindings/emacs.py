@@ -129,8 +129,7 @@ def load_emacs_bindings() -> KeyBindingsBase:
 
     @handle("escape", "-", filter=~has_arg)
     def _meta_dash(event: E) -> None:
-        """
-        """
+        """"""
         if event._arg is None:
             event.append_to_arg_count("-")
 

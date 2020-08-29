@@ -130,7 +130,10 @@ def input_dialog(
     dialog = Dialog(
         title=title,
         body=HSplit(
-            [Label(text=text, dont_extend_height=True), textfield,],
+            [
+                Label(text=text, dont_extend_height=True),
+                textfield,
+            ],
             padding=D(preferred=1, max=1),
         ),
         buttons=[ok_button, cancel_button],
@@ -152,7 +155,7 @@ def message_dialog(
     dialog = Dialog(
         title=title,
         body=Label(text=text, dont_extend_height=True),
-        buttons=[Button(text=ok_text, handler=_return_none),],
+        buttons=[Button(text=ok_text, handler=_return_none)],
         with_background=True,
     )
 
@@ -184,7 +187,8 @@ def radiolist_dialog(
     dialog = Dialog(
         title=title,
         body=HSplit(
-            [Label(text=text, dont_extend_height=True), radio_list,], padding=1
+            [Label(text=text, dont_extend_height=True), radio_list],
+            padding=1,
         ),
         buttons=[
             Button(text=ok_text, handler=ok_handler),
@@ -220,7 +224,10 @@ def checkboxlist_dialog(
 
     dialog = Dialog(
         title=title,
-        body=HSplit([Label(text=text, dont_extend_height=True), cb_list,], padding=1),
+        body=HSplit(
+            [Label(text=text, dont_extend_height=True), cb_list],
+            padding=1,
+        ),
         buttons=[
             Button(text=ok_text, handler=ok_handler),
             Button(text=cancel_text, handler=_return_none),
@@ -254,7 +261,11 @@ def progress_dialog(
 
     dialog = Dialog(
         body=HSplit(
-            [Box(Label(text=text)), Box(text_area, padding=D.exact(1)), progressbar,]
+            [
+                Box(Label(text=text)),
+                Box(text_area, padding=D.exact(1)),
+                progressbar,
+            ]
         ),
         title=title,
         with_background=True,
@@ -293,7 +304,7 @@ def _create_app(dialog: AnyContainer, style: Optional[BaseStyle]) -> Application
 
     return Application(
         layout=Layout(dialog),
-        key_bindings=merge_key_bindings([load_key_bindings(), bindings,]),
+        key_bindings=merge_key_bindings([load_key_bindings(), bindings]),
         mouse_support=True,
         style=style,
         full_screen=True,

@@ -1071,13 +1071,13 @@ class _CombinedRegistry(KeyBindingsBase):
 
     @property
     def _version(self) -> Hashable:
-        """ Not needed - this object is not going to be wrapped in another
-        KeyBindings object. """
+        """Not needed - this object is not going to be wrapped in another
+        KeyBindings object."""
         raise NotImplementedError
 
     def bindings(self) -> List[Binding]:
-        """ Not needed - this object is not going to be wrapped in another
-        KeyBindings object. """
+        """Not needed - this object is not going to be wrapped in another
+        KeyBindings object."""
         raise NotImplementedError
 
     def _create_key_bindings(

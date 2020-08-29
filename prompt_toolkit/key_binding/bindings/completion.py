@@ -132,7 +132,7 @@ def _display_completions_like_readline(
 
                     # Add padding.
                     padding = max_compl_width - get_cwidth(completion.display_text)
-                    result.append((completion.style, " " * padding,))
+                    result.append((completion.style, " " * padding))
                 except IndexError:
                     pass
             result.append(("", "\n"))

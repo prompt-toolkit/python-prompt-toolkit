@@ -664,7 +664,7 @@ class Renderer:
         layout.container.write_to_screen(
             screen,
             mouse_handlers,
-            WritePosition(xpos=0, ypos=0, width=size.columns, height=height,),
+            WritePosition(xpos=0, ypos=0, width=size.columns, height=height),
             parent_style="",
             erase_bg=False,
             z_index=None,

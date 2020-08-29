@@ -10,11 +10,20 @@ print = print_formatted_text
 
 
 def main():
-    style = Style.from_dict({"hello": "#ff0066", "world": "#44ff44 italic",})
+    style = Style.from_dict(
+        {
+            "hello": "#ff0066",
+            "world": "#44ff44 italic",
+        }
+    )
 
     # Print using a a list of text fragments.
     text_fragments = FormattedText(
-        [("class:hello", "Hello "), ("class:world", "World"), ("", "\n"),]
+        [
+            ("class:hello", "Hello "),
+            ("class:world", "World"),
+            ("", "\n"),
+        ]
     )
     print(text_fragments, style=style)
 

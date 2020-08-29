@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 OneStyleAndTextTuple = Union[
-    Tuple[str, str], Tuple[str, str, Callable[[MouseEvent], None]],
+    Tuple[str, str], Tuple[str, str, Callable[[MouseEvent], None]]
 ]
 
 # List of (style, text) tuples.
