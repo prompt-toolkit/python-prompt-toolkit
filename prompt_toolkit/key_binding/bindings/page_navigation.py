@@ -37,7 +37,10 @@ def load_page_navigation_bindings() -> KeyBindingsBase:
     # ptterm.Terminal).
     return ConditionalKeyBindings(
         merge_key_bindings(
-            [load_emacs_page_navigation_bindings(), load_vi_page_navigation_bindings(),]
+            [
+                load_emacs_page_navigation_bindings(),
+                load_vi_page_navigation_bindings(),
+            ]
         ),
         buffer_has_focus,
     )

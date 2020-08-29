@@ -490,8 +490,8 @@ class PromptSession(Generic[_T]):
 
         # Create buffers list.
         def accept(buff: Buffer) -> bool:
-            """ Accept the content of the default buffer. This is called when
-            the validation succeeds. """
+            """Accept the content of the default buffer. This is called when
+            the validation succeeds."""
             cast(Application[str], get_app()).exit(result=buff.document.text)
             return True  # Keep text, we call 'reset' later on.
 
@@ -556,7 +556,8 @@ class PromptSession(Generic[_T]):
             # Users can insert processors here.
             DynamicProcessor(lambda: merge_processors(self.input_processors or [])),
             ConditionalProcessor(
-                AfterInput(lambda: self.placeholder), filter=display_placeholder,
+                AfterInput(lambda: self.placeholder),
+                filter=display_placeholder,
             ),
         ]
 
@@ -581,7 +582,7 @@ class PromptSession(Generic[_T]):
 
         search_buffer_control = SearchBufferControl(
             buffer=search_buffer,
-            input_processors=[ReverseSearchProcessor(),],
+            input_processors=[ReverseSearchProcessor()],
             ignore_case=dyncond("search_ignore_case"),
         )
 
@@ -810,8 +811,8 @@ class PromptSession(Generic[_T]):
 
         @Condition
         def ctrl_d_condition() -> bool:
-            """ Ctrl-D binding is only active when the default buffer is selected
-            and empty. """
+            """Ctrl-D binding is only active when the default buffer is selected
+            and empty."""
             app = get_app()
             return (
                 app.current_buffer.name == DEFAULT_BUFFER

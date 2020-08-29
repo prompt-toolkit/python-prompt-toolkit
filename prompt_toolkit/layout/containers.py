@@ -1574,8 +1574,8 @@ class Window(Container):
         """
 
         def preferred_content_width() -> Optional[int]:
-            """ Content width: is only calculated if no exact width for the
-            window was given. """
+            """Content width: is only calculated if no exact width for the
+            window was given."""
             if self.ignore_content_width():
                 return None
 
@@ -1605,8 +1605,8 @@ class Window(Container):
         """
 
         def preferred_content_height() -> Optional[int]:
-            """ Content height: is only calculated if no exact height for the
-            window was given. """
+            """Content height: is only calculated if no exact height for the
+            window was given."""
             if self.ignore_content_height():
                 return None
 
@@ -1804,8 +1804,8 @@ class Window(Container):
 
         # Set mouse handlers.
         def mouse_handler(mouse_event: MouseEvent) -> None:
-            """ Wrapper around the mouse_handler of the `UIControl` that turns
-            screen coordinates into line coordinates. """
+            """Wrapper around the mouse_handler of the `UIControl` that turns
+            screen coordinates into line coordinates."""
             # Don't handle mouse events outside of the current modal part of
             # the UI.
             if self not in get_app().layout.walk_through_modal_area():

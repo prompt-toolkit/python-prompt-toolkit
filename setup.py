@@ -28,7 +28,7 @@ setup(
     long_description_content_type="text/x-rst",
     packages=find_packages("."),
     package_data={"prompt_toolkit": ["py.typed"]},
-    install_requires=["wcwidth",],
+    install_requires=["wcwidth"],
     # We require Python 3.6.1 for two reasons:
     # - Syntax for variable annotations - PEP 526.
     # - Asynchronous generators - PEP 525.

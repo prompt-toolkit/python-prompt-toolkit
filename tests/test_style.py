@@ -3,7 +3,10 @@ from prompt_toolkit.styles import Attrs, Style, SwapLightAndDarkStyleTransformat
 
 def test_style_from_dict():
     style = Style.from_dict(
-        {"a": "#ff0000 bold underline italic", "b": "bg:#00ff00 blink reverse",}
+        {
+            "a": "#ff0000 bold underline italic",
+            "b": "bg:#00ff00 blink reverse",
+        }
     )
 
     # Lookup of class:a.
@@ -74,7 +77,13 @@ def test_style_from_dict():
 def test_class_combinations_1():
     # In this case, our style has both class 'a' and 'b'.
     # Given that the style for 'a b' is defined at the end, that one is used.
-    style = Style([("a", "#0000ff"), ("b", "#00ff00"), ("a b", "#ff0000"),])
+    style = Style(
+        [
+            ("a", "#0000ff"),
+            ("b", "#00ff00"),
+            ("a b", "#ff0000"),
+        ]
+    )
     expected = Attrs(
         color="ff0000",
         bgcolor="",
@@ -97,7 +106,13 @@ def test_class_combinations_1():
 def test_class_combinations_2():
     # In this case, our style has both class 'a' and 'b'.
     # The style that is defined the latest get priority.
-    style = Style([("a b", "#ff0000"), ("b", "#00ff00"), ("a", "#0000ff"),])
+    style = Style(
+        [
+            ("a b", "#ff0000"),
+            ("b", "#00ff00"),
+            ("a", "#0000ff"),
+        ]
+    )
     expected = Attrs(
         color="00ff00",
         bgcolor="",

@@ -120,7 +120,7 @@ class MessageDialog:
 
         self.dialog = Dialog(
             title=title,
-            body=HSplit([Label(text=text),]),
+            body=HSplit([Label(text=text)]),
             buttons=[ok_button],
             width=D(preferred=80),
             modal=True,
@@ -245,8 +245,10 @@ def do_go_to():
         except ValueError:
             show_message("Invalid line number")
         else:
-            text_field.buffer.cursor_position = text_field.buffer.document.translate_row_col_to_index(
-                line_number - 1, 0
+            text_field.buffer.cursor_position = (
+                text_field.buffer.document.translate_row_col_to_index(
+                    line_number - 1, 0
+                )
             )
 
     ensure_future(coroutine())
@@ -333,8 +335,14 @@ root_container = MenuContainer(
                 MenuItem("Time/Date", handler=do_time_date),
             ],
         ),
-        MenuItem("View", children=[MenuItem("Status Bar", handler=do_status_bar),]),
-        MenuItem("Info", children=[MenuItem("About", handler=do_about),]),
+        MenuItem(
+            "View",
+            children=[MenuItem("Status Bar", handler=do_status_bar)],
+        ),
+        MenuItem(
+            "Info",
+            children=[MenuItem("About", handler=do_about)],
+        ),
     ],
     floats=[
         Float(
@@ -347,7 +355,12 @@ root_container = MenuContainer(
 )
 
 
-style = Style.from_dict({"status": "reverse", "shadow": "bg:#440044",})
+style = Style.from_dict(
+    {
+        "status": "reverse",
+        "shadow": "bg:#440044",
+    }
+)
 
 
 layout = Layout(root_container, focused_element=text_field)

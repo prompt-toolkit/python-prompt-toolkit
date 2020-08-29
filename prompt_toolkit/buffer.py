@@ -1676,8 +1676,8 @@ class Buffer:
             self.complete_state = complete_state
 
             def proceed() -> bool:
-                """ Keep retrieving completions. Input text has not yet changed
-                while generating completions. """
+                """Keep retrieving completions. Input text has not yet changed
+                while generating completions."""
                 return self.complete_state == complete_state
 
             async for completion in self.completer.get_completions_async(

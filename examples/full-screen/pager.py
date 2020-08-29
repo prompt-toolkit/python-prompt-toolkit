@@ -94,7 +94,7 @@ style = Style.from_dict(
 
 # create application.
 application = Application(
-    layout=Layout(root_container, focused_element=text_area,),
+    layout=Layout(root_container, focused_element=text_area),
     key_bindings=bindings,
     enable_page_navigation_bindings=True,
     mouse_support=True,

@@ -18,7 +18,10 @@ def load_open_in_editor_bindings() -> KeyBindingsBase:
     Load both the Vi and emacs key bindings for handling edit-and-execute-command.
     """
     return merge_key_bindings(
-        [load_emacs_open_in_editor_bindings(), load_vi_open_in_editor_bindings(),]
+        [
+            load_emacs_open_in_editor_bindings(),
+            load_vi_open_in_editor_bindings(),
+        ]
     )
 
 

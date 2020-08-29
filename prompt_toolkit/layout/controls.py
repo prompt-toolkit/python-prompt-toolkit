@@ -696,9 +696,9 @@ class BufferControl(UIControl):
             " Transform the fragments for a given line number. "
             # Get cursor position at this line.
             def source_to_display(i: int) -> int:
-                """ X position from the buffer to the x position in the
+                """X position from the buffer to the x position in the
                 processed fragment list. By default, we start from the 'identity'
-                operation. """
+                operation."""
                 return i
 
             transformation = merged_processor.apply_transformation(

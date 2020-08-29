@@ -237,8 +237,7 @@ class Win32Output(Output):
         self._erase(start, length)
 
     def erase_end_of_line(self) -> None:
-        """
-        """
+        """"""
         sbinfo = self.get_win32_screen_buffer_info()
         start = sbinfo.dwCursorPosition
         length = sbinfo.dwSize.X - sbinfo.dwCursorPosition.X

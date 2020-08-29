@@ -22,8 +22,8 @@ E = KeyPressEvent
 
 
 def if_no_repeat(event: E) -> bool:
-    """ Callable that returns True when the previous event was delivered to
-    another handler. """
+    """Callable that returns True when the previous event was delivered to
+    another handler."""
     return not event.is_repeat
 
 

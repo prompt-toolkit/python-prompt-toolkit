@@ -11,7 +11,11 @@ from prompt_toolkit.widgets import Box, Frame, TextArea
 # (The frame creates the border, the box takes care of the margin/padding.)
 root_container = Box(
     Frame(
-        TextArea(text="Hello world!\nPress control-c to quit.", width=40, height=10,)
+        TextArea(
+            text="Hello world!\nPress control-c to quit.",
+            width=40,
+            height=10,
+        )
     ),
 )
 layout = Layout(container=root_container)
