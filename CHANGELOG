@@ -1,6 +1,26 @@
 CHANGELOG
 =========
 
+3.0.7: 2020-08-29
+-----------------
+
+New features:
+- New "placeholder" parameter added to `PromptSession`.
+
+Other changes:
+- The "respond to CPR" logic has been moved from the `Input` to `Output`
+  classes (this does clean up some code).
+
+Fixes:
+- Bugfix in shift-selection key bindings.
+- Fix hight calculation of `FormattedTextControl` when line wrapping is turned
+  on.
+- Fixes for SSH server:
+  * Missing encoding property.
+  * Fix failure in "set_line_mode" call.
+  * Handle `BrokenPipeError`.
+
+
 3.0.6: 2020-08-10
 -----------------
 
