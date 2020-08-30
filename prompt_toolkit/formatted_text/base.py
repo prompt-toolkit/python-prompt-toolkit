@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 OneStyleAndTextTuple = Union[
-    Tuple[str, str], Tuple[str, str, Callable[[MouseEvent], None]],
+    Tuple[str, str], Tuple[str, str, Callable[[MouseEvent], None]]
 ]
 
 # List of (style, text) tuples.
@@ -55,8 +55,9 @@ def to_formatted_text(
     fragments. (Which is the canonical form of formatted text.) The outcome is
     always a `FormattedText` instance, which is a list of (style, text) tuples.
 
-    It can take an `HTML` object, a plain text string, or anything that
-    implements `__pt_formatted_text__`.
+    It can take a plain text string, an `HTML` or `ANSI` object, anything that
+    implements `__pt_formatted_text__` or a callable that takes no arguments and
+    returns one of those.
 
     :param style: An additional style string which is applied to all text
         fragments.

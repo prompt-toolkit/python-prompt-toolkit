@@ -232,14 +232,14 @@ class Document:
 
     @property
     def line_count(self) -> int:
-        r""" Return the number of lines in this document. If the document ends
-        with a trailing \n, that counts as the beginning of a new line. """
+        r"""Return the number of lines in this document. If the document ends
+        with a trailing \n, that counts as the beginning of a new line."""
         return len(self.lines)
 
     @property
     def current_line(self) -> str:
-        """ Return the text on the line where the cursor is. (when the input
-        consists of just one line, it equals `text`. """
+        """Return the text on the line where the cursor is. (when the input
+        consists of just one line, it equals `text`."""
         return self.current_line_before_cursor + self.current_line_after_cursor
 
     @property

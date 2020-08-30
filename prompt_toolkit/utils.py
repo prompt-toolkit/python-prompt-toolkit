@@ -26,6 +26,7 @@ __all__ = [
     "is_conemu_ansi",
     "is_windows",
     "in_main_thread",
+    "get_term_environment_variable",
     "take_using_weights",
     "to_str",
     "to_int",
@@ -306,6 +307,6 @@ def is_dumb_terminal(term: Optional[str] = None) -> bool:
     without cursor positioning and color support.
     """
     if term is None:
-        term = os.environ.get("TERM", "")
+        return is_dumb_terminal(os.environ.get("TERM", ""))
 
-    return term in ["dumb", "unknown"]
+    return term.lower() in ["dumb", "unknown"]

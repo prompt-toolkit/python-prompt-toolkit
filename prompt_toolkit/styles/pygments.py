@@ -11,8 +11,8 @@ from typing import TYPE_CHECKING, Dict, Type
 from .style import Style
 
 if TYPE_CHECKING:
-    from pygments.token import Token
     from pygments.style import Style as PygmentsStyle
+    from pygments.token import Token
 
 
 __all__ = [

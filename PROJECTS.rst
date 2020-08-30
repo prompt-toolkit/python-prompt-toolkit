@@ -46,6 +46,7 @@ Full screen applications:
 - `pypager <https://github.com/prompt-toolkit/pypager>`_: A $PAGER in pure Python (like "less").
 - `kubeterminal <https://github.com/samisalkosuo/kubeterminal>`_: Kubectl helper tool.
 - `pydoro <https://github.com/JaDogg/pydoro>`_: Pomodoro timer.
+- `sanctuary-zero <https://github.com/t0xic0der/sanctuary-zero>`_: A secure chatroom with zero logging and total transience.
 
 Libraries:
 

@@ -225,13 +225,16 @@ names to refer to the style.
 The `message` can be any kind of formatted text, as discussed :ref:`here
 <formatted_text>`. It can also be a callable that returns some formatted text.
 
-By default, colors are taking from the 256 color palette. If you want to have
-24bit true color, this is possible by adding the ``true_color=True`` option to
-the :func:`~prompt_toolkit.shortcuts.prompt.prompt` function.
+By default, colors are taken from the 256 color palette. If you want to have
+24bit true color, this is possible by adding the
+``color_depth=ColorDepth.TRUE_COLOR`` option to the
+:func:`~prompt_toolkit.shortcuts.prompt.prompt` function.
 
 .. code:: python
 
-    text = prompt(message, style=style, true_color=True)
+    from prompt_toolkit.output import ColorDepth
+
+    text = prompt(message, style=style, color_depth=ColorDepth.TRUE_COLOR)
 
 
 Autocompletion

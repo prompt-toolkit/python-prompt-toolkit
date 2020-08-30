@@ -22,8 +22,8 @@ E = KeyPressEvent
 
 
 def if_no_repeat(event: E) -> bool:
-    """ Callable that returns True when the previous event was delivered to
-    another handler. """
+    """Callable that returns True when the previous event was delivered to
+    another handler."""
     return not event.is_repeat
 
 
@@ -78,6 +78,10 @@ def load_basic_bindings() -> KeyBindings:
     @handle("f18")
     @handle("f19")
     @handle("f20")
+    @handle("f21")
+    @handle("f22")
+    @handle("f23")
+    @handle("f24")
     @handle("c-@")  # Also c-space.
     @handle("c-\\")
     @handle("c-]")

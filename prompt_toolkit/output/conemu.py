@@ -1,8 +1,9 @@
-from typing import Any, TextIO
+from typing import Any, Optional, TextIO
 
 from prompt_toolkit.data_structures import Size
 from prompt_toolkit.renderer import Output
 
+from .color_depth import ColorDepth
 from .vt100 import Vt100_Output
 from .win32 import Win32Output
 
@@ -27,9 +28,17 @@ class ConEmuOutput:
     http://gooseberrycreative.com/cmder/
     """
 
-    def __init__(self, stdout: TextIO) -> None:
-        self.win32_output = Win32Output(stdout)
-        self.vt100_output = Vt100_Output(stdout, lambda: Size(0, 0))
+    def __init__(
+        self, stdout: TextIO, default_color_depth: Optional[ColorDepth] = None
+    ) -> None:
+        self.win32_output = Win32Output(stdout, default_color_depth=default_color_depth)
+        self.vt100_output = Vt100_Output(
+            stdout, lambda: Size(0, 0), default_color_depth=default_color_depth
+        )
+
+    @property
+    def responds_to_cpr(self) -> bool:
+        return False  # We don't need this on Windows.
 
     def __getattr__(self, name: str) -> Any:
         if name in (

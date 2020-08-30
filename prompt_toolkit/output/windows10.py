@@ -1,12 +1,13 @@
 from ctypes import byref, windll
 from ctypes.wintypes import DWORD, HANDLE
-from typing import Any, TextIO
+from typing import Any, Optional, TextIO
 
 from prompt_toolkit.data_structures import Size
 from prompt_toolkit.renderer import Output
 from prompt_toolkit.utils import is_windows
 from prompt_toolkit.win32_types import STD_OUTPUT_HANDLE
 
+from .color_depth import ColorDepth
 from .vt100 import Vt100_Output
 from .win32 import Win32Output
 
@@ -24,9 +25,13 @@ class Windows10_Output:
     Windows 10 output abstraction. This enables and uses vt100 escape sequences.
     """
 
-    def __init__(self, stdout: TextIO) -> None:
-        self.win32_output = Win32Output(stdout)
-        self.vt100_output = Vt100_Output(stdout, lambda: Size(0, 0))
+    def __init__(
+        self, stdout: TextIO, default_color_depth: Optional[ColorDepth] = None
+    ) -> None:
+        self.win32_output = Win32Output(stdout, default_color_depth=default_color_depth)
+        self.vt100_output = Vt100_Output(
+            stdout, lambda: Size(0, 0), default_color_depth=default_color_depth
+        )
         self._hconsole = HANDLE(windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE))
 
     def flush(self) -> None:
@@ -50,6 +55,10 @@ class Windows10_Output:
             # Restore console mode.
             windll.kernel32.SetConsoleMode(self._hconsole, original_mode)
 
+    @property
+    def responds_to_cpr(self) -> bool:
+        return False  # We don't need this on Windows.
+
     def __getattr__(self, name: str) -> Any:
         if name in (
             "get_size",
@@ -60,6 +69,7 @@ class Windows10_Output:
             "get_win32_screen_buffer_info",
             "enable_bracketed_paste",
             "disable_bracketed_paste",
+            "get_default_color_depth",
         ):
             return getattr(self.win32_output, name)
         else:

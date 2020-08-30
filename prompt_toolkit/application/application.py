@@ -15,6 +15,7 @@ from asyncio import (
     set_event_loop,
     sleep,
 )
+from contextlib import contextmanager
 from subprocess import Popen
 from traceback import format_tb
 from typing import (
@@ -23,6 +24,7 @@ from typing import (
     Callable,
     Dict,
     FrozenSet,
+    Generator,
     Generic,
     Hashable,
     Iterable,
@@ -159,7 +161,7 @@ class Application(Generic[_AppResult]):
         don't want this for the implementation of a REPL. By default, this is
         enabled if `full_screen` is set.
 
-    Callbacks (all of these should accept a
+    Callbacks (all of these should accept an
     :class:`~prompt_toolkit.application.Application` object as input.)
 
     :param on_reset: Called during reset.
@@ -308,7 +310,6 @@ class Application(Generic[_AppResult]):
         self.renderer = Renderer(
             self._merged_style,
             self.output,
-            self.input,
             full_screen=full_screen,
             mouse_support=mouse_support,
             cpr_not_supported_callback=self.cpr_not_supported_callback,
@@ -364,15 +365,23 @@ class Application(Generic[_AppResult]):
     @property
     def color_depth(self) -> ColorDepth:
         """
-        Active :class:`.ColorDepth`.
+        The active :class:`.ColorDepth`.
+
+        The current value is determined as follows:
+        - If a color depth was given explicitely to this application, use that
+          value.
+        - Otherwise, fall back to the color depth that is reported by the
+          :class:`.Output` implementation. If the :class:`.Output` class was
+          created using `output.defaults.create_output`, then this value is
+          coming from the $PROMPT_TOOLKIT_COLOR_DEPTH environment variable.
         """
         depth = self._color_depth
 
         if callable(depth):
-            return depth() or ColorDepth.default()
+            depth = depth()
 
         if depth is None:
-            return ColorDepth.default()
+            depth = self.output.get_default_color_depth()
 
         return depth
 
@@ -681,68 +690,55 @@ class Application(Generic[_AppResult]):
                     if self.input.closed:
                         f.set_exception(EOFError)
 
-            # Enter raw mode.
-            with self.input.raw_mode():
-                with self.input.attach(read_from_input):
-                    # Draw UI.
-                    self._request_absolute_cursor_position()
-                    self._redraw()
-                    self._start_auto_refresh_task()
+            # Enter raw mode, attach input and attach WINCH event handler.
+            with self.input.raw_mode(), self.input.attach(
+                read_from_input
+            ), attach_winch_signal_handler(self._on_resize):
+                # Draw UI.
+                self._request_absolute_cursor_position()
+                self._redraw()
+                self._start_auto_refresh_task()
 
-                    if _SIGWINCH is not None and in_main_thread():
-                        previous_winch_handler = signal.getsignal(_SIGWINCH)
-                        loop.add_signal_handler(_SIGWINCH, self._on_resize)
-                        if previous_winch_handler is None:
-                            # In some situations we receive `None`. This is
-                            # however not a valid value for passing to
-                            # `signal.signal` at the end of this block.
-                            previous_winch_handler = signal.SIG_DFL
-
-                    # Wait for UI to finish.
+                # Wait for UI to finish.
+                try:
+                    result = await f
+                finally:
+                    # In any case, when the application finishes.
+                    # (Successful, or because of an error.)
                     try:
-                        result = await f
+                        self._redraw(render_as_done=True)
                     finally:
-                        # In any case, when the application finishes. (Successful,
-                        # or because of an error.)
-                        try:
-                            self._redraw(render_as_done=True)
-                        finally:
-                            # _redraw has a good chance to fail if it calls widgets
-                            # with bad code. Make sure to reset the renderer anyway.
-                            self.renderer.reset()
+                        # _redraw has a good chance to fail if it calls widgets
+                        # with bad code. Make sure to reset the renderer
+                        # anyway.
+                        self.renderer.reset()
 
-                            # Unset `is_running`, this ensures that possibly
-                            # scheduled draws won't paint during the following
-                            # yield.
-                            self._is_running = False
+                        # Unset `is_running`, this ensures that possibly
+                        # scheduled draws won't paint during the following
+                        # yield.
+                        self._is_running = False
 
-                            # Detach event handlers for invalidate events.
-                            # (Important when a UIControl is embedded in
-                            # multiple applications, like ptterm in pymux. An
-                            # invalidate should not trigger a repaint in
-                            # terminated applications.)
-                            for ev in self._invalidate_events:
-                                ev -= self._invalidate_handler
-                            self._invalidate_events = []
+                        # Detach event handlers for invalidate events.
+                        # (Important when a UIControl is embedded in multiple
+                        # applications, like ptterm in pymux. An invalidate
+                        # should not trigger a repaint in terminated
+                        # applications.)
+                        for ev in self._invalidate_events:
+                            ev -= self._invalidate_handler
+                        self._invalidate_events = []
 
-                            # Wait for CPR responses.
-                            if self.input.responds_to_cpr:
-                                await self.renderer.wait_for_cpr_responses()
+                        # Wait for CPR responses.
+                        if self.output.responds_to_cpr:
+                            await self.renderer.wait_for_cpr_responses()
 
-                            if _SIGWINCH is not None:
-                                loop.remove_signal_handler(_SIGWINCH)
-                                signal.signal(_SIGWINCH, previous_winch_handler)
+                        # Wait for the run-in-terminals to terminate.
+                        previous_run_in_terminal_f = self._running_in_terminal_f
 
-                            # Wait for the run-in-terminals to terminate.
-                            previous_run_in_terminal_f = self._running_in_terminal_f
+                        if previous_run_in_terminal_f:
+                            await previous_run_in_terminal_f
 
-                            if previous_run_in_terminal_f:
-                                await previous_run_in_terminal_f
-
-                            # Store unprocessed input as typeahead for next time.
-                            store_typeahead(
-                                self.input, self.key_processor.empty_queue()
-                            )
+                        # Store unprocessed input as typeahead for next time.
+                        store_typeahead(self.input, self.key_processor.empty_queue())
 
                 return result
 
@@ -879,7 +875,7 @@ class Application(Generic[_AppResult]):
         """
         Called when we don't receive the cursor position response in time.
         """
-        if not self.input.responds_to_cpr:
+        if not self.output.responds_to_cpr:
             return  # We know about this already.
 
         def in_terminal() -> None:
@@ -1075,13 +1071,13 @@ class _CombinedRegistry(KeyBindingsBase):
 
     @property
     def _version(self) -> Hashable:
-        """ Not needed - this object is not going to be wrapped in another
-        KeyBindings object. """
+        """Not needed - this object is not going to be wrapped in another
+        KeyBindings object."""
         raise NotImplementedError
 
     def bindings(self) -> List[Binding]:
-        """ Not needed - this object is not going to be wrapped in another
-        KeyBindings object. """
+        """Not needed - this object is not going to be wrapped in another
+        KeyBindings object."""
         raise NotImplementedError
 
     def _create_key_bindings(
@@ -1179,3 +1175,48 @@ async def _do_wait_for_enter(wait_text: AnyFormattedText) -> None:
         message=wait_text, key_bindings=key_bindings
     )
     await session.app.run_async()
+
+
+@contextmanager
+def attach_winch_signal_handler(
+    handler: Callable[[], None]
+) -> Generator[None, None, None]:
+    """
+    Attach the given callback as a WINCH signal handler within the context
+    manager. Restore the original signal handler when done.
+
+    The `Application.run` method will register SIGWINCH, so that it will
+    properly repaint when the terminal window resizes. However, using
+    `run_in_terminal`, we can temporarily send an application to the
+    background, and run an other app in between, which will then overwrite the
+    SIGWINCH. This is why it's important to restore the handler when the app
+    terminates.
+    """
+    # The tricky part here is that signals are registered in the Unix event
+    # loop with a wakeup fd, but another application could have registered
+    # signals using signal.signal directly. For now, the implementation is
+    # hard-coded for the `asyncio.unix_events._UnixSelectorEventLoop`.
+
+    # No WINCH? Then don't do anything.
+    sigwinch = getattr(signal, "SIGWINCH", None)
+    if sigwinch is None or not in_main_thread():
+        yield
+        return
+
+    # Keep track of the previous handler.
+    # (Only UnixSelectorEventloop has `_signal_handlers`.)
+    loop = asyncio.get_event_loop()
+    previous_winch_handler = getattr(loop, "_signal_handlers", {}).get(sigwinch)
+
+    try:
+        loop.add_signal_handler(sigwinch, handler)
+        yield
+    finally:
+        # Restore the previous signal handler.
+        loop.remove_signal_handler(sigwinch)
+        if previous_winch_handler is not None:
+            loop.add_signal_handler(
+                sigwinch,
+                previous_winch_handler._callback,
+                *previous_winch_handler._args,
+            )

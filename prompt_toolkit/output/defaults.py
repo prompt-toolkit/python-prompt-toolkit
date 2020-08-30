@@ -9,6 +9,7 @@ from prompt_toolkit.utils import (
 )
 
 from .base import Output
+from .color_depth import ColorDepth
 
 __all__ = [
     "create_output",
@@ -28,6 +29,12 @@ def create_output(
         consumed by something other then a terminal, so this is a reasonable
         default.)
     """
+    # Consider TERM and PROMPT_TOOLKIT_COLOR_DEPTH environment variables.
+    # Notice that PROMPT_TOOLKIT_COLOR_DEPTH value is the default that's used
+    # if the Application doesn't override it.
+    term_from_env = get_term_environment_variable()
+    color_depth_from_env = ColorDepth.from_env()
+
     if stdout is None:
         # By default, render to stdout. If the output is piped somewhere else,
         # render to stderr.
@@ -48,15 +55,22 @@ def create_output(
     if is_windows():
         from .conemu import ConEmuOutput
         from .win32 import Win32Output
-        from .windows10 import is_win_vt100_enabled, Windows10_Output
+        from .windows10 import Windows10_Output, is_win_vt100_enabled
 
         if is_win_vt100_enabled():
-            return cast(Output, Windows10_Output(stdout))
+            return cast(
+                Output,
+                Windows10_Output(stdout, default_color_depth=color_depth_from_env),
+            )
         if is_conemu_ansi():
-            return cast(Output, ConEmuOutput(stdout))
+            return cast(
+                Output, ConEmuOutput(stdout, default_color_depth=color_depth_from_env)
+            )
         else:
-            return Win32Output(stdout)
+            return Win32Output(stdout, default_color_depth=color_depth_from_env)
     else:
         from .vt100 import Vt100_Output
 
-        return Vt100_Output.from_pty(stdout, term=get_term_environment_variable())
+        return Vt100_Output.from_pty(
+            stdout, term=term_from_env, default_color_depth=color_depth_from_env
+        )

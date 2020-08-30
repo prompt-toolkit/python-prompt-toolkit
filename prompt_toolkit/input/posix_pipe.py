@@ -2,6 +2,7 @@ import os
 from typing import ContextManager, TextIO, cast
 
 from ..utils import DummyContext
+from .base import PipeInput
 from .vt100 import Vt100Input
 
 __all__ = [
@@ -9,7 +10,7 @@ __all__ = [
 ]
 
 
-class PosixPipeInput(Vt100Input):
+class PosixPipeInput(Vt100Input, PipeInput):
     """
     Input that is send through a pipe.
     This is useful if we want to send the input programmatically into the
@@ -41,10 +42,6 @@ class PosixPipeInput(Vt100Input):
         # Identifier for every PipeInput for the hash.
         self.__class__._id += 1
         self._id = self.__class__._id
-
-    @property
-    def responds_to_cpr(self) -> bool:
-        return False
 
     def send_bytes(self, data: bytes) -> None:
         os.write(self._w, data)

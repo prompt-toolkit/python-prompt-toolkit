@@ -4,6 +4,7 @@ For testing: test to make sure that everything still works when gevent monkey
 patches are applied.
 """
 from gevent.monkey import patch_all
+
 from prompt_toolkit.eventloop.defaults import create_event_loop
 from prompt_toolkit.shortcuts import PromptSession
 

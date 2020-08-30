@@ -334,6 +334,6 @@ information.
 Processing `.inputrc`
 ---------------------
 
-GNU readline can be configured using an `.inputrc` configuration file. This can
-could key bindings as well as certain settings. Right now, prompt_toolkit
-doesn't support `.inputrc` yet, but it should be possible in the future.
+GNU readline can be configured using an `.inputrc` configuration file. This file
+contains key bindings as well as certain settings. Right now, prompt_toolkit
+doesn't support `.inputrc`, but it should be possible in the future.

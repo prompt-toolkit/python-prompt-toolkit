@@ -59,10 +59,10 @@ class Layout:
         if focused_element is None:
             try:
                 self._stack.append(next(self.find_all_windows()))
-            except StopIteration:
+            except StopIteration as e:
                 raise InvalidLayoutError(
                     "Invalid layout. The layout does not contain any Window object."
-                )
+                ) from e
         else:
             self.focus(focused_element)
 

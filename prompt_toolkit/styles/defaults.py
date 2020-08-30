@@ -211,7 +211,11 @@ def default_ui_style() -> BaseStyle:
     Create a default `Style` object.
     """
     return merge_styles(
-        [Style(PROMPT_TOOLKIT_STYLE), Style(COLORS_STYLE), Style(WIDGETS_STYLE),]
+        [
+            Style(PROMPT_TOOLKIT_STYLE),
+            Style(COLORS_STYLE),
+            Style(WIDGETS_STYLE),
+        ]
     )
 
 

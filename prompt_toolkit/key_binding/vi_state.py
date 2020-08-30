@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, Callable, Dict, Optional
 from prompt_toolkit.clipboard import ClipboardData
 
 if TYPE_CHECKING:
-    from .key_processor import KeyPressEvent
     from .key_bindings.vi import TextObject
+    from .key_processor import KeyPressEvent
 
 __all__ = [
     "InputMode",
@@ -21,6 +21,7 @@ class InputMode(str, Enum):
     INSERT_MULTIPLE = "vi-insert-multiple"
     NAVIGATION = "vi-navigation"  # Normal mode.
     REPLACE = "vi-replace"
+    REPLACE_SINGLE = "vi-replace-single"
 
 
 class CharacterFind:

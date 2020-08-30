@@ -60,7 +60,7 @@ There are several ways to display colors:
 
 An instance of any of these four kinds of objects is called "formatted text".
 There are various places in prompt toolkit, where we accept not just plain text
-(as a strings), but also formatted text.
+(as a string), but also formatted text.
 
 HTML
 ^^^^

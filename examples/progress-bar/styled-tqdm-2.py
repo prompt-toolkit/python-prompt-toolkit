@@ -10,7 +10,7 @@ from prompt_toolkit.shortcuts import ProgressBar
 from prompt_toolkit.shortcuts.progress_bar import formatters
 from prompt_toolkit.styles import Style
 
-style = Style.from_dict({"bar-a": "reverse",})
+style = Style.from_dict({"bar-a": "reverse"})
 
 
 def main():

@@ -143,6 +143,22 @@ class Output(metaclass=ABCMeta):
         (VT100 only.)
         """
 
+    @property
+    def responds_to_cpr(self) -> bool:
+        """
+        `True` if the `Application` can expect to receive a CPR response after
+        calling `ask_for_cpr` (this will come back through the corresponding
+        `Input`).
+
+        This is used to determine the amount of available rows we have below
+        the cursor position. In the first place, we have this so that the drop
+        down autocompletion menus are sized according to the available space.
+
+        On Windows, we don't need this, there we have
+        `get_rows_below_cursor_position`.
+        """
+        return False
+
     @abstractmethod
     def get_size(self) -> Size:
         " Return the size of the output window. "
@@ -162,6 +178,23 @@ class Output(metaclass=ABCMeta):
     def get_rows_below_cursor_position(self) -> int:
         " For Windows only. "
         raise NotImplementedError
+
+    @abstractmethod
+    def get_default_color_depth(self) -> ColorDepth:
+        """
+        Get default color depth for this output.
+
+        This value will be used if no color depth was explicitely passed to the
+        `Application`.
+
+        .. note::
+
+            If the `$PROMPT_TOOLKIT_COLOR_DEPTH` environment variable has been
+            set, then `outputs.defaults.create_output` will pass this value to
+            the implementation as the default_color_depth, which is returned
+            here. (This is not used when the output corresponds to a
+            prompt_toolkit SSH/Telnet session.)
+        """
 
 
 class DummyOutput(Output):
@@ -265,3 +298,6 @@ class DummyOutput(Output):
 
     def get_rows_below_cursor_position(self) -> int:
         return 40
+
+    def get_default_color_depth(self) -> ColorDepth:
+        return ColorDepth.DEPTH_1_BIT

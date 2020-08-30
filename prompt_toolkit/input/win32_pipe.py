@@ -5,13 +5,14 @@ from prompt_toolkit.eventloop.win32 import create_win32_event
 
 from ..key_binding import KeyPress
 from ..utils import DummyContext
+from .base import PipeInput
 from .vt100_parser import Vt100Parser
 from .win32 import _Win32InputBase, attach_win32_input, detach_win32_input
 
 __all__ = ["Win32PipeInput"]
 
 
-class Win32PipeInput(_Win32InputBase):
+class Win32PipeInput(_Win32InputBase, PipeInput):
     """
     This is an input pipe that works on Windows.
     Text or bytes can be feed into the pipe, and key strokes can be read from
@@ -102,10 +103,6 @@ class Win32PipeInput(_Win32InputBase):
         result = self._buffer
         self._buffer = []
         return result
-
-    @property
-    def responds_to_cpr(self) -> bool:
-        return False
 
     def send_bytes(self, data: bytes) -> None:
         " Send bytes to the input. "

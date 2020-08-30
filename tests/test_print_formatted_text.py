@@ -54,8 +54,18 @@ def test_print_formatted_text_backslash_r():
 @pytest.mark.skipif(is_windows(), reason="Doesn't run on Windows yet.")
 def test_formatted_text_with_style():
     f = _Capture()
-    style = Style.from_dict({"hello": "#ff0066", "world": "#44ff44 italic",})
-    tokens = FormattedText([("class:hello", "Hello "), ("class:world", "world"),])
+    style = Style.from_dict(
+        {
+            "hello": "#ff0066",
+            "world": "#44ff44 italic",
+        }
+    )
+    tokens = FormattedText(
+        [
+            ("class:hello", "Hello "),
+            ("class:world", "world"),
+        ]
+    )
 
     # NOTE: We pass the default (8bit) color depth, so that the unit tests
     #       don't start failing when environment variables change.

@@ -64,6 +64,7 @@ if TYPE_CHECKING:
     NotImplementedOrNone = object
 
 __all__ = [
+    "AnyContainer",
     "Container",
     "HorizontalAlign",
     "VerticalAlign",
@@ -353,7 +354,8 @@ class HSplit(_Split):
                         style=self.padding_style,
                     )
                 )
-            result.pop()
+            if result:
+                result.pop()
 
             # Padding right.
             if self.align in (VerticalAlign.CENTER, VerticalAlign.TOP):
@@ -605,7 +607,8 @@ class VSplit(_Split):
                         style=self.padding_style,
                     )
                 )
-            result.pop()
+            if result:
+                result.pop()
 
             # Padding right.
             if self.align in (HorizontalAlign.CENTER, HorizontalAlign.LEFT):
@@ -1105,7 +1108,7 @@ class Float:
 
 class WindowRenderInfo:
     """
-    Render information, for the last render time of this control.
+    Render information for the last render time of this control.
     It stores mapping information between the input buffers (in case of a
     :class:`~prompt_toolkit.layout.controls.BufferControl`) and the actual
     render position on the output screen.
@@ -1571,8 +1574,8 @@ class Window(Container):
         """
 
         def preferred_content_width() -> Optional[int]:
-            """ Content width: is only calculated if no exact width for the
-            window was given. """
+            """Content width: is only calculated if no exact width for the
+            window was given."""
             if self.ignore_content_width():
                 return None
 
@@ -1602,8 +1605,8 @@ class Window(Container):
         """
 
         def preferred_content_height() -> Optional[int]:
-            """ Content height: is only calculated if no exact height for the
-            window was given. """
+            """Content height: is only calculated if no exact height for the
+            window was given."""
             if self.ignore_content_height():
                 return None
 
@@ -1801,8 +1804,8 @@ class Window(Container):
 
         # Set mouse handlers.
         def mouse_handler(mouse_event: MouseEvent) -> None:
-            """ Wrapper around the mouse_handler of the `UIControl` that turns
-            screen coordinates into line coordinates. """
+            """Wrapper around the mouse_handler of the `UIControl` that turns
+            screen coordinates into line coordinates."""
             # Don't handle mouse events outside of the current modal part of
             # the UI.
             if self not in get_app().layout.walk_through_modal_area():
@@ -2616,7 +2619,7 @@ class ConditionalContainer(Container):
 
 class DynamicContainer(Container):
     """
-    Container class that can dynamically returns any Container.
+    Container class that dynamically returns any Container.
 
     :param get_container: Callable that returns a :class:`.Container` instance
         or any widget with a ``__pt_container__`` method.
@@ -2672,7 +2675,7 @@ def to_container(container: AnyContainer) -> Container:
     elif hasattr(container, "__pt_container__"):
         return to_container(cast("MagicContainer", container).__pt_container__())
     else:
-        raise ValueError("Not a container object.")
+        raise ValueError("Not a container object: %r" % (container,))
 
 
 def to_window(container: AnyContainer) -> Window:

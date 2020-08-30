@@ -55,8 +55,8 @@ def get_by_name(name: str) -> Binding:
     """
     try:
         return _readline_commands[name]
-    except KeyError:
-        raise KeyError("Unknown Readline command: %r" % name)
+    except KeyError as e:
+        raise KeyError("Unknown Readline command: %r" % name) from e
 
 
 #

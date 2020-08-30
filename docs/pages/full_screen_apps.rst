@@ -66,7 +66,7 @@ I/O objects
 -----------
 
 Every :class:`~prompt_toolkit.application.Application` instance requires an I/O
-objects for input and output:
+object for input and output:
 
     - An :class:`~prompt_toolkit.input.Input` instance, which is an abstraction
       of the input stream (stdin).
@@ -326,7 +326,7 @@ Modal containers
 All container objects, like :class:`~prompt_toolkit.layout.VSplit` and
 :class:`~prompt_toolkit.layout.HSplit` take a ``modal`` argument.
 
-If this flag has been set, then key bindings from the parent account are not
+If this flag has been set, then key bindings from the parent are not
 taken into account if one of the children windows has the focus.
 
 This is useful in a complex layout, where many controls have their own key

@@ -51,14 +51,6 @@ class Input(metaclass=ABCMeta):
         " The event loop can call this when the input has to be flushed. "
         pass
 
-    @property
-    def responds_to_cpr(self) -> bool:
-        """
-        `True` if the `Application` can expect to receive a CPR response from
-        here.
-        """
-        return False
-
     @abstractproperty
     def closed(self) -> bool:
         " Should be true when the input stream is closed. "
@@ -93,6 +85,20 @@ class Input(metaclass=ABCMeta):
     def close(self) -> None:
         " Close input. "
         pass
+
+
+class PipeInput(Input):
+    """
+    Abstraction for pipe input.
+    """
+
+    @abstractmethod
+    def send_bytes(self, data: bytes) -> None:
+        """Feed byte string into the pipe"""
+
+    @abstractmethod
+    def send_text(self, data: str) -> None:
+        """Feed a text string into the pipe"""
 
 
 class DummyInput(Input):

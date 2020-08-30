@@ -3,7 +3,7 @@ from typing import Optional, TextIO
 
 from prompt_toolkit.utils import is_windows
 
-from .base import Input
+from .base import Input, PipeInput
 
 __all__ = [
     "create_input",
@@ -43,7 +43,7 @@ def create_input(
         return Vt100Input(stdin)
 
 
-def create_pipe_input() -> Input:
+def create_pipe_input() -> PipeInput:
     """
     Create an input pipe.
     This is mostly useful for unit testing.

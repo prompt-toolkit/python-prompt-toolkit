@@ -129,8 +129,7 @@ def load_emacs_bindings() -> KeyBindingsBase:
 
     @handle("escape", "-", filter=~has_arg)
     def _meta_dash(event: E) -> None:
-        """
-        """
+        """"""
         if event._arg is None:
             event.append_to_arg_count("-")
 
@@ -438,14 +437,13 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
 
         try:
             # Both the dict lookup and `get_by_name` can raise KeyError.
-            handler = get_by_name(key_to_command[key])
+            binding = get_by_name(key_to_command[key])
         except KeyError:
             pass
         else:  # (`else` is not really needed here.)
-            if not isinstance(handler, Binding):
-                # (It should always be a normal callable here, for these
-                # commands.)
-                handler(event)
+            if isinstance(binding, Binding):
+                # (It should always be a binding here)
+                binding.call(event)
 
     @handle("s-left", filter=~has_selection)
     @handle("s-right", filter=~has_selection)

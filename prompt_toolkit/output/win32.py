@@ -10,7 +10,7 @@ from ctypes import (
     windll,
 )
 from ctypes.wintypes import DWORD, HANDLE
-from typing import Dict, List, TextIO, Tuple
+from typing import Dict, List, Optional, TextIO, Tuple
 
 from prompt_toolkit.data_structures import Size
 from prompt_toolkit.renderer import Output
@@ -85,8 +85,14 @@ class Win32Output(Output):
     (cmd.exe and similar.)
     """
 
-    def __init__(self, stdout: TextIO, use_complete_width: bool = False) -> None:
+    def __init__(
+        self,
+        stdout: TextIO,
+        use_complete_width: bool = False,
+        default_color_depth: Optional[ColorDepth] = None,
+    ) -> None:
         self.use_complete_width = use_complete_width
+        self.default_color_depth = default_color_depth
 
         self._buffer: List[str] = []
         self.stdout = stdout
@@ -231,8 +237,7 @@ class Win32Output(Output):
         self._erase(start, length)
 
     def erase_end_of_line(self) -> None:
-        """
-        """
+        """"""
         sbinfo = self.get_win32_screen_buffer_info()
         start = sbinfo.dwCursorPosition
         length = sbinfo.dwSize.X - sbinfo.dwCursorPosition.X
@@ -478,6 +483,23 @@ class Win32Output(Output):
 
         RDW_INVALIDATE = 0x0001
         windll.user32.RedrawWindow(handle, None, None, c_uint(RDW_INVALIDATE))
+
+    def get_default_color_depth(self) -> ColorDepth:
+        """
+        Return the default color depth for a windows terminal.
+
+        Contrary to the Vt100 implementation, this doesn't depend on a $TERM
+        variable.
+        """
+        if self.default_color_depth is not None:
+            return self.default_color_depth
+
+        # For now, by default, always use 4 bit color on Windows 10 by default,
+        # even when vt100 escape sequences with
+        # ENABLE_VIRTUAL_TERMINAL_PROCESSING are supported. We don't have a
+        # reliable way yet to know whether our console supports true color or
+        # only 4-bit.
+        return ColorDepth.DEPTH_4_BIT
 
 
 class FOREGROUND_COLOR:

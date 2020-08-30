@@ -11,7 +11,7 @@ from prompt_toolkit.application.current import create_app_session, get_app
 from prompt_toolkit.application.run_in_terminal import run_in_terminal
 from prompt_toolkit.data_structures import Size
 from prompt_toolkit.formatted_text import AnyFormattedText, to_formatted_text
-from prompt_toolkit.input.posix_pipe import PosixPipeInput
+from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output.vt100 import Vt100_Output
 from prompt_toolkit.renderer import print_formatted_text as print_formatted_text
 from prompt_toolkit.styles import BaseStyle, DummyStyle
@@ -26,7 +26,9 @@ from .protocol import (
     NAWS,
     SB,
     SE,
+    SEND,
     SUPPRESS_GO_AHEAD,
+    TTYPE,
     WILL,
     TelnetProtocolParser,
 )
@@ -59,6 +61,15 @@ def _initialize_telnet(connection: socket.socket) -> None:
     # Negotiate window size
     connection.send(IAC + DO + NAWS)
 
+    # Negotiate terminal type
+    # Assume the client will accept the negociation with `IAC +  WILL + TTYPE`
+    connection.send(IAC + DO + TTYPE)
+
+    # We can then select the first terminal type supported by the client,
+    # which is generally the best type the client supports
+    # The client should reply with a `IAC + SB  + TTYPE + IS + ttype + IAC + SE`
+    connection.send(IAC + SB + TTYPE + SEND + IAC + SE)
+
 
 class _ConnectionStdout:
     """
@@ -73,6 +84,7 @@ class _ConnectionStdout:
         self._buffer: List[bytes] = []
 
     def write(self, data: str) -> None:
+        data = data.replace("\n", "\r\n")
         self._buffer.append(data.encode(self._encoding, errors=self._errors))
         self.flush()
 
@@ -115,6 +127,8 @@ class TelnetConnection:
         self.encoding = encoding
         self.style = style
         self._closed = False
+        self._ready = asyncio.Event()
+        self.vt100_output = None
 
         # Create "Output" object.
         self.size = Size(rows=40, columns=79)
@@ -123,14 +137,13 @@ class TelnetConnection:
         _initialize_telnet(conn)
 
         # Create input.
-        self.vt100_input = PosixPipeInput()
+        self.vt100_input = create_pipe_input()
 
         # Create output.
         def get_size() -> Size:
             return self.size
 
         self.stdout = cast(TextIO, _ConnectionStdout(conn, encoding=encoding))
-        self.vt100_output = Vt100_Output(self.stdout, get_size, write_binary=False)
 
         def data_received(data: bytes) -> None:
             """ TelnetProtocolParser 'data_received' callback """
@@ -139,9 +152,17 @@ class TelnetConnection:
         def size_received(rows: int, columns: int) -> None:
             """ TelnetProtocolParser 'size_received' callback """
             self.size = Size(rows=rows, columns=columns)
-            get_app()._on_resize()
+            if self.vt100_output is not None:
+                get_app()._on_resize()
 
-        self.parser = TelnetProtocolParser(data_received, size_received)
+        def ttype_received(ttype: str) -> None:
+            """ TelnetProtocolParser 'ttype_received' callback """
+            self.vt100_output = Vt100_Output(
+                self.stdout, get_size, term=ttype, write_binary=False
+            )
+            self._ready.set()
+
+        self.parser = TelnetProtocolParser(data_received, size_received, ttype_received)
         self.context: Optional[contextvars.Context] = None
 
     async def run_application(self) -> None:
@@ -158,25 +179,24 @@ class TelnetConnection:
                 logger.info("Connection closed by client. %r %r" % self.addr)
                 self.close()
 
-        async def run() -> None:
-            # Add reader.
-            loop = get_event_loop()
-            loop.add_reader(self.conn, handle_incoming_data)
+        # Add reader.
+        loop = get_event_loop()
+        loop.add_reader(self.conn, handle_incoming_data)
 
-            try:
+        try:
+            # Wait for v100_output to be properly instantiated
+            await self._ready.wait()
+            with create_app_session(input=self.vt100_input, output=self.vt100_output):
+                self.context = contextvars.copy_context()
                 await self.interact(self)
-            except Exception as e:
-                print("Got %s" % type(e).__name__, e)
-                import traceback
+        except Exception as e:
+            print("Got %s" % type(e).__name__, e)
+            import traceback
 
-                traceback.print_exc()
-                raise
-            finally:
-                self.close()
-
-        with create_app_session(input=self.vt100_input, output=self.vt100_output):
-            self.context = contextvars.copy_context()
-            await run()
+            traceback.print_exc()
+            raise
+        finally:
+            self.close()
 
     def feed(self, data: bytes) -> None:
         """
@@ -199,6 +219,8 @@ class TelnetConnection:
         """
         Send text to the client.
         """
+        if self.vt100_output is None:
+            return
         formatted_text = to_formatted_text(formatted_text)
         print_formatted_text(
             self.vt100_output, formatted_text, self.style or DummyStyle()
@@ -224,6 +246,8 @@ class TelnetConnection:
         """
         Erase the screen and move the cursor to the top.
         """
+        if self.vt100_output is None:
+            return
         self.vt100_output.erase_screen()
         self.vt100_output.cursor_goto(0, 0)
         self.vt100_output.flush()

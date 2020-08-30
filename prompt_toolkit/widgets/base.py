@@ -279,7 +279,7 @@ class TextArea:
 
     @text.setter
     def text(self, value: str) -> None:
-        self.buffer.set_document(Document(value, 0), bypass_readonly=True)
+        self.document = Document(value, 0)
 
     @property
     def document(self) -> Document:
@@ -290,7 +290,7 @@ class TextArea:
 
     @document.setter
     def document(self, value: Document) -> None:
-        self.buffer.document = value
+        self.buffer.set_document(value, bypass_readonly=True)
 
     @property
     def accept_handler(self) -> Optional[BufferAcceptHandler]:
@@ -360,7 +360,9 @@ class Button:
     Clickable button.
 
     :param text: The caption for the button.
-    :param handler: `None` or callable. Called when the button is clicked.
+    :param handler: `None` or callable. Called when the button is clicked. No
+        parameters are passed to this callable. Use for instance Python's
+        `functools.partial` to pass parameters to this callable if needed.
     :param width: Width of the button.
     """
 

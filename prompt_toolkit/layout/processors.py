@@ -566,7 +566,7 @@ class AfterInput(Processor):
     :param style: style to be applied to this prompt/prefix.
     """
 
-    def __init__(self, text: str, style: str = "") -> None:
+    def __init__(self, text: AnyFormattedText, style: str = "") -> None:
         self.text = text
         self.style = style
 
@@ -807,8 +807,8 @@ class ReverseSearchProcessor(Processor):
         excluded_processors = tuple(self._excluded_input_processors)
 
         def filter_processor(item: Processor) -> Optional[Processor]:
-            """ Filter processors from the main control that we want to disable
-            here. This returns either an accepted processor or None. """
+            """Filter processors from the main control that we want to disable
+            here. This returns either an accepted processor or None."""
             # For a `_MergedProcessor`, check each individual processor, recursively.
             if isinstance(item, _MergedProcessor):
                 accepted_processors = [filter_processor(p) for p in item.processors]
@@ -990,8 +990,8 @@ class _MergedProcessor(Processor):
         fragments = ti.fragments
 
         def source_to_display(i: int) -> int:
-            """ Translate x position from the buffer to the x position in the
-            processor fragments list. """
+            """Translate x position from the buffer to the x position in the
+            processor fragments list."""
             for f in source_to_display_functions:
                 i = f(i)
             return i
