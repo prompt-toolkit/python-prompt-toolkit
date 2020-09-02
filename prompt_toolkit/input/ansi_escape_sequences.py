@@ -267,6 +267,8 @@ ANSI_SEQUENCES: Dict[str, Union[Keys, Tuple[Keys, ...]]] = {
     "\x1b[1;9B": (Keys.Escape, Keys.Down),
     "\x1b[1;9C": (Keys.Escape, Keys.Right),
     "\x1b[1;9D": (Keys.Escape, Keys.Left),
+    "\x1b[1;10C": Keys.EscapeShiftRight,
+    "\x1b[1;10D": Keys.EscapeShiftLeft,
     # --
     # Control/shift/meta + number in mintty.
     # (c-2 will actually send c-@ and c-6 will send c-^.)

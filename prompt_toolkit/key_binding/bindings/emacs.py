@@ -62,6 +62,8 @@ def load_emacs_bindings() -> KeyBindingsBase:
     handle("c-f")(get_by_name("forward-char"))
     handle("c-left")(get_by_name("backward-word"))
     handle("c-right")(get_by_name("forward-word"))
+    handle("escape", "left")(get_by_name("backward-word"))
+    handle("escape", "right")(get_by_name("forward-word"))
     handle("c-x", "r", "y", filter=insert_mode)(get_by_name("yank"))
     handle("c-y", filter=insert_mode)(get_by_name("yank"))
     handle("escape", "b")(get_by_name("backward-word"))
@@ -269,27 +271,6 @@ def load_emacs_bindings() -> KeyBindingsBase:
         data = event.current_buffer.copy_selection()
         event.app.clipboard.set_data(data)
 
-    @handle("escape", "left")
-    def _start_of_word(event: E) -> None:
-        """
-        Cursor to start of previous word.
-        """
-        buffer = event.current_buffer
-        buffer.cursor_position += (
-            buffer.document.find_previous_word_beginning(count=event.arg) or 0
-        )
-
-    @handle("escape", "right")
-    def _start_next_word(event: E) -> None:
-        """
-        Cursor to start of next word.
-        """
-        buffer = event.current_buffer
-        buffer.cursor_position += (
-            buffer.document.find_next_word_beginning(count=event.arg)
-            or buffer.document.get_end_of_document_position()
-        )
-
     @handle("escape", "/", filter=insert_mode)
     def _complete(event: E) -> None:
         """
@@ -433,6 +414,8 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
             Keys.ControlShiftRight: "forward-word",
             Keys.ControlShiftHome: "beginning-of-buffer",
             Keys.ControlShiftEnd: "end-of-buffer",
+            Keys.EscapeShiftLeft: "backward-word",
+            Keys.EscapeShiftRight: "forward-word",
         }
 
         try:
@@ -455,6 +438,8 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
     @handle("c-s-right", filter=~has_selection)
     @handle("c-s-home", filter=~has_selection)
     @handle("c-s-end", filter=~has_selection)
+    @handle("e-s-left", filter=~has_selection)
+    @handle("e-s-right", filter=~has_selection)
     def _start_selection(event: E) -> None:
         """
         Start selection with shift + movement.
@@ -487,6 +472,8 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
     @handle("c-s-right", filter=shift_selection_mode)
     @handle("c-s-home", filter=shift_selection_mode)
     @handle("c-s-end", filter=shift_selection_mode)
+    @handle("e-s-left", filter=shift_selection_mode)
+    @handle("e-s-right", filter=shift_selection_mode)
     def _extend_selection(event: E) -> None:
         """
         Extend the selection
@@ -544,6 +531,8 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
     @handle("c-right", filter=shift_selection_mode)
     @handle("c-home", filter=shift_selection_mode)
     @handle("c-end", filter=shift_selection_mode)
+    @handle("escape", "left", filter=shift_selection_mode)
+    @handle("escape", "right", filter=shift_selection_mode)
     def _cancel(event: E) -> None:
         """
         Cancel selection.
