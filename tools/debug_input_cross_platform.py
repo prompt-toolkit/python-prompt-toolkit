@@ -1,17 +1,19 @@
 #!/usr/bin/env python
 """
-Read Windows input and print keys.
+Read input and print keys.
 For testing terminal input.
+
+Works on both Windows and Posix.
 """
 import asyncio
 
-from prompt_toolkit.input.win32 import Win32Input
+from prompt_toolkit.input import create_input
 from prompt_toolkit.keys import Keys
 
 
-async def main():
-    input = Win32Input()
+async def main() -> None:
     done = asyncio.Event()
+    input = create_input()
 
     def keys_ready():
         for key_press in input.read_keys():

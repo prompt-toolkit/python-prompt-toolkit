@@ -960,3 +960,40 @@ returns a coroutines and is awaitable.
 The :func:`~prompt_toolkit.patch_stdout.patch_stdout` context manager is
 optional, but it's recommended, because other coroutines could print to stdout.
 This ensures that other output won't destroy the prompt.
+
+
+Reading keys from stdin, one key at a time, but without a prompt
+----------------------------------------------------------------
+
+Suppose that you want to use prompt_toolkit to read the keys from stdin, one
+key at a time, but not render a prompt to the output, that is also possible:
+
+.. code:: python
+
+    import asyncio
+
+    from prompt_toolkit.input import create_input
+    from prompt_toolkit.keys import Keys
+
+
+    async def main() -> None:
+        done = asyncio.Event()
+        input = create_input()
+
+        def keys_ready():
+            for key_press in input.read_keys():
+                print(key_press)
+
+                if key_press.key == Keys.ControlC:
+                    done.set()
+
+        with input.raw_mode():
+            with input.attach(keys_ready):
+                await done.wait()
+
+
+    if __name__ == "__main__":
+        asyncio.run(main())
+
+The above snippet will print the `KeyPress` object whenever a key is pressed.
+This is also cross platform, and should work on Windows.
