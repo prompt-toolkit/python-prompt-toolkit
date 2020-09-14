@@ -16,6 +16,7 @@ from prompt_toolkit.layout import Layout
 from prompt_toolkit.layout.containers import AnyContainer, HSplit
 from prompt_toolkit.layout.dimension import Dimension as D
 from prompt_toolkit.styles import BaseStyle
+from prompt_toolkit.validation import Validator
 from prompt_toolkit.widgets import (
     Box,
     Button,
@@ -25,6 +26,7 @@ from prompt_toolkit.widgets import (
     ProgressBar,
     RadioList,
     TextArea,
+    ValidationToolbar,
 )
 
 __all__ = [
@@ -105,6 +107,7 @@ def input_dialog(
     ok_text: str = "OK",
     cancel_text: str = "Cancel",
     completer: Optional[Completer] = None,
+    validator: Optional[Validator] = None,
     password: FilterOrBool = False,
     style: Optional[BaseStyle] = None,
 ) -> Application[str]:
@@ -124,7 +127,11 @@ def input_dialog(
     cancel_button = Button(text=cancel_text, handler=_return_none)
 
     textfield = TextArea(
-        multiline=False, password=password, completer=completer, accept_handler=accept
+        multiline=False,
+        password=password,
+        completer=completer,
+        validator=validator,
+        accept_handler=accept,
     )
 
     dialog = Dialog(
@@ -133,6 +140,7 @@ def input_dialog(
             [
                 Label(text=text, dont_extend_height=True),
                 textfield,
+                ValidationToolbar(),
             ],
             padding=D(preferred=1, max=1),
         ),
