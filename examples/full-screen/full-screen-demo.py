@@ -202,8 +202,6 @@ style = Style.from_dict(
         "window.border shadow": "#444444",
         "focused  button": "bg:#880000 #ffffff noinherit",
         # Styling for Dialog widgets.
-        "radiolist focused": "noreverse",
-        "radiolist focused radio.selected": "reverse",
         "button-bar": "bg:#aaaaff",
     }
 )
