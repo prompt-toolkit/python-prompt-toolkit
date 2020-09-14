@@ -74,6 +74,7 @@ from prompt_toolkit.layout.processors import (
 from prompt_toolkit.lexers import DynamicLexer, Lexer
 from prompt_toolkit.mouse_events import MouseEvent, MouseEventType
 from prompt_toolkit.utils import get_cwidth
+from prompt_toolkit.validation import DynamicValidator, Validator
 
 from .toolbars import SearchToolbar
 
@@ -139,6 +140,8 @@ class TextArea:
     :param focus_on_click: When `True`, focus after mouse click.
     :param input_processors: `None` or a list of
         :class:`~prompt_toolkit.layout.Processor` objects.
+    :param validator: `None` or a :class:`~prompt_toolkit.validation.Validator`
+        object.
 
     Window attributes:
 
@@ -173,6 +176,7 @@ class TextArea:
         auto_suggest: Optional[AutoSuggest] = None,
         completer: Optional[Completer] = None,
         complete_while_typing: FilterOrBool = True,
+        validator: Optional[Validator] = None,
         accept_handler: Optional[BufferAcceptHandler] = None,
         history: Optional[History] = None,
         focusable: FilterOrBool = True,
@@ -208,6 +212,7 @@ class TextArea:
         self.auto_suggest = auto_suggest
         self.read_only = read_only
         self.wrap_lines = wrap_lines
+        self.validator = validator
 
         self.buffer = Buffer(
             document=Document(text, 0),
@@ -217,6 +222,7 @@ class TextArea:
             complete_while_typing=Condition(
                 lambda: is_true(self.complete_while_typing)
             ),
+            validator=DynamicValidator(lambda: self.validator),
             auto_suggest=DynamicAutoSuggest(lambda: self.auto_suggest),
             accept_handler=accept_handler,
             history=history,
