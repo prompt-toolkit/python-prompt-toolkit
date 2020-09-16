@@ -158,7 +158,17 @@ def _attached_input(
     fd = input.fileno()
     previous = _current_callbacks.get((loop, fd))
 
-    loop.add_reader(fd, callback)
+    def callback_wrapper() -> None:
+        """Wrapper around the callback that already removes the reader when
+        the input is closed. Otherwise, we keep continuously calling this
+        callback, until we leave the context manager (which can happen a bit
+        later). This fixes issues when piping /dev/null into a prompt_toolkit
+        application."""
+        if input.closed:
+            loop.remove_reader(fd)
+        callback()
+
+    loop.add_reader(fd, callback_wrapper)
     _current_callbacks[loop, fd] = callback
 
     try:
