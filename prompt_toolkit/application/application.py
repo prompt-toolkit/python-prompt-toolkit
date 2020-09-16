@@ -666,7 +666,8 @@ class Application(Generic[_AppResult]):
 
                 # Quit when the input stream was closed.
                 if self.input.closed:
-                    f.set_exception(EOFError)
+                    if not f.done():
+                        f.set_exception(EOFError)
                 else:
                     # Automatically flush keys.
                     if flush_task:
