@@ -456,7 +456,7 @@ class Document:
         self, WORD: bool = False, pattern: Optional[Pattern[str]] = None
     ) -> bool:
         if pattern:
-            return self.find_start_of_previous_word(pattern=pattern) is None
+            return self.find_start_of_previous_word(WORD=WORD, pattern=pattern) is None
         else:
             return (
                 self.text_before_cursor == "" or self.text_before_cursor[-1:].isspace()

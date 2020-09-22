@@ -1,17 +1,16 @@
-sudo: false
+os: linux
+dist: focal
 cache: pip
 language: python
 
-matrix:
+jobs:
   include:
+    - python: 3.8
     - python: 3.7
-      dist: xenial
-      sudo: required
     - python: 3.6
 
 install:
-  - pip install . pytest coverage codecov flake8 mypy
-  - pip install isort black
+  - pip install . black coverage codecov flake8 isort mypy pytest
   - pip list
 
 script:
@@ -24,7 +23,7 @@ script:
 
   # Check wheather the imports were sorted correctly.
   # When this fails, please run ./tools/sort-imports.sh
-  - isort -c -rc prompt_toolkit examples tests setup.py
+  - isort -c -rc --profile black prompt_toolkit examples tests setup.py
 
   - black --check prompt_toolkit examples tests setup.py
 
