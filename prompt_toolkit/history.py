@@ -10,10 +10,10 @@ import asyncio
 import datetime
 import os
 import time
+import warnings
 from abc import ABCMeta, abstractmethod
 from threading import Thread
 from typing import Callable, Iterable, List, Optional
-import warnings
 
 __all__ = [
     "History",
@@ -40,7 +40,10 @@ class History(metaclass=ABCMeta):
     # Methods expected by `Buffer`.
     #
 
-    def load(self, item_loaded_callback: Callable[[str], None],) -> None:
+    def load(
+        self,
+        item_loaded_callback: Callable[[str], None],
+    ) -> None:
         """
         Load the history and call the callback for every entry in the history.
         This one assumes the callback is only called from same thread as `Buffer` is using.
@@ -103,13 +106,13 @@ class ThreadedHistory(History):
     """
 
     def __init__(
-        self, history: History, event_loop: asyncio.BaseEventLoop = None
+        self, history: History, event_loop: Optional[asyncio.AbstractEventLoop] = None
     ) -> None:
         """Create instance of ThreadedHistory
 
         Args:
             history (History): Instance of History intended to run on a background thread.
-            event_loop (asyncio.BaseEventLoop, optional): The event loop on which prompt toolkit is running.
+            event_loop (asyncio.AbstractEventLoop, optional): The event loop on which prompt toolkit is running.
             (Deprecated) Defaults to ``asyncio.get_event_loop(), which may *create* the event loop. Caller should provide an explicit value.
         """
         self.history = history
@@ -151,7 +154,10 @@ class ThreadedHistory(History):
             self._load_thread.daemon = True
             self._load_thread.start()
 
-    def bg_loader(self, item_loaded_callback: Callable[[str], None],) -> None:
+    def bg_loader(
+        self,
+        item_loaded_callback: Callable[[str], None],
+    ) -> None:
         """
         Load the history and schedule the callback for every entry in the history.
         TODO: extend the callback so it can take a batch of lines in one event_loop dispatch.
