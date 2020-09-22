@@ -13,6 +13,7 @@ import time
 from abc import ABCMeta, abstractmethod
 from threading import Thread
 from typing import Callable, Iterable, List, Optional
+import warnings
 
 __all__ = [
     "History",
@@ -101,19 +102,33 @@ class ThreadedHistory(History):
     wait for everything to be loaded.
     """
 
-    def __init__(self, history: History) -> None:
+    def __init__(
+        self, history: History, event_loop: asyncio.BaseEventLoop = None
+    ) -> None:
+        """Create instance of ThreadedHistory
+
+        Args:
+            history (History): Instance of History intended to run on a background thread.
+            event_loop (asyncio.BaseEventLoop, optional): The event loop on which prompt toolkit is running.
+            (Deprecated) Defaults to ``asyncio.get_event_loop(), which may *create* the event loop. Caller should provide an explicit value.
+        """
         self.history = history
         self._load_thread: Optional[Thread] = None
         self._item_loaded_callbacks: List[Callable[[str], None]] = []
+        if event_loop is None:
+            warnings.warn(
+                "Event_loop argument should be explicitly provided by caller so history callback "
+                "uses the same loop as rest of prompt-toolkit.  Will use default event loop for now.",
+                DeprecationWarning,
+            )
+            event_loop = asyncio.get_event_loop()
+        self.event_loop = event_loop
         super().__init__()
 
     def load(self, item_loaded_callback: Callable[[str], None]) -> None:
 
         """Collect the history strings on a background thread,
-        but run the callback in the event loop.
-
-        Caller of ThreadedHistory must ensure that the Application ends up running on the same
-        event loop as we (probably) create here.
+        but run the callback which provides them to a buffer in the event loop.
         """
 
         self._item_loaded_callbacks.append(item_loaded_callback)
@@ -130,19 +145,13 @@ class ThreadedHistory(History):
         # Start the load thread, if we don't have a thread yet.
         if not self._load_thread:
 
-            event_loop = asyncio.get_event_loop()
-
             self._load_thread = Thread(
-                target=self.bg_loader, args=(call_all_callbacks, event_loop)
+                target=self.bg_loader, args=(call_all_callbacks,)
             )
             self._load_thread.daemon = True
             self._load_thread.start()
 
-    def bg_loader(
-        self,
-        item_loaded_callback: Callable[[str], None],
-        event_loop: asyncio.BaseEventLoop,
-    ) -> None:
+    def bg_loader(self, item_loaded_callback: Callable[[str], None],) -> None:
         """
         Load the history and schedule the callback for every entry in the history.
         TODO: extend the callback so it can take a batch of lines in one event_loop dispatch.
@@ -153,7 +162,7 @@ class ThreadedHistory(History):
                 self._loaded_strings.insert(
                     0, item
                 )  # slowest way to add an element to a list known to man.
-                event_loop.call_soon_threadsafe(
+                self.event_loop.call_soon_threadsafe(
                     item_loaded_callback, item
                 )  # expensive way to dispatch single line.
         finally:
