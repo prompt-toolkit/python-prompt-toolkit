@@ -10,7 +10,7 @@ jobs:
     - python: 3.6
 
 install:
-  - pip install . black coverage codecov flake8 isort mypy pytest
+  - pip install . black coverage codecov flake8 isort mypy pytest readme_renderer
   - pip list
 
 script:
@@ -26,6 +26,10 @@ script:
   - isort -c -rc --profile black prompt_toolkit examples tests setup.py
 
   - black --check prompt_toolkit examples tests setup.py
+
+  # Ensure that the README renders correctly (required for uploading to PyPI).
+  - python -m readme_renderer README.rst > /dev/null
+
 
 after_success:
   - codecov
