@@ -34,4 +34,7 @@ __all__ = [
     # Formatted text.
     "HTML",
     "ANSI",
+    # Version info.
+    "__version__",
+    "VERSION",
 ]
