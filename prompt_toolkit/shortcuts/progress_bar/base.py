@@ -50,7 +50,7 @@ from prompt_toolkit.layout.controls import UIContent, UIControl
 from prompt_toolkit.layout.dimension import AnyDimension, D
 from prompt_toolkit.output import ColorDepth, Output
 from prompt_toolkit.styles import BaseStyle
-from prompt_toolkit.utils import in_main_thread
+from prompt_toolkit.utils import Event, in_main_thread
 
 from .formatters import Formatter, create_default_formatters
 
@@ -240,17 +240,20 @@ class ProgressBar:
         return self
 
     def __exit__(self, *a: object) -> None:
-        # Quit UI application.
-        if self.app.is_running:
-            self.app.exit()
-
         # Remove WINCH handler.
         if self._has_sigwinch:
             self._loop.remove_signal_handler(_SIGWINCH)
             signal.signal(_SIGWINCH, self._previous_winch_handler)
 
         if self._thread is not None:
+
+            def exit_app(app: Application[None]) -> None:
+                app.is_running and app.exit()
+
+            # Instruct the app to exit on next invalidate (0.3s at most).
+            self.app.on_invalidate = Event(self.app, exit_app)
             self._thread.join()
+
         self._app_loop.close()
 
     def __call__(
