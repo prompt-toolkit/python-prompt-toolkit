@@ -133,6 +133,9 @@ from prompt_toolkit.widgets.toolbars import (
 if TYPE_CHECKING:
     from prompt_toolkit.formatted_text.base import MagicFormattedText
 
+completion_float_container = None
+"""debug: singleton container for completion menus (which has preferred_height_float())"""
+
 __all__ = [
     "PromptSession",
     "prompt",
@@ -608,7 +611,6 @@ class PromptSession(Generic[_T]):
 
         default_buffer_window = Window(
             default_buffer_control,
-            height=self._get_default_buffer_control_height,
             get_line_prefix=partial(
                 self._get_line_prefix, get_prompt_text_2=get_prompt_text_2
             ),
@@ -697,6 +699,10 @@ class PromptSession(Generic[_T]):
                 bottom_toolbar,
             ]
         )
+
+        if self.reserve_space_for_menu:
+            global completion_float_container
+            completion_float_container = layout.children[0]  # we just know float_container is first!
 
         return Layout(layout, default_buffer_window)
 

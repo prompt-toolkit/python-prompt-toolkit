@@ -794,6 +794,15 @@ class FloatContainer(Container):
         """
         return self.content.preferred_height(width, max_available_height)
 
+    def preferred_height_floats(self, width: int, max_available_height: int) -> Dimension:
+        """
+        Return the preferred height of the floats within the container.
+        App may want to ensure more height for a float that's taller than 
+        its container, so just make the number available and let app deal with it.
+        """
+        phs = [f.content.preferred_height(width, max_available_height).preferred for f in self.floats]
+        return max(phs)
+
     def write_to_screen(
         self,
         screen: Screen,

@@ -388,7 +388,7 @@ class MultiColumnCompletionMenuControl(UIControl):
         column_count = max(1, (width - self._required_margin) // column_width)
 
         return int(math.ceil(len(complete_state.completions) / float(column_count)))
-
+        
     def create_content(self, width: int, height: int) -> UIContent:
         """
         Create a UIContent object for this menu.
