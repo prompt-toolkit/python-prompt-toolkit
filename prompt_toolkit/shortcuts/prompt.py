@@ -675,7 +675,8 @@ class PromptSession(Generic[_T]):
                             transparent=True,
                             content=MultiColumnCompletionsMenu(
                                 min_rows=1,  # prefer wide completions
-                                show_meta=True,
+                                #show_meta=True,
+                                show_meta=False,
                                 extra_filter=has_focus(default_buffer)
                                 & multi_column_complete_style,
                             ),
