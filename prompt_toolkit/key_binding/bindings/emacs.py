@@ -1,5 +1,5 @@
 # pylint: disable=function-redefined
-from typing import Dict, Union
+from typing import Dict
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import Buffer, SelectionType, indent, unindent
@@ -395,35 +395,35 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
         a shift + movement key press event, moves the cursor
         as if shift is not pressed.
         """
-        key = event.key_sequence[0].key
+        sequence = " ".join([seq.key for seq in event.key_sequence])
 
-        if key == Keys.ShiftUp:
+        if sequence == "s-up":
             event.current_buffer.auto_up(count=event.arg)
             return
-        if key == Keys.ShiftDown:
+        if sequence == "s-down":
             event.current_buffer.auto_down(count=event.arg)
             return
 
         # the other keys are handled through their readline command
-        key_to_command: Dict[Union[Keys, str], str] = {
-            Keys.ShiftLeft: "backward-char",
-            Keys.ShiftRight: "forward-char",
-            Keys.ShiftHome: "beginning-of-line",
-            Keys.ShiftEnd: "end-of-line",
-            Keys.ControlShiftLeft: "backward-word",
-            Keys.ControlShiftRight: "forward-word",
-            Keys.ControlShiftHome: "beginning-of-buffer",
-            Keys.ControlShiftEnd: "end-of-buffer",
-            Keys.EscapeShiftLeft: "backward-word",
-            Keys.EscapeShiftRight: "forward-word",
+        sequence_to_command: Dict[str, str] = {
+            "s-left": "backward-char",
+            "s-right": "forward-char",
+            "s-home": "beginning-of-line",
+            "s-end": "end-of-line",
+            "c-s-left": "backward-word",
+            "c-s-right": "forward-word",
+            "c-s-home": "beginning-of-buffer",
+            "c-s-end": "end-of-buffer",
+            "escape s-left": "backward-word",
+            "escape s-right": "forward-word",
         }
 
         try:
             # Both the dict lookup and `get_by_name` can raise KeyError.
-            binding = get_by_name(key_to_command[key])
+            binding = get_by_name(sequence_to_command[sequence])
         except KeyError:
             pass
-        else:  # (`else` is not really needed here.)
+        else:
             if isinstance(binding, Binding):
                 # (It should always be a binding here)
                 binding.call(event)
@@ -438,8 +438,8 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
     @handle("c-s-right", filter=~has_selection)
     @handle("c-s-home", filter=~has_selection)
     @handle("c-s-end", filter=~has_selection)
-    @handle("e-s-left", filter=~has_selection)
-    @handle("e-s-right", filter=~has_selection)
+    @handle("escape", "s-left", filter=~has_selection)
+    @handle("escape", "s-right", filter=~has_selection)
     def _start_selection(event: E) -> None:
         """
         Start selection with shift + movement.
@@ -472,8 +472,8 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
     @handle("c-s-right", filter=shift_selection_mode)
     @handle("c-s-home", filter=shift_selection_mode)
     @handle("c-s-end", filter=shift_selection_mode)
-    @handle("e-s-left", filter=shift_selection_mode)
-    @handle("e-s-right", filter=shift_selection_mode)
+    @handle("escape", "s-left", filter=shift_selection_mode)
+    @handle("escape", "s-right", filter=shift_selection_mode)
     def _extend_selection(event: E) -> None:
         """
         Extend the selection

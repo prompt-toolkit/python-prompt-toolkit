@@ -114,7 +114,9 @@ def forward_char(event: E) -> None:
 
 @register("backward-char")
 def backward_char(event: E) -> None:
-    " Move back a character. "
+    """
+    Move back a character.
+    """
     buff = event.current_buffer
     buff.cursor_position += buff.document.get_cursor_left_position(count=event.arg)
 

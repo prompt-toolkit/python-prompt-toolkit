@@ -120,9 +120,6 @@ class Keys(str, Enum):
     ControlShiftPageUp = "c-s-pageup"
     ControlShiftPageDown = "c-s-pagedown"
 
-    EscapeShiftLeft = "e-s-left"
-    EscapeShiftRight = "e-s-right"
-
     BackTab = "s-tab"  # shift + tab
 
     F1 = "f1"
