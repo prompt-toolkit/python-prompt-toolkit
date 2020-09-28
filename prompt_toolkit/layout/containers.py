@@ -752,17 +752,25 @@ class FloatContainer(Container):
                            Float(xcursor=True,
                                 ycursor=True,
                                 layout=CompletionMenu(...))
-                       ])
+                       ],
+                       floats_min_preferred_height=5)
 
     :param z_index: (int or None) When specified, this can be used to bring
         element in front of floating elements.  `None` means: inherit from parent.
         This is the z_index for the whole `Float` container as a whole.
+    :param floats_min_preferred_height: (Callable[[],int] or None) When specified,
+        the preferred height of the child floats *does* contribute to the
+        preferred height of this float container.  The contribution is the max
+        of the preferred heights of all the child floats, but not more than
+        the int returned from floats_min_preferred_heights.
+        Default (when not specified) is to ignore preferred heights of floats entirely.
     """
 
     def __init__(
         self,
         content: AnyContainer,
         floats: List["Float"],
+        floats_min_preferred_height: Optional[Callable[[],int]] = None,
         modal: bool = False,
         key_bindings: Optional[KeyBindingsBase] = None,
         style: Union[str, Callable[[], str]] = "",
@@ -771,6 +779,7 @@ class FloatContainer(Container):
 
         self.content = to_container(content)
         self.floats = floats
+        self.floats_min_preferred_height = floats_min_preferred_height
 
         self.modal = modal
         self.key_bindings = key_bindings
@@ -787,21 +796,21 @@ class FloatContainer(Container):
         return self.content.preferred_width(max_available_width)
 
     def preferred_height(self, width: int, max_available_height: int) -> Dimension:
-        """
-        Return the preferred height of the float container.
-        (We don't care about the height of the floats, they should always fit
-        into the dimensions provided by the container.)
-        """
-        return self.content.preferred_height(width, max_available_height)
+        # too bad max_available_height is not a good hint for number of rows
+        # currently left at bottom.  If it were, menu could be taller when not near bottom.
 
-    def preferred_height_floats(self, width: int, max_available_height: int) -> Dimension:
-        """
-        Return the preferred height of the floats within the container.
-        App may want to ensure more height for a float that's taller than 
-        its container, so just make the number available and let app deal with it.
-        """
-        phs = [f.content.preferred_height(width, max_available_height).preferred for f in self.floats]
-        return max(phs)
+        ph = self.content.preferred_height(width, max_available_height)
+        if self.floats_min_preferred_height:
+            floats_ph = min(
+                max(
+                [
+                    f.content.preferred_height(width, max_available_height).preferred
+                    for f in self.floats
+                ]),
+                self.floats_min_preferred_height(),
+            )
+            ph.preferred += floats_ph
+        return ph
 
     def write_to_screen(
         self,

@@ -133,8 +133,6 @@ from prompt_toolkit.widgets.toolbars import (
 if TYPE_CHECKING:
     from prompt_toolkit.formatted_text.base import MagicFormattedText
 
-completion_float_container = None
-"""debug: singleton container for completion menus (which has preferred_height_float())"""
 
 __all__ = [
     "PromptSession",
@@ -277,7 +275,7 @@ class PromptSession(Generic[_T]):
         For ``CompleteStyle.READLINE_LIKE``, this setting has no effect. There
         we always run the completions in the main thread.
     :param reserve_space_for_menu: Space to be reserved for displaying the menu.
-        (0 means that no space needs to be reserved.)
+        (None means that no space needs to be reserved.)
     :param auto_suggest: :class:`~prompt_toolkit.auto_suggest.AutoSuggest`
         instance for input suggestions.
     :param style: :class:`.Style` instance for the color scheme.
@@ -388,7 +386,7 @@ class PromptSession(Generic[_T]):
         validator: Optional[Validator] = None,
         completer: Optional[Completer] = None,
         complete_in_thread: bool = False,
-        reserve_space_for_menu: int = 8,
+        reserve_space_for_menu: int = None,
         complete_style: CompleteStyle = CompleteStyle.COLUMN,
         auto_suggest: Optional[AutoSuggest] = None,
         style: Optional[BaseStyle] = None,
@@ -621,6 +619,10 @@ class PromptSession(Generic[_T]):
         def multi_column_complete_style() -> bool:
             return self.complete_style == CompleteStyle.MULTI_COLUMN
 
+        def get_reserve_space_for_menu() -> int:
+            """dynamic function to fetch current setting of the attribute."""
+            return self.reserve_space_for_menu
+
         # Build the layout.
         layout = HSplit(
             [
@@ -672,6 +674,7 @@ class PromptSession(Generic[_T]):
                             ycursor=True,
                             transparent=True,
                             content=MultiColumnCompletionsMenu(
+                                min_rows=1,  # prefer wide completions
                                 show_meta=True,
                                 extra_filter=has_focus(default_buffer)
                                 & multi_column_complete_style,
@@ -685,6 +688,7 @@ class PromptSession(Generic[_T]):
                             content=_RPrompt(lambda: self.rprompt),
                         ),
                     ],
+                    floats_min_preferred_height = get_reserve_space_for_menu,
                 ),
                 ConditionalContainer(ValidationToolbar(), filter=~is_done),
                 ConditionalContainer(
@@ -699,10 +703,6 @@ class PromptSession(Generic[_T]):
                 bottom_toolbar,
             ]
         )
-
-        if self.reserve_space_for_menu:
-            global completion_float_container
-            completion_float_container = layout.children[0]  # we just know float_container is first!
 
         return Layout(layout, default_buffer_window)
 
@@ -1223,28 +1223,6 @@ class PromptSession(Generic[_T]):
     @editing_mode.setter
     def editing_mode(self, value: EditingMode) -> None:
         self.app.editing_mode = value
-
-    def _get_default_buffer_control_height(self) -> Dimension:
-        # If there is an autocompletion menu to be shown, make sure that our
-        # layout has at least a minimal height in order to display it.
-        if (
-            self.completer is not None
-            and self.complete_style != CompleteStyle.READLINE_LIKE
-        ):
-            space = self.reserve_space_for_menu
-        else:
-            space = 0
-
-        if space and not get_app().is_done:
-            buff = self.default_buffer
-
-            # Reserve the space, either when there are completions, or when
-            # `complete_while_typing` is true and we expect completions very
-            # soon.
-            if buff.complete_while_typing() or buff.complete_state is not None:
-                return Dimension(min=space)
-
-        return Dimension()
 
     def _get_prompt(self) -> StyleAndTextTuples:
         return to_formatted_text(self.message, style="class:prompt")

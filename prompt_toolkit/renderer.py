@@ -583,7 +583,6 @@ class Renderer:
         :param is_done: When True, put the cursor at the end of the interface. We
                 won't print any changes to this part.
         """
-        from prompt_toolkit.shortcuts.prompt import completion_float_container
 
         output = self.output
 
@@ -626,17 +625,10 @@ class Renderer:
         else:
             last_height = self._last_screen.height if self._last_screen else 0
             preferred = layout.container.preferred_height(size.columns, size.rows).preferred
-            global completion_float_container
-            preferred_float = completion_float_container.preferred_height_floats(
-                size.columns,
-                size.rows
-            ) if completion_float_container else 0
             height = max(
                 self._min_available_height,
                 last_height,
                 preferred,
-                min(preferred_float, 8),
-#                layout.container.preferred_height(size.columns, size.rows).preferred,
             )
 
         height = min(height, size.rows)
