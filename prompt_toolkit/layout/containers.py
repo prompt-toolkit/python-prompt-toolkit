@@ -753,7 +753,8 @@ class FloatContainer(Container):
                                 ycursor=True,
                                 layout=CompletionMenu(...))
                        ],
-                       floats_min_preferred_height=5)
+                       floats_min_preferred_height=(lambda:5)
+                       )
 
     :param z_index: (int or None) When specified, this can be used to bring
         element in front of floating elements.  `None` means: inherit from parent.
@@ -796,6 +797,8 @@ class FloatContainer(Container):
         return self.content.preferred_width(max_available_width)
 
     def preferred_height(self, width: int, max_available_height: int) -> Dimension:
+        """Return preferred height of background, optionally including child
+        Floats as well."""
         # too bad max_available_height is not a good hint for number of rows
         # currently left at bottom.  If it were, menu could be taller when not near bottom.
 
@@ -807,7 +810,7 @@ class FloatContainer(Container):
                     f.content.preferred_height(width, max_available_height).preferred
                     for f in self.floats
                 ]),
-                self.floats_min_preferred_height(),
+                self.floats_min_preferred_height() or 0,
             )
             ph.preferred += floats_ph
         return ph
