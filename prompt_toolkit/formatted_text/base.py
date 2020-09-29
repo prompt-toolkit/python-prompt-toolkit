@@ -129,6 +129,9 @@ class FormattedText(StyleAndTextTuples):
     def __repr__(self) -> str:
         return "FormattedText(%s)" % super().__repr__()
 
+    def __len__(self) -> int:
+        return sum(len(t) for s, t in self)
+
 
 class Template:
     """

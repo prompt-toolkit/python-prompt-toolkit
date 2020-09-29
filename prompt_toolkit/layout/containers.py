@@ -771,7 +771,7 @@ class FloatContainer(Container):
         self,
         content: AnyContainer,
         floats: List["Float"],
-        floats_min_preferred_height: Optional[Callable[[],int]] = None,
+        floats_min_preferred_height: Optional[Callable[[], int]] = None,
         modal: bool = False,
         key_bindings: Optional[KeyBindingsBase] = None,
         style: Union[str, Callable[[], str]] = "",
@@ -806,10 +806,13 @@ class FloatContainer(Container):
         if self.floats_min_preferred_height:
             floats_ph = min(
                 max(
-                [
-                    f.content.preferred_height(width, max_available_height).preferred
-                    for f in self.floats
-                ]),
+                    [
+                        f.content.preferred_height(
+                            width, max_available_height
+                        ).preferred
+                        for f in self.floats
+                    ]
+                ),
                 self.floats_min_preferred_height() or 0,
             )
             ph.preferred += floats_ph

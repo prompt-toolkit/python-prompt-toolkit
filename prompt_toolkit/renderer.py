@@ -583,7 +583,6 @@ class Renderer:
         :param is_done: When True, put the cursor at the end of the interface. We
                 won't print any changes to this part.
         """
-
         output = self.output
 
         # Enter alternate screen.
@@ -624,11 +623,10 @@ class Renderer:
             ).preferred
         else:
             last_height = self._last_screen.height if self._last_screen else 0
-            preferred = layout.container.preferred_height(size.columns, size.rows).preferred
             height = max(
                 self._min_available_height,
                 last_height,
-                preferred,
+                layout.container.preferred_height(size.columns, size.rows).preferred,
             )
 
         height = min(height, size.rows)

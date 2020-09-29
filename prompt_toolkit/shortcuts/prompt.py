@@ -373,7 +373,7 @@ class PromptSession(Generic[_T]):
         validator: Optional[Validator] = None,
         completer: Optional[Completer] = None,
         complete_in_thread: bool = False,
-        reserve_space_for_menu: int = None,
+        reserve_space_for_menu: int = 0,
         complete_style: CompleteStyle = CompleteStyle.COLUMN,
         auto_suggest: Optional[AutoSuggest] = None,
         style: Optional[BaseStyle] = None,
@@ -609,16 +609,6 @@ class PromptSession(Generic[_T]):
             """dynamic function to fetch current setting of the attribute."""
             return self.reserve_space_for_menu
 
-        right_prompt = ConditionalContainer(
-            Window(
-                FormattedTextControl(text=lambda: self.rprompt),
-                align=WindowAlign.RIGHT,
-                style="class:rprompt",
-            ),
-            filter=~is_done
-            & Condition(lambda: self.rprompt is not None and len(self.rprompt) > 0),
-        )
-
         # Build the layout.
         layout = HSplit(
             [
@@ -682,7 +672,16 @@ class PromptSession(Generic[_T]):
                         # line at the bottom of the screen if it is configured.
                         # To fix, would need to know height of left prompt.
                         Float(
-                            content=right_prompt,
+                            content=None
+                            if (not self.rprompt)
+                            or len(to_formatted_text(self.rprompt)) == 0
+                            else (
+                                Window(
+                                    FormattedTextControl(text=lambda: self.rprompt),
+                                    align=WindowAlign.RIGHT,
+                                    style="class:rprompt",
+                                )
+                            ),
                             right=0,
                             # bottom=0, # right prompt floats to *top* of prompt.
                             hide_when_covering_content=True,
@@ -882,7 +881,7 @@ class PromptSession(Generic[_T]):
         mouse_support: Optional[FilterOrBool] = None,
         input_processors: Optional[List[Processor]] = None,
         placeholder: Optional[AnyFormattedText] = None,
-        reserve_space_for_menu: Optional[int] = None,
+        reserve_space_for_menu: int = 0,
         enable_system_prompt: Optional[FilterOrBool] = None,
         enable_suspend: Optional[FilterOrBool] = None,
         enable_open_in_editor: Optional[FilterOrBool] = None,
@@ -1101,7 +1100,7 @@ class PromptSession(Generic[_T]):
         mouse_support: Optional[FilterOrBool] = None,
         input_processors: Optional[List[Processor]] = None,
         placeholder: Optional[AnyFormattedText] = None,
-        reserve_space_for_menu: Optional[int] = None,
+        reserve_space_for_menu: int = 0,
         enable_system_prompt: Optional[FilterOrBool] = None,
         enable_suspend: Optional[FilterOrBool] = None,
         enable_open_in_editor: Optional[FilterOrBool] = None,
@@ -1346,7 +1345,7 @@ def prompt(
     mouse_support: Optional[FilterOrBool] = None,
     input_processors: Optional[List[Processor]] = None,
     placeholder: Optional[AnyFormattedText] = None,
-    reserve_space_for_menu: Optional[int] = None,
+    reserve_space_for_menu: int = 0,
     enable_system_prompt: Optional[FilterOrBool] = None,
     enable_suspend: Optional[FilterOrBool] = None,
     enable_open_in_editor: Optional[FilterOrBool] = None,
