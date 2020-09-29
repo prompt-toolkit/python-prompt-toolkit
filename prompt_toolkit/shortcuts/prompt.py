@@ -186,19 +186,6 @@ def _split_multiline_prompt(
     return has_before_fragments, before, first_input_line
 
 
-class _RPrompt(Window):
-    """
-    The prompt that is displayed on the right side of the Window.
-    """
-
-    def __init__(self, text: AnyFormattedText) -> None:
-        super().__init__(
-            FormattedTextControl(text=text),
-            align=WindowAlign.RIGHT,
-            style="class:rprompt",
-        )
-
-
 class CompleteStyle(str, Enum):
     """
     How to display autocompletions for the prompt.
@@ -557,8 +544,7 @@ class PromptSession(Generic[_T]):
             # Users can insert processors here.
             DynamicProcessor(lambda: merge_processors(self.input_processors or [])),
             ConditionalProcessor(
-                AfterInput(lambda: self.placeholder),
-                filter=display_placeholder,
+                AfterInput(lambda: self.placeholder), filter=display_placeholder,
             ),
         ]
 
@@ -623,6 +609,16 @@ class PromptSession(Generic[_T]):
             """dynamic function to fetch current setting of the attribute."""
             return self.reserve_space_for_menu
 
+        right_prompt = ConditionalContainer(
+            Window(
+                FormattedTextControl(text=lambda: self.rprompt),
+                align=WindowAlign.RIGHT,
+                style="class:rprompt",
+            ),
+            filter=~is_done
+            & Condition(lambda: self.rprompt is not None and len(self.rprompt) > 0),
+        )
+
         # Build the layout.
         layout = HSplit(
             [
@@ -680,15 +676,19 @@ class PromptSession(Generic[_T]):
                                 & multi_column_complete_style,
                             ),
                         ),
-                        # The right prompt.
+                        # The right prompt.  Don't consume height if it's not configured.
+                        # Although it overlaps with first line of (left) prompt,
+                        # its height is added to the windoww, resulting in an empty
+                        # line at the bottom of the screen if it is configured.
+                        # To fix, would need to know height of left prompt.
                         Float(
+                            content=right_prompt,
                             right=0,
-                            bottom=0,
+                            # bottom=0, # right prompt floats to *top* of prompt.
                             hide_when_covering_content=True,
-                            content=_RPrompt(lambda: self.rprompt),
                         ),
                     ],
-                    floats_min_preferred_height = get_reserve_space_for_menu,
+                    floats_min_preferred_height=get_reserve_space_for_menu,
                 ),
                 ConditionalContainer(ValidationToolbar(), filter=~is_done),
                 ConditionalContainer(
