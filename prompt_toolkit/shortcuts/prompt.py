@@ -470,6 +470,20 @@ class PromptSession(Generic[_T]):
 
         return dynamic
 
+    def ft_not_empty(self, attr_name: str) -> Condition:
+        """
+        Returns a condition that is true if named attribute
+        of this 'PromptSession' instance (assumed to be formatted text)
+        is configured and non-empty.
+        """
+
+        @Condition
+        def _ft_not_empty():
+            value: AnyFormattedText = getattr(self, attr_name)
+            return value and len(to_formatted_text(value)) > 0
+
+        return _ft_not_empty
+
     def _create_default_buffer(self) -> Buffer:
         """
         Create and return the default input buffer.
@@ -544,7 +558,8 @@ class PromptSession(Generic[_T]):
             # Users can insert processors here.
             DynamicProcessor(lambda: merge_processors(self.input_processors or [])),
             ConditionalProcessor(
-                AfterInput(lambda: self.placeholder), filter=display_placeholder,
+                AfterInput(lambda: self.placeholder),
+                filter=display_placeholder,
             ),
         ]
 
@@ -560,7 +575,7 @@ class PromptSession(Generic[_T]):
             ),
             filter=~is_done
             & renderer_height_is_known
-            & Condition(lambda: self.bottom_toolbar is not None),
+            & self.ft_not_empty("bottom_toolbar"),
         )
 
         search_toolbar = SearchToolbar(
@@ -672,18 +687,16 @@ class PromptSession(Generic[_T]):
                         # line at the bottom of the screen if it is configured.
                         # To fix, would need to know height of left prompt.
                         Float(
-                            content=None
-                            if (not self.rprompt)
-                            or len(to_formatted_text(self.rprompt)) == 0
-                            else (
+                            ConditionalContainer(
                                 Window(
                                     FormattedTextControl(text=lambda: self.rprompt),
                                     align=WindowAlign.RIGHT,
                                     style="class:rprompt",
-                                )
+                                ),
+                                filter=~is_done & self.ft_not_empty("rprompt"),
                             ),
                             right=0,
-                            # bottom=0, # right prompt floats to *top* of prompt.
+                            top=0,  # right prompt floats to *top* of prompt.
                             hide_when_covering_content=True,
                         ),
                     ],
