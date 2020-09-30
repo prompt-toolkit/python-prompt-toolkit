@@ -315,7 +315,7 @@ the key handler:
     app.run()
 
 The callback function is named ``exit_`` for clarity, but it could have been
-named ``_`` (underscore) as well, because the we won't refer to this name.
+named ``_`` (underscore) as well, because we won't refer to this name.
 
 :ref:`Read more about key bindings ...<key_bindings>`
 
