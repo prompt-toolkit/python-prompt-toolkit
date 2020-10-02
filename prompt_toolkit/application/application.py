@@ -368,7 +368,8 @@ class Application(Generic[_AppResult]):
         The active :class:`.ColorDepth`.
 
         The current value is determined as follows:
-        - If a color depth was given explicitely to this application, use that
+
+        - If a color depth was given explicitly to this application, use that
           value.
         - Otherwise, fall back to the color depth that is reported by the
           :class:`.Output` implementation. If the :class:`.Output` class was
