@@ -40,6 +40,9 @@ class PromptToolkitSSHSession(asyncssh.SSHServerSession):
                 except BrokenPipeError:
                     pass  # Channel not open for sending.
 
+            def isatty(s) -> bool:
+                return True
+
             def flush(s):
                 pass
 
