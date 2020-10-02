@@ -23,6 +23,12 @@ from .base import (
 from .html import HTML
 from .pygments import PygmentsTokens
 from .utils import (
+    formatted_text_indent,
+    formatted_text_len,
+    formatted_text_split_lines,
+    formatted_text_strip,
+    formatted_text_to_text,
+    formatted_text_width,
     fragment_list_len,
     fragment_list_to_text,
     fragment_list_width,
@@ -49,4 +55,10 @@ __all__ = [
     "fragment_list_width",
     "fragment_list_to_text",
     "split_lines",
+    "formatted_text_len",
+    "formatted_text_width",
+    "formatted_text_to_text",
+    "formatted_text_split_lines",
+    "formatted_text_indent",
+    "formatted_text_strip",
 ]

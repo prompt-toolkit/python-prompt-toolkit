@@ -4,6 +4,8 @@ from prompt_toolkit.formatted_text import (
     FormattedText,
     PygmentsTokens,
     Template,
+    formatted_text_len,
+    formatted_text_to_text,
     merge_formatted_text,
     to_formatted_text,
 )
@@ -214,3 +216,11 @@ def test_split_lines_3():
     assert lines == [
         [("class:a", "")],
     ]
+
+
+def test_formatted_text_to_text():
+    assert formatted_text_to_text(HTML("<b>Hello</b> <u>world</u>!")) == "Hello world!"
+
+
+def test_formatted_text_len():
+    assert formatted_text_len(HTML("<b>Hello</b> <u>world</u>!")) == len("Hello world!")
