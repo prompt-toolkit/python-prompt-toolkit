@@ -837,6 +837,13 @@ class PromptSession(Generic[_T]):
             """
             event.app.suspend_to_background()
 
+        @handle("c-\\")
+        def _do_sigquit(event: E) -> None:
+            """
+            Trigger SIGQUIT.
+            """
+            event.app.do_sigquit()
+
         return kb
 
     def prompt(
