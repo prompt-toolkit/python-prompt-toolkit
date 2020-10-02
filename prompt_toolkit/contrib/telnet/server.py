@@ -88,6 +88,9 @@ class _ConnectionStdout:
         self._buffer.append(data.encode(self._encoding, errors=self._errors))
         self.flush()
 
+    def isatty(self) -> bool:
+        return True
+
     def flush(self) -> None:
         try:
             self._connection.send(b"".join(self._buffer))
