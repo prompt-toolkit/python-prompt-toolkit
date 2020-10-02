@@ -6,7 +6,7 @@ from asyncio import get_event_loop
 from contextlib import contextmanager
 from ctypes import pointer, windll
 from ctypes.wintypes import DWORD, HANDLE
-from typing import Callable, ContextManager, Dict, Iterable, Optional, TextIO
+from typing import Callable, ContextManager, Dict, Iterable, List, Optional, TextIO
 
 from prompt_toolkit.eventloop import run_in_executor_with_context
 from prompt_toolkit.eventloop.win32 import create_win32_event, wait_for_handles
@@ -71,7 +71,7 @@ class Win32Input(_Win32InputBase):
         """
         return detach_win32_input(self)
 
-    def read_keys(self):
+    def read_keys(self) -> List[KeyPress]:
         return list(self.console_input_reader.read())
 
     def flush(self) -> None:
