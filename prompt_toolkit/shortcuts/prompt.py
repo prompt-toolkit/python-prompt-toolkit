@@ -697,7 +697,7 @@ class PromptSession(Generic[_T]):
                             ),
                             right=0,
                             top=0,  # right prompt floats to *top* of prompt.
-                            hide_when_covering_content=True,
+                            hide_when_covering_content=False,  # and should overright main prompt when so.
                         ),
                     ],
                     floats_min_preferred_height=get_reserve_space_for_menu,

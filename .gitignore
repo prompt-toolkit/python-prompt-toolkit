@@ -47,3 +47,6 @@ docs/_build
 
 # vscode settings
 .vscode/
+
+# virtual environment
+.venv/

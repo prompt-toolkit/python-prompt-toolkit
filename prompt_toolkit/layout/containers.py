@@ -815,7 +815,7 @@ class FloatContainer(Container):
                 ),
                 self.floats_min_preferred_height() or 0,
             )
-            ph.preferred += floats_ph
+            ph.preferred = max(ph.preferred, floats_ph)
         return ph
 
     def write_to_screen(
