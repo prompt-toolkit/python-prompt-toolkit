@@ -53,7 +53,7 @@ Some features:
 - Auto suggestions. (Like `fish shell <http://fishshell.com/>`_.)
 - Multiple input buffers.
 - No global state.
-- Lightweight, the only dependencies are Pygments, six and wcwidth.
+- Lightweight, the only dependencies are Pygments and wcwidth.
 - Runs on Linux, OS X, FreeBSD, OpenBSD and Windows systems.
 - And much more...
 
