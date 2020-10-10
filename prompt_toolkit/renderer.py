@@ -622,10 +622,11 @@ class Renderer:
                 size.columns, size.rows
             ).preferred
         else:
-            last_height = self._last_screen.height if self._last_screen else 0
+            # REVIEW: last_height = self._last_screen.height if self._last_screen else 0
             height = max(
                 self._min_available_height,
-                last_height,
+                # REVIEW: forces prompt off bottom line?
+                # last_height,
                 layout.container.preferred_height(size.columns, size.rows).preferred,
             )
 

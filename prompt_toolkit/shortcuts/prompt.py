@@ -273,8 +273,8 @@ class PromptSession(Generic[_T]):
         background thread in order to avoid blocking the user interface.
         For ``CompleteStyle.READLINE_LIKE``, this setting has no effect. There
         we always run the completions in the main thread.
-    :param reserve_space_for_menu: Space to be reserved for displaying the menu.
-        (0 means that no space needs to be reserved.)
+    :param completion_menu_rows: Maximum number of rows of completions displayed,
+        applies to both single and multi column completion menus.
     :param auto_suggest: :class:`~prompt_toolkit.auto_suggest.AutoSuggest`
         instance for input suggestions.
     :param style: :class:`.Style` instance for the color scheme.
@@ -360,7 +360,7 @@ class PromptSession(Generic[_T]):
         "enable_system_prompt",
         "enable_suspend",
         "enable_open_in_editor",
-        "reserve_space_for_menu",
+        "completion_menu_rows",
         "tempfile_suffix",
         "tempfile",
     )
@@ -385,7 +385,7 @@ class PromptSession(Generic[_T]):
         validator: Optional[Validator] = None,
         completer: Optional[Completer] = None,
         complete_in_thread: bool = False,
-        reserve_space_for_menu: int = 8,
+        completion_menu_rows: int = 3,
         complete_style: CompleteStyle = CompleteStyle.COLUMN,
         auto_suggest: Optional[AutoSuggest] = None,
         style: Optional[BaseStyle] = None,
@@ -454,7 +454,7 @@ class PromptSession(Generic[_T]):
         self.enable_system_prompt = enable_system_prompt
         self.enable_suspend = enable_suspend
         self.enable_open_in_editor = enable_open_in_editor
-        self.reserve_space_for_menu = reserve_space_for_menu
+        self.completion_menu_rows = completion_menu_rows
         self.tempfile_suffix = tempfile_suffix
         self.tempfile = tempfile
 
@@ -556,8 +556,7 @@ class PromptSession(Generic[_T]):
             # Users can insert processors here.
             DynamicProcessor(lambda: merge_processors(self.input_processors or [])),
             ConditionalProcessor(
-                AfterInput(lambda: self.placeholder),
-                filter=display_placeholder,
+                AfterInput(lambda: self.placeholder), filter=display_placeholder,
             ),
         ]
 
@@ -608,7 +607,9 @@ class PromptSession(Generic[_T]):
 
         default_buffer_window = Window(
             default_buffer_control,
-            height=self._get_default_buffer_control_height,
+            height=Dimension(
+                min=1, preferred=1, max=10000000000000000000
+            ),  ##self._get_default_buffer_control_height,
             get_line_prefix=partial(
                 self._get_line_prefix, get_prompt_text_2=get_prompt_text_2
             ),
@@ -670,6 +671,7 @@ class PromptSession(Generic[_T]):
                             ycursor=True,
                             transparent=True,
                             content=MultiColumnCompletionsMenu(
+                                max_rows=(lambda: self.completion_menu_rows),
                                 show_meta=True,
                                 extra_filter=has_focus(default_buffer)
                                 & multi_column_complete_style,
@@ -678,7 +680,7 @@ class PromptSession(Generic[_T]):
                         # The right prompt.
                         Float(
                             right=0,
-                            bottom=0,
+                            top=0,  # floats to top of prompt.
                             hide_when_covering_content=True,
                             content=_RPrompt(lambda: self.rprompt),
                         ),
@@ -876,7 +878,7 @@ class PromptSession(Generic[_T]):
         mouse_support: Optional[FilterOrBool] = None,
         input_processors: Optional[List[Processor]] = None,
         placeholder: Optional[AnyFormattedText] = None,
-        reserve_space_for_menu: Optional[int] = None,
+        completion_menu_rows: Optional[int] = None,
         enable_system_prompt: Optional[FilterOrBool] = None,
         enable_suspend: Optional[FilterOrBool] = None,
         enable_open_in_editor: Optional[FilterOrBool] = None,
@@ -986,8 +988,8 @@ class PromptSession(Generic[_T]):
             self.input_processors = input_processors
         if placeholder is not None:
             self.placeholder = placeholder
-        if reserve_space_for_menu is not None:
-            self.reserve_space_for_menu = reserve_space_for_menu
+        if completion_menu_rows is not None:
+            self.completion_menu_rows = completion_menu_rows
         if enable_system_prompt is not None:
             self.enable_system_prompt = enable_system_prompt
         if enable_suspend is not None:
@@ -1095,7 +1097,7 @@ class PromptSession(Generic[_T]):
         mouse_support: Optional[FilterOrBool] = None,
         input_processors: Optional[List[Processor]] = None,
         placeholder: Optional[AnyFormattedText] = None,
-        reserve_space_for_menu: Optional[int] = None,
+        completion_menu_rows: Optional[int] = None,
         enable_system_prompt: Optional[FilterOrBool] = None,
         enable_suspend: Optional[FilterOrBool] = None,
         enable_open_in_editor: Optional[FilterOrBool] = None,
@@ -1168,8 +1170,8 @@ class PromptSession(Generic[_T]):
             self.input_processors = input_processors
         if placeholder is not None:
             self.placeholder = placeholder
-        if reserve_space_for_menu is not None:
-            self.reserve_space_for_menu = reserve_space_for_menu
+        if completion_menu_rows is not None:
+            self.completion_menu_rows = completion_menu_rows
         if enable_system_prompt is not None:
             self.enable_system_prompt = enable_system_prompt
         if enable_suspend is not None:
@@ -1218,14 +1220,14 @@ class PromptSession(Generic[_T]):
     def editing_mode(self, value: EditingMode) -> None:
         self.app.editing_mode = value
 
-    def _get_default_buffer_control_height(self) -> Dimension:
+    """def _get_default_buffer_control_height(self) -> Dimension:
         # If there is an autocompletion menu to be shown, make sure that our
         # layout has at least a minimal height in order to display it.
         if (
             self.completer is not None
             and self.complete_style != CompleteStyle.READLINE_LIKE
         ):
-            space = self.reserve_space_for_menu
+            space = self.completion_menu_rows
         else:
             space = 0
 
@@ -1239,6 +1241,7 @@ class PromptSession(Generic[_T]):
                 return Dimension(min=space)
 
         return Dimension()
+"""
 
     def _get_prompt(self) -> StyleAndTextTuples:
         return to_formatted_text(self.message, style="class:prompt")
@@ -1362,7 +1365,7 @@ def prompt(
     mouse_support: Optional[FilterOrBool] = None,
     input_processors: Optional[List[Processor]] = None,
     placeholder: Optional[AnyFormattedText] = None,
-    reserve_space_for_menu: Optional[int] = None,
+    completion_menu_rows: Optional[int] = None,
     enable_system_prompt: Optional[FilterOrBool] = None,
     enable_suspend: Optional[FilterOrBool] = None,
     enable_open_in_editor: Optional[FilterOrBool] = None,
@@ -1412,7 +1415,7 @@ def prompt(
         mouse_support=mouse_support,
         input_processors=input_processors,
         placeholder=placeholder,
-        reserve_space_for_menu=reserve_space_for_menu,
+        completion_menu_rows=completion_menu_rows,
         enable_system_prompt=enable_system_prompt,
         enable_suspend=enable_suspend,
         enable_open_in_editor=enable_open_in_editor,

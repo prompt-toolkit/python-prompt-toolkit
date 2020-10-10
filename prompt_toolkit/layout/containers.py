@@ -789,10 +789,26 @@ class FloatContainer(Container):
     def preferred_height(self, width: int, max_available_height: int) -> Dimension:
         """
         Return the preferred height of the float container.
-        (We don't care about the height of the floats, they should always fit
-        into the dimensions provided by the container.)
+        This includes the height of the child floats, especially when
+        one of the floats is a completion menu bound to the current cursor position.
         """
-        return self.content.preferred_height(width, max_available_height)
+        content_ph = self.content.preferred_height(width, max_available_height)
+
+        def get_float_ph():
+            for f in self.floats:
+                h = f.content.preferred_height(width, max_available_height).preferred
+                if h > 0 and getattr(f, "ycursor", False):
+                    h += (
+                        content_ph.preferred
+                    )  # Assumes float is tied to current input point in background
+                yield h
+
+        floats_ph = max(get_float_ph())
+        return Dimension(
+            min=content_ph.min,
+            max=content_ph.max,
+            preferred=max(content_ph.preferred, floats_ph),
+        )
 
     def write_to_screen(
         self,
@@ -896,8 +912,12 @@ class FloatContainer(Container):
         # Near x position of cursor.
         elif fl.xcursor:
             if fl_width is None:
-                width = fl.content.preferred_width(write_position.width).preferred
-                width = min(write_position.width, width)
+                width = min(
+                    fl.content.preferred_width(
+                        write_position.width - cursor_position.x
+                    ).preferred,
+                    write_position.width,
+                )
             else:
                 width = fl_width
 

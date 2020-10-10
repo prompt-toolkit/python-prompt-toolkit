@@ -101,7 +101,7 @@ class Completion:
         " Return meta-text. (This is lazy when using a callable). "
         from prompt_toolkit.formatted_text import to_formatted_text
 
-        return to_formatted_text(self._display_meta or "")
+        return to_formatted_text(self._display_meta)
 
     @property
     def display_meta_text(self) -> str:
