@@ -462,7 +462,9 @@ class PromptSession(Generic[_T]):
         self.tempfile = tempfile
 
         if reserve_space_for_menu is not None:
-            self.completion_menu_rows = reserve_space_for_menu if reserve_space_for_menu != 0 else 5
+            self.completion_menu_rows = (
+                reserve_space_for_menu if reserve_space_for_menu != 0 else 5
+            )
             warnings.warn(
                 "PromptSession(,reserve_space_for_menu,...) is deprecated, specify parameter completion_menu_rows instead.",
                 DeprecationWarning,
@@ -1023,7 +1025,9 @@ class PromptSession(Generic[_T]):
             self.tempfile = tempfile
 
         if reserve_space_for_menu is not None:
-            self.completion_menu_rows = reserve_space_for_menu if reserve_space_for_menu != 0 else 5
+            self.completion_menu_rows = (
+                reserve_space_for_menu if reserve_space_for_menu != 0 else 5
+            )
             self.layout = None
             warnings.warn(
                 "PromptSession(,reserve_space_for_menu,...) is deprecated, specify parameter completion_menu_rows instead.",
@@ -1217,7 +1221,9 @@ class PromptSession(Generic[_T]):
         if tempfile is not None:
             self.tempfile = tempfile
         if reserve_space_for_menu is not None:
-            self.completion_menu_rows = reserve_space_for_menu if reserve_space_for_menu != 0 else 5
+            self.completion_menu_rows = (
+                reserve_space_for_menu if reserve_space_for_menu != 0 else 5
+            )
             self.layout = None
             warnings.warn(
                 "PromptSession(,reserve_space_for_menu,...) is deprecated, specify parameter completion_menu_rows instead.",

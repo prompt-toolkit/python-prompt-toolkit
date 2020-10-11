@@ -543,7 +543,9 @@ class MultiColumnCompletionMenuControl(UIControl):
         # FIXME: should consider self.suggested_max_column_width, too.
         return ret_val
 
-    def mouse_handler(self, mouse_event: MouseEvent) -> "NotImplementedOrNone":
+    def mouse_handler(
+        self, mouse_event: MouseEvent
+    ) -> Optional["NotImplementedOrNone"]:
         """
         Handle scroll and click events.
         """
