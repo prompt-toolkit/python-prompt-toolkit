@@ -313,7 +313,7 @@ class MultiColumnCompletionMenuControl(UIControl):
         This results in less completions displayed and additional scrolling.
         (It's a limitation of how the layout engine currently works: first the
         widths are calculated, then the heights.)
-    :param max_rows: callable returning int maximum height of the completion menu.
+    :param max_rows: maximum height of the completion menu. Must be > 0.
     :param suggested_max_column_width: The suggested max width of a column.
         The column can still be bigger than this, but if there is place for two
         columns of this width, we will display two columns. This to avoid that
@@ -326,7 +326,7 @@ class MultiColumnCompletionMenuControl(UIControl):
     def __init__(
         self,
         min_rows: int = 1,
-        max_rows: Callable[[], int] = (lambda: 3),
+        max_rows: int = 3,  # 3 is for backward comapt.
         suggested_max_column_width: int = 30,
     ) -> None:
         assert min_rows >= 1
@@ -343,6 +343,7 @@ class MultiColumnCompletionMenuControl(UIControl):
         self._cur_preferred_height = 0
 
         # Info of last rendering.
+        # FIXME: where is this used?
         self._rendered_rows = 0
         self._rendered_columns = 0
         self._total_columns = 0
@@ -393,12 +394,12 @@ class MultiColumnCompletionMenuControl(UIControl):
             return 0
 
         if width != self._cur_preferred_width:
-            # can happen? assert False, "width different from preferred width"
+            # does happen often
             self.preferred_width(width)
 
         self._cur_preferred_height = min(
             math.ceil(len(complete_state.completions) / float(self._cur_num_cols)),
-            self.max_rows(),
+            self.max_rows,
             max_available_height,
         )
         return self._cur_preferred_height
@@ -539,6 +540,7 @@ class MultiColumnCompletionMenuControl(UIControl):
                     top_n_list[0] = cur_len
                     top_n_list.sort()
             ret_val = top_n_list[0] + 1
+        # FIXME: should consider self.suggested_max_column_width, too.
         return ret_val
 
     def mouse_handler(self, mouse_event: MouseEvent) -> "NotImplementedOrNone":
@@ -644,13 +646,14 @@ class MultiColumnCompletionsMenu(HSplit):
     :param min_rows: is minimum number of rows in the completions window.
         meta window will add 1 additional row if it is visible.
     :param max_rows: is maximum number of rows in the completions window.
+        Must be > 0.
 
     """
 
     def __init__(
         self,
         min_rows: int = 1,
-        max_rows: Callable[[], int] = (lambda: 3),
+        max_rows: int = 3,
         suggested_max_column_width: int = 30,
         show_meta: FilterOrBool = True,
         extra_filter: FilterOrBool = True,

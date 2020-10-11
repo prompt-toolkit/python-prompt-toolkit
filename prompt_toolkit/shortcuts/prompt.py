@@ -273,8 +273,8 @@ class PromptSession(Generic[_T]):
         background thread in order to avoid blocking the user interface.
         For ``CompleteStyle.READLINE_LIKE``, this setting has no effect. There
         we always run the completions in the main thread.
-    :param completion_menu_rows: Maximum number of rows of completions displayed,
-        applies to both single and multi column completion menus.
+    :param completion_menu_rows: Maximum number of rows of completions displayed.
+        Must be > 0, but actual rows displayed is limited by render available height.
     :param auto_suggest: :class:`~prompt_toolkit.auto_suggest.AutoSuggest`
         instance for input suggestions.
     :param style: :class:`.Style` instance for the color scheme.
@@ -326,6 +326,7 @@ class PromptSession(Generic[_T]):
     :param output: `Output` object.
     """
 
+    # FIXME: where is this tuple referenced?
     _fields = (
         "message",
         "lexer",
@@ -385,7 +386,7 @@ class PromptSession(Generic[_T]):
         validator: Optional[Validator] = None,
         completer: Optional[Completer] = None,
         complete_in_thread: bool = False,
-        completion_menu_rows: int = 3,
+        completion_menu_rows: int = 5,
         complete_style: CompleteStyle = CompleteStyle.COLUMN,
         auto_suggest: Optional[AutoSuggest] = None,
         style: Optional[BaseStyle] = None,
@@ -462,7 +463,7 @@ class PromptSession(Generic[_T]):
         self.history = history
         self.default_buffer = self._create_default_buffer()
         self.search_buffer = self._create_search_buffer()
-        self.layout = self._create_layout()
+        self.layout: Optional[Layout] = self._create_layout()
         self.app = self._create_application(editing_mode, erase_when_done)
 
     def _dyncond(self, attr_name: str) -> Condition:
@@ -608,9 +609,7 @@ class PromptSession(Generic[_T]):
 
         default_buffer_window = Window(
             default_buffer_control,
-            height=Dimension(
-                min=1, preferred=1, max=10000000000000000000
-            ),  ##self._get_default_buffer_control_height,
+            height=Dimension(min=1, preferred=1, max=10000000000000000000),
             get_line_prefix=partial(
                 self._get_line_prefix, get_prompt_text_2=get_prompt_text_2
             ),
@@ -662,7 +661,7 @@ class PromptSession(Generic[_T]):
                             dont_shrink_height=True,
                             transparent=True,
                             content=CompletionsMenu(
-                                max_height=16,
+                                max_height=self.completion_menu_rows,
                                 scroll_offset=1,
                                 extra_filter=has_focus(default_buffer)
                                 & ~multi_column_complete_style,
@@ -674,7 +673,7 @@ class PromptSession(Generic[_T]):
                             transparent=True,
                             dont_shrink_height=True,
                             content=MultiColumnCompletionsMenu(
-                                max_rows=(lambda: self.completion_menu_rows),
+                                max_rows=self.completion_menu_rows,
                                 show_meta=True,
                                 extra_filter=has_focus(default_buffer)
                                 & multi_column_complete_style,
@@ -844,6 +843,14 @@ class PromptSession(Generic[_T]):
 
         return kb
 
+    def _rethink_layout(self):
+        """Update layout to reflect some parameter change and notify all interested parties.
+        Can't expect this to work if application is actually running.
+        """
+
+        self.layout = self._create_layout()
+        self.app.layout = self.layout
+
     def prompt(
         self,
         # When any of these arguments are passed, this value is overwritten
@@ -993,6 +1000,7 @@ class PromptSession(Generic[_T]):
             self.placeholder = placeholder
         if completion_menu_rows is not None:
             self.completion_menu_rows = completion_menu_rows
+            self.layout = None
         if enable_system_prompt is not None:
             self.enable_system_prompt = enable_system_prompt
         if enable_suspend is not None:
@@ -1003,6 +1011,9 @@ class PromptSession(Generic[_T]):
             self.tempfile_suffix = tempfile_suffix
         if tempfile is not None:
             self.tempfile = tempfile
+
+        if self.layout is None:  # parameter change above forced rethinking layout
+            self._rethink_layout()
 
         self._add_pre_run_callables(pre_run, accept_default)
         self.default_buffer.reset(
@@ -1175,6 +1186,7 @@ class PromptSession(Generic[_T]):
             self.placeholder = placeholder
         if completion_menu_rows is not None:
             self.completion_menu_rows = completion_menu_rows
+            self.layout = None
         if enable_system_prompt is not None:
             self.enable_system_prompt = enable_system_prompt
         if enable_suspend is not None:
@@ -1185,6 +1197,9 @@ class PromptSession(Generic[_T]):
             self.tempfile_suffix = tempfile_suffix
         if tempfile is not None:
             self.tempfile = tempfile
+
+        if self.layout is None:  # parameter change above forced rethink of layout.
+            self._rethink_layout()
 
         self._add_pre_run_callables(pre_run, accept_default)
         self.default_buffer.reset(
@@ -1222,29 +1237,6 @@ class PromptSession(Generic[_T]):
     @editing_mode.setter
     def editing_mode(self, value: EditingMode) -> None:
         self.app.editing_mode = value
-
-    """def _get_default_buffer_control_height(self) -> Dimension:
-        # If there is an autocompletion menu to be shown, make sure that our
-        # layout has at least a minimal height in order to display it.
-        if (
-            self.completer is not None
-            and self.complete_style != CompleteStyle.READLINE_LIKE
-        ):
-            space = self.completion_menu_rows
-        else:
-            space = 0
-
-        if space and not get_app().is_done:
-            buff = self.default_buffer
-
-            # Reserve the space, either when there are completions, or when
-            # `complete_while_typing` is true and we expect completions very
-            # soon.
-            if buff.complete_while_typing() or buff.complete_state is not None:
-                return Dimension(min=space)
-
-        return Dimension()
-"""
 
     def _get_prompt(self) -> StyleAndTextTuples:
         return to_formatted_text(self.message, style="class:prompt")
