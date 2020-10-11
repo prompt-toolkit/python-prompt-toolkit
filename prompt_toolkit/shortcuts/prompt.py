@@ -38,6 +38,7 @@ from typing import (
     Union,
     cast,
 )
+import warnings
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app
@@ -409,6 +410,7 @@ class PromptSession(Generic[_T]):
         refresh_interval: float = 0,
         input: Optional[Input] = None,
         output: Optional[Output] = None,
+        reserve_space_for_menu: Optional[int] = None,
     ) -> None:
 
         history = history or InMemoryHistory()
@@ -458,6 +460,13 @@ class PromptSession(Generic[_T]):
         self.completion_menu_rows = completion_menu_rows
         self.tempfile_suffix = tempfile_suffix
         self.tempfile = tempfile
+
+        if reserve_space_for_menu is not None:
+            self.completion_menu_rows = reserve_space_for_menu if reserve_space_for_menu != 0 else 5
+            warnings.warn(
+                "PromptSession(,reserve_space_for_menu,...) is deprecated, specify parameter completion_menu_rows instead.",
+                DeprecationWarning,
+            )
 
         # Create buffers, layout and Application.
         self.history = history
@@ -899,6 +908,7 @@ class PromptSession(Generic[_T]):
         accept_default: bool = False,
         pre_run: Optional[Callable[[], None]] = None,
         set_exception_handler: bool = True,
+        reserve_space_for_menu: Optional[int] = None,
     ) -> _T:
         """
         Display the prompt.
@@ -1012,6 +1022,14 @@ class PromptSession(Generic[_T]):
         if tempfile is not None:
             self.tempfile = tempfile
 
+        if reserve_space_for_menu is not None:
+            self.completion_menu_rows = reserve_space_for_menu if reserve_space_for_menu != 0 else 5
+            self.layout = None
+            warnings.warn(
+                "PromptSession(,reserve_space_for_menu,...) is deprecated, specify parameter completion_menu_rows instead.",
+                DeprecationWarning,
+            )
+
         if self.layout is None:  # parameter change above forced rethinking layout
             self._rethink_layout()
 
@@ -1122,6 +1140,7 @@ class PromptSession(Generic[_T]):
         accept_default: bool = False,
         pre_run: Optional[Callable[[], None]] = None,
         set_exception_handler: bool = True,
+        reserve_space_for_menu: Optional[int] = None,
     ) -> _T:
 
         if message is not None:
@@ -1197,6 +1216,13 @@ class PromptSession(Generic[_T]):
             self.tempfile_suffix = tempfile_suffix
         if tempfile is not None:
             self.tempfile = tempfile
+        if reserve_space_for_menu is not None:
+            self.completion_menu_rows = reserve_space_for_menu if reserve_space_for_menu != 0 else 5
+            self.layout = None
+            warnings.warn(
+                "PromptSession(,reserve_space_for_menu,...) is deprecated, specify parameter completion_menu_rows instead.",
+                DeprecationWarning,
+            )
 
         if self.layout is None:  # parameter change above forced rethink of layout.
             self._rethink_layout()
