@@ -326,7 +326,7 @@ class MultiColumnCompletionMenuControl(UIControl):
     def __init__(
         self,
         min_rows: int = 1,
-        max_rows: Callable[[],int] = (lambda: 3),
+        max_rows: Callable[[], int] = (lambda: 3),
         suggested_max_column_width: int = 30,
     ) -> None:
         assert min_rows >= 1
@@ -466,7 +466,7 @@ class MultiColumnCompletionMenuControl(UIControl):
                 fragments.append(("", " "))
 
             # Draw row content.
-            for column_index, c in enumerate(row[self.scroll :][:self._cur_num_cols]):
+            for column_index, c in enumerate(row[self.scroll :][: self._cur_num_cols]):
                 if c is not None:
                     fragments += _get_menu_item_fragments(
                         c,
@@ -523,7 +523,9 @@ class MultiColumnCompletionMenuControl(UIControl):
         Return not max but 90th percentile largest (e.g max of 9, but 2nd largest of 10)
         """
 
-        top_n = 1 + len(complete_state.completions) // 10  # number of top values to learn
+        top_n = (
+            1 + len(complete_state.completions) // 10
+        )  # number of top values to learn
 
         if top_n <= 1:  # max of 1-10 completions
             ret_val = (
@@ -648,7 +650,7 @@ class MultiColumnCompletionsMenu(HSplit):
     def __init__(
         self,
         min_rows: int = 1,
-        max_rows: Callable[[],int] = (lambda:3),
+        max_rows: Callable[[], int] = (lambda: 3),
         suggested_max_column_width: int = 30,
         show_meta: FilterOrBool = True,
         extra_filter: FilterOrBool = True,

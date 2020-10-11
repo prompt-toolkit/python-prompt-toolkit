@@ -556,7 +556,8 @@ class PromptSession(Generic[_T]):
             # Users can insert processors here.
             DynamicProcessor(lambda: merge_processors(self.input_processors or [])),
             ConditionalProcessor(
-                AfterInput(lambda: self.placeholder), filter=display_placeholder,
+                AfterInput(lambda: self.placeholder),
+                filter=display_placeholder,
             ),
         ]
 

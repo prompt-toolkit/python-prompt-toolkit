@@ -796,7 +796,9 @@ class FloatContainer(Container):
         def get_float_ph():
             for f in self.floats:
                 if f.dont_shrink_height:
-                    h = f.content.preferred_height(width, max_available_height).preferred
+                    h = f.content.preferred_height(
+                        width, max_available_height
+                    ).preferred
                     if h > 0 and getattr(f, "ycursor", False):
                         h += (
                             content_ph.preferred
@@ -968,8 +970,8 @@ class FloatContainer(Container):
                 height = fl_height
 
             # Reduce height if not enough space.
-            # Dan't do this for dont_shrink_height floats, even if they would fit *above* cursor, 
-            # because render has already determined height of FloatContainer and moving the 
+            # Dan't do this for dont_shrink_height floats, even if they would fit *above* cursor,
+            # because render has already determined height of FloatContainer and moving the
             # float above cursor would still leave a blank line at bottom.
             # For "regular" floats, either fit above cursor or trim to fit below.
             if (not fl.dont_shrink_height) and height > write_position.height - ypos:
@@ -1060,7 +1062,7 @@ class Float:
     :param width: :class:`.Dimension` or callable which returns a :class:`.Dimension`.
     :param height: :class:`.Dimension` or callable which returns a :class:`.Dimension`.
     :param dont_shrink_height" When `True`, ensure all rows of content is displayed.
-        Default `False`. 
+        Default `False`.
     :param left: Distance to the left edge of the :class:`.FloatContainer`.
     :param right: Distance to the right edge of the :class:`.FloatContainer`.
     :param top: Distance to the top of the :class:`.FloatContainer`.
