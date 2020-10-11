@@ -789,19 +789,21 @@ class FloatContainer(Container):
     def preferred_height(self, width: int, max_available_height: int) -> Dimension:
         """
         Return the preferred height of the float container.
-        This includes the height of the child floats, especially when
-        one of the floats is a completion menu bound to the current cursor position.
+        This includes the height of the child floats flagged for dont_shrink_height.
         """
         content_ph = self.content.preferred_height(width, max_available_height)
 
         def get_float_ph():
             for f in self.floats:
-                h = f.content.preferred_height(width, max_available_height).preferred
-                if h > 0 and getattr(f, "ycursor", False):
-                    h += (
-                        content_ph.preferred
-                    )  # Assumes float is tied to current input point in background
-                yield h
+                if f.dont_shrink_height:
+                    h = f.content.preferred_height(width, max_available_height).preferred
+                    if h > 0 and getattr(f, "ycursor", False):
+                        h += (
+                            content_ph.preferred
+                        )  # Assumes float is tied to current input point in background
+                else:
+                    h = 0
+                yield h  # FIXME: should yield just selected floats, handle yield none case.
 
         floats_ph = max(get_float_ph())
         return Dimension(
@@ -965,9 +967,12 @@ class FloatContainer(Container):
             else:
                 height = fl_height
 
-            # Reduce height if not enough space. (We can use the height
-            # when the content requires it.)
-            if height > write_position.height - ypos:
+            # Reduce height if not enough space.
+            # Dan't do this for dont_shrink_height floats, even if they would fit *above* cursor, 
+            # because render has already determined height of FloatContainer and moving the 
+            # float above cursor would still leave a blank line at bottom.
+            # For "regular" floats, either fit above cursor or trim to fit below.
+            if (not fl.dont_shrink_height) and height > write_position.height - ypos:
                 if write_position.height - ypos + 1 >= ypos:
                     # When the space below the cursor is more than
                     # the space above, just reduce the height.
@@ -1054,7 +1059,8 @@ class Float:
 
     :param width: :class:`.Dimension` or callable which returns a :class:`.Dimension`.
     :param height: :class:`.Dimension` or callable which returns a :class:`.Dimension`.
-
+    :param dont_shrink_height" When `True`, ensure all rows of content is displayed.
+        Default `False`. 
     :param left: Distance to the left edge of the :class:`.FloatContainer`.
     :param right: Distance to the right edge of the :class:`.FloatContainer`.
     :param top: Distance to the top of the :class:`.FloatContainer`.
@@ -1080,6 +1086,7 @@ class Float:
         left: Optional[int] = None,
         width: Optional[Union[int, Callable[[], int]]] = None,
         height: Optional[Union[int, Callable[[], int]]] = None,
+        dont_shrink_height: bool = False,
         xcursor: bool = False,
         ycursor: bool = False,
         attach_to_window: Optional[AnyContainer] = None,
@@ -1098,6 +1105,7 @@ class Float:
 
         self.width = width
         self.height = height
+        self.dont_shrink_height = dont_shrink_height
 
         self.xcursor = xcursor
         self.ycursor = ycursor

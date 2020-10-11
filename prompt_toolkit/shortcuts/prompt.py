@@ -658,6 +658,7 @@ class PromptSession(Generic[_T]):
                         Float(
                             xcursor=True,
                             ycursor=True,
+                            dont_shrink_height=True,
                             transparent=True,
                             content=CompletionsMenu(
                                 max_height=16,
@@ -670,6 +671,7 @@ class PromptSession(Generic[_T]):
                             xcursor=True,
                             ycursor=True,
                             transparent=True,
+                            dont_shrink_height=True,
                             content=MultiColumnCompletionsMenu(
                                 max_rows=(lambda: self.completion_menu_rows),
                                 show_meta=True,
