@@ -1,4 +1,4 @@
-from .base import ProgressBar
+from .base import ProgressBar, ProgressBarCounter
 from .formatters import (
     Bar,
     Formatter,
@@ -15,6 +15,7 @@ from .formatters import (
 
 __all__ = [
     "ProgressBar",
+    "ProgressBarCounter",
     # Formatters.
     "Formatter",
     "Text",
