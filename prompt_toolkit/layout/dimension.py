@@ -39,7 +39,7 @@ class Dimension:
         max: Optional[int] = None,
         weight: Optional[int] = None,
         preferred: Optional[int] = None,
-    ):
+    ) -> None:
         if weight is not None:
             assert weight >= 0  # Also cannot be a float.
 

@@ -59,7 +59,7 @@ class _ImmutableLineList(list):
     pop = _error
     remove = _error
     reverse = _error
-    sort = _error
+    sort = _error  # type: ignore
 
 
 class _DocumentCache:

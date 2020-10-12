@@ -512,7 +512,7 @@ class MultiColumnCompletionMenuControl(UIControl):
         """
         return max(get_cwidth(c.display_text) for c in complete_state.completions) + 1
 
-    def mouse_handler(self, mouse_event: MouseEvent) -> Optional["NotImplemented"]:
+    def mouse_handler(self, mouse_event: MouseEvent) -> "NotImplementedOrNone":
         """
         Handle scroll and click events.
         """
