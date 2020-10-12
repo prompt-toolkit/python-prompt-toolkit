@@ -1,6 +1,23 @@
 CHANGELOG
 =========
 
+3.0.8: 2020-10-12
+-----------------
+
+New features:
+- Added `validator` parameter to `input_dialog`.
+
+Fixes:
+- Cope with stdout not having a working `fileno`.
+- Handle situation when /dev/null is piped into stdin, or when stdin is closed
+  somehow.
+- Fix for telnet/ssh server: `isatty` method was not implemented.
+- Display correct error when a tuple is passed into `to_formatted_text`.
+- Pass along WORD parameter in `Document._is_word_before_cursor_complete`.
+  Fixes some key bindings.
+- Expose `ProgressBarCounter` in shortcuts module.
+
+
 3.0.7: 2020-08-29
 -----------------
 
