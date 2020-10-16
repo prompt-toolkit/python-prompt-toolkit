@@ -24,6 +24,7 @@ Example::
         s = PromptSession()
         result = s.prompt('Say something: ')
 """
+import warnings
 from asyncio import get_event_loop
 from enum import Enum
 from functools import partial
@@ -38,7 +39,6 @@ from typing import (
     Union,
     cast,
 )
-import warnings
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app
@@ -226,105 +226,107 @@ _T = TypeVar("_T")
 
 class PromptSession(Generic[_T]):
     """
-    PromptSession for a prompt application, which can be used as a GNU Readline
-    replacement.
+        PromptSession for a prompt application, which can be used as a GNU Readline
+        replacement.
 
-    This is a wrapper around a lot of ``prompt_toolkit`` functionality and can
-    be a replacement for `raw_input`.
+        This is a wrapper around a lot of ``prompt_toolkit`` functionality and can
+        be a replacement for `raw_input`.
 
-    All parameters that expect "formatted text" can take either just plain text
-    (a unicode object), a list of ``(style_str, text)`` tuples or an HTML object.
+        All parameters that expect "formatted text" can take either just plain text
+        (a unicode object), a list of ``(style_str, text)`` tuples or an HTML object.
 
-    Example usage::
+        Example usage::
 
-        s = PromptSession(message='>')
-        text = s.prompt()
+            s = PromptSession(message='>')
+            text = s.prompt()
 
-    :param message: Plain text or formatted text to be shown before the prompt.
-        This can also be a callable that returns formatted text.
-    :param multiline: `bool` or :class:`~prompt_toolkit.filters.Filter`.
-        When True, prefer a layout that is more adapted for multiline input.
-        Text after newlines is automatically indented, and search/arg input is
-        shown below the input, instead of replacing the prompt.
-    :param wrap_lines: `bool` or :class:`~prompt_toolkit.filters.Filter`.
-        When True (the default), automatically wrap long lines instead of
-        scrolling horizontally.
-    :param is_password: Show asterisks instead of the actual typed characters.
-    :param editing_mode: ``EditingMode.VI`` or ``EditingMode.EMACS``.
-    :param vi_mode: `bool`, if True, Identical to ``editing_mode=EditingMode.VI``.
-    :param complete_while_typing: `bool` or
-        :class:`~prompt_toolkit.filters.Filter`. Enable autocompletion while
-        typing.
-    :param validate_while_typing: `bool` or
-        :class:`~prompt_toolkit.filters.Filter`. Enable input validation while
-        typing.
-    :param enable_history_search: `bool` or
-        :class:`~prompt_toolkit.filters.Filter`. Enable up-arrow parting
-        string matching.
-    :param search_ignore_case:
-        :class:`~prompt_toolkit.filters.Filter`. Search case insensitive.
-    :param lexer: :class:`~prompt_toolkit.lexers.Lexer` to be used for the
-        syntax highlighting.
-    :param validator: :class:`~prompt_toolkit.validation.Validator` instance
-        for input validation.
-    :param completer: :class:`~prompt_toolkit.completion.Completer` instance
-        for input completion.
-    :param complete_in_thread: `bool` or
-        :class:`~prompt_toolkit.filters.Filter`. Run the completer code in a
-        background thread in order to avoid blocking the user interface.
-        For ``CompleteStyle.READLINE_LIKE``, this setting has no effect. There
-        we always run the completions in the main thread.
-    :param completion_menu_rows: Maximum number of rows of completions displayed.
-        Must be > 0, but actual rows displayed is limited by render available height.
-    :param auto_suggest: :class:`~prompt_toolkit.auto_suggest.AutoSuggest`
-        instance for input suggestions.
-    :param style: :class:`.Style` instance for the color scheme.
-    :param include_default_pygments_style: `bool` or
-        :class:`~prompt_toolkit.filters.Filter`. Tell whether the default
-        styling for Pygments lexers has to be included. By default, this is
-        true, but it is recommended to be disabled if another Pygments style is
-        passed as the `style` argument, otherwise, two Pygments styles will be
-        merged.
-    :param style_transformation:
-        :class:`~prompt_toolkit.style.StyleTransformation` instance.
-    :param swap_light_and_dark_colors: `bool` or
-        :class:`~prompt_toolkit.filters.Filter`. When enabled, apply
-        :class:`~prompt_toolkit.style.SwapLightAndDarkStyleTransformation`.
-        This is useful for switching between dark and light terminal
-        backgrounds.
-    :param enable_system_prompt: `bool` or
-        :class:`~prompt_toolkit.filters.Filter`. Pressing Meta+'!' will show
-        a system prompt.
-    :param enable_suspend: `bool` or :class:`~prompt_toolkit.filters.Filter`.
-        Enable Control-Z style suspension.
-    :param enable_open_in_editor: `bool` or
-        :class:`~prompt_toolkit.filters.Filter`. Pressing 'v' in Vi mode or
-        C-X C-E in emacs mode will open an external editor.
-    :param history: :class:`~prompt_toolkit.history.History` instance.
-    :param clipboard: :class:`~prompt_toolkit.clipboard.Clipboard` instance.
-        (e.g. :class:`~prompt_toolkit.clipboard.InMemoryClipboard`)
-    :param rprompt: Text or formatted text to be displayed on the right side.
-        This can also be a callable that returns (formatted) text.
-    :param bottom_toolbar: Formatted text or callable which is supposed to
-        return formatted text.
-    :param prompt_continuation: Text that needs to be displayed for a multiline
-        prompt continuation. This can either be formatted text or a callable
-        that takes a `prompt_width`, `line_number` and `wrap_count` as input
-        and returns formatted text. When this is `None` (the default), then
-        `prompt_width` spaces will be used.
-    :param complete_style: ``CompleteStyle.COLUMN``,
-        ``CompleteStyle.MULTI_COLUMN`` or ``CompleteStyle.READLINE_LIKE``.
-    :param mouse_support: `bool` or :class:`~prompt_toolkit.filters.Filter`
-        to enable mouse support.
-    :param placeholder: Text to be displayed when no input has been given
-        yet. Unlike the `default` parameter, this won't be returned as part of
-        the output ever. This can be formatted text or a callable that returns
-        formatted text.
-    :param refresh_interval: (number; in seconds) When given, refresh the UI
-        every so many seconds.
-    :param input: `Input` object. (Note that the preferred way to change the
-        input/output is by creating an `AppSession`.)
-    :param output: `Output` object.
+        :param message: Plain text or formatted text to be shown before the prompt.
+            This can also be a callable that returns formatted text.
+        :param multiline: `bool` or :class:`~prompt_toolkit.filters.Filter`.
+            When True, prefer a layout that is more adapted for multiline input.
+            Text after newlines is automatically indented, and search/arg input is
+            shown below the input, instead of replacing the prompt.
+        :param wrap_lines: `bool` or :class:`~prompt_toolkit.filters.Filter`.
+            When True (the default), automatically wrap long lines instead of
+            scrolling horizontally.
+        :param is_password: Show asterisks instead of the actual typed characters.
+        :param editing_mode: ``EditingMode.VI`` or ``EditingMode.EMACS``.
+        :param vi_mode: `bool`, if True, Identical to ``editing_mode=EditingMode.VI``.
+        :param complete_while_typing: `bool` or
+            :class:`~prompt_toolkit.filters.Filter`. Enable autocompletion while
+            typing.
+        :param validate_while_typing: `bool` or
+            :class:`~prompt_toolkit.filters.Filter`. Enable input validation while
+            typing.
+        :param enable_history_search: `bool` or
+            :class:`~prompt_toolkit.filters.Filter`. Enable up-arrow parting
+            string matching.
+        :param search_ignore_case:
+            :class:`~prompt_toolkit.filters.Filter`. Search case insensitive.
+        :param lexer: :class:`~prompt_toolkit.lexers.Lexer` to be used for the
+            syntax highlighting.
+        :param validator: :class:`~prompt_toolkit.validation.Validator` instance
+            for input validation.
+        :param completer: :class:`~prompt_toolkit.completion.Completer` instance
+            for input completion.
+        :param complete_in_thread: `bool` or
+            :class:`~prompt_toolkit.filters.Filter`. Run the completer code in a
+            background thread in order to avoid blocking the user interface.
+            For ``CompleteStyle.READLINE_LIKE``, this setting has no effect. There
+            we always run the completions in the main thread.
+        :param reserve_space_for_menu: Space to be reserved for displaying the menu.
+    -        (Deprecated.  See `completion_menu_rows` instead.)
+        :param completion_menu_rows: Maximum number of rows of completions displayed.
+            Must be > 0, actual rows displayed depends on actual number of completions.
+        :param auto_suggest: :class:`~prompt_toolkit.auto_suggest.AutoSuggest`
+            instance for input suggestions.
+        :param style: :class:`.Style` instance for the color scheme.
+        :param include_default_pygments_style: `bool` or
+            :class:`~prompt_toolkit.filters.Filter`. Tell whether the default
+            styling for Pygments lexers has to be included. By default, this is
+            true, but it is recommended to be disabled if another Pygments style is
+            passed as the `style` argument, otherwise, two Pygments styles will be
+            merged.
+        :param style_transformation:
+            :class:`~prompt_toolkit.style.StyleTransformation` instance.
+        :param swap_light_and_dark_colors: `bool` or
+            :class:`~prompt_toolkit.filters.Filter`. When enabled, apply
+            :class:`~prompt_toolkit.style.SwapLightAndDarkStyleTransformation`.
+            This is useful for switching between dark and light terminal
+            backgrounds.
+        :param enable_system_prompt: `bool` or
+            :class:`~prompt_toolkit.filters.Filter`. Pressing Meta+'!' will show
+            a system prompt.
+        :param enable_suspend: `bool` or :class:`~prompt_toolkit.filters.Filter`.
+            Enable Control-Z style suspension.
+        :param enable_open_in_editor: `bool` or
+            :class:`~prompt_toolkit.filters.Filter`. Pressing 'v' in Vi mode or
+            C-X C-E in emacs mode will open an external editor.
+        :param history: :class:`~prompt_toolkit.history.History` instance.
+        :param clipboard: :class:`~prompt_toolkit.clipboard.Clipboard` instance.
+            (e.g. :class:`~prompt_toolkit.clipboard.InMemoryClipboard`)
+        :param rprompt: Text or formatted text to be displayed on the right side.
+            This can also be a callable that returns (formatted) text.
+        :param bottom_toolbar: Formatted text or callable which is supposed to
+            return formatted text.
+        :param prompt_continuation: Text that needs to be displayed for a multiline
+            prompt continuation. This can either be formatted text or a callable
+            that takes a `prompt_width`, `line_number` and `wrap_count` as input
+            and returns formatted text. When this is `None` (the default), then
+            `prompt_width` spaces will be used.
+        :param complete_style: ``CompleteStyle.COLUMN``,
+            ``CompleteStyle.MULTI_COLUMN`` or ``CompleteStyle.READLINE_LIKE``.
+        :param mouse_support: `bool` or :class:`~prompt_toolkit.filters.Filter`
+            to enable mouse support.
+        :param placeholder: Text to be displayed when no input has been given
+            yet. Unlike the `default` parameter, this won't be returned as part of
+            the output ever. This can be formatted text or a callable that returns
+            formatted text.
+        :param refresh_interval: (number; in seconds) When given, refresh the UI
+            every so many seconds.
+        :param input: `Input` object. (Note that the preferred way to change the
+            input/output is by creating an `AppSession`.)
+        :param output: `Output` object.
     """
 
     # FIXME: where is this tuple referenced?
@@ -1392,7 +1394,8 @@ def prompt(
     mouse_support: Optional[FilterOrBool] = None,
     input_processors: Optional[List[Processor]] = None,
     placeholder: Optional[AnyFormattedText] = None,
-    completion_menu_rows: Optional[int] = None,
+    completion_menu_rows: int = 5,
+    reserve_space_for_menu: Optional[int] = None,
     enable_system_prompt: Optional[FilterOrBool] = None,
     enable_suspend: Optional[FilterOrBool] = None,
     enable_open_in_editor: Optional[FilterOrBool] = None,
@@ -1443,6 +1446,7 @@ def prompt(
         input_processors=input_processors,
         placeholder=placeholder,
         completion_menu_rows=completion_menu_rows,
+        reserve_space_for_menu=reserve_space_for_menu,
         enable_system_prompt=enable_system_prompt,
         enable_suspend=enable_suspend,
         enable_open_in_editor=enable_open_in_editor,
