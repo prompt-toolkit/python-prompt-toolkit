@@ -78,7 +78,7 @@ default works fine.
 
 There is a third I/O object which is also required by the application, but not
 passed inside. This is the event loop, an
-:class:`~prompt_toolkit.eventloop.EventLoop` instance. This is basically a
+:class:`~prompt_toolkit.eventloop` instance. This is basically a
 while-true loop that waits for user input, and when it receives something (like
 a key press), it will send that to the the appropriate handler, like for
 instance, a key binding.
