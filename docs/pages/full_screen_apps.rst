@@ -234,7 +234,7 @@ condition is satisfied, use a
 Focusing windows
 ^^^^^^^^^^^^^^^^^
 
-Focussing something can be done by calling the
+Focusing something can be done by calling the
 :meth:`~prompt_toolkit.layout.Layout.focus` method. This method is very
 flexible and accepts a :class:`~prompt_toolkit.layout.Window`, a
 :class:`~prompt_toolkit.buffer.Buffer`, a
