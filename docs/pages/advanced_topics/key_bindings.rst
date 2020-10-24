@@ -35,7 +35,7 @@ Key bindings can be defined as follows by creating a
     :kbd:`c-s` is pressed, until :kbd:`c-q` is pressed. It won't be possible to
     bind these keys.
 
-    In order to disable this, execute type the following in your shell, or even
+    In order to disable this, execute the following command in your shell, or even
     add it to your `.bashrc`.
 
     .. code::
