@@ -1,10 +1,6 @@
 import pytest
 
-from prompt_toolkit.application import (
-    Application,
-    get_app,
-    handle_exit_on_key,
-)
+from prompt_toolkit.application import Application, get_app, handle_exit_on_key
 from prompt_toolkit.application.current import set_app
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, _parse_key
 from prompt_toolkit.keys import Keys
@@ -15,9 +11,9 @@ def test_exit_on_key_simple():
     """
     Setting 'exit_on_key' should create a Binding in 'key_binding'
     """
-    with set_dummy_app(exit_on_key='c-c'):
+    with set_dummy_app(exit_on_key="c-c"):
         exit_kb = KeyBindings()
-        exit_kb.add('c-c')(handle_exit_on_key)
+        exit_kb.add("c-c")(handle_exit_on_key)
 
         app = get_app()
 
@@ -36,7 +32,7 @@ def test_without_exit_on_key():
     """
     kb = KeyBindings()
 
-    @kb.add('c-d')
+    @kb.add("c-d")
     def bind(e):
         pass
 
@@ -48,7 +44,7 @@ def test_without_exit_on_key():
 
         app_binding = app.key_bindings.bindings[0]
 
-        assert app_binding.keys == (_parse_key('c-d'),)
+        assert app_binding.keys == (_parse_key("c-d"),)
         assert app_binding.handler == bind
 
 
@@ -57,9 +53,9 @@ def test_exit_on_key_not_override(handlers):
     'exit_on_key' should NOT override a 'key_bindings' Binding with same keys
     """
     kb = KeyBindings()
-    kb.add('c-c')(handlers.control_c)
+    kb.add("c-c")(handlers.control_c)
 
-    with set_dummy_app(exit_on_key='c-c', key_bindings=kb):
+    with set_dummy_app(exit_on_key="c-c", key_bindings=kb):
         app = get_app()
 
         assert len(app.key_bindings.bindings) == 2
@@ -79,23 +75,22 @@ def test_exit_on_key_mixed_bindings():
     """
     kb = KeyBindings()
 
-    @kb.add('c-d')
+    @kb.add("c-d")
     def bind_c_d(event):
         pass
 
-    @kb.add('s-tab')
+    @kb.add("s-tab")
     def bind_s_tab(event):
         pass
 
-    with set_dummy_app(exit_on_key='c-c', key_bindings=kb):
+    with set_dummy_app(exit_on_key="c-c", key_bindings=kb):
         app = get_app()
 
         binding_tuples = [
-            (binding.keys, binding.handler)
-            for binding in app.key_bindings.bindings
+            (binding.keys, binding.handler) for binding in app.key_bindings.bindings
         ]
 
         assert len(binding_tuples) == 3
-        assert ((_parse_key('c-c'),), handle_exit_on_key) in binding_tuples
-        assert ((_parse_key('c-d'),), bind_c_d) in binding_tuples
-        assert ((_parse_key('s-tab'),), bind_s_tab) in binding_tuples
+        assert ((_parse_key("c-c"),), handle_exit_on_key) in binding_tuples
+        assert ((_parse_key("c-d"),), bind_c_d) in binding_tuples
+        assert ((_parse_key("s-tab"),), bind_s_tab) in binding_tuples
