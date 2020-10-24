@@ -323,11 +323,18 @@ named ``_`` (underscore) as well, because we won't refer to this name.
 Modal containers
 ^^^^^^^^^^^^^^^^
 
-All container objects, like :class:`~prompt_toolkit.layout.VSplit` and
-:class:`~prompt_toolkit.layout.HSplit` take a ``modal`` argument.
+The following container objects take a ``modal`` argument
+:class:`~prompt_toolkit.layout.VSplit`,
+:class:`~prompt_toolkit.layout.HSplit`, and
+:class:`~prompt_toolkit.layout.FloatContainer`.
 
-If this flag has been set, then key bindings from the parent are not
-taken into account if one of the children windows has the focus.
+Setting ``modal=True`` makes what is called a **modal** container. Normally, a
+child container would inherit its parent key bindings. This does not apply to
+**modal** containers.
+
+Consider a **modal** container (e.g. :class:`~prompt_toolkit.layout.VSplit`)
+is child of another container, its parent. Any key bindings from the parent
+are not taken into account if the **modal** container (child) has the focus.
 
 This is useful in a complex layout, where many controls have their own key
 bindings, but you only want to enable the key bindings for a certain region of
