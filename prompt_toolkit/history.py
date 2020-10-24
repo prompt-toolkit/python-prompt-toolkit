@@ -1,10 +1,11 @@
 """
 Implementations for the history of a `Buffer`.
 
-NOTE: Notice that there is no `DynamicHistory`. This doesn't work well, because
-      the `Buffer` needs to be able to attach an event handler to the event
-      when a history entry is loaded. This loading can be done asynchronously
-      and making the history swappable would probably break this.
+NOTE: There is no `DynamicHistory`:
+      This doesn't work well, because the `Buffer` needs to be able to attach
+      an event handler to the event when a history entry is loaded. This
+      loading can be done asynchronously and making the history swappable would
+      probably break this.
 """
 import datetime
 import os
