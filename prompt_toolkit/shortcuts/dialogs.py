@@ -177,6 +177,7 @@ def radiolist_dialog(
     cancel_text: str = "Cancel",
     values: Optional[List[Tuple[_T, AnyFormattedText]]] = None,
     style: Optional[BaseStyle] = None,
+    initial_selected: Optional[_T] = None,
 ) -> Application[_T]:
     """
     Display a simple list of element the user can choose amongst.
@@ -191,6 +192,9 @@ def radiolist_dialog(
         get_app().exit(result=radio_list.current_value)
 
     radio_list = RadioList(values)
+
+    if initial_selected:
+        radio_list.current_value = initial_selected
 
     dialog = Dialog(
         title=title,
@@ -215,6 +219,7 @@ def checkboxlist_dialog(
     cancel_text: str = "Cancel",
     values: Optional[List[Tuple[_T, AnyFormattedText]]] = None,
     style: Optional[BaseStyle] = None,
+    initial_selected: Optional[List[_T]] = None,
 ) -> Application[List[_T]]:
     """
     Display a simple list of element the user can choose multiple values amongst.
@@ -229,6 +234,9 @@ def checkboxlist_dialog(
         get_app().exit(result=cb_list.current_values)
 
     cb_list = CheckboxList(values)
+
+    if initial_selected:
+        cb_list.current_values = initial_selected
 
     dialog = Dialog(
         title=title,
