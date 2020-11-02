@@ -201,7 +201,9 @@ passing a :class:`~prompt_toolkit.key_binding.KeyBindings` object:
     from prompt_toolkit.patch_stdout import patch_stdout
     from prompt_toolkit.shortcuts import ProgressBar
 
+    import os
     import time
+    import signal
 
     bottom_toolbar = HTML(' <b>[f]</b> Print "f" <b>[x]</b> Abort.')
 
