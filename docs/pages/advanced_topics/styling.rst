@@ -225,7 +225,7 @@ style can however be loaded and used as follows:
 
 .. code:: python
 
-    from prompt_toolkit.styles.from_pygments import style_from_pygments_cls
+    from prompt_toolkit.styles.pygments import style_from_pygments_cls
     from pygments.styles import get_style_by_name
 
     style = style_from_pygments_cls(get_style_by_name('monokai'))
