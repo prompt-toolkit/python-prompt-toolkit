@@ -422,8 +422,8 @@ class Button:
         " Key bindings for the Button. "
         kb = KeyBindings()
 
-        @kb.add(" ")
         @kb.add("enter")
+        @kb.add(Keys.Space)
         def _(event: E) -> None:
             if self.handler is not None:
                 self.handler()
@@ -692,7 +692,7 @@ class _DialogList(Generic[_T]):
                 )
 
         @kb.add("enter")
-        @kb.add(" ")
+        @kb.add(Keys.Space)
         def _click(event: E) -> None:
             self._handle_enter()
 
