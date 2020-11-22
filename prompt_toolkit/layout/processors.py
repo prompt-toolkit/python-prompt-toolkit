@@ -86,7 +86,7 @@ DisplayToSource = Callable[[int], int]
 
 class TransformationInput:
     """
-    :param control: :class:`.BufferControl` instance.
+    :param buffer_control: :class:`.BufferControl` instance.
     :param lineno: The number of the line to which we apply the processor.
     :param source_to_display: A function that returns the position in the
         `fragments` for any position in the source string. (This takes
