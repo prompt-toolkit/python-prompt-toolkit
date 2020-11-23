@@ -2,7 +2,7 @@
 Renders the command line on the console.
 (Redraws parts of the input line that were changed.)
 """
-from asyncio import FIRST_COMPLETED, Future, create_task, sleep, wait
+from asyncio import FIRST_COMPLETED, Future, ensure_future, sleep, wait
 from collections import deque
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Callable, Deque, Dict, Hashable, Optional, Tuple
@@ -567,8 +567,8 @@ class Renderer:
             self._waiting_for_cpr_futures = deque()
 
         tasks = {
-            create_task(wait_for_responses()),
-            create_task(wait_for_timeout()),
+            ensure_future(wait_for_responses()),
+            ensure_future(wait_for_timeout()),
         }
         _, pending = await wait(tasks, return_when=FIRST_COMPLETED)
         for task in pending:
