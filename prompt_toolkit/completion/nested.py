@@ -10,7 +10,7 @@ from prompt_toolkit.document import Document
 __all__ = ["NestedCompleter"]
 
 # NestedDict = Mapping[str, Union['NestedDict', Set[str], None, Completer]]
-NestedDict = Mapping[str, Union[Any, Set[str], None, Completer]]
+NestedDict = Mapping[Union[str, Completion], Union[Any, Set[str], None, Completer]]
 
 
 class NestedCompleter(Completer):
@@ -86,6 +86,10 @@ class NestedCompleter(Completer):
         if " " in text:
             first_term = text.split()[0]
             completer = self.options.get(first_term)
+            if completer is None:
+               matching =  (c for c in self.options.keys() if
+                            isinstance(c, Completion) and c.text==first_term)
+               completer =  self.options.get(next(matching, None))
 
             # If we have a sub completer, use this for the completions.
             if completer is not None:

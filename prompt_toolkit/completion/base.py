@@ -87,7 +87,7 @@ class Completion:
         )
 
     def __hash__(self) -> int:
-        return hash((self.text, self.start_position, self.display, self._display_meta))
+        return hash((self.text, self.start_position, self.style))
 
     @property
     def display_text(self) -> str:
