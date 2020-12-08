@@ -208,7 +208,7 @@ class FileHistory(History):
         if os.path.exists(self.filename):
             with open(self.filename, "rb") as f:
                 for line_bytes in f:
-                    line = line_bytes.decode("utf-8")
+                    line = line_bytes.decode("utf-8", errors="replace")
 
                     if line.startswith("+"):
                         lines.append(line[1:])
