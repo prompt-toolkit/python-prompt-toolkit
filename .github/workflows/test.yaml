@@ -1,0 +1,44 @@
+name: test
+
+on:
+  push: # any branch
+  pull_request:
+    branches: [master]
+
+jobs:
+  test-ubuntu:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Dependencies
+        run: |
+          sudo apt remove python3-pip
+          python -m pip install --upgrade pip
+          python -m pip install . black coverage codecov flake8 isort==5.6.4 mypy pytest readme_renderer
+          pip list
+      - name: Run Tests
+        run: |
+          flake8 prompt_toolkit
+          coverage run -m pytest
+      - name: Type Checker
+        # Check wheather the imports were sorted correctly.
+        # When this fails, please run ./tools/sort-imports.sh      
+        run: |
+          mypy prompt_toolkit
+          isort -c --profile black prompt_toolkit examples tests setup.py
+          black --check prompt_toolkit examples tests setup.py
+      - name: Validate README.md
+        # Ensure that the README renders correctly (required for uploading to PyPI).        
+        run: |
+          python -m readme_renderer README.rst > /dev/null
+      - name: Run codecov
+        run: |
+          codecov
