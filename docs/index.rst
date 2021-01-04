@@ -56,7 +56,7 @@ Thanks to:
 ----------
 
 A special thanks to `all the contributors
-<https://github.com/jonathanslenders/python-prompt-toolkit/graphs/contributors>`_
+<https://github.com/prompt_toolkit/python-prompt-toolkit/graphs/contributors>`_
 for making prompt_toolkit possible.
 
 Also, a special thanks to the `Pygments <http://pygments.org/>`_ and `wcwidth
@@ -90,4 +90,4 @@ Indices and tables
 * :ref:`search`
 
 Prompt_toolkit was created by `Jonathan Slenders
-<http://github.com/jonathanslenders/>`_.
+<http://github.com/prompt_toolkit/>`_.

@@ -337,5 +337,5 @@ interfaces.
 
 The End.
 
-.. _prompt_toolkit: https://github.com/jonathanslenders/python-prompt-toolkit
+.. _prompt_toolkit: https://github.com/prompt_toolkit/python-prompt-toolkit
 .. _Pygments: http://pygments.org/
