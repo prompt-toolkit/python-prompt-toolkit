@@ -631,7 +631,7 @@ class Renderer:
 
         height = min(height, size.rows)
 
-        # When te size changes, don't consider the previous screen.
+        # When the size changes, don't consider the previous screen.
         if self._last_size != size:
             self._last_screen = None
 
@@ -757,6 +757,7 @@ def print_formatted_text(
     # Reset first.
     output.reset_attributes()
     output.enable_autowrap()
+    last_attrs: Optional[Attrs] = None
 
     # Print all (style_str, text) tuples.
     attrs_for_style_string = _StyleStringToAttrsCache(
@@ -766,10 +767,13 @@ def print_formatted_text(
     for style_str, text, *_ in fragments:
         attrs = attrs_for_style_string[style_str]
 
-        if attrs:
-            output.set_attributes(attrs, color_depth)
-        else:
-            output.reset_attributes()
+        # Set style attributes if something changed.
+        if attrs != last_attrs:
+            if attrs:
+                output.set_attributes(attrs, color_depth)
+            else:
+                output.reset_attributes()
+        last_attrs = attrs
 
         # Eliminate carriage returns
         text = text.replace("\r", "")
