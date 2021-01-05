@@ -18,7 +18,7 @@ from .formatted_text import ANSI, HTML
 from .shortcuts import PromptSession, print_formatted_text, prompt
 
 # Don't forget to update in `docs/conf.py`!
-__version__ = "3.0.8"
+__version__ = "3.0.9"
 
 # Version tuple.
 VERSION = tuple(__version__.split("."))

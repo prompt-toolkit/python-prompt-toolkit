@@ -1,6 +1,19 @@
 CHANGELOG
 =========
 
+3.0.9: 2021-01-05
+-----------------
+
+New features:
+- Handle c-tab for TERM=linux.
+
+Fixes:
+- Improve rendering speed of `print_formatted_text`. (Don't render styling
+  attributes to output between fragments that have identical styling.)
+- Gracefully handle `FileHistory` decoding errors.
+- Prevent asyncio deprecation warnings.
+
+
 3.0.8: 2020-10-12
 -----------------
 
