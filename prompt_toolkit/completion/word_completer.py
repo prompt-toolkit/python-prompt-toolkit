@@ -30,7 +30,7 @@ class WordCompleter(Completer):
 
     def __init__(
         self,
-        words: Union[List[str], Callable[[], List[str]]],
+        words: Union[List[Union[str, Completion]], Callable[[], Union[str, Completion]]],
         ignore_case: bool = False,
         meta_dict: Optional[Dict[str, str]] = None,
         WORD: bool = False,
@@ -78,7 +78,12 @@ class WordCompleter(Completer):
             else:
                 return word.startswith(word_before_cursor)
 
+        start_position = -len(word_before_cursor)
         for a in words:
-            if word_matches(a):
+            if isinstance(a, Completion):
+                if word_matches(a.text):
+                    a.start_position = start_position
+                    yield(a)
+            elif word_matches(a):
                 display_meta = self.meta_dict.get(a, "")
-                yield Completion(a, -len(word_before_cursor), display_meta=display_meta)
+                yield Completion(a, start_position, display_meta=display_meta)
