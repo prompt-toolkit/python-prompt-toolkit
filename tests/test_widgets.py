@@ -14,5 +14,5 @@ def test_defaulf_button():
 
 
 def test_custom_button():
-    button = Button("Exit", left_char="[", right_char="]")
+    button = Button("Exit", left_symbol="[", right_symbol="]")
     assert _to_text(button) == "[   Exit   ]"

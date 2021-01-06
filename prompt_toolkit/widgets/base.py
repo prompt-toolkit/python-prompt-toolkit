@@ -377,13 +377,13 @@ class Button:
         text: str,
         handler: Optional[Callable[[], None]] = None,
         width: int = 12,
-        left_char: str = "<",
-        right_char: str = ">",
+        left_symbol: str = "<",
+        right_symbol: str = ">",
     ) -> None:
 
         self.text = text
-        self.left_char = left_char
-        self.right_char = right_char
+        self.left_symbol = left_symbol
+        self.right_symbol = right_symbol
         self.handler = handler
         self.width = width
         self.control = FormattedTextControl(
@@ -409,7 +409,7 @@ class Button:
         )
 
     def _get_text_fragments(self) -> StyleAndTextTuples:
-        width = self.width - (len(self.left_char) + len(self.right_char))
+        width = self.width - (len(self.left_symbol) + len(self.right_symbol))
         text = ("{{:^{}}}".format(width)).format(self.text)
 
         def handler(mouse_event: MouseEvent) -> None:
@@ -420,10 +420,10 @@ class Button:
                 self.handler()
 
         return [
-            ("class:button.arrow", self.left_char, handler),
+            ("class:button.arrow", self.left_symbol, handler),
             ("[SetCursorPosition]", ""),
             ("class:button.text", text, handler),
-            ("class:button.arrow", self.right_char, handler),
+            ("class:button.arrow", self.right_symbol, handler),
         ]
 
     def _get_key_bindings(self) -> KeyBindings:
