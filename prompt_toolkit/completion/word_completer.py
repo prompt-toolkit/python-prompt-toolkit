@@ -1,7 +1,8 @@
-from typing import Callable, Dict, Iterable, List, Optional, Pattern, Union
+from typing import Callable, Iterable, List, Mapping, Optional, Pattern, Union
 
 from prompt_toolkit.completion import CompleteEvent, Completer, Completion
 from prompt_toolkit.document import Document
+from prompt_toolkit.formatted_text import AnyFormattedText
 
 __all__ = [
     "WordCompleter",
@@ -32,7 +33,8 @@ class WordCompleter(Completer):
         self,
         words: Union[List[str], Callable[[], List[str]]],
         ignore_case: bool = False,
-        meta_dict: Optional[Dict[str, str]] = None,
+        display_dict: Optional[Mapping[str, AnyFormattedText]] = None,
+        meta_dict: Optional[Mapping[str, AnyFormattedText]] = None,
         WORD: bool = False,
         sentence: bool = False,
         match_middle: bool = False,
@@ -43,6 +45,7 @@ class WordCompleter(Completer):
 
         self.words = words
         self.ignore_case = ignore_case
+        self.display_dict = display_dict or {}
         self.meta_dict = meta_dict or {}
         self.WORD = WORD
         self.sentence = sentence
@@ -80,5 +83,11 @@ class WordCompleter(Completer):
 
         for a in words:
             if word_matches(a):
+                display = self.display_dict.get(a, a)
                 display_meta = self.meta_dict.get(a, "")
-                yield Completion(a, -len(word_before_cursor), display_meta=display_meta)
+                yield Completion(
+                    a,
+                    -len(word_before_cursor),
+                    display=display,
+                    display_meta=display_meta,
+                )
