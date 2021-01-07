@@ -75,6 +75,7 @@ ANSI_SEQUENCES: Dict[str, Union[Keys, Tuple[Keys, ...]]] = {
     "\x1b[8~": Keys.End,  # xrvt
     "\x1b[Z": Keys.BackTab,  # shift + tab
     "\x1b\x09": Keys.BackTab,  # Linux console
+    "\x1b[~": Keys.BackTab,  # Windows console
     # --
     # Function keys.
     "\x1bOP": Keys.F1,
