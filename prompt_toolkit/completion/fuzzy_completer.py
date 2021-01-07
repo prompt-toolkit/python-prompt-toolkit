@@ -133,7 +133,9 @@ class FuzzyCompleter(Completer):
 
         if m.match_length == 0:
             # No highlighting when we have zero length matches (no input text).
-            return word
+            # In this case, use the original display text (which can include
+            # additional styling or characters).
+            return m.completion.display
 
         result: StyleAndTextTuples = []
 
