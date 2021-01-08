@@ -1,6 +1,19 @@
 CHANGELOG
 =========
 
+3.0.10: 2021-01-08
+------------------
+
+New features:
+- Improved `WordCompleter`: accept `display_dict`. Also accept formatted text
+  for both `display_dict` and `meta_dict`.
+- Allow customization of button arrows.
+
+Fixes:
+- Correctly recognize backtab on Windows.
+- Show original display text in fuzzy completer if no filtering was done.
+
+
 3.0.9: 2021-01-05
 -----------------
 
