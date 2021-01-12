@@ -777,7 +777,7 @@ class _DialogList(Generic[_T]):
             if checked and not self.select_line:
                 result.append((style, "*"))
             elif self.select_line:
-               result.append((style, ""))
+                result.append((style, ""))
             else:
                 result.append((style, " "))
 
@@ -801,6 +801,7 @@ class _DialogList(Generic[_T]):
     def __pt_container__(self) -> Container:
         return self.window
 
+
 class SelectList(_DialogList[_T]):
     """
     List of radio buttons. Only one can be checked at the same time.
@@ -816,6 +817,7 @@ class SelectList(_DialogList[_T]):
     selected_style = "class:select-selected"
     checked_style = "class:select-checked"
     multiple_selection = False
+
 
 class RadioList(_DialogList[_T]):
     """
