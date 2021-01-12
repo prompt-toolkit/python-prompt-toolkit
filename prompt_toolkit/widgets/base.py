@@ -662,6 +662,7 @@ class _DialogList(Generic[_T]):
     checked_style: str = ""
     multiple_selection: bool = False
     show_scrollbar: bool = True
+    select_line: bool = False
 
     def __init__(self, values: Sequence[Tuple[_T, AnyFormattedText]]) -> None:
         assert len(values) > 0
@@ -773,14 +774,21 @@ class _DialogList(Generic[_T]):
             if selected:
                 result.append(("[SetCursorPosition]", ""))
 
-            if checked:
+            if checked and not self.select_line:
                 result.append((style, "*"))
+            elif self.select_line:
+               result.append((style, ""))
             else:
                 result.append((style, " "))
 
             result.append((style, self.close_character))
             result.append((self.default_style, " "))
-            result.extend(to_formatted_text(value[1], style=self.default_style))
+            if self.select_line and checked:
+                result.extend(to_formatted_text(value[1] + ' ' * 500, style=self.checked_style))
+            elif self.select_line and selected:
+                result.extend(to_formatted_text(value[1] + ' ' * 500, style=self.selected_style))
+            else:
+                result.extend(to_formatted_text(value[1], style=self.default_style))
             result.append(("", "\n"))
 
         # Add mouse handler to all fragments.
@@ -793,6 +801,21 @@ class _DialogList(Generic[_T]):
     def __pt_container__(self) -> Container:
         return self.window
 
+class SelectList(_DialogList[_T]):
+     """
+     List of radio buttons. Only one can be checked at the same time.
+
+     :param values: List of (value, label) tuples.
+     """
+
+     open_character = ""
+     close_character = ""
+     select_line = True
+     container_style = "class:select-list"
+     default_style = "class:select"
+     selected_style = "class:select-selected"
+     checked_style = "class:select-checked"
+     multiple_selection = False
 
 class RadioList(_DialogList[_T]):
     """
