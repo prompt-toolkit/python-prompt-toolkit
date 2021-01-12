@@ -802,20 +802,20 @@ class _DialogList(Generic[_T]):
         return self.window
 
 class SelectList(_DialogList[_T]):
-     """
-     List of radio buttons. Only one can be checked at the same time.
+    """
+    List of radio buttons. Only one can be checked at the same time.
 
-     :param values: List of (value, label) tuples.
-     """
+    :param values: List of (value, label) tuples.
+    """
 
-     open_character = ""
-     close_character = ""
-     select_line = True
-     container_style = "class:select-list"
-     default_style = "class:select"
-     selected_style = "class:select-selected"
-     checked_style = "class:select-checked"
-     multiple_selection = False
+    open_character = ""
+    close_character = ""
+    select_line = True
+    container_style = "class:select-list"
+    default_style = "class:select"
+    selected_style = "class:select-selected"
+    checked_style = "class:select-checked"
+    multiple_selection = False
 
 class RadioList(_DialogList[_T]):
     """
