@@ -127,9 +127,9 @@ class SystemToolbar:
             event.app.layout.focus_last()
 
         @handle("enter", filter=focused)
-        def _accept(event: E) -> None:
+        async def _accept(event: E) -> None:
             " Run system command. "
-            event.app.run_system_command(
+            await event.app.run_system_command(
                 self.system_buffer.text,
                 display_before_text=self._get_display_before_text(),
             )
@@ -149,7 +149,7 @@ class SystemToolbar:
             event.app.layout.focus_last()
 
         @handle("enter", filter=focused)
-        def _accept_vi(event: E) -> None:
+        async def _accept_vi(event: E) -> None:
             " Run system command. "
             event.app.vi_state.input_mode = InputMode.NAVIGATION
             event.app.run_system_command(

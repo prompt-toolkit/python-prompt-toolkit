@@ -2,8 +2,10 @@
 """
 Example of adding a custom key binding to a prompt.
 """
+import asyncio
+
 from prompt_toolkit import prompt
-from prompt_toolkit.application import run_in_terminal
+from prompt_toolkit.application import in_terminal, run_in_terminal
 from prompt_toolkit.key_binding import KeyBindings
 
 
@@ -51,6 +53,19 @@ def main():
             print("hello world")
 
         run_in_terminal(print_hello)
+
+    @bindings.add("c-k")
+    async def _(event):
+        """
+        Example of asyncio coroutine as a key binding.
+        """
+        try:
+            for i in range(5):
+                async with in_terminal():
+                    print("hello")
+                await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            print("Prompt terminated before we completed.")
 
     # Read input.
     print('Press F4 to insert "hello world", type "xy" to insert "z":')

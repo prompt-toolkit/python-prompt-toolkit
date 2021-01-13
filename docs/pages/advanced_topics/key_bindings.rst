@@ -282,6 +282,33 @@ called, even if there's an active `ab` binding.
 
 This is mainly useful in order to conditionally override another binding.
 
+Asyncio coroutines
+------------------
+
+Key binding handlers can be asyncio coroutines.
+
+.. code:: python
+
+    from prompt_toolkit.application import in_terminal
+
+    @bindings.add('x')
+    async def print_hello(event):
+        """
+        Pressing 'x' will print 5 times "hello" in the background above the
+        prompt.
+        """
+        for i in range(5):
+            # Print hello above the current prompt.
+            async with in_terminal():
+                print('hello')
+
+            # Sleep, but allow further input editing in the meantime.
+            await asyncio.sleep(1)
+
+If the user accepts the input on the prompt, while this coroutine is not yet
+finished , an `asyncio.CancelledError` exception will be thrown in this
+coroutine.
+
 
 Timeouts
 --------

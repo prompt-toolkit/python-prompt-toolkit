@@ -37,6 +37,7 @@ been assigned, through the `key_binding` decorator.::
 from abc import ABCMeta, abstractmethod, abstractproperty
 from typing import (
     TYPE_CHECKING,
+    Awaitable,
     Callable,
     Hashable,
     List,
@@ -67,7 +68,7 @@ __all__ = [
     "GlobalOnlyKeyBindings",
 ]
 
-KeyHandlerCallable = Callable[["KeyPressEvent"], None]
+KeyHandlerCallable = Callable[["KeyPressEvent"], Union[None, Awaitable[None]]]
 
 
 class Binding:
@@ -98,7 +99,11 @@ class Binding:
         self.record_in_macro = to_filter(record_in_macro)
 
     def call(self, event: "KeyPressEvent") -> None:
-        self.handler(event)
+        result = self.handler(event)
+
+        # If the handler is a coroutine, create an asyncio task.
+        if result is not None:
+            event.app.create_background_task(result)
 
     def __repr__(self) -> str:
         return "%s(keys=%r, handler=%r)" % (
