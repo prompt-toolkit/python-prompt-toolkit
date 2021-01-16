@@ -332,6 +332,8 @@ class ProgressBarCounter(Generic[_CounterItem]):
 
         self.start_time = datetime.datetime.now()
         self.stop_time: Optional[datetime.datetime] = None
+        self.duration_stopped = datetime.timedelta(0)
+        self.most_recent_time: Optional[datetime.datetime] = None
         self.progress_bar = progress_bar
         self.data = data
         self.items_completed = 0
@@ -371,6 +373,7 @@ class ProgressBarCounter(Generic[_CounterItem]):
         (Can be called manually in case we don't have a collection to loop through.)
         """
         self.items_completed += 1
+        self.most_recent_time = datetime.datetime.now()
         self.progress_bar.invalidate()
 
     @property
@@ -418,6 +421,9 @@ class ProgressBarCounter(Generic[_CounterItem]):
             if not self.stop_time:
                 self.stop_time = datetime.datetime.now()
         else:
+            # Update time spend stopped
+            if self.stop_time:
+                self.duration_stopped += datetime.datetime.now() - self.stop_time
             # Clearing any previously set stop_time.
             self.stop_time = None
 
@@ -434,18 +440,40 @@ class ProgressBarCounter(Generic[_CounterItem]):
         Return how much time has been elapsed since the start.
         """
         if self.stop_time is None:
-            return datetime.datetime.now() - self.start_time
+            return datetime.datetime.now() - self.start_time - self.duration_stopped
         else:
-            return self.stop_time - self.start_time
+            return self.stop_time - self.start_time - self.duration_stopped
+
+    @property
+    def average_time_per_item(self) -> Optional[datetime.timedelta]:
+        """
+        Timedelta representing the average time per item elapsed so far.
+        """
+        if self.items_completed == 0 or not self.most_recent_time:
+            return None
+        else:
+            return (
+                self.most_recent_time - self.start_time - self.duration_stopped
+            ) / self.items_completed
 
     @property
     def time_left(self) -> Optional[datetime.timedelta]:
         """
         Timedelta representing the time left.
         """
-        if self.total is None or not self.percentage:
+        if (
+            self.total is None
+            or not self.percentage
+            or not self.average_time_per_item
+            or not self.most_recent_time
+        ):
             return None
         elif self.done or self.stopped:
             return datetime.timedelta(0)
         else:
-            return self.time_elapsed * (100 - self.percentage) / self.percentage
+            return self.average_time_per_item * (
+                self.total - self.items_completed
+            ) - min(
+                datetime.datetime.now() - self.most_recent_time,
+                self.average_time_per_item,
+            )
