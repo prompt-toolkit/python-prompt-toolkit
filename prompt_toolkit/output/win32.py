@@ -95,7 +95,7 @@ class Win32Output(Output):
         self.default_color_depth = default_color_depth
 
         self._buffer: List[str] = []
-        self.stdout = stdout
+        self.stdout: TextIO = stdout
         self.hconsole = HANDLE(windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE))
 
         self._in_alternate_screen = False
