@@ -2,6 +2,7 @@
 Interface for an output.
 """
 from abc import ABCMeta, abstractmethod
+from typing import Optional, TextIO
 
 from prompt_toolkit.data_structures import Size
 from prompt_toolkit.styles import Attrs
@@ -23,6 +24,8 @@ class Output(metaclass=ABCMeta):
     :class:`~prompt_toolkit.output.vt100.Vt100_Output` and
     :class:`~prompt_toolkit.output.win32.Win32Output`.
     """
+
+    stdout: Optional[TextIO] = None
 
     @abstractmethod
     def fileno(self) -> int:

@@ -17,13 +17,16 @@ Usage::
 Multiple applications can run in the body of the context manager, one after the
 other.
 """
+import asyncio
+import queue
 import sys
 import threading
-from asyncio import get_event_loop
+import time
 from contextlib import contextmanager
-from typing import Generator, List, Optional, TextIO, cast
+from typing import Generator, List, Optional, TextIO, Union, cast
 
-from .application import run_in_terminal
+from .application import get_app_session, run_in_terminal
+from .output import Output
 
 __all__ = [
     "patch_stdout",
@@ -49,71 +52,175 @@ def patch_stdout(raw: bool = False) -> Generator[None, None, None]:
     :param raw: (`bool`) When True, vt100 terminal escape sequences are not
                 removed/escaped.
     """
-    proxy = cast(TextIO, StdoutProxy(raw=raw))
+    with StdoutProxy(raw=raw) as proxy:
+        original_stdout = sys.stdout
+        original_stderr = sys.stderr
 
-    original_stdout = sys.stdout
-    original_stderr = sys.stderr
+        # Enter.
+        sys.stdout = cast(TextIO, proxy)
+        sys.stderr = cast(TextIO, proxy)
 
-    # Enter.
-    sys.stdout = proxy
-    sys.stderr = proxy
+        try:
+            yield
+        finally:
+            sys.stdout = original_stdout
+            sys.stderr = original_stderr
 
-    try:
-        yield
-    finally:
-        # Exit.
-        proxy.flush()
 
-        sys.stdout = original_stdout
-        sys.stderr = original_stderr
+class _Done:
+    " Sentinel value for stopping the stdout proxy. "
 
 
 class StdoutProxy:
     """
-    Proxy object for stdout which captures everything and prints output above
-    the current application.
+    File-like object, which prints everything written to it, output above the
+    current application/prompt. This class is compatible with other file
+    objects and can be used as a drop-in replacement for `sys.stdout` or can
+    for instance be passed to `logging.StreamHandler`.
+
+    The current application, above which we print, is determined by looking
+    what application currently runs in the `AppSession` that is active during
+    the creation of this instance.
+
+    This class can be used as a context manager.
+
+    In order to avoid having to repaint the prompt continuously for every
+    little write, a short delay of `sleep_between_writes` seconds will be added
+    between writes in order to bundle many smaller writes in a short timespan.
     """
 
     def __init__(
-        self, raw: bool = False, original_stdout: Optional[TextIO] = None
+        self,
+        sleep_between_writes: float = 0.2,
+        raw: bool = False,
     ) -> None:
 
-        original_stdout = original_stdout or sys.__stdout__
-
-        self.original_stdout = original_stdout
+        self.sleep_between_writes = sleep_between_writes
+        self.raw = raw
 
         self._lock = threading.RLock()
-        self._raw = raw
         self._buffer: List[str] = []
 
-        # errors/encoding attribute for compatibility with sys.__stdout__.
-        self.errors = original_stdout.errors
-        self.encoding = original_stdout.encoding
+        # Keep track of the curret app session.
+        self.app_session = get_app_session()
 
-        self.loop = get_event_loop()
+        # See what output is active *right now*. We should do it at this point,
+        # before this `StdoutProxy` instance is possibly assigned to `sys.stdout`.
+        # Otherwise, if `patch_stdout` is used, and no `Output` instance has
+        # been created, then the default output creation code will see this
+        # proxy object as `sys.stdout`, and get in a recursive loop trying to
+        # access `StdoutProxy.isatty()` which will again retrieve the output.
+        self._output: Output = self.app_session.output
 
-    def _write_and_flush(self, text: str) -> None:
+        # Flush thread
+        self._flush_queue: queue.Queue[Union[str, _Done]] = queue.Queue()
+        self._flush_thread = self._start_write_thread()
+        self.closed = False
+
+    def __enter__(self) -> "StdoutProxy":
+        return self
+
+    def __exit__(self, *args) -> None:
+        self.close()
+
+    def close(self) -> None:
+        """
+        Stop `StdoutProxy` proxy.
+
+        This will terminate the write thread, make sure everything is flushed
+        and wait for the write thread to finish.
+        """
+        if not self.closed:
+            self._flush_queue.put(_Done())
+            self._flush_thread.join()
+            self.closed = True
+
+    def _start_write_thread(self) -> threading.Thread:
+        thread = threading.Thread(
+            target=self._write_thread,
+            name="patch-stdout-flush-thread",
+            daemon=True,
+        )
+        thread.start()
+        return thread
+
+    def _write_thread(self) -> None:
+        done = False
+
+        while not done:
+            item = self._flush_queue.get()
+
+            if isinstance(item, _Done):
+                break
+
+            # Don't bother calling when we got an empty string.
+            if not item:
+                continue
+
+            text = []
+            text.append(item)
+
+            # Read the rest of the queue if more data was queued up.
+            while True:
+                try:
+                    item = self._flush_queue.get_nowait()
+                except queue.Empty:
+                    break
+                else:
+                    if isinstance(item, _Done):
+                        done = True
+                    else:
+                        text.append(item)
+
+            app_loop = self._get_app_loop()
+            self._write_and_flush(app_loop, "".join(text))
+
+            # If an application was running that requires repainting, then wait
+            # for a very short time, in order to bundle actual writes and avoid
+            # having to repaint to often.
+            if app_loop is not None:
+                time.sleep(self.sleep_between_writes)
+
+    def _get_app_loop(self) -> Optional[asyncio.AbstractEventLoop]:
+        """
+        Return the event loop for the application currently running in our
+        `AppSession`.
+        """
+        app = self.app_session.app
+
+        if app is None:
+            return None
+
+        return app.loop
+
+    def _write_and_flush(
+        self, loop: Optional[asyncio.AbstractEventLoop], text: str
+    ) -> None:
         """
         Write the given text to stdout and flush.
         If an application is running, use `run_in_terminal`.
         """
-        if not text:
-            # Don't bother calling `run_in_terminal` when there is nothing to
-            # display.
-            return
 
         def write_and_flush() -> None:
-            self.original_stdout.write(text)
-            self.original_stdout.flush()
+            if self.raw:
+                self._output.write_raw(text)
+            else:
+                self._output.write(text)
+
+            self._output.flush()
 
         def write_and_flush_in_loop() -> None:
             # If an application is running, use `run_in_terminal`, otherwise
             # call it directly.
-            run_in_terminal.run_in_terminal(write_and_flush, in_executor=False)
+            run_in_terminal(write_and_flush, in_executor=False)
 
-        # Make sure `write_and_flush` is executed *in* the event loop, not in
-        # another thread.
-        self.loop.call_soon_threadsafe(write_and_flush_in_loop)
+        if loop is None:
+            # No loop, write immediately.
+            write_and_flush()
+        else:
+            # Make sure `write_and_flush` is executed *in* the event loop, not
+            # in another thread.
+            loop.call_soon_threadsafe(write_and_flush_in_loop)
 
     def _write(self, data: str) -> None:
         """
@@ -133,7 +240,7 @@ class StdoutProxy:
             self._buffer = [after]
 
             text = "".join(to_write)
-            self._write_and_flush(text)
+            self._flush_queue.put(text)
         else:
             # Otherwise, cache in buffer.
             self._buffer.append(data)
@@ -141,7 +248,7 @@ class StdoutProxy:
     def _flush(self) -> None:
         text = "".join(self._buffer)
         self._buffer = []
-        self._write_and_flush(text)
+        self._flush_queue.put(text)
 
     def write(self, data: str) -> int:
         with self._lock:
@@ -156,12 +263,26 @@ class StdoutProxy:
         with self._lock:
             self._flush()
 
+    @property
+    def original_stdout(self) -> TextIO:
+        return self._output.stdout or sys.__stdout__
+
+    # Attributes for compatibility with sys.__stdout__:
+
     def fileno(self) -> int:
-        """
-        Return file descriptor.
-        """
-        # This is important for code that expects sys.stdout.fileno() to work.
-        return self.original_stdout.fileno()
+        return self._output.fileno()
 
     def isatty(self) -> bool:
-        return self.original_stdout.isatty()
+        stdout = self._output.stdout
+        if stdout is None:
+            return False
+
+        return stdout.isatty()
+
+    @property
+    def encoding(self) -> str:
+        return self._output.encoding()
+
+    @property
+    def errors(self) -> str:
+        return "strict"

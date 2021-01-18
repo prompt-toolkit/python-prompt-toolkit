@@ -427,7 +427,7 @@ class Vt100_Output(Output):
             assert hasattr(stdout, "encoding")
 
         self._buffer: List[str] = []
-        self.stdout = stdout
+        self.stdout: TextIO = stdout
         self.write_binary = write_binary
         self.default_color_depth = default_color_depth
         self._get_size = get_size
