@@ -41,6 +41,7 @@ from typing import (
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.cache import SimpleCache
 from prompt_toolkit.clipboard import Clipboard, InMemoryClipboard
+from prompt_toolkit.data_structures import Size
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.eventloop import (
     get_traceback_from_context,
@@ -147,6 +148,10 @@ class Application(Generic[_AppResult]):
         seconds. When `None` (the default), only invalidate when `invalidate`
         has been called.
 
+    :param terminal_size_polling_interval: Poll the terminal size every so many
+        seconds. Useful if the applications runs in a thread other then then
+        main thread where SIGWINCH can't be handled, or on Windows.
+
     Filters:
 
     :param mouse_support: (:class:`~prompt_toolkit.filters.Filter` or
@@ -211,6 +216,7 @@ class Application(Generic[_AppResult]):
         min_redraw_interval: Union[float, int, None] = None,
         max_render_postpone_time: Union[float, int, None] = 0.01,
         refresh_interval: Optional[float] = None,
+        terminal_size_polling_interval: Optional[float] = 0.5,
         on_reset: Optional[ApplicationEventHandler] = None,
         on_invalidate: Optional[ApplicationEventHandler] = None,
         before_render: Optional[ApplicationEventHandler] = None,
@@ -218,7 +224,7 @@ class Application(Generic[_AppResult]):
         # I/O.
         input: Optional[Input] = None,
         output: Optional[Output] = None,
-    ):
+    ) -> None:
 
         # If `enable_page_navigation_bindings` is not specified, enable it in
         # case of full screen applications only. This can be overridden by the user.
@@ -259,6 +265,7 @@ class Application(Generic[_AppResult]):
         self.min_redraw_interval = min_redraw_interval
         self.max_render_postpone_time = max_render_postpone_time
         self.refresh_interval = refresh_interval
+        self.terminal_size_polling_interval = terminal_size_polling_interval
 
         # Events.
         self.on_invalidate = Event(self, on_invalidate)
@@ -696,6 +703,8 @@ class Application(Generic[_AppResult]):
             with self.input.raw_mode(), self.input.attach(
                 read_from_input
             ), attach_winch_signal_handler(self._on_resize):
+                self.create_background_task(self._poll_output_size())
+
                 # Draw UI.
                 self._request_absolute_cursor_position()
                 self._redraw()
@@ -872,6 +881,28 @@ class Application(Generic[_AppResult]):
                 await task
             except CancelledError:
                 pass
+
+    async def _poll_output_size(self) -> None:
+        """
+        Coroutine for polling the terminal dimensions.
+
+        Useful for situations where `attach_winch_signal_handler` is not sufficient:
+        - If we are not running in the main thread.
+        - On Windows.
+        """
+        size: Optional[Size] = None
+        interval = self.terminal_size_polling_interval
+
+        if interval is None:
+            return
+
+        while True:
+            await asyncio.sleep(interval)
+            new_size = self.output.get_size()
+
+            if size is not None and new_size != size:
+                self._on_resize()
+            size = new_size
 
     def cpr_not_supported_callback(self) -> None:
         """
