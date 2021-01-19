@@ -7,11 +7,12 @@ NOTE: There is no `DynamicHistory`:
       loading can be done asynchronously and making the history swappable would
       probably break this.
 """
+import asyncio
 import datetime
 import os
+import threading
 from abc import ABCMeta, abstractmethod
-from threading import Thread
-from typing import Callable, Iterable, List, Optional
+from typing import AsyncGenerator, Iterable, List, Optional, Sequence
 
 __all__ = [
     "History",
@@ -32,57 +33,43 @@ class History(metaclass=ABCMeta):
     def __init__(self) -> None:
         # In memory storage for strings.
         self._loaded = False
+
+        # History that's loaded already, in reverse order. Latest, most recent
+        # item first.
         self._loaded_strings: List[str] = []
 
     #
     # Methods expected by `Buffer`.
     #
 
-    def load(self, item_loaded_callback: Callable[[str], None]) -> None:
+    async def load(self) -> AsyncGenerator[str, None]:
         """
-        Load the history and call the callback for every entry in the history.
+        Load the history and yield all the entries in reverse order (latest,
+        most recent history entry first).
 
-        XXX: The callback can be called from another thread, which happens in
-             case of `ThreadedHistory`.
-
-             We can't assume that an asyncio event loop is running, and
-             schedule the insertion into the `Buffer` using the event loop.
-
-             The reason is that the creation of the :class:`.History` object as
-             well as the start of the loading happens *before*
-             `Application.run()` is called, and it can continue even after
-             `Application.run()` terminates. (Which is useful to have a
-             complete history during the next prompt.)
-
-             Calling `get_event_loop()` right here is also not guaranteed to
-             return the same event loop which is used in `Application.run`,
-             because a new event loop can be created during the `run`. This is
-             useful in Python REPLs, where we want to use one event loop for
-             the prompt, and have another one active during the `eval` of the
-             commands. (Otherwise, the user can schedule a while/true loop and
-             freeze the UI.)
+        This method can be called multiple times from the `Buffer` to
+        repopulate the history when prompting for a new input. So we are
+        responsible here for both caching, and making sure that strings that
+        were were appended to the history will be incorporated next time this
+        method is called.
         """
-        if self._loaded:
-            for item in self._loaded_strings[::-1]:
-                item_loaded_callback(item)
-            return
-
-        try:
-            for item in self.load_history_strings():
-                self._loaded_strings.insert(0, item)
-                item_loaded_callback(item)
-        finally:
+        if not self._loaded:
+            self._loaded_strings = list(self.load_history_strings())
             self._loaded = True
+
+        for item in self._loaded_strings:
+            yield item
 
     def get_strings(self) -> List[str]:
         """
         Get the strings from the history that are loaded so far.
+        (In order. Oldest item first.)
         """
-        return self._loaded_strings
+        return self._loaded_strings[::-1]
 
     def append_string(self, string: str) -> None:
         " Add string to the history. "
-        self._loaded_strings.append(string)
+        self._loaded_strings.insert(0, string)
         self.store_string(string)
 
     #
@@ -110,7 +97,8 @@ class History(metaclass=ABCMeta):
 
 class ThreadedHistory(History):
     """
-    Wrapper that runs the `load_history_strings` generator in a thread.
+    Wrapper around `History` implementations that run the `load()` generator in
+    a thread.
 
     Use this to increase the start-up time of prompt_toolkit applications.
     History entries are available as soon as they are loaded. We don't have to
@@ -118,32 +106,90 @@ class ThreadedHistory(History):
     """
 
     def __init__(self, history: History) -> None:
-        self.history = history
-        self._load_thread: Optional[Thread] = None
-        self._item_loaded_callbacks: List[Callable[[str], None]] = []
         super().__init__()
 
-    def load(self, item_loaded_callback: Callable[[str], None]) -> None:
-        self._item_loaded_callbacks.append(item_loaded_callback)
+        self.history = history
 
-        # Start the load thread, if we don't have a thread yet.
+        self._load_thread: Optional[threading.Thread] = None
+
+        # Lock for accessing/manipulating `_loaded_strings` and `_loaded`
+        # together in a consistent state.
+        self._lock = threading.Lock()
+
+        # Events created by each `load()` call. Used to wait for new history
+        # entries from the loader thread.
+        self._string_load_events: List[threading.Event] = []
+
+    async def load(self) -> AsyncGenerator[str, None]:
+        """
+        Like `History.load(), but call `self.load_history_strings()` in a
+        background thread.
+        """
+        # Start the load thread, if this is called for the first time.
         if not self._load_thread:
-
-            def call_all_callbacks(item: str) -> None:
-                for cb in self._item_loaded_callbacks:
-                    cb(item)
-
-            self._load_thread = Thread(
-                target=self.history.load, args=(call_all_callbacks,)
+            self._load_thread = threading.Thread(
+                target=self._in_load_thread,
+                daemon=True,
             )
-            self._load_thread.daemon = True
             self._load_thread.start()
 
-    def get_strings(self) -> List[str]:
-        return self.history.get_strings()
+        # Consume the `_loaded_strings` list, using asyncio.
+        loop = asyncio.get_event_loop()
+
+        # Create threading Event so that we can wait for new items.
+        event = threading.Event()
+        event.set()
+        self._string_load_events.append(event)
+
+        items_yielded = 0
+
+        try:
+            while True:
+                # Wait for new items to be available.
+                await loop.run_in_executor(None, event.wait)
+
+                # Read new items (in lock).
+                await loop.run_in_executor(None, self._lock.acquire)
+                try:
+                    new_items = self._loaded_strings[items_yielded:]
+                    done = self._loaded
+                    event.clear()
+                finally:
+                    self._lock.release()
+
+                items_yielded += len(new_items)
+
+                for item in new_items:
+                    yield item
+
+                if done:
+                    break
+        finally:
+            self._string_load_events.remove(event)
+
+    def _in_load_thread(self) -> None:
+        try:
+            # Start with an empty list. In case `append_string()` was called
+            # before `load()` happened. Then `.store_string()` will have
+            # written these entries back to disk and we will reload it.
+            self._loaded_strings = []
+
+            for item in self.history.load_history_strings():
+                with self._lock:
+                    self._loaded_strings.append(item)
+
+                for event in self._string_load_events:
+                    event.set()
+        finally:
+            with self._lock:
+                self._loaded = True
+            for event in self._string_load_events:
+                event.set()
 
     def append_string(self, string: str) -> None:
-        self.history.append_string(string)
+        with self._lock:
+            self._loaded_strings.insert(0, string)
+        self.store_string(string)
 
     # All of the following are proxied to `self.history`.
 
@@ -160,13 +206,25 @@ class ThreadedHistory(History):
 class InMemoryHistory(History):
     """
     :class:`.History` class that keeps a list of all strings in memory.
+
+    In order to prepopulate the history, it's possible to call either
+    `append_string` for all items or pass a list of strings to `__init__` here.
     """
 
+    def __init__(self, history_strings: Optional[Sequence[str]] = None) -> None:
+        super().__init__()
+        # Emulating disk storage.
+        if history_strings is None:
+            self._storage = []
+        else:
+            self._storage = list(history_strings)
+
     def load_history_strings(self) -> Iterable[str]:
-        return []
+        for item in self._storage[::-1]:
+            yield item
 
     def store_string(self, string: str) -> None:
-        pass
+        self._storage.append(string)
 
 
 class DummyHistory(History):
