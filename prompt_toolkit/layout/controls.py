@@ -737,6 +737,14 @@ class BufferControl(UIControl):
         """
         buffer = self.buffer
 
+        # Trigger history loading of the buffer. We do this during the
+        # rendering of the UI here, because it needs to happen when an
+        # `Application` with its event loop is running. During the rendering of
+        # the buffer control is the earliest place we can achieve this, where
+        # we're sure the right event loop is active, and don't require user
+        # interaction (like in a key binding).
+        buffer.load_history_if_not_yet_loaded()
+
         # Get the document to be shown. If we are currently searching (the
         # search buffer has focus, and the preview_search filter is enabled),
         # then use the search document, which has possibly a different

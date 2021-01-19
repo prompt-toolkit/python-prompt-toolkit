@@ -3,18 +3,21 @@ Data structures for the Buffer.
 It holds the text, cursor position, history, etc...
 """
 import asyncio
+import logging
 import os
 import re
 import shlex
 import shutil
 import subprocess
 import tempfile
+from collections import deque
 from enum import Enum
 from functools import wraps
 from typing import (
     Any,
     Awaitable,
     Callable,
+    Deque,
     Iterable,
     List,
     Optional,
@@ -53,6 +56,8 @@ __all__ = [
     "unindent",
     "reshape_text",
 ]
+
+logger = logging.getLogger(__name__)
 
 
 class EditReadOnlyBuffer(Exception):
@@ -300,20 +305,11 @@ class Buffer:
         self._async_completer = self._create_completer_coroutine()
         self._async_validator = self._create_auto_validate_coroutine()
 
+        # Asyncio task for populating the history.
+        self._load_history_task: Optional[asyncio.Future[None]] = None
+
         # Reset other attributes.
         self.reset(document=document)
-
-        # Load the history.
-        def new_history_item(item: str) -> None:
-            # XXX: Keep in mind that this function can be called in a different
-            #      thread!
-            # Insert the new string into `_working_lines`.
-            self._working_lines.insert(0, item)
-            self.__working_index += (
-                1  # Not entirely threadsafe, but probably good enough.
-            )
-
-        self.history.load(new_history_item)
 
     def __repr__(self) -> str:
         if len(self.text) < 15:
@@ -373,14 +369,57 @@ class Buffer:
         self._undo_stack: List[Tuple[str, int]] = []
         self._redo_stack: List[Tuple[str, int]] = []
 
+        # Cancel history loader. If history loading was still ongoing.
+        # Cancel the `_load_history_task`, so that next repaint of the
+        # `BufferControl` we will repopulate it.
+        if self._load_history_task is not None:
+            self._load_history_task.cancel()
+        self._load_history_task = None
+
         #: The working lines. Similar to history, except that this can be
         #: modified. The user can press arrow_up and edit previous entries.
         #: Ctrl-C should reset this, and copy the whole history back in here.
         #: Enter should process the current command and append to the real
         #: history.
-        self._working_lines = self.history.get_strings()[:]
-        self._working_lines.append(document.text)
-        self.__working_index = len(self._working_lines) - 1
+        self._working_lines: Deque[str] = deque([document.text])
+        self.__working_index = 0
+
+    def load_history_if_not_yet_loaded(self) -> None:
+        """
+        Create task for populating the buffer history (if not yet done).
+
+        Note::
+
+            This needs to be called from within the event loop of the
+            application, because history loading is async, and we need to be
+            sure the right event loop is active. Therefor, we call this method
+            in the `BufferControl.create_content`.
+
+            There are situations where prompt_toolkit applications are created
+            in one thread, but will later run in a different thread (Ptpython
+            is one example. The REPL runs in a separate thread, in order to
+            prevent interfering with a potential different event loop in the
+            main thread. The REPL UI however is still created in the main
+            thread.) We could decide to not support creating prompt_toolkit
+            objects in one thread and running the application in a different
+            thread, but history loading is the only place where it matters, and
+            this solves it.
+        """
+        if self._load_history_task is None:
+
+            async def load_history() -> None:
+                try:
+                    async for item in self.history.load():
+                        self._working_lines.appendleft(item)
+                        self.__working_index += 1
+                except asyncio.CancelledError:
+                    pass
+                except BaseException:
+                    # Log error if something goes wrong. (We don't have a
+                    # caller to which we can propagate this exception.)
+                    logger.exception("Loading history failed")
+
+            self._load_history_task = asyncio.ensure_future(load_history())
 
     # <getters/setters>
 
