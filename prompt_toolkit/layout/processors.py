@@ -314,7 +314,7 @@ class HighlightSelectionProcessor(Processor):
 
 class PasswordProcessor(Processor):
     """
-    Processor that turns masks the input. (For passwords.)
+    Processor that masks the input. (For passwords.)
 
     :param char: (string) Character to be used. "*" by default.
     """
