@@ -146,7 +146,16 @@ class ThreadedHistory(History):
         try:
             while True:
                 # Wait for new items to be available.
-                await loop.run_in_executor(None, event.wait)
+                # (Use a timeout, because the executor thread is not a daemon
+                # thread. The "slow-history.py" example would otherwise hang if
+                # Control-C is pressed before the history is fully loaded,
+                # because there's still this non-daemon executor thread waiting
+                # for this event.)
+                got_timeout = await loop.run_in_executor(
+                    None, lambda: event.wait(timeout=0.5)
+                )
+                if not got_timeout:
+                    continue
 
                 # Read new items (in lock).
                 await loop.run_in_executor(None, self._lock.acquire)
