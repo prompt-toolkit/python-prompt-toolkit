@@ -949,7 +949,7 @@ class ConditionalProcessor(Processor):
 
 class DynamicProcessor(Processor):
     """
-    Processor class that can dynamically returns any Processor.
+    Processor class that dynamically returns any Processor.
 
     :param get_processor: Callable that returns a :class:`.Processor` instance.
     """
