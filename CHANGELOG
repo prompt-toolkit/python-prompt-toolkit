@@ -1,6 +1,28 @@
 CHANGELOG
 =========
 
+3.0.11: 2021-01-20
+------------------
+
+New features:
+- Poll terminal size: better handle resize events when the application runs in
+  a thread other than the main thread (where handling SIGWINCH doesn't work) or
+  in the Windows console.
+
+Fixes:
+- Fix bug in system toolbar. The execution of system commands was broken.
+- A refactoring of patch_stdout that includes several fixes.
+  * We know look at the `AppSession` in order to see which application is
+    running, rather then looking at the event loop which is installed when
+    `StdoutProxy` is created. This way, `patch_stdout` will work when
+    prompt_toolkit applications with a different event loop run.
+  * Fix printing when no application/event loop is running.
+  * Fixed the `raw` argument of `PatchStdout`.
+- A refactoring of the `ThreadedHistory`, which includes several fixes, in
+  particular a race condition (see issue #1158) that happened when editing
+  input while a big history was still being loaded in the background.
+
+
 3.0.10: 2021-01-08
 ------------------
 
