@@ -253,9 +253,6 @@ class raw_mode:
 
             termios.tcsetattr(self.fileno, termios.TCSANOW, newattr)
 
-            # Put the terminal in cursor mode. (Instead of application mode.)
-            os.write(self.fileno, b"\x1b[?1l")
-
     @classmethod
     def _patch_lflag(cls, attrs):
         return attrs & ~(termios.ECHO | termios.ICANON | termios.IEXTEN | termios.ISIG)
