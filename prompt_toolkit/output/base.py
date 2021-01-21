@@ -175,6 +175,14 @@ class Output(metaclass=ABCMeta):
     def disable_bracketed_paste(self) -> None:
         " For vt100 only. "
 
+    def reset_cursor_key_mode(self) -> None:
+        """
+        For vt100 only.
+        Put the terminal in normal cursor mode (instead of application mode).
+
+        See: https://vt100.net/docs/vt100-ug/chapter3.html
+        """
+
     def scroll_buffer_to_prompt(self) -> None:
         " For Win32 only. "
 

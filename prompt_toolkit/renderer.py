@@ -354,6 +354,7 @@ class Renderer:
         self._in_alternate_screen = False
         self._mouse_support_enabled = False
         self._bracketed_paste_enabled = False
+        self._cursor_key_mode_reset = False
 
         # Future set when we are waiting for a CPR flag.
         self._waiting_for_cpr_futures: Deque[Future[None]] = deque()
@@ -411,6 +412,8 @@ class Renderer:
         if self._bracketed_paste_enabled:
             self.output.disable_bracketed_paste()
             self._bracketed_paste_enabled = False
+
+        # NOTE: No need to set/reset cursor key mode here.
 
         # Flush output. `disable_mouse_support` needs to write to stdout.
         self.output.flush()
@@ -594,6 +597,11 @@ class Renderer:
         if not self._bracketed_paste_enabled:
             self.output.enable_bracketed_paste()
             self._bracketed_paste_enabled = True
+
+        # Reset cursor key mode.
+        if not self._cursor_key_mode_reset:
+            self.output.reset_cursor_key_mode()
+            self._cursor_key_mode_reset = True
 
         # Enable/disable mouse support.
         needs_mouse_support = self.mouse_support()

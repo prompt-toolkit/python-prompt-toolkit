@@ -596,6 +596,14 @@ class Vt100_Output(Output):
     def disable_bracketed_paste(self) -> None:
         self.write_raw("\x1b[?2004l")
 
+    def reset_cursor_key_mode(self) -> None:
+        """
+        For vt100 only.
+        Put the terminal in cursor mode (instead of application mode).
+        """
+        # Put the terminal in cursor mode. (Instead of application mode.)
+        self.write_raw("\x1b[?1l")
+
     def cursor_goto(self, row: int = 0, column: int = 0) -> None:
         """
         Move cursor position.

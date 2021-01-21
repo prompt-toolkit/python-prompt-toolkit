@@ -183,6 +183,7 @@ ANSI_SEQUENCES: Dict[str, Union[Keys, Tuple[Keys, ...]]] = {
     "\x1b[6;8~": (Keys.Escape, Keys.ControlShiftPageDown),
     # --
     # Arrows.
+    # (Normal cursor mode).
     "\x1b[A": Keys.Up,
     "\x1b[B": Keys.Down,
     "\x1b[C": Keys.Right,
@@ -192,6 +193,7 @@ ANSI_SEQUENCES: Dict[str, Union[Keys, Tuple[Keys, ...]]] = {
     # Tmux sends following keystrokes when control+arrow is pressed, but for
     # Emacs ansi-term sends the same sequences for normal arrow keys. Consider
     # it a normal arrow press, because that's more important.
+    # (Application cursor mode).
     "\x1bOA": Keys.Up,
     "\x1bOB": Keys.Down,
     "\x1bOC": Keys.Right,
