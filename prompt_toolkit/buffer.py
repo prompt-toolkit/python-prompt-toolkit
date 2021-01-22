@@ -408,18 +408,34 @@ class Buffer:
         if self._load_history_task is None:
 
             async def load_history() -> None:
+                async for item in self.history.load():
+                    self._working_lines.appendleft(item)
+                    self.__working_index += 1
+
+            self._load_history_task = get_app().create_background_task(load_history())
+
+            def load_history_done(f: "asyncio.Future[None]") -> None:
+                """
+                Handle `load_history` result when either done, cancelled, or
+                when an exception was raised.
+                """
                 try:
-                    async for item in self.history.load():
-                        self._working_lines.appendleft(item)
-                        self.__working_index += 1
+                    f.result()
                 except asyncio.CancelledError:
+                    # Ignore cancellation. But handle it, so that we don't get
+                    # this traceback.
+                    pass
+                except GeneratorExit:
+                    # Probably not needed, but we had situations where
+                    # `GeneratorExit` was raised in `load_history` during
+                    # cancellation.
                     pass
                 except BaseException:
                     # Log error if something goes wrong. (We don't have a
                     # caller to which we can propagate this exception.)
                     logger.exception("Loading history failed")
 
-            self._load_history_task = asyncio.ensure_future(load_history())
+            self._load_history_task.add_done_callback(load_history_done)
 
     # <getters/setters>
 
