@@ -1,6 +1,5 @@
 import contextlib
 import io
-import os
 import sys
 import termios
 import tty
