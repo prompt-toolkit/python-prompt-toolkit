@@ -488,7 +488,13 @@ class Vt100_Output(Output):
                 pass
             return Size(rows=rows or 24, columns=columns or 80)
 
-        return cls(stdout, get_size, term=term, default_color_depth=default_color_depth, bell=bell)
+        return cls(
+            stdout,
+            get_size,
+            term=term,
+            default_color_depth=default_color_depth,
+            bell=bell,
+        )
 
     def get_size(self) -> Size:
         return self._get_size()

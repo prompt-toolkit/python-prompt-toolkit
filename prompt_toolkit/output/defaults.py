@@ -75,5 +75,8 @@ def create_output(
         from .vt100 import Vt100_Output
 
         return Vt100_Output.from_pty(
-            stdout, term=term_from_env, default_color_depth=color_depth_from_env, bell=bell_from_env,
+            stdout,
+            term=term_from_env,
+            default_color_depth=color_depth_from_env,
+            bell=bell_from_env,
         )
