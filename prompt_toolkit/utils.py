@@ -26,6 +26,7 @@ __all__ = [
     "is_conemu_ansi",
     "is_windows",
     "in_main_thread",
+    "get_bell_environment_variable",
     "get_term_environment_variable",
     "take_using_weights",
     "to_str",
@@ -208,6 +209,14 @@ def in_main_thread() -> bool:
     True when the current thread is the main thread.
     """
     return threading.current_thread().__class__.__name__ == "_MainThread"
+
+
+def get_bell_environment_variable() -> bool:
+    """
+    True if env variable is set to true (true, TRUE, TrUe, 1).
+    """
+    value = os.environ.get("PROMPT_TOOLKIT_BELL", "true")
+    return value.lower() in ("1", "true")
 
 
 def get_term_environment_variable() -> str:

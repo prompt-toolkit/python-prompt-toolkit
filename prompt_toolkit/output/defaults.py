@@ -2,6 +2,7 @@ import sys
 from typing import Optional, TextIO, cast
 
 from prompt_toolkit.utils import (
+    get_bell_environment_variable,
     get_term_environment_variable,
     is_conemu_ansi,
     is_windows,
@@ -28,10 +29,11 @@ def create_output(
         consumed by something other then a terminal, so this is a reasonable
         default.)
     """
-    # Consider TERM and PROMPT_TOOLKIT_COLOR_DEPTH environment variables.
-    # Notice that PROMPT_TOOLKIT_COLOR_DEPTH value is the default that's used
-    # if the Application doesn't override it.
+    # Consider TERM, PROMPT_TOOLKIT_BELL, and PROMPT_TOOLKIT_COLOR_DEPTH
+    # environment variables. Notice that PROMPT_TOOLKIT_COLOR_DEPTH value is
+    # the default that's used if the Application doesn't override it.
     term_from_env = get_term_environment_variable()
+    bell_from_env = get_bell_environment_variable()
     color_depth_from_env = ColorDepth.from_env()
 
     if stdout is None:
@@ -73,5 +75,8 @@ def create_output(
         from .vt100 import Vt100_Output
 
         return Vt100_Output.from_pty(
-            stdout, term=term_from_env, default_color_depth=color_depth_from_env
+            stdout,
+            term=term_from_env,
+            default_color_depth=color_depth_from_env,
+            enable_bell=bell_from_env,
         )
