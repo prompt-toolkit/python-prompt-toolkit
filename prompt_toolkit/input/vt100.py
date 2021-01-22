@@ -226,7 +226,7 @@ class raw_mode:
     #    See: https://github.com/jonathanslenders/python-prompt-toolkit/pull/165
     def __init__(self, fileno: int) -> None:
         self.fileno = fileno
-        self.attrs_before: Optional[List[Union[int, List[bytes]]]]
+        self.attrs_before: Optional[List[Union[int, List[Union[bytes, int]]]]]
         try:
             self.attrs_before = termios.tcgetattr(fileno)
         except termios.error:
