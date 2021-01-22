@@ -12,7 +12,7 @@ import datetime
 import os
 import threading
 from abc import ABCMeta, abstractmethod
-from typing import AsyncGenerator, Iterable, List, Optional, Sequence
+from typing import AsyncGenerator, Iterable, List, Optional, Sequence, Tuple
 
 __all__ = [
     "History",
@@ -158,18 +158,14 @@ class ThreadedHistory(History):
                     continue
 
                 # Read new items (in lock).
-                # (Important: acquiring the lock should happen *in* the try
-                # block. Otherwise it's not guaranteed it will ever be
-                # released. This can happen when this coroutine is cancelled at
-                # an "await" point. This did actually happen when continuously
-                # pasting huge amounts of text in ptpython.)
-                try:
-                    await loop.run_in_executor(None, self._lock.acquire)
-                    new_items = self._loaded_strings[items_yielded:]
-                    done = self._loaded
-                    event.clear()
-                finally:
-                    self._lock.release()
+                def in_executor() -> Tuple[List[str], bool]:
+                    with self._lock:
+                        new_items = self._loaded_strings[items_yielded:]
+                        done = self._loaded
+                        event.clear()
+                    return new_items, done
+
+                new_items, done = await loop.run_in_executor(None, in_executor)
 
                 items_yielded += len(new_items)
 
