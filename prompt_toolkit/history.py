@@ -158,8 +158,13 @@ class ThreadedHistory(History):
                     continue
 
                 # Read new items (in lock).
-                await loop.run_in_executor(None, self._lock.acquire)
+                # (Important: acquiring the lock should happen *in* the try
+                # block. Otherwise it's not guaranteed it will ever be
+                # released. This can happen when this coroutine is cancelled at
+                # an "await" point. This did actually happen when continuously
+                # pasting huge amounts of text in ptpython.)
                 try:
+                    await loop.run_in_executor(None, self._lock.acquire)
                     new_items = self._loaded_strings[items_yielded:]
                     done = self._loaded
                     event.clear()
