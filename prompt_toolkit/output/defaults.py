@@ -78,5 +78,5 @@ def create_output(
             stdout,
             term=term_from_env,
             default_color_depth=color_depth_from_env,
-            bell=bell_from_env,
+            enable_bell=bell_from_env,
         )

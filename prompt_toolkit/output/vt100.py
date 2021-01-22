@@ -419,7 +419,7 @@ class Vt100_Output(Output):
         term: Optional[str] = None,
         write_binary: bool = True,
         default_color_depth: Optional[ColorDepth] = None,
-        bell: bool = True,
+        enable_bell: bool = True,
     ) -> None:
 
         assert all(hasattr(stdout, a) for a in ("write", "flush"))
@@ -433,7 +433,7 @@ class Vt100_Output(Output):
         self.default_color_depth = default_color_depth
         self._get_size = get_size
         self.term = term
-        self.beep = bell
+        self.enable_bell = enable_bell
 
         # Cache for escape codes.
         self._escape_code_caches: Dict[ColorDepth, _EscapeCodeCache] = {
@@ -449,7 +449,7 @@ class Vt100_Output(Output):
         stdout: TextIO,
         term: Optional[str] = None,
         default_color_depth: Optional[ColorDepth] = None,
-        bell: bool = True,
+        enable_bell: bool = True,
     ) -> "Vt100_Output":
         """
         Create an Output class from a pseudo terminal.
@@ -493,7 +493,7 @@ class Vt100_Output(Output):
             get_size,
             term=term,
             default_color_depth=default_color_depth,
-            bell=bell,
+            enable_bell=enable_bell,
         )
 
     def get_size(self) -> Size:
@@ -727,7 +727,7 @@ class Vt100_Output(Output):
 
     def bell(self) -> None:
         " Sound bell. "
-        if self.beep:
+        if self.enable_bell:
             self.write_raw("\a")
             self.flush()
 
