@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+3.0.13: 2021-01-21
+------------------
+
+Fixes:
+- Again, fixed the race condition in `ThreadedHistory`. Previous fix was not
+  correct.
+
+
 3.0.12: 2021-01-21
 ------------------
 
