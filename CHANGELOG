@@ -1,6 +1,17 @@
 CHANGELOG
 =========
 
+3.0.14: 2021-01-24
+------------------
+
+New features:
+- Disable bell when `PROMPT_TOOLKIT_BELL=false` environment variable has been
+  set.
+
+Fixes:
+- Improve cancellation of history loading.
+
+
 3.0.13: 2021-01-21
 ------------------
 
