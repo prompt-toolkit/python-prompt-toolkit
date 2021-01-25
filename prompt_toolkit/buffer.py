@@ -202,11 +202,11 @@ class Buffer:
 
     Events:
 
-    :param on_text_changed: When the buffer text changes. (Callable on None.)
-    :param on_text_insert: When new text is inserted. (Callable on None.)
-    :param on_cursor_position_changed: When the cursor moves. (Callable on None.)
-    :param on_completions_changed: When the completions were changed. (Callable on None.)
-    :param on_suggestion_set: When an auto-suggestion text has been set. (Callable on None.)
+    :param on_text_changed: When the buffer text changes. (Callable or None.)
+    :param on_text_insert: When new text is inserted. (Callable or None.)
+    :param on_cursor_position_changed: When the cursor moves. (Callable or None.)
+    :param on_completions_changed: When the completions were changed. (Callable or None.)
+    :param on_suggestion_set: When an auto-suggestion text has been set. (Callable or None.)
 
     Filters:
 
