@@ -464,7 +464,7 @@ class Buffer:
         original_position = self.__cursor_position
         self.__cursor_position = max(0, value)
 
-        return value != original_position
+        return self.__cursor_position != original_position
 
     @property
     def text(self) -> str:
