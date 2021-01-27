@@ -11,12 +11,14 @@ import errno
 import io
 import os
 import sys
+from contextlib import contextmanager
 from typing import (
     IO,
     Callable,
     Dict,
     Hashable,
     Iterable,
+    Iterator,
     List,
     Optional,
     Sequence,
@@ -669,22 +671,27 @@ class Vt100_Output(Output):
         data = "".join(self._buffer)
 
         try:
-            # (We try to encode ourself, because that way we can replace
-            # characters that don't exist in the character set, avoiding
-            # UnicodeEncodeError crashes. E.g. u'\xb7' does not appear in 'ascii'.)
-            # My Arch Linux installation of july 2015 reported 'ANSI_X3.4-1968'
-            # for sys.stdout.encoding in xterm.
-            out: IO
-            if self.write_binary:
-                if hasattr(self.stdout, "buffer"):
-                    out = self.stdout.buffer  # Py3.
+            # Ensure that `self.stdout` is made blocking when writing into it.
+            # Otherwise, when uvloop is activated (which makes stdout
+            # non-blocking), and we write big amounts of text, then we get a
+            # `BlockingIOError` here.
+            with blocking_io(self.stdout):
+                # (We try to encode ourself, because that way we can replace
+                # characters that don't exist in the character set, avoiding
+                # UnicodeEncodeError crashes. E.g. u'\xb7' does not appear in 'ascii'.)
+                # My Arch Linux installation of july 2015 reported 'ANSI_X3.4-1968'
+                # for sys.stdout.encoding in xterm.
+                out: IO
+                if self.write_binary:
+                    if hasattr(self.stdout, "buffer"):
+                        out = self.stdout.buffer  # Py3.
+                    else:
+                        out = self.stdout
+                    out.write(data.encode(self.stdout.encoding or "utf-8", "replace"))
                 else:
-                    out = self.stdout
-                out.write(data.encode(self.stdout.encoding or "utf-8", "replace"))
-            else:
-                self.stdout.write(data)
+                    self.stdout.write(data)
 
-            self.stdout.flush()
+                self.stdout.flush()
         except IOError as e:
             if e.args and e.args[0] == errno.EINTR:
                 # Interrupted system call. Can happen in case of a window
@@ -754,3 +761,37 @@ class Vt100_Output(Output):
             return ColorDepth.DEPTH_4_BIT
 
         return ColorDepth.DEFAULT
+
+
+@contextmanager
+def blocking_io(io: IO[str]) -> Iterator[None]:
+    """
+    Ensure that the FD for `io` is set to blocking in here.
+    """
+    if sys.platform == "win32":
+        # On Windows, the `os` module doesn't have a `get/set_blocking`
+        # function.
+        yield
+        return
+
+    try:
+        fd = io.fileno()
+        blocking = os.get_blocking(fd)
+    except:  # noqa
+        # Failed somewhere.
+        # `get_blocking` can raise `OSError`.
+        # The io object can raise `AttributeError` when no `fileno()` method is
+        # present if we're not a real file object.
+        blocking = True  # Assume we're good, and don't do anything.
+
+    try:
+        # Make blocking if we weren't blocking yet.
+        if not blocking:
+            os.set_blocking(fd, True)
+
+        yield
+
+    finally:
+        # Restore original blocking mode.
+        if not blocking:
+            os.set_blocking(fd, blocking)
