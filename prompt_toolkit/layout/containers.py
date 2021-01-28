@@ -1710,6 +1710,32 @@ class Window(Container):
         Write window to screen. This renders the user control, the margins and
         copies everything over to the absolute position at the given screen.
         """
+        # If dont_extend_width/height was given. Then reduce width/height in
+        # WritePosition if the parent wanted us to paint in a bigger area.
+        # (This happens if this window is bundled with another window in a
+        # HSplit/VSplit, but with different size requirements.)
+        write_position = WritePosition(
+            xpos=write_position.xpos,
+            ypos=write_position.ypos,
+            width=write_position.width,
+            height=write_position.height,
+        )
+
+        if self.dont_extend_width():
+            write_position.width = min(
+                write_position.width,
+                self.preferred_width(write_position.width).preferred,
+            )
+
+        if self.dont_extend_height():
+            write_position.height = min(
+                write_position.height,
+                self.preferred_height(
+                    write_position.width, write_position.height
+                ).preferred,
+            )
+
+        # Draw
         z_index = z_index if self.z_index is None else self.z_index
 
         draw_func = partial(
