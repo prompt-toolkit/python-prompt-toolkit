@@ -395,7 +395,7 @@ def _get_size(fileno: int) -> Tuple[int, int]:
     # Note: We should not pass 'True' as a fourth parameter to 'ioctl'. (True
     #       is the default.) This causes segmentation faults on some systems.
     #       See: https://github.com/jonathanslenders/python-prompt-toolkit/pull/364
-    fcntl.ioctl(fileno, termios.TIOCGWINSZ, buf)  # type: ignore
+    fcntl.ioctl(fileno, termios.TIOCGWINSZ, buf)
 
     # Return rows, cols
     return buf[0], buf[1]
