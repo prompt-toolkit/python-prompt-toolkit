@@ -68,7 +68,7 @@ def call_soon_threadsafe(
         # now.
         # Notice: uvloop doesn't have this _ready attribute. In that case,
         #         always call immediately.
-        if not getattr(loop2, "_ready", []):  # type: ignore
+        if not getattr(loop2, "_ready", []):
             func()
             return
 

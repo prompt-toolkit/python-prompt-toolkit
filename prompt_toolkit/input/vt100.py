@@ -248,7 +248,7 @@ class raw_mode:
             # Solaris and derived operating systems it defaults to 4. (This is
             # because the VMIN slot is the same as the VEOF slot, which
             # defaults to ASCII EOT = Ctrl-D = 4.)
-            newattr[tty.CC][termios.VMIN] = 1  # type: ignore
+            newattr[tty.CC][termios.VMIN] = 1
 
             termios.tcsetattr(self.fileno, termios.TCSANOW, newattr)
 
