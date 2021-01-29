@@ -1923,8 +1923,9 @@ class Window(Container):
         # Apply 'self.style'
         self._apply_style(screen, write_position, parent_style)
 
-        # Tell the screen that this user control has been painted.
-        screen.visible_windows.append(self)
+        # Tell the screen that this user control has been painted at this
+        # position.
+        screen.visible_windows_to_write_positions[self] = write_position
 
     def _copy_body(
         self,

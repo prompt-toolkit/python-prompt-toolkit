@@ -186,10 +186,14 @@ class Screen:
 
         # Windows that have been drawn. (Each `Window` class will add itself to
         # this list.)
-        self.visible_windows: List["Window"] = []
+        self.visible_windows_to_write_positions: Dict["Window", "WritePosition"] = {}
 
         # List of (z_index, draw_func)
         self._draw_float_functions: List[Tuple[int, Callable[[], None]]] = []
+
+    @property
+    def visible_windows(self) -> List["Window"]:
+        return list(self.visible_windows_to_write_positions.keys())
 
     def set_cursor_position(self, window: "Window", position: Point) -> None:
         """
