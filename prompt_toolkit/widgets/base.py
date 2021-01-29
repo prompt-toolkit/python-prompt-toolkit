@@ -263,6 +263,10 @@ class TextArea:
 
         style = "class:text-area " + style
 
+        # If no height was given, guarantee height of at least 1.
+        if height is None:
+            height = D(min=1)
+
         self.window = Window(
             height=height,
             width=width,
@@ -352,6 +356,7 @@ class Label:
         self.window = Window(
             content=self.formatted_text_control,
             width=get_width,
+            height=D(min=1),
             style="class:label " + style,
             dont_extend_height=dont_extend_height,
             dont_extend_width=dont_extend_width,
