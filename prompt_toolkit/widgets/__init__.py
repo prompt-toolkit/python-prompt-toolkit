@@ -16,6 +16,7 @@ from .base import (
     Label,
     ProgressBar,
     RadioList,
+    SelectList,
     Shadow,
     TextArea,
     VerticalLine,
