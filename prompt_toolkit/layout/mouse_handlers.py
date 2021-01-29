@@ -5,8 +5,11 @@ from typing import Callable, DefaultDict, Tuple
 from prompt_toolkit.mouse_events import MouseEvent
 
 __all__ = [
+    "MouseHandler",
     "MouseHandlers",
 ]
+
+MouseHandler = Callable[[MouseEvent], None]
 
 
 class MouseHandlers:
@@ -20,10 +23,14 @@ class MouseHandlers:
             :param mouse_event: `MouseEvent` instance.
             """
 
-        # Map (x,y) tuples to handlers.
+        # NOTE: Previously, the data structure was a dictionary mapping (x,y)
+        # to the handlers. This however would be more inefficient when copying
+        # over the mouse handlers of the visible region in the scrollable pane.
+
+        # Map y (row) to x (column) to handlers.
         self.mouse_handlers: DefaultDict[
-            Tuple[int, int], Callable[[MouseEvent], None]
-        ] = defaultdict(lambda: dummy_callback)
+            int, DefaultDict[int, MouseHandler]
+        ] = defaultdict(lambda: defaultdict(lambda: dummy_callback))
 
     def set_mouse_handler_for_range(
         self,
@@ -36,5 +43,8 @@ class MouseHandlers:
         """
         Set mouse handler for a region.
         """
-        for x, y in product(range(x_min, x_max), range(y_min, y_max)):
-            self.mouse_handlers[x, y] = handler
+        for y in range(y_min, y_max):
+            row = self.mouse_handlers[y]
+
+            for x in range(x_min, x_max):
+                row[x] = handler

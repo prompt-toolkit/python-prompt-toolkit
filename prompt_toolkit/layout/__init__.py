@@ -90,6 +90,7 @@ from .margins import (
     ScrollbarMargin,
 )
 from .menus import CompletionsMenu, MultiColumnCompletionsMenu
+from .scrollable_pane import ScrollablePane
 
 __all__ = [
     # Layout.
@@ -123,6 +124,7 @@ __all__ = [
     "to_window",
     "is_container",
     "DynamicContainer",
+    "ScrollablePane",
     # Controls.
     "BufferControl",
     "SearchBufferControl",

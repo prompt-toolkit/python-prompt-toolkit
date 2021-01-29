@@ -94,7 +94,7 @@ def load_mouse_bindings() -> KeyBindings:
                 return
 
             # Call the mouse handler from the renderer.
-            handler = event.app.renderer.mouse_handlers.mouse_handlers[x, y]
+            handler = event.app.renderer.mouse_handlers.mouse_handlers[y][x]
             handler(MouseEvent(position=Point(x=x, y=y), event_type=mouse_event_type))
 
     @key_bindings.add(Keys.ScrollUp)
@@ -141,7 +141,7 @@ def load_mouse_bindings() -> KeyBindings:
             y -= rows_above_cursor
 
             # Call the mouse event handler.
-            handler = event.app.renderer.mouse_handlers.mouse_handlers[x, y]
+            handler = event.app.renderer.mouse_handlers.mouse_handlers[y][x]
             handler(MouseEvent(position=Point(x=x, y=y), event_type=event_type))
 
     return key_bindings

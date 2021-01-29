@@ -168,6 +168,7 @@ responsible for generating the actual content.
 |                                             | :class:`~prompt_toolkit.layout.VSplit`               |
 |                                             | :class:`~prompt_toolkit.layout.FloatContainer`       |
 |                                             | :class:`~prompt_toolkit.layout.Window`               |
+|                                             | :class:`~prompt_toolkit.layout.ScrollablePane`       |
 +---------------------------------------------+------------------------------------------------------+
 | :class:`~prompt_toolkit.layout.UIControl`   | :class:`~prompt_toolkit.layout.BufferControl`        |
 |                                             | :class:`~prompt_toolkit.layout.FormattedTextControl` |
@@ -228,6 +229,10 @@ More complex layouts can be achieved by nesting multiple
 If you want to make some part of the layout only visible when a certain
 condition is satisfied, use a
 :class:`~prompt_toolkit.layout.ConditionalContainer`.
+
+Finally, there is :class:`~prompt_toolkit.layout.ScrollablePane`, a container
+class that can be used to create long forms or nested layouts that are
+scrollable as a whole.
 
 
 Focusing windows

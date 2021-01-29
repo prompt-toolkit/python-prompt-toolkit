@@ -164,6 +164,8 @@ Containers
 
 .. autoclass:: prompt_toolkit.layout.DynamicContainer
 
+.. autoclass:: prompt_toolkit.layout.ScrollablePane
+
 .. autoclass:: prompt_toolkit.layout.ScrollOffsets
 
 .. autoclass:: prompt_toolkit.layout.ColorColumn
