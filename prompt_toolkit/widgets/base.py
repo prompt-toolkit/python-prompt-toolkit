@@ -535,7 +535,9 @@ class Frame:
                         fill(width=1, height=1, char=Border.BOTTOM_LEFT),
                         fill(char=Border.HORIZONTAL),
                         fill(width=1, height=1, char=Border.BOTTOM_RIGHT),
-                    ]
+                    ],
+                    # specifying height here will increase the rendering speed.
+                    height=1,
                 ),
             ],
             width=width,
