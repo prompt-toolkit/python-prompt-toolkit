@@ -733,8 +733,6 @@ class Application(Generic[_AppResult]):
                 try:
                     result = await f
                 finally:
-                    self.future = None  # Remove used future again.
-
                     # In any case, when the application finishes.
                     # (Successful, or because of an error.)
                     try:
@@ -805,6 +803,12 @@ class Application(Generic[_AppResult]):
                         # above, but in case of exceptions, that's not always the
                         # case.
                         self._is_running = False
+
+                        # Also remove the Future again. (This brings the
+                        # application back to its initial state, where it also
+                        # doesn't have a Future.)
+                        self.future = None
+
                     return result
             finally:
                 if set_exception_handler:
