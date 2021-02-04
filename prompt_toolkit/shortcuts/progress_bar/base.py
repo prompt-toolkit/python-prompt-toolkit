@@ -15,7 +15,6 @@ import threading
 import traceback
 from asyncio import get_event_loop, new_event_loop, set_event_loop
 from typing import (
-    TYPE_CHECKING,
     Generic,
     Iterable,
     List,
@@ -146,13 +145,7 @@ class ProgressBar:
         self._loop = get_event_loop()
         self._app_loop = new_event_loop()
 
-        self._previous_winch_handler = None
         self._has_sigwinch = False
-
-        if TYPE_CHECKING:
-            # Infer type from getsignal result, as defined in typeshed. Too
-            # complex to repeat here.
-            self._previous_winch_handler = signal.getsignal(_SIGWINCH)
 
     def __enter__(self) -> "ProgressBar":
         # Create UI Application.
@@ -230,24 +223,12 @@ class ProgressBar:
         self._thread = threading.Thread(target=ctx.run, args=(run,))
         self._thread.start()
 
-        # Attach WINCH signal handler in main thread.
-        # (Interrupt that we receive during resize events.)
-        self._has_sigwinch = _SIGWINCH is not None and in_main_thread()
-        if self._has_sigwinch:
-            self._previous_winch_handler = signal.getsignal(_SIGWINCH)
-            self._loop.add_signal_handler(_SIGWINCH, self.invalidate)
-
         return self
 
     def __exit__(self, *a: object) -> None:
         # Quit UI application.
         if self.app.is_running:
             self.app.exit()
-
-        # Remove WINCH handler.
-        if self._has_sigwinch:
-            self._loop.remove_signal_handler(_SIGWINCH)
-            signal.signal(_SIGWINCH, self._previous_winch_handler)
 
         if self._thread is not None:
             self._thread.join()
