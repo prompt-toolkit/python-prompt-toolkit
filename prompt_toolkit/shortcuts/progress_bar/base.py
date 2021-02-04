@@ -144,8 +144,8 @@ class ProgressBar:
 
         self._loop = get_event_loop()
         self._app_loop = new_event_loop()
-
         self._has_sigwinch = False
+        self._app_started = threading.Event()
 
     def __enter__(self) -> "ProgressBar":
         # Create UI Application.
@@ -213,7 +213,7 @@ class ProgressBar:
         def run() -> None:
             set_event_loop(self._app_loop)
             try:
-                self.app.run()
+                self.app.run(pre_run=self._app_started.set)
             except BaseException as e:
                 traceback.print_exc()
                 print(e)
@@ -226,6 +226,11 @@ class ProgressBar:
         return self
 
     def __exit__(self, *a: object) -> None:
+        # Wait for the app to be started. Make sure we don't quit earlier,
+        # otherwise `self.app.exit` won't terminate the app because
+        # `self.app.future` has not yet been set.
+        self._app_started.wait()
+
         # Quit UI application.
         if self.app.is_running:
             self._app_loop.call_soon_threadsafe(self.app.exit)
