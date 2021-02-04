@@ -257,7 +257,7 @@ class ProgressBar:
         return counter
 
     def invalidate(self) -> None:
-        self._app_loop.call_soon_threadsafe(self.app.invalidate)
+        self.app.invalidate()
 
 
 class _ProgressControl(UIControl):

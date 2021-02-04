@@ -460,6 +460,11 @@ class Application(Generic[_AppResult]):
             # See: https://github.com/dbcli/mycli/issues/797
             return
 
+        # `invalidate()` called if we don't have a loop yet (not running?), or
+        # after the event loop was closed.
+        if self.loop is None or self.loop.is_closed():
+            return
+
         # Never schedule a second redraw, when a previous one has not yet been
         # executed. (This should protect against other threads calling
         # 'invalidate' many times, resulting in 100% CPU.)
@@ -469,7 +474,7 @@ class Application(Generic[_AppResult]):
             self._invalidated = True
 
         # Trigger event.
-        self.on_invalidate.fire()
+        self.loop.call_soon_threadsafe(self.on_invalidate.fire)
 
         def redraw() -> None:
             self._invalidated = False
@@ -490,7 +495,9 @@ class Application(Generic[_AppResult]):
                     await sleep(cast(float, self.min_redraw_interval) - diff)
                     schedule_redraw()
 
-                self.create_background_task(redraw_in_future())
+                self.loop.call_soon_threadsafe(
+                    lambda: self.create_background_task(redraw_in_future())
+                )
             else:
                 schedule_redraw()
         else:
@@ -859,6 +866,8 @@ class Application(Generic[_AppResult]):
         Start a background task (coroutine) for the running application.
         If asyncio had nurseries like Trio, we would create a nursery in
         `Application.run_async`, and run the given coroutine in that nursery.
+
+        Not threadsafe.
         """
         task = get_event_loop().create_task(coroutine)
         self.background_tasks.append(task)
