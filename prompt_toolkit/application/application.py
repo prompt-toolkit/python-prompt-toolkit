@@ -611,7 +611,15 @@ class Application(Generic[_AppResult]):
         self._redraw()
 
     def _pre_run(self, pre_run: Optional[Callable[[], None]] = None) -> None:
-        " Called during `run`. "
+        """
+        Called during `run`.
+
+        `self.future` should be set to the new future at the point where this
+        is called in order to avoid data races. `pre_run` can be used to set a
+        `threading.Event` to synchronize with UI termination code, running in
+        another thread that would call `Application.exit`. (See the progress
+        bar code for an example.)
+        """
         if pre_run:
             pre_run()
 
@@ -658,6 +666,7 @@ class Application(Generic[_AppResult]):
             flush_task: Optional[asyncio.Task[None]] = None
 
             # Reset.
+            # (`self.future` needs to be set when `pre_run` is called.)
             self.reset()
             self._pre_run(pre_run)
 
@@ -724,6 +733,8 @@ class Application(Generic[_AppResult]):
                 try:
                     result = await f
                 finally:
+                    self.future = None  # Remove used future again.
+
                     # In any case, when the application finishes.
                     # (Successful, or because of an error.)
                     try:
@@ -953,6 +964,14 @@ class Application(Generic[_AppResult]):
     ) -> None:
         """
         Exit application.
+
+        .. note::
+
+            If `Application.exit` is called before `Application.run()` is
+            called, then the `Application` won't exit (because the
+            `Application.future` doesn't correspond to the current run). Use a
+            `pre_run` hook and an event to synchronize the closing if there's a
+            chance this can happen.
 
         :param result: Set this result for the application.
         :param exception: Set this exception as the result for an application. For
