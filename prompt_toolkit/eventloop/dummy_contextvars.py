@@ -18,6 +18,9 @@ class Context:
     def run(self, callable: Callable[..., _T], *args: Any, **kwargs: Any) -> _T:
         return callable(*args, **kwargs)
 
+    def copy(self) -> "Context":
+        return self
+
 
 class Token(Generic[_T]):
     pass

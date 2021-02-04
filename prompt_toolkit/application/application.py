@@ -546,8 +546,11 @@ class Application(Generic[_AppResult]):
         #       invalidate function is often called from a context where this
         #       application is not the active one. (Like the
         #       `PromptSession._auto_refresh_context`).
+        #       We copy the context in case the context was already active, to
+        #       prevent RuntimeErrors. (The rendering is not supposed to change
+        #       any context variables.)
         if self.context is not None:
-            self.context.run(run_in_context)
+            self.context.copy().run(run_in_context)
 
     def _start_auto_refresh_task(self) -> None:
         """
