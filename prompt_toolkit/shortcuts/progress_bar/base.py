@@ -228,7 +228,7 @@ class ProgressBar:
     def __exit__(self, *a: object) -> None:
         # Quit UI application.
         if self.app.is_running:
-            self.app.exit()
+            self._app_loop.call_soon_threadsafe(self.app.exit)
 
         if self._thread is not None:
             self._thread.join()
