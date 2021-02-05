@@ -452,7 +452,7 @@ takes a :class:`~prompt_toolkit.document.Document` as input and raises
             if text and not text.isdigit():
                 i = 0
 
-                # Get index of fist non numeric character.
+                # Get index of first non numeric character.
                 # We want to move the cursor here.
                 for i, c in enumerate(text):
                     if not c.isdigit():
