@@ -132,44 +132,116 @@ Lexers
 Layout
 ------
 
+.. automodule:: prompt_toolkit.layout
+
 The layout class itself
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: prompt_toolkit.layout
-    :members: Layout, InvalidLayoutError, walk
+.. autoclass:: prompt_toolkit.layout.Layout
 
+.. autoclass:: prompt_toolkit.layout.InvalidLayoutError
+
+.. autoclass:: prompt_toolkit.layout.walk
 
 Containers
 ^^^^^^^^^^
 
-.. automodule:: prompt_toolkit.layout
-    :members: Container, HSplit, VSplit, FloatContainer, Float, Window,
-        WindowAlign, ConditionalContainer, DynamicContainer, ScrollOffsets,
-        ColorColumn, to_container, to_window, is_container, HorizontalAlign,
-        VerticalAlign
+.. autoclass:: prompt_toolkit.layout.Container
 
+.. autoclass:: prompt_toolkit.layout.HSplit
+
+.. autoclass:: prompt_toolkit.layout.VSplit
+
+.. autoclass:: prompt_toolkit.layout.FloatContainer
+
+.. autoclass:: prompt_toolkit.layout.Float
+
+.. autoclass:: prompt_toolkit.layout.Window
+
+.. autoclass:: prompt_toolkit.layout.WindowAlign
+
+.. autoclass:: prompt_toolkit.layout.ConditionalContainer
+
+.. autoclass:: prompt_toolkit.layout.DynamicContainer
+
+.. autoclass:: prompt_toolkit.layout.ScrollOffsets
+
+.. autoclass:: prompt_toolkit.layout.ColorColumn
+
+.. autoclass:: prompt_toolkit.layout.to_container
+
+.. autoclass:: prompt_toolkit.layout.to_window
+
+.. autoclass:: prompt_toolkit.layout.is_container
+
+.. autoclass:: prompt_toolkit.layout.HorizontalAlign
+
+.. autoclass:: prompt_toolkit.layout.VerticalAlign
 
 Controls
 ^^^^^^^^
 
-.. automodule:: prompt_toolkit.layout
-    :members: BufferControl, SearchBufferControl, DummyControl,
-        FormattedTextControl, UIControl, UIContent
+.. autoclass:: prompt_toolkit.layout.BufferControl
+
+.. autoclass:: prompt_toolkit.layout.SearchBufferControl
+
+.. autoclass:: prompt_toolkit.layout.DummyControl
+
+.. autoclass:: prompt_toolkit.layout.FormattedTextControl
+
+.. autoclass:: prompt_toolkit.layout.UIControl
+
+.. autoclass:: prompt_toolkit.layout.UIContent
 
 
 Other
 ^^^^^
 
-.. automodule:: prompt_toolkit.layout
-    :members: Dimension, Margin, NumberedMargin, ScrollbarMargin,
-        ConditionalMargin, PromptMargin, CompletionsMenu,
-        MultiColumnCompletionsMenu
+
+Sizing
+""""""
+
+.. autoclass:: prompt_toolkit.layout.Dimension
+
+
+Margins
+"""""""
+
+.. autoclass:: prompt_toolkit.layout.Margin
+
+.. autoclass:: prompt_toolkit.layout.NumberedMargin
+
+.. autoclass:: prompt_toolkit.layout.ScrollbarMargin
+
+.. autoclass:: prompt_toolkit.layout.ConditionalMargin
+
+.. autoclass:: prompt_toolkit.layout.PromptMargin
+
+
+Completion Menus
+""""""""""""""""
+
+.. autoclass:: prompt_toolkit.layout.CompletionsMenu
+
+.. autoclass:: prompt_toolkit.layout.MultiColumnCompletionsMenu
+
+
+Processors
+""""""""""
 
 .. automodule:: prompt_toolkit.layout.processors
     :members:
 
+
+Utils
+"""""
+
 .. automodule:: prompt_toolkit.layout.utils
     :members:
+
+
+Screen
+""""""
 
 .. automodule:: prompt_toolkit.layout.screen
     :members:
