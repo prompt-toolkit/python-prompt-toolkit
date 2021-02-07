@@ -120,8 +120,6 @@ class Application(Generic[_AppResult]):
         :class:`~prompt_toolkit.key_binding.KeyBindingsBase` instance for
         the key bindings.
     :param clipboard: :class:`~prompt_toolkit.clipboard.Clipboard` to use.
-    :param on_abort: What to do when Control-C is pressed.
-    :param on_exit: What to do when Control-D is pressed.
     :param full_screen: When True, run the application on the alternate screen buffer.
     :param color_depth: Any :class:`~.ColorDepth` value, a callable that
         returns a :class:`~.ColorDepth` or `None` for default.
