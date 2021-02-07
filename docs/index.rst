@@ -39,7 +39,7 @@ Works everywhere:
 - Pure Python. Runs on all Python versions starting at Python 3.6.
   (Python 2.6 - 3.x is supported in prompt_toolkit 2.0; not 3.0).
 - Runs on Linux, OS X, OpenBSD and Windows systems.
-- Lightweight, the only dependencies are Pygments, six and wcwidth.
+- Lightweight, the only dependencies are Pygments and wcwidth.
 - No assumptions about I/O are made. Every prompt_toolkit application should
   also run in a telnet/ssh server or an `asyncio
   <https://docs.python.org/3/library/asyncio.html>`_ process.
