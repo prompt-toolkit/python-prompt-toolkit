@@ -25,6 +25,7 @@ __all__ = ["MouseEventType", "MouseEvent"]
 class MouseEventType(Enum):
     MOUSE_UP = "MOUSE_UP"
     MOUSE_DOWN = "MOUSE_DOWN"
+    MOUSE_DOWN_MOVE = "MOUSE_DOWN_MOVE"
     SCROLL_UP = "SCROLL_UP"
     SCROLL_DOWN = "SCROLL_DOWN"
 

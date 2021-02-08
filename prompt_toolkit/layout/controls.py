@@ -856,6 +856,11 @@ class BufferControl(UIControl):
                     buffer.exit_selection()
                     buffer.cursor_position = index
 
+                elif mouse_event.event_type == MouseEventType.MOUSE_DOWN_MOVE:
+                    if buffer.selection_state is None:
+                        buffer.start_selection(selection_type=SelectionType.CHARACTERS)
+                    buffer.cursor_position = index
+
                 elif mouse_event.event_type == MouseEventType.MOUSE_UP:
                     # When the cursor was moved to another place, select the text.
                     # (The >1 is actually a small but acceptable workaround for
@@ -863,7 +868,10 @@ class BufferControl(UIControl):
                     # the cursor can never be after the text, so the cursor
                     # will be repositioned automatically.)
                     if abs(buffer.cursor_position - index) > 1:
-                        buffer.start_selection(selection_type=SelectionType.CHARACTERS)
+                        if buffer.selection_state is None:
+                            buffer.start_selection(
+                                selection_type=SelectionType.CHARACTERS
+                            )
                         buffer.cursor_position = index
 
                     # Select word around cursor on double click.

@@ -318,13 +318,13 @@ class ConsoleInputReader:
 
         return newline_count >= 1 and text_count > 1
 
-    def _event_to_key_presses(self, ev):
+    def _event_to_key_presses(self, ev: KEY_EVENT_RECORD) -> List[KeyPress]:
         """
         For this `KEY_EVENT_RECORD`, return a list of `KeyPress` instances.
         """
         assert type(ev) == KEY_EVENT_RECORD and ev.KeyDown
 
-        result = None
+        result: Optional[KeyPress] = None
 
         u_char = ev.uChar.UnicodeChar
         ascii_char = u_char.encode("utf-8")
@@ -356,7 +356,7 @@ class ConsoleInputReader:
             and ev.ControlKeyState & self.SHIFT_PRESSED
             and result
         ):
-            result.key = {
+            mapping: Dict[str, str] = {
                 Keys.Left: Keys.ControlShiftLeft,
                 Keys.Right: Keys.ControlShiftRight,
                 Keys.Up: Keys.ControlShiftUp,
@@ -366,14 +366,15 @@ class ConsoleInputReader:
                 Keys.Insert: Keys.ControlShiftInsert,
                 Keys.PageUp: Keys.ControlShiftPageUp,
                 Keys.PageDown: Keys.ControlShiftPageDown,
-            }.get(result.key, result.key)
+            }
+            result.key = mapping.get(result.key, result.key)
 
         # Correctly handle Control-Arrow/Home/End and Control-Insert keys.
         if (
             ev.ControlKeyState & self.LEFT_CTRL_PRESSED
             or ev.ControlKeyState & self.RIGHT_CTRL_PRESSED
         ) and result:
-            result.key = {
+            mapping = {
                 Keys.Left: Keys.ControlLeft,
                 Keys.Right: Keys.ControlRight,
                 Keys.Up: Keys.ControlUp,
@@ -383,12 +384,13 @@ class ConsoleInputReader:
                 Keys.Insert: Keys.ControlInsert,
                 Keys.PageUp: Keys.ControlPageUp,
                 Keys.PageDown: Keys.ControlPageDown,
-            }.get(result.key, result.key)
+            }
+            result.key = mapping.get(result.key, result.key)
 
         # Turn 'Tab' into 'BackTab' when shift was pressed.
         # Also handle other shift-key combination
         if ev.ControlKeyState & self.SHIFT_PRESSED and result:
-            result.key = {
+            mapping = {
                 Keys.Tab: Keys.BackTab,
                 Keys.Left: Keys.ShiftLeft,
                 Keys.Right: Keys.ShiftRight,
@@ -399,7 +401,8 @@ class ConsoleInputReader:
                 Keys.Insert: Keys.ShiftInsert,
                 Keys.PageUp: Keys.ShiftPageUp,
                 Keys.PageDown: Keys.ShiftPageDown,
-            }.get(result.key, result.key)
+            }
+            result.key = mapping.get(result.key, result.key)
 
         # Turn 'Space' into 'ControlSpace' when control was pressed.
         if (
@@ -443,23 +446,42 @@ class ConsoleInputReader:
         else:
             return []
 
-    def _handle_mouse(self, ev):
+    def _handle_mouse(self, ev: MOUSE_EVENT_RECORD) -> List[KeyPress]:
         """
         Handle mouse events. Return a list of KeyPress instances.
         """
         FROM_LEFT_1ST_BUTTON_PRESSED = 0x1
+        MOUSE_MOVED = 0x0001
+        MOUSE_WHEELED = 0x0004
 
         result = []
+        event_type: Optional[MouseEventType] = None
 
-        # Check event type.
-        if ev.ButtonState == FROM_LEFT_1ST_BUTTON_PRESSED:
-            # On a key press, generate both the mouse down and up event.
-            for event_type in [MouseEventType.MOUSE_DOWN, MouseEventType.MOUSE_UP]:
-                data = ";".join(
-                    [event_type.value, str(ev.MousePosition.X), str(ev.MousePosition.Y)]
-                )
-                result.append(KeyPress(Keys.WindowsMouseEvent, data))
+        # Move events.
+        if ev.EventFlags & MOUSE_MOVED:
+            if ev.ButtonState == FROM_LEFT_1ST_BUTTON_PRESSED:
+                event_type = MouseEventType.MOUSE_DOWN_MOVE
 
+        # Scroll events.
+        elif ev.EventFlags & MOUSE_WHEELED:
+            if ev.ButtonState > 0:
+                event_type = MouseEventType.SCROLL_UP
+            else:
+                event_type = MouseEventType.SCROLL_DOWN
+
+        # Mouse down (left button).
+        elif ev.ButtonState == FROM_LEFT_1ST_BUTTON_PRESSED:
+            event_type = MouseEventType.MOUSE_DOWN
+
+        # No key pressed anymore: mouse up.
+        else:
+            event_type = MouseEventType.MOUSE_UP
+
+        if event_type is not None:
+            data = ";".join(
+                [event_type.value, str(ev.MousePosition.X), str(ev.MousePosition.Y)]
+            )
+            result.append(KeyPress(Keys.WindowsMouseEvent, data))
         return result
 
 
