@@ -131,8 +131,9 @@ def load_mouse_bindings() -> KeyBindings:
         output = event.app.renderer.output
 
         from prompt_toolkit.output.win32 import Win32Output
+        from prompt_toolkit.output.windows10 import Windows10_Output
 
-        if isinstance(output, Win32Output):
+        if isinstance(output, (Win32Output, Windows10_Output)):
             screen_buffer_info = output.get_win32_screen_buffer_info()
             rows_above_cursor = (
                 screen_buffer_info.dwCursorPosition.Y - event.app.renderer._cursor_pos.y
