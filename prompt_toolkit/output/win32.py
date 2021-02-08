@@ -441,6 +441,12 @@ class Win32Output(Output):
 
     def enable_mouse_support(self) -> None:
         ENABLE_MOUSE_INPUT = 0x10
+
+        # This `ENABLE_QUICK_EDIT_MODE` flag needs to be cleared for mouse
+        # support to work, but it's possible that it was already cleared
+        # before.
+        ENABLE_QUICK_EDIT_MODE = 0x0040
+
         handle = HANDLE(windll.kernel32.GetStdHandle(STD_INPUT_HANDLE))
 
         original_mode = DWORD()
@@ -448,7 +454,7 @@ class Win32Output(Output):
         self._winapi(
             windll.kernel32.SetConsoleMode,
             handle,
-            original_mode.value | ENABLE_MOUSE_INPUT,
+            (original_mode.value | ENABLE_MOUSE_INPUT) & ~ENABLE_QUICK_EDIT_MODE,
         )
 
     def disable_mouse_support(self) -> None:
