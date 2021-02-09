@@ -1,6 +1,8 @@
+import contextvars
 import msvcrt
 import os
 import sys
+import threading
 from abc import abstractmethod
 from asyncio import get_event_loop
 from contextlib import contextmanager
@@ -8,7 +10,6 @@ from ctypes import pointer, windll
 from ctypes.wintypes import DWORD, HANDLE
 from typing import Callable, ContextManager, Dict, Iterable, List, Optional, TextIO
 
-from prompt_toolkit.eventloop import run_in_executor_with_context
 from prompt_toolkit.eventloop.win32 import create_win32_event, wait_for_handles
 from prompt_toolkit.key_binding.key_processor import KeyPress
 from prompt_toolkit.keys import Keys
@@ -38,10 +39,6 @@ class _Win32InputBase(Input):
     """
     Base class for `Win32Input` and `Win32PipeInput`.
     """
-
-    def __init__(self) -> None:
-        self.win32_handles = _Win32Handles()
-
     @property
     @abstractmethod
     def handle(self) -> HANDLE:
@@ -54,7 +51,7 @@ class Win32Input(_Win32InputBase):
     """
 
     def __init__(self, stdin: Optional[TextIO] = None) -> None:
-        super().__init__()
+        self.win32_handles = _Win32Handles()
         self.console_input_reader = ConsoleInputReader()
 
     def attach(self, input_ready_callback: Callable[[], None]) -> ContextManager[None]:
@@ -482,6 +479,9 @@ class _Win32Handles:
     def __init__(self) -> None:
         self._handle_callbacks: Dict[int, Callable[[], None]] = {}
 
+        # Background threads that do the blocking `wait_for_handles` calls.
+        self._wait_threads: Dict[int, threading.Thread] = {}
+
         # Windows Events that are triggered when we have to stop watching this
         # handle.
         self._remove_events: Dict[int, HANDLE] = {}
@@ -511,7 +511,7 @@ class _Win32Handles:
             try:
                 callback()
             finally:
-                run_in_executor_with_context(wait, loop=loop)
+                start_wait_thread()
 
         # Wait for the input to become ready.
         # (Use an executor for this, the Windows asyncio event loop doesn't
@@ -527,7 +527,13 @@ class _Win32Handles:
             else:
                 loop.call_soon_threadsafe(ready)
 
-        run_in_executor_with_context(wait, loop=loop)
+        def start_wait_thread() -> None:
+            ctx = contextvars.copy_context()
+            thread = threading.Thread(target=ctx.run, args=(wait, ))
+            self._wait_threads[handle.value] = thread
+            thread.start()
+
+        start_wait_thread()
 
     def remove_win32_handle(self, handle: HANDLE) -> Optional[Callable[[], None]]:
         """
@@ -544,6 +550,14 @@ class _Win32Handles:
             pass
         else:
             windll.kernel32.SetEvent(event)
+
+        # Join the background thread, if there is one.
+        try:
+            wait_thread = self._wait_threads.pop(handle.value)
+        except KeyError:
+            pass
+        else:
+            wait_thread.join()
 
         try:
             return self._handle_callbacks.pop(handle.value)
