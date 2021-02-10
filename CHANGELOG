@@ -1,6 +1,27 @@
 CHANGELOG
 =========
 
+3.0.15: 2021-02-10
+------------------
+
+Fixes:
+- Set stdout blocking when writing in vt100 output. Fixes an issue when uvloop
+  is used and big amounts of text are written.
+- Guarantee height of at least 1 for both labels and text areas.
+- In the `Window` rendering, take `dont_extend_width`/`dont_extend_height` into
+  account. This fixes issues where one window is enlarged unexpectedly because
+  it's bundled with another window in a `HSplit`/`VSplit`, but with different
+  width/height.
+- Don't handle `SIGWINCH` in progress bar anymore. (The UI runs in another
+  thread, and we have terminal size polling now).
+- Fix several thread safety issues and a race condition in the progress bar.
+- Fix thread safety issues in `Application.invalidate()`. (Fixes a
+  `RuntimeError` in some situations when using progress bars.)
+- Fix handling of mouse events on Windows if we have a Windows 10 console with
+  ANSI support.
+- Disable `QUICK_EDIT_MODE` on Windows 10 when mouse support is requested.
+
+
 3.0.14: 2021-01-24
 ------------------
 
