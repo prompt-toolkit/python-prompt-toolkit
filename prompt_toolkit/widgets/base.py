@@ -403,13 +403,19 @@ class Button:
             else:
                 return "class:button"
 
+        # Note: `dont_extend_width` is False, because we want to allow buttons
+        #       to take more space if the parent container provides more space.
+        #       Otherwise, we will also truncate the text.
+        #       Probably we need a better way here to adjust to width of the
+        #       button to the text.
+
         self.window = Window(
             self.control,
             align=WindowAlign.CENTER,
             height=1,
             width=width,
             style=get_style,
-            dont_extend_width=True,
+            dont_extend_width=False,
             dont_extend_height=True,
         )
 
