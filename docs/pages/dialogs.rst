@@ -164,7 +164,7 @@ Styling reference sheet
 
 In reality, the shortcut commands presented above build a full-screen frame by using a list of components. The two tables below allow you to get the classnames available for each shortcut, therefore you will be able to provide a custom style for every element that is displayed, using the method provided above.
 
-.. note:: All the shortcuts use the ``Dialog`` component, therefore it isn't specified explicitely below.
+.. note:: All the shortcuts use the ``Dialog`` component, therefore it isn't specified explicitly below.
 
 +--------------------------+-------------------------+
 | Shortcut                 | Components used         |
@@ -242,7 +242,7 @@ _______
 Let's customize the example of the ``checkboxlist_dialog``.
 
 It uses 2 ``Button``, a ``CheckboxList`` and a ``Label``, packed inside a ``Dialog``.
-Threfore we can customize each of these elements separately, using for instance:
+Therefore we can customize each of these elements separately, using for instance:
 
 .. code:: python
 
