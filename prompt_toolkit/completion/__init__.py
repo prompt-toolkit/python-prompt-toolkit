@@ -2,12 +2,14 @@ from .base import (
     CompleteEvent,
     Completer,
     Completion,
+    ConditionalCompleter,
     DummyCompleter,
     DynamicCompleter,
     ThreadedCompleter,
     get_common_complete_suffix,
     merge_completers,
 )
+from .deduplicate import DeduplicateCompleter
 from .filesystem import ExecutableCompleter, PathCompleter
 from .fuzzy_completer import FuzzyCompleter, FuzzyWordCompleter
 from .nested import NestedCompleter
@@ -21,6 +23,7 @@ __all__ = [
     "DummyCompleter",
     "DynamicCompleter",
     "CompleteEvent",
+    "ConditionalCompleter",
     "merge_completers",
     "get_common_complete_suffix",
     # Filesystem.
@@ -33,4 +36,6 @@ __all__ = [
     "NestedCompleter",
     # Word completer.
     "WordCompleter",
+    # Deduplicate
+    "DeduplicateCompleter",
 ]
