@@ -1,6 +1,18 @@
 CHANGELOG
 =========
 
+3.0.16: 2021-02-11
+------------------
+
+New features:
+- Added `ScrollablePane`: a scrollable layout container.
+  This allows applications to build a layout, larger than the terminal, with a
+  vertical scroll bar. The vertical scrolling will be done automatically when
+  certain widgets receive the focus.
+- Added `DeduplicateCompleter and `ConditionalCompleter`.
+- Added `deduplicate` argument to `merge_completers`.
+
+
 3.0.15: 2021-02-10
 ------------------
 
