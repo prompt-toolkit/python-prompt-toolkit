@@ -6,10 +6,12 @@ from contextlib import contextmanager
 
 from prompt_toolkit.completion import (
     CompleteEvent,
+    DeduplicateCompleter,
     FuzzyWordCompleter,
     NestedCompleter,
     PathCompleter,
     WordCompleter,
+    merge_completers,
 )
 from prompt_toolkit.document import Document
 
@@ -439,3 +441,28 @@ def test_nested_completer():
         Document("show ip interface br"), CompleteEvent()
     )
     assert {c.text for c in completions} == {"brief"}
+
+
+def test_deduplicate_completer():
+    def create_completer(deduplicate: bool):
+        return merge_completers(
+            [
+                WordCompleter(["hello", "world", "abc", "def"]),
+                WordCompleter(["xyz", "xyz", "abc", "def"]),
+            ],
+            deduplicate=deduplicate,
+        )
+
+    completions = list(
+        create_completer(deduplicate=False).get_completions(
+            Document(""), CompleteEvent()
+        )
+    )
+    assert len(completions) == 8
+
+    completions = list(
+        create_completer(deduplicate=True).get_completions(
+            Document(""), CompleteEvent()
+        )
+    )
+    assert len(completions) == 5

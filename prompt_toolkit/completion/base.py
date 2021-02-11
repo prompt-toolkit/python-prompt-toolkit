@@ -5,6 +5,7 @@ from typing import AsyncGenerator, Callable, Iterable, Optional, Sequence
 
 from prompt_toolkit.document import Document
 from prompt_toolkit.eventloop import generator_to_async_generator
+from prompt_toolkit.filters import FilterOrBool, to_filter
 from prompt_toolkit.formatted_text import AnyFormattedText, StyleAndTextTuples
 
 __all__ = [
@@ -14,6 +15,7 @@ __all__ = [
     "DummyCompleter",
     "DynamicCompleter",
     "CompleteEvent",
+    "ConditionalCompleter",
     "merge_completers",
     "get_common_complete_suffix",
 ]
@@ -275,6 +277,42 @@ class DynamicCompleter(Completer):
         return "DynamicCompleter(%r -> %r)" % (self.get_completer, self.get_completer())
 
 
+class ConditionalCompleter(Completer):
+    """
+    Wrapper around any other completer that will enable/disable the completions
+    depending on whether the received condition is satisfied.
+
+    :param completer: :class:`.Completer` instance.
+    :param filter: :class:`.Filter` instance.
+    """
+
+    def __init__(self, completer: Completer, filter: FilterOrBool) -> None:
+        self.completer = completer
+        self.filter = to_filter(filter)
+
+    def __repr__(self) -> str:
+        return "ConditionalCompleter(%r, filter=%r)" % (self.completer, self.filter)
+
+    def get_completions(
+        self, document: Document, complete_event: CompleteEvent
+    ) -> Iterable[Completion]:
+        # Get all completions in a blocking way.
+        if self.filter():
+            for c in self.completer.get_completions(document, complete_event):
+                yield c
+
+    async def get_completions_async(
+        self, document: Document, complete_event: CompleteEvent
+    ) -> AsyncGenerator[Completion, None]:
+
+        # Get all completions in a non-blocking way.
+        if self.filter():
+            async for item in self.completer.get_completions_async(
+                document, complete_event
+            ):
+                yield item
+
+
 class _MergedCompleter(Completer):
     """
     Combine several completers into one.
@@ -295,16 +333,27 @@ class _MergedCompleter(Completer):
         self, document: Document, complete_event: CompleteEvent
     ) -> AsyncGenerator[Completion, None]:
 
-        # Get all completions from the other completers in a blocking way.
+        # Get all completions from the other completers in a non-blocking way.
         for completer in self.completers:
             async for item in completer.get_completions_async(document, complete_event):
                 yield item
 
 
-def merge_completers(completers: Sequence[Completer]) -> _MergedCompleter:
+def merge_completers(
+    completers: Sequence[Completer], deduplicate: bool = False
+) -> Completer:
     """
     Combine several completers into one.
+
+    :param deduplicate: If `True`, wrap the result in a `DeduplicateCompleter`
+        so that completions that would result in the same text will be
+        deduplicated.
     """
+    if deduplicate:
+        from .deduplicate import DeduplicateCompleter
+
+        return DeduplicateCompleter(_MergedCompleter(completers))
+
     return _MergedCompleter(completers)
 
 
