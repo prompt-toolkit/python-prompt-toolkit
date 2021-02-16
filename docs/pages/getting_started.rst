@@ -24,8 +24,8 @@ Several use cases: prompts versus full screen terminal applications
 However, when it became more mature, we realised that all the components for
 full screen applications are there and `prompt_toolkit` is very capable of
 handling many use situations. `Pyvim
-<http://github.com/prompt_toolkit/pyvim>`_ and `pymux
-<http://github.com/prompt_toolkit/pymux>`_ are examples of full screen
+<http://github.com/prompt-toolkit/pyvim>`_ and `pymux
+<http://github.com/prompt-toolkit/pymux>`_ are examples of full screen
 applications.
 
 .. image:: ../images/pyvim.png
