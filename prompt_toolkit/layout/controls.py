@@ -375,7 +375,9 @@ class FormattedTextControl(UIControl):
         wrap_lines: bool,
         get_line_prefix: Optional[GetLinePrefixCallable],
     ) -> Optional[int]:
-
+        """
+        Return the preferred height for this control.
+        """
         content = self.create_content(width, None)
         if wrap_lines:
             height = 0
