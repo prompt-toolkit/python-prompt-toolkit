@@ -29,7 +29,7 @@ class ScrollablePane(Container):
 
         If you want to display a completion menu for widgets in this
         `ScrollablePane`, then it's still a good practice to use a
-        `FloatContainer` with a `CompletionMenu` in a `Float` at the top-level
+        `FloatContainer` with a `CompletionsMenu` in a `Float` at the top-level
         of the layout hierarchy, rather then nesting a `FloatContainer` in this
         `ScrollablePane`. (Otherwise, it's possible that the completion menu
         is clipped.)
