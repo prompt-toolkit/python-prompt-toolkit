@@ -751,7 +751,7 @@ class FloatContainer(Container):
                        floats=[
                            Float(xcursor=True,
                                 ycursor=True,
-                                content=CompletionMenu(...))
+                                content=CompletionsMenu(...))
                        ])
 
     :param z_index: (int or None) When specified, this can be used to bring
