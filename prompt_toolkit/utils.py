@@ -36,6 +36,10 @@ __all__ = [
     "is_dumb_terminal",
 ]
 
+# Used to ensure sphinx autodoc does not try to import platform-specific
+# stuff when documenting win32.py modules.
+SPHINX_AUTODOC_RUNNING = "sphinx.ext.autodoc" in sys.modules
+
 _Sender = TypeVar("_Sender", covariant=True)
 
 
