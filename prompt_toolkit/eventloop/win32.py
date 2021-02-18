@@ -1,4 +1,12 @@
-from ctypes import pointer, windll
+from ctypes import pointer
+
+from ..utils import SPHINX_AUTODOC_RUNNING
+
+# Do not import win32-specific stuff when generating documentation.
+# Otherwise RTD would be unable to generate docs for this module.
+if not SPHINX_AUTODOC_RUNNING:
+    from ctypes import windll
+
 from ctypes.wintypes import BOOL, DWORD, HANDLE
 from typing import List, Optional
 

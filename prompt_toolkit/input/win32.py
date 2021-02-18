@@ -1,10 +1,18 @@
-import msvcrt
 import os
 import sys
 from abc import abstractmethod
 from asyncio import get_event_loop
 from contextlib import contextmanager
-from ctypes import pointer, windll
+
+from ..utils import SPHINX_AUTODOC_RUNNING
+
+# Do not import win32-specific stuff when generating documentation.
+# Otherwise RTD would be unable to generate docs for this module.
+if not SPHINX_AUTODOC_RUNNING:
+    import msvcrt
+    from ctypes import windll
+
+from ctypes import pointer
 from ctypes.wintypes import DWORD, HANDLE
 from typing import Callable, ContextManager, Dict, Iterable, List, Optional, TextIO
 
