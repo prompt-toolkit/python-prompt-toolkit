@@ -892,7 +892,6 @@ Enabling can be done by passing the ``mouse_support=True`` option.
 .. code:: python
 
     from prompt_toolkit import prompt
-    import getpass
 
     prompt('What is your name: ', mouse_support=True)
 
@@ -907,7 +906,6 @@ scroll horizontally.
 .. code:: python
 
     from prompt_toolkit import prompt
-    import getpass
 
     prompt('What is your name: ', wrap_lines=False)
 
@@ -921,7 +919,6 @@ asterisks (``*`` characters).
 .. code:: python
 
     from prompt_toolkit import prompt
-    import getpass
 
     prompt('Enter password: ', is_password=True)
 
