@@ -75,6 +75,9 @@ class Keys(str, Enum):
     ControlSquareClose = "c-]"
     ControlCircumflex = "c-^"
     ControlUnderscore = "c-_"
+    ControlBackspace = "c-backspace"
+    ShiftBackspace = "s-backspace"
+    ControlShiftBackspace = "c-s-backspace"
 
     Left = "left"
     Right = "right"

@@ -145,7 +145,7 @@ class ConsoleInputReader:
         b"\x1d": Keys.ControlSquareClose,  # Control-]
         b"\x1e": Keys.ControlCircumflex,  # Control-^
         b"\x1f": Keys.ControlUnderscore,  # Control-underscore (Also for Ctrl-hyphen.)
-        b"\x7f": Keys.Backspace,  # (127) Backspace   (ASCII Delete.)
+        b"\x7f": Keys.ControlBackspace,  # (127) Backspace   (ASCII Delete.)
     }
 
     # Keys that don't carry character data.
@@ -366,6 +366,7 @@ class ConsoleInputReader:
                 Keys.Insert: Keys.ControlShiftInsert,
                 Keys.PageUp: Keys.ControlShiftPageUp,
                 Keys.PageDown: Keys.ControlShiftPageDown,
+                Keys.Backspace: Keys.ControlShiftBackspace,
             }
             result.key = mapping.get(result.key, result.key)
 
@@ -403,6 +404,7 @@ class ConsoleInputReader:
                 Keys.Delete: Keys.ShiftDelete,
                 Keys.PageUp: Keys.ShiftPageUp,
                 Keys.PageDown: Keys.ShiftPageDown,
+                Keys.Backspace: Keys.ShiftBackspace,
             }
             result.key = mapping.get(result.key, result.key)
 
