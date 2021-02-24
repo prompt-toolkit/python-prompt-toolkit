@@ -369,7 +369,7 @@ class ConsoleInputReader:
             }
             result.key = mapping.get(result.key, result.key)
 
-        # Correctly handle Control-Arrow/Home/End and Control-Insert keys.
+        # Correctly handle Control-Arrow/Home/End and Control-Insert/Delete keys.
         if (
             ev.ControlKeyState & self.LEFT_CTRL_PRESSED
             or ev.ControlKeyState & self.RIGHT_CTRL_PRESSED
@@ -382,6 +382,7 @@ class ConsoleInputReader:
                 Keys.Home: Keys.ControlHome,
                 Keys.End: Keys.ControlEnd,
                 Keys.Insert: Keys.ControlInsert,
+                Keys.Delete: Keys.ControlDelete,
                 Keys.PageUp: Keys.ControlPageUp,
                 Keys.PageDown: Keys.ControlPageDown,
             }
@@ -399,6 +400,7 @@ class ConsoleInputReader:
                 Keys.Home: Keys.ShiftHome,
                 Keys.End: Keys.ShiftEnd,
                 Keys.Insert: Keys.ShiftInsert,
+                Keys.Delete: Keys.ShiftDelete,
                 Keys.PageUp: Keys.ShiftPageUp,
                 Keys.PageDown: Keys.ShiftPageDown,
             }
