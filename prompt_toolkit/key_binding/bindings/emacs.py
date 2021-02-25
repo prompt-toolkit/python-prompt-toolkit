@@ -58,6 +58,7 @@ def load_emacs_bindings() -> KeyBindingsBase:
     handle("c-a")(get_by_name("beginning-of-line"))
     handle("c-b")(get_by_name("backward-char"))
     handle("c-delete", filter=insert_mode)(get_by_name("kill-word"))
+    handle("c-backspace", filter=insert_mode)(get_by_name("backward-kill-word"))
     handle("c-e")(get_by_name("end-of-line"))
     handle("c-f")(get_by_name("forward-char"))
     handle("c-left")(get_by_name("backward-word"))
