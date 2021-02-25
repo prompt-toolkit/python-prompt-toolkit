@@ -2,6 +2,7 @@ import pathlib
 import re
 from typing import Iterable
 
+from prompt_toolkit import prompt
 from prompt_toolkit.completion import CompleteEvent, Completer, Completion
 from prompt_toolkit.document import Document
 
@@ -34,3 +35,17 @@ class PathCompleter(Completer):
         # NOTE: currently doesnt work with filepaths with spaces. Other non-ascii characters may also break it.
         for sub_path in search_path.glob(f"{file_substr}*"):
             yield Completion(sub_path.as_posix(), start_position=-len(path))
+
+
+
+def main():
+    text = prompt(
+        "shell: ",
+        completer=PathCompleter(),
+        complete_while_typing=False,
+    )
+    print("You said: %s" % text)
+
+
+if __name__ == "__main__":
+    main()
