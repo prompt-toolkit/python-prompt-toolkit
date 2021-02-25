@@ -10,7 +10,9 @@ _FILE_PATH_RE = re.compile(r"[^\s\"'\t]+")
 
 
 class PathCompleter(Completer):
-    def get_completions(self, document: Document, complete_event: CompleteEvent) -> Iterable[Completion]:
+    def get_completions(
+        self, document: Document, complete_event: CompleteEvent
+    ) -> Iterable[Completion]:
         path = document.get_word_before_cursor(pattern=_FILE_PATH_RE)
 
         # absoulte path
@@ -35,7 +37,6 @@ class PathCompleter(Completer):
         # NOTE: currently doesnt work with filepaths with spaces. Other non-ascii characters may also break it.
         for sub_path in search_path.glob(f"{file_substr}*"):
             yield Completion(sub_path.as_posix(), start_position=-len(path))
-
 
 
 def main():
