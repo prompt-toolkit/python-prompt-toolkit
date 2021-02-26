@@ -347,7 +347,7 @@ class ConsoleInputReader:
             else:
                 result = KeyPress(u_char, u_char)
 
-        # First we handle Shift-Control-Arrow/Home/End (need to do this first)
+        # First we handle Shift-Control-Arrow/Home/End/Ins/Del/PgUp/PgDown/BS (need to do this first)
         if (
             (
                 ev.ControlKeyState & self.LEFT_CTRL_PRESSED
@@ -364,6 +364,7 @@ class ConsoleInputReader:
                 Keys.Home: Keys.ControlShiftHome,
                 Keys.End: Keys.ControlShiftEnd,
                 Keys.Insert: Keys.ControlShiftInsert,
+                Keys.Delete: Keys.ControlShiftDelete,
                 Keys.PageUp: Keys.ControlShiftPageUp,
                 Keys.PageDown: Keys.ControlShiftPageDown,
                 Keys.Backspace: Keys.ControlShiftBackspace,
