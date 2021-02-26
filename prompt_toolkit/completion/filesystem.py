@@ -1,4 +1,5 @@
 import os
+import re
 from typing import Callable, Iterable, List, Optional
 
 from prompt_toolkit.completion import CompleteEvent, Completer, Completion
@@ -8,6 +9,8 @@ __all__ = [
     "PathCompleter",
     "ExecutableCompleter",
 ]
+
+_FILE_PATH_RE = re.compile(r"[^\s\"'\t]+")
 
 
 class PathCompleter(Completer):
@@ -20,6 +23,7 @@ class PathCompleter(Completer):
                         this file should show up in the completion. ``None``
                         when no filtering has to be done.
     :param min_input_len: Don't do autocompletion when the input string is shorter.
+    :param use_word: Search up to the last white space instead of the whole input.
     """
 
     def __init__(
@@ -29,6 +33,7 @@ class PathCompleter(Completer):
         file_filter: Optional[Callable[[str], bool]] = None,
         min_input_len: int = 0,
         expanduser: bool = False,
+        use_word: bool = False,
     ) -> None:
 
         self.only_directories = only_directories
@@ -36,11 +41,17 @@ class PathCompleter(Completer):
         self.file_filter = file_filter or (lambda _: True)
         self.min_input_len = min_input_len
         self.expanduser = expanduser
+        self.use_word = use_word
 
     def get_completions(
         self, document: Document, complete_event: CompleteEvent
     ) -> Iterable[Completion]:
-        text = document.text_before_cursor
+
+        text = (
+            document.text_before_cursor
+            if not self.use_word
+            else document.get_word_before_cursor(pattern=_FILE_PATH_RE)
+        )
 
         # Complete only when we have at least the minimal input length,
         # otherwise, we can too many results and autocompletion will become too
@@ -93,7 +104,11 @@ class PathCompleter(Completer):
                 if not self.file_filter(full_name):
                     continue
 
-                yield Completion(completion, 0, display=filename)
+                yield Completion(
+                    completion,
+                    0,
+                    display=filename,
+                )
         except OSError:
             pass
 
