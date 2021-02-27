@@ -57,12 +57,11 @@ ANSI_SEQUENCES: Dict[str, Union[Keys, Tuple[Keys, ...]]] = {
     "\x1f": Keys.ControlUnderscore,  # Control-underscore (Also for Ctrl-hyphen.)
     # ASCII Delete (0x7f)
     # Vt220 (and Linux terminal) send this when pressing backspace. We map this
-    # to ControlH, because that will make it easier to create key bindings that
-    # work everywhere, with the trade-off that it's no longer possible to
-    # handle backspace and control-h individually for the few terminals that
-    # support it. (Most terminals send ControlH when backspace is pressed.)
+    # to Backspace, although that will make it harder to create key bindings that
+    # work everywhere given that some terminals don't support it
+    # (they send ControlH when backspace is pressed)
     # See: http://www.ibb.net/~anne/keyboard.html
-    "\x7f": Keys.ControlH,
+    "\x7f": Keys.Backspace,
     # --
     # Various
     "\x1b[1~": Keys.Home,  # tmux
