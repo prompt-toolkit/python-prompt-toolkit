@@ -19,16 +19,38 @@ from enum import Enum
 
 from .data_structures import Point
 
-__all__ = ["MouseEventType", "MouseEvent"]
+__all__ = ["MouseEventType", "MouseButton", "MouseModifier", "MouseEvent"]
 
 
 class MouseEventType(Enum):
-    MOUSE_UP = "MOUSE_UP"
-    MOUSE_DOWN = "MOUSE_DOWN"
-    MOUSE_DOWN_MOVE = "MOUSE_DOWN_MOVE"
-    SCROLL_UP = "SCROLL_UP"
+    MOUSE_UP    = "MOUSE_UP"   #Ryan Burgert: This same event type is fired for all three events: left mouse up, right mouse up, or middle mouse up
+    MOUSE_DOWN  = "MOUSE_DOWN" #Ryan Burgert: This implicitly refers to the left mouse down (this event is not fired upon pressing the middle or right mouse buttons. I didn't change it's name because I fear creating incompatiabilities with older code.
+    SCROLL_UP   = "SCROLL_UP"
     SCROLL_DOWN = "SCROLL_DOWN"
+    MOUSE_DRAG  = "MOUSE_DRAG" #Triggered when the left   mouse button is held down, and the mouse moves
 
+class MouseButton(Enum):
+    LEFT           = "LEFT"
+    MIDDLE         = "MIDDLE"
+    RIGHT          = "RIGHT"
+    NO_BUTTON      = ""               # When we're scrolling, or just moving the mouse and not pressing a button, mouse_event.button=="". The reason it's an empty string is so that bool(MouseButton.NO_BUTTON)==False
+    UNKNOWN_BUTTON = "UNKNOWN_BUTTON" # This is for when we don't know which mouse button was pressed, but we do know that one has been pressed during this mouse event (as opposed to scrolling, for example)
+
+class MouseModifierKey(Enum):
+    SHIFT   = "SHIFT"
+    ALT     = "ALT"
+    CONTROL = "CONTROL"
+
+class MouseModifier(Enum):
+    NO_MODIFIER       = (                                                                     )
+    SHIFT             = (MouseModifierKey.SHIFT                                              ,)
+    ALT               = (                       MouseModifierKey.ALT                         ,)
+    SHIFT_ALT         = (MouseModifierKey.SHIFT,MouseModifierKey.ALT                         ,)
+    CONTROL           = (                                            MouseModifierKey.CONTROL,)
+    SHIFT_CONTROL     = (MouseModifierKey.SHIFT,                     MouseModifierKey.CONTROL,)
+    ALT_CONTROL       = (                       MouseModifierKey.ALT,MouseModifierKey.CONTROL,)
+    SHIFT_ALT_CONTROL = (MouseModifierKey.SHIFT,MouseModifierKey.ALT,MouseModifierKey.CONTROL,)
+    UNKNOWN_MODIFIER  = ("UNKNOWN") # This is used if we're not sure what modifiers are being used, if any
 
 class MouseEvent:
     """
@@ -38,9 +60,16 @@ class MouseEvent:
     :param event_type: `MouseEventType`.
     """
 
-    def __init__(self, position: Point, event_type: MouseEventType) -> None:
-        self.position = position
+    def __init__(
+             self,
+             position: Point,
+             event_type: MouseEventType,
+             button:MouseButton,
+             modifier:MouseModifier) -> None:
+        self.position   = position
         self.event_type = event_type
+        self.button     = button
+        self.modifier   = modifier
 
     def __repr__(self) -> str:
-        return "MouseEvent(%r, %r)" % (self.position, self.event_type)
+        return "MouseEvent(%r,%r,%r,%r)" % (self.position, self.event_type, self.button, self.modifier)

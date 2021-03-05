@@ -462,7 +462,7 @@ class ConsoleInputReader:
         # Move events.
         if ev.EventFlags & MOUSE_MOVED:
             if ev.ButtonState == FROM_LEFT_1ST_BUTTON_PRESSED:
-                event_type = MouseEventType.MOUSE_DOWN_MOVE
+                event_type = MouseEventType.MOUSE_DRAG
 
         # Scroll events.
         elif ev.EventFlags & MOUSE_WHEELED:
