@@ -305,6 +305,8 @@ class ScrollablePane(Container):
                             y=event.position.y + self.vertical_scroll - ypos,
                         ),
                         event_type=event.event_type,
+                        button=event.button,
+                        modifiers=event.modifiers,
                     )
                     handler(new_event)
 

@@ -16,7 +16,7 @@ from prompt_toolkit.layout.containers import (
     Window,
 )
 from prompt_toolkit.layout.controls import FormattedTextControl
-from prompt_toolkit.mouse_events import MouseEvent, MouseEventType
+from prompt_toolkit.mouse_events import MouseButton, MouseEvent, MouseEventType
 from prompt_toolkit.utils import get_cwidth
 from prompt_toolkit.widgets import Shadow
 
@@ -233,14 +233,20 @@ class MenuContainer:
         # Generate text fragments for the main menu.
         def one_item(i: int, item: MenuItem) -> Iterable[OneStyleAndTextTuple]:
             def mouse_handler(mouse_event: MouseEvent) -> None:
-                if mouse_event.event_type == MouseEventType.MOUSE_UP:
+                hover = mouse_event.event_type == MouseEventType.MOUSE_MOVE
+                if (
+                    mouse_event.event_type == MouseEventType.MOUSE_DOWN
+                    or hover
+                    and focused
+                ):
                     # Toggle focus.
                     app = get_app()
-                    if app.layout.has_focus(self.window):
-                        if self.selected_menu == [i]:
-                            app.layout.focus_last()
-                    else:
-                        app.layout.focus(self.window)
+                    if not hover:
+                        if app.layout.has_focus(self.window):
+                            if self.selected_menu == [i]:
+                                app.layout.focus_last()
+                        else:
+                            app.layout.focus(self.window)
                     self.selected_menu = [i]
 
             yield ("class:menu-bar", " ", mouse_handler)
@@ -276,9 +282,17 @@ class MenuContainer:
                         i: int, item: MenuItem
                     ) -> Iterable[OneStyleAndTextTuple]:
                         def mouse_handler(mouse_event: MouseEvent) -> None:
-                            if mouse_event.event_type == MouseEventType.MOUSE_UP:
+                            if item.disabled:
+                                # The arrow keys can't interact with menu items that are disabled.
+                                # The mouse shouldn't be able to either.
+                                return
+                            hover = mouse_event.event_type == MouseEventType.MOUSE_MOVE
+                            if (
+                                mouse_event.event_type == MouseEventType.MOUSE_UP
+                                or hover
+                            ):
                                 app = get_app()
-                                if item.handler:
+                                if not hover and item.handler:
                                     app.layout.focus_last()
                                     item.handler()
                                 else:

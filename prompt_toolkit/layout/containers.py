@@ -1861,6 +1861,8 @@ class Window(Container):
                         MouseEvent(
                             position=Point(x=col, y=row),
                             event_type=mouse_event.event_type,
+                            button=mouse_event.button,
+                            modifiers=mouse_event.modifiers,
                         )
                     )
                     break
@@ -1871,7 +1873,10 @@ class Window(Container):
                 # Report (0,0) instead.)
                 result = self.content.mouse_handler(
                     MouseEvent(
-                        position=Point(x=0, y=0), event_type=mouse_event.event_type
+                        position=Point(x=0, y=0),
+                        event_type=mouse_event.event_type,
+                        button=mouse_event.button,
+                        modifiers=mouse_event.modifiers,
                     )
                 )
 

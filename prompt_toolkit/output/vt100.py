@@ -551,6 +551,9 @@ class Vt100_Output(Output):
     def enable_mouse_support(self) -> None:
         self.write_raw("\x1b[?1000h")
 
+        # Enable mouse-drag support.
+        self.write_raw("\x1b[?1003h")
+
         # Enable urxvt Mouse mode. (For terminals that understand this.)
         self.write_raw("\x1b[?1015h")
 
@@ -564,6 +567,7 @@ class Vt100_Output(Output):
         self.write_raw("\x1b[?1000l")
         self.write_raw("\x1b[?1015l")
         self.write_raw("\x1b[?1006l")
+        self.write_raw("\x1b[?1003l")
 
     def erase_end_of_line(self) -> None:
         """
