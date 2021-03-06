@@ -22,6 +22,7 @@ from .data_structures import Point
 __all__ = ["MouseEventType", "MouseButton", "MouseModifier", "MouseEvent"]
 
 
+# fmt: off
 class MouseEventType(Enum):
     MOUSE_UP    = "MOUSE_UP"    #Ryan Burgert: This same event type is fired for all three events: left mouse up, right mouse up, or middle mouse up
     MOUSE_DOWN  = "MOUSE_DOWN"  #Ryan Burgert: This implicitly refers to the left mouse down (this event is not fired upon pressing the middle or right mouse buttons. I didn't change it's name because I fear creating incompatiabilities with older code.
@@ -55,6 +56,7 @@ class MouseModifier(Enum):
     ALT_CONTROL       = (                       MouseModifierKey.ALT,MouseModifierKey.CONTROL,)
     SHIFT_ALT_CONTROL = (MouseModifierKey.SHIFT,MouseModifierKey.ALT,MouseModifierKey.CONTROL,)
     UNKNOWN_MODIFIER  = ("UNKNOWN") # This is used if we're not sure what modifiers are being used, if any
+# fmt: on
 
 
 class MouseEvent:
@@ -66,15 +68,21 @@ class MouseEvent:
     """
 
     def __init__(
-             self,
-             position: Point,
-             event_type: MouseEventType,
-             button:MouseButton,
-             modifier:MouseModifier) -> None:
-        self.position   = position
+        self,
+        position: Point,
+        event_type: MouseEventType,
+        button: MouseButton,
+        modifier: MouseModifier,
+    ) -> None:
+        self.position = position
         self.event_type = event_type
-        self.button     = button
-        self.modifier   = modifier
+        self.button = button
+        self.modifier = modifier
 
     def __repr__(self) -> str:
-        return "MouseEvent(%r,%r,%r,%r)" % (self.position, self.event_type, self.button, self.modifier)
+        return "MouseEvent(%r,%r,%r,%r)" % (
+            self.position,
+            self.event_type,
+            self.button,
+            self.modifier,
+        )

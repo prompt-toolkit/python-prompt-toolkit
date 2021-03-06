@@ -1,7 +1,12 @@
 from prompt_toolkit.data_structures import Point
 from prompt_toolkit.key_binding.key_processor import KeyPress, KeyPressEvent
 from prompt_toolkit.keys import Keys
-from prompt_toolkit.mouse_events import MouseEvent, MouseEventType, MouseButton, MouseModifier
+from prompt_toolkit.mouse_events import (
+    MouseButton,
+    MouseEvent,
+    MouseEventType,
+    MouseModifier,
+)
 from prompt_toolkit.utils import is_windows
 
 from ..key_bindings import KeyBindings
@@ -10,6 +15,7 @@ __all__ = [
     "load_mouse_bindings",
 ]
 
+# fmt: off
 SCROLL_UP   = MouseEventType.SCROLL_UP
 SCROLL_DOWN = MouseEventType.SCROLL_DOWN
 MOUSE_DOWN  = MouseEventType.MOUSE_DOWN
@@ -31,6 +37,7 @@ MIDDLE           = MouseButton.MIDDLE
 RIGHT            = MouseButton.RIGHT
 NO_BUTTON        = MouseButton.NO_BUTTON
 UNKNOWN_BUTTON   = MouseButton.UNKNOWN_BUTTON
+# fmt: on
 
 E = KeyPressEvent
 
@@ -56,21 +63,23 @@ def load_mouse_bindings() -> KeyBindings:
             # Typical.
             mouse_event, x, y = map(ord, event.data[3:])
 
-            #TODO: Is it possible to add modifiers here?
+            # TODO: Is it possible to add modifiers here?
+            # fmt: off
             mouse_button,mouse_event_type,mouse_modifier = {
-                32: (LEFT,MOUSE_DOWN,UNKNOWN_MODIFIER),
-                33: (MIDDLE,MOUSE_DOWN,UNKNOWN_MODIFIER),
-                34: (RIGHT,MOUSE_DOWN,UNKNOWN_MODIFIER),
-                35: (UNKNOWN_BUTTON,MOUSE_UP,UNKNOWN_MODIFIER),
+                32: (LEFT           , MOUSE_DOWN , UNKNOWN_MODIFIER), 
+                33: (MIDDLE         , MOUSE_DOWN , UNKNOWN_MODIFIER), 
+                34: (RIGHT          , MOUSE_DOWN , UNKNOWN_MODIFIER), 
+                35: (UNKNOWN_BUTTON , MOUSE_UP   , UNKNOWN_MODIFIER), 
 
-                64: (LEFT,MOUSE_DRAG,UNKNOWN_MODIFIER),
-                65: (MIDDLE,MOUSE_DRAG,UNKNOWN_MODIFIER),
-                66: (RIGHT,MOUSE_DRAG,UNKNOWN_MODIFIER),
-                67: (NO_BUTTON,MOUSE_DRAG,UNKNOWN_MODIFIER),#Just moving the mouse around without clicking anything
-
-                96: (NO_BUTTON,SCROLL_UP,UNKNOWN_MODIFIER),
-                97: (NO_BUTTON,SCROLL_DOWN,UNKNOWN_MODIFIER),
+                64: (LEFT           , MOUSE_DRAG , UNKNOWN_MODIFIER), 
+                65: (MIDDLE         , MOUSE_DRAG , UNKNOWN_MODIFIER), 
+                66: (RIGHT          , MOUSE_DRAG , UNKNOWN_MODIFIER), 
+                67: (NO_BUTTON      , MOUSE_DRAG , UNKNOWN_MODIFIER), #Just moving the mouse around without clicking anything
+                
+                96: (NO_BUTTON      , SCROLL_UP  , UNKNOWN_MODIFIER), 
+                97: (NO_BUTTON      , SCROLL_DOWN, UNKNOWN_MODIFIER), 
             }[mouse_event]
+            # fmt: on
 
             # Handle situations where `PosixStdinReader` used surrogateescapes.
             if x >= 0xDC00:
@@ -97,6 +106,7 @@ def load_mouse_bindings() -> KeyBindings:
 
             # Parse event type.
             if sgr:
+                # fmt: off
                 # flake8: noqa E201
                 mouse_button,mouse_event_type,mouse_modifier = {
                     ( 0, 'm') : (LEFT, MOUSE_UP, NO_MODIFIER),                # left_up                       0+ + +  =0
@@ -207,16 +217,16 @@ def load_mouse_bindings() -> KeyBindings:
                     (89, 'M') : (NO_BUTTON, SCROLL_DOWN, ALT_CONTROL),        # scroll_down       Alt Control 64+ +8+16=89
                     (93, 'M') : (NO_BUTTON, SCROLL_DOWN, SHIFT_ALT_CONTROL),  # scroll_down Shift Alt Control 64+4+8+16=93
                 }[mouse_event, m]
+                # fmt: on
             else:
-                mouse_button,mouse_event_type,mouse_modifier = {
-                    # TODO: I don't know when this is triggered or how this mode works (though my Hyper terminal seems to use it), so I marked the buttons and modifiers UNKNOWN. 
+                mouse_button, mouse_event_type, mouse_modifier = {
+                    # TODO: I don't know when this is triggered or how this mode works (though my Hyper terminal seems to use it), so I marked the buttons and modifiers UNKNOWN.
                     # By replacing these UNKNOWN values with the correct values, we can get more functionality in different terminal varieties
-                    32: (UNKNOWN_BUTTON,MOUSE_DOWN,UNKNOWN_MODIFIER),
-                    35: (UNKNOWN_BUTTON,MOUSE_UP,UNKNOWN_MODIFIER),
-                    96: (NO_BUTTON,SCROLL_UP,UNKNOWN_MODIFIER),
-                    97: (NO_BUTTON,SCROLL_DOWN,UNKNOWN_MODIFIER),
-                }.get(mouse_event,(UNKNOWN_BUTTON,MOUSE_DRAG,UNKNOWN_MODIFIER))
-
+                    32: (UNKNOWN_BUTTON, MOUSE_DOWN, UNKNOWN_MODIFIER),
+                    35: (UNKNOWN_BUTTON, MOUSE_UP, UNKNOWN_MODIFIER),
+                    96: (NO_BUTTON, SCROLL_UP, UNKNOWN_MODIFIER),
+                    97: (NO_BUTTON, SCROLL_DOWN, UNKNOWN_MODIFIER),
+                }.get(mouse_event, (UNKNOWN_BUTTON, MOUSE_DRAG, UNKNOWN_MODIFIER))
 
         x -= 1
         y -= 1
@@ -234,7 +244,14 @@ def load_mouse_bindings() -> KeyBindings:
 
             # Call the mouse handler from the renderer.
             handler = event.app.renderer.mouse_handlers.mouse_handlers[y][x]
-            handler(MouseEvent(position=Point(x=x, y=y), event_type=mouse_event_type, button=mouse_button, modifier=mouse_modifier))
+            handler(
+                MouseEvent(
+                    position=Point(x=x, y=y),
+                    event_type=mouse_event_type,
+                    button=mouse_button,
+                    modifier=mouse_modifier,
+                )
+            )
             # print(MouseEvent(position=Point(x=x, y=y), event_type=mouse_event_type, button=mouse_button, modifier=mouse_modifier)) # Uncomment to debug mouse events
 
     @key_bindings.add(Keys.ScrollUp)
@@ -282,6 +299,13 @@ def load_mouse_bindings() -> KeyBindings:
 
             # Call the mouse event handler.
             handler = event.app.renderer.mouse_handlers.mouse_handlers[y][x]
-            handler(MouseEvent(position=Point(x=x, y=y), event_type=event_type,button=UNKNOWN_BUTTON,modifier=UNKNOWN_MODIFIER))
+            handler(
+                MouseEvent(
+                    position=Point(x=x, y=y),
+                    event_type=event_type,
+                    button=UNKNOWN_BUTTON,
+                    modifier=UNKNOWN_MODIFIER,
+                )
+            )
 
     return key_bindings

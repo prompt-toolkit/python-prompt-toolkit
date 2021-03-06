@@ -1873,7 +1873,10 @@ class Window(Container):
                 # Report (0,0) instead.)
                 result = self.content.mouse_handler(
                     MouseEvent(
-                        position=Point(x=0, y=0), event_type=mouse_event.event_type, button=mouse_event.button,  modifier=mouse_event.modifier
+                        position=Point(x=0, y=0),
+                        event_type=mouse_event.event_type,
+                        button=mouse_event.button,
+                        modifier=mouse_event.modifier,
                     )
                 )
 
