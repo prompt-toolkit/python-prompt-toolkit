@@ -23,25 +23,29 @@ __all__ = ["MouseEventType", "MouseButton", "MouseModifier", "MouseEvent"]
 
 
 class MouseEventType(Enum):
-    MOUSE_UP    = "MOUSE_UP"   #Ryan Burgert: This same event type is fired for all three events: left mouse up, right mouse up, or middle mouse up
-    MOUSE_DOWN  = "MOUSE_DOWN" #Ryan Burgert: This implicitly refers to the left mouse down (this event is not fired upon pressing the middle or right mouse buttons. I didn't change it's name because I fear creating incompatiabilities with older code.
+    MOUSE_UP    = "MOUSE_UP"    #Ryan Burgert: This same event type is fired for all three events: left mouse up, right mouse up, or middle mouse up
+    MOUSE_DOWN  = "MOUSE_DOWN"  #Ryan Burgert: This implicitly refers to the left mouse down (this event is not fired upon pressing the middle or right mouse buttons. I didn't change it's name because I fear creating incompatiabilities with older code.
     SCROLL_UP   = "SCROLL_UP"
     SCROLL_DOWN = "SCROLL_DOWN"
-    MOUSE_DRAG  = "MOUSE_DRAG" #Triggered when the left   mouse button is held down, and the mouse moves
+    MOUSE_DRAG  = "MOUSE_DRAG"  #Triggered when the left   mouse button is held down, and the mouse moves
+
 
 class MouseButton(Enum):
     LEFT           = "LEFT"
     MIDDLE         = "MIDDLE"
     RIGHT          = "RIGHT"
-    NO_BUTTON      = ""               # When we're scrolling, or just moving the mouse and not pressing a button, mouse_event.button=="". The reason it's an empty string is so that bool(MouseButton.NO_BUTTON)==False
-    UNKNOWN_BUTTON = "UNKNOWN_BUTTON" # This is for when we don't know which mouse button was pressed, but we do know that one has been pressed during this mouse event (as opposed to scrolling, for example)
+    NO_BUTTON      = ""                # When we're scrolling, or just moving the mouse and not pressing a button, mouse_event.button=="". The reason it's an empty string is so that bool(MouseButton.NO_BUTTON)==False
+    UNKNOWN_BUTTON = "UNKNOWN_BUTTON"  # This is for when we don't know which mouse button was pressed, but we do know that one has been pressed during this mouse event (as opposed to scrolling, for example)
+
 
 class MouseModifierKey(Enum):
     SHIFT   = "SHIFT"
     ALT     = "ALT"
     CONTROL = "CONTROL"
 
+
 class MouseModifier(Enum):
+    # flake8: noqa E201 E202 E261 
     NO_MODIFIER       = (                                                                     )
     SHIFT             = (MouseModifierKey.SHIFT                                              ,)
     ALT               = (                       MouseModifierKey.ALT                         ,)
@@ -51,6 +55,7 @@ class MouseModifier(Enum):
     ALT_CONTROL       = (                       MouseModifierKey.ALT,MouseModifierKey.CONTROL,)
     SHIFT_ALT_CONTROL = (MouseModifierKey.SHIFT,MouseModifierKey.ALT,MouseModifierKey.CONTROL,)
     UNKNOWN_MODIFIER  = ("UNKNOWN") # This is used if we're not sure what modifiers are being used, if any
+
 
 class MouseEvent:
     """
