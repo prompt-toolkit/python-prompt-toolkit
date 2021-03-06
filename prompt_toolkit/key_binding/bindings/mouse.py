@@ -70,7 +70,7 @@ def load_mouse_bindings() -> KeyBindings:
 
                 96: (NO_BUTTON,SCROLL_UP,UNKNOWN_MODIFIER),
                 97: (NO_BUTTON,SCROLL_DOWN,UNKNOWN_MODIFIER),
-            }.get(mouse_event)
+            }[mouse_event]
 
             # Handle situations where `PosixStdinReader` used surrogateescapes.
             if x >= 0xDC00:
@@ -206,7 +206,7 @@ def load_mouse_bindings() -> KeyBindings:
                     (85, 'M') : (NO_BUTTON, SCROLL_DOWN, SHIFT_CONTROL),      # scroll_down Shift     Control 64+4+ +16=85
                     (89, 'M') : (NO_BUTTON, SCROLL_DOWN, ALT_CONTROL),        # scroll_down       Alt Control 64+ +8+16=89
                     (93, 'M') : (NO_BUTTON, SCROLL_DOWN, SHIFT_ALT_CONTROL),  # scroll_down Shift Alt Control 64+4+8+16=93
-                }.get((mouse_event, m))
+                }[mouse_event, m]
             else:
                 mouse_button,mouse_event_type,mouse_modifier = {
                     # TODO: I don't know when this is triggered or how this mode works (though my Hyper terminal seems to use it), so I marked the buttons and modifiers UNKNOWN. 
