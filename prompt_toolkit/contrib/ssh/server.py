@@ -95,6 +95,7 @@ class PromptToolkitSSHSession(asyncssh.SSHServerSession):
             finally:
                 # Close the connection.
                 self._chan.close()
+                self._input.close()
 
     def terminal_size_changed(self, width, height, pixwidth, pixheight):
         # Send resize event to the current application.
