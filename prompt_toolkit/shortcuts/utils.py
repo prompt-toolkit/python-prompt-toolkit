@@ -95,15 +95,6 @@ def print_formatted_text(
     """
     assert not (output and file)
 
-    # Build/merge style.
-    styles = [default_ui_style()]
-    if include_default_pygments_style:
-        styles.append(default_pygments_style())
-    if style:
-        styles.append(style)
-
-    merged_style = merge_styles(styles)
-
     # Create Output object.
     if output is None:
         if file:
@@ -137,7 +128,9 @@ def print_formatted_text(
     renderer_print_formatted_text(
         output,
         fragments,
-        merged_style,
+        _create_merged_style(
+            style, include_default_pygments_style=include_default_pygments_style
+        ),
         color_depth=color_depth,
         style_transformation=style_transformation,
     )
@@ -147,7 +140,12 @@ def print_formatted_text(
         output.flush()
 
 
-def print_container(container: "Container", file: Optional[TextIO] = None) -> None:
+def print_container(
+    container: "Container",
+    file: Optional[TextIO] = None,
+    style: Optional[BaseStyle] = None,
+    include_default_pygments_style: bool = True,
+) -> None:
     """
     Print any layout to the output in a non-interactive way.
 
@@ -168,9 +166,29 @@ def print_container(container: "Container", file: Optional[TextIO] = None) -> No
         get_event_loop().call_soon(lambda: app.exit())
 
     app: Application[None] = Application(
-        layout=Layout(container=container), output=output, input=DummyInput()
+        layout=Layout(container=container),
+        output=output,
+        input=DummyInput(),
+        style=_create_merged_style(
+            style, include_default_pygments_style=include_default_pygments_style
+        ),
     )
     app.run(pre_run=exit_immediately)
+
+
+def _create_merged_style(
+    style: Optional[BaseStyle], include_default_pygments_style: bool
+) -> BaseStyle:
+    """
+    Merge user defined style with built-in style.
+    """
+    styles = [default_ui_style()]
+    if include_default_pygments_style:
+        styles.append(default_pygments_style())
+    if style:
+        styles.append(style)
+
+    return merge_styles(styles)
 
 
 def clear() -> None:
