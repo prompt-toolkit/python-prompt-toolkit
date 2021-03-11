@@ -1,6 +1,17 @@
 CHANGELOG
 =========
 
+3.0.17: 2021-03-11
+------------------
+
+New features:
+- Accept `style` parameter in `print_container` utility.
+- On Windows, handle Control-Delete.
+
+Fixes:
+- Avoid leaking file descriptors in SSH server.
+
+
 3.0.16: 2021-02-11
 ------------------
 
