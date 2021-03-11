@@ -24,6 +24,7 @@ Example::
         s = PromptSession()
         result = s.prompt('Say something: ')
 """
+import warnings
 from asyncio import get_event_loop
 from enum import Enum
 from functools import partial
@@ -225,107 +226,110 @@ _T = TypeVar("_T")
 
 class PromptSession(Generic[_T]):
     """
-    PromptSession for a prompt application, which can be used as a GNU Readline
-    replacement.
+        PromptSession for a prompt application, which can be used as a GNU Readline
+        replacement.
 
-    This is a wrapper around a lot of ``prompt_toolkit`` functionality and can
-    be a replacement for `raw_input`.
+        This is a wrapper around a lot of ``prompt_toolkit`` functionality and can
+        be a replacement for `raw_input`.
 
-    All parameters that expect "formatted text" can take either just plain text
-    (a unicode object), a list of ``(style_str, text)`` tuples or an HTML object.
+        All parameters that expect "formatted text" can take either just plain text
+        (a unicode object), a list of ``(style_str, text)`` tuples or an HTML object.
 
-    Example usage::
+        Example usage::
 
-        s = PromptSession(message='>')
-        text = s.prompt()
+            s = PromptSession(message='>')
+            text = s.prompt()
 
-    :param message: Plain text or formatted text to be shown before the prompt.
-        This can also be a callable that returns formatted text.
-    :param multiline: `bool` or :class:`~prompt_toolkit.filters.Filter`.
-        When True, prefer a layout that is more adapted for multiline input.
-        Text after newlines is automatically indented, and search/arg input is
-        shown below the input, instead of replacing the prompt.
-    :param wrap_lines: `bool` or :class:`~prompt_toolkit.filters.Filter`.
-        When True (the default), automatically wrap long lines instead of
-        scrolling horizontally.
-    :param is_password: Show asterisks instead of the actual typed characters.
-    :param editing_mode: ``EditingMode.VI`` or ``EditingMode.EMACS``.
-    :param vi_mode: `bool`, if True, Identical to ``editing_mode=EditingMode.VI``.
-    :param complete_while_typing: `bool` or
-        :class:`~prompt_toolkit.filters.Filter`. Enable autocompletion while
-        typing.
-    :param validate_while_typing: `bool` or
-        :class:`~prompt_toolkit.filters.Filter`. Enable input validation while
-        typing.
-    :param enable_history_search: `bool` or
-        :class:`~prompt_toolkit.filters.Filter`. Enable up-arrow parting
-        string matching.
-    :param search_ignore_case:
-        :class:`~prompt_toolkit.filters.Filter`. Search case insensitive.
-    :param lexer: :class:`~prompt_toolkit.lexers.Lexer` to be used for the
-        syntax highlighting.
-    :param validator: :class:`~prompt_toolkit.validation.Validator` instance
-        for input validation.
-    :param completer: :class:`~prompt_toolkit.completion.Completer` instance
-        for input completion.
-    :param complete_in_thread: `bool` or
-        :class:`~prompt_toolkit.filters.Filter`. Run the completer code in a
-        background thread in order to avoid blocking the user interface.
-        For ``CompleteStyle.READLINE_LIKE``, this setting has no effect. There
-        we always run the completions in the main thread.
-    :param reserve_space_for_menu: Space to be reserved for displaying the menu.
-        (0 means that no space needs to be reserved.)
-    :param auto_suggest: :class:`~prompt_toolkit.auto_suggest.AutoSuggest`
-        instance for input suggestions.
-    :param style: :class:`.Style` instance for the color scheme.
-    :param include_default_pygments_style: `bool` or
-        :class:`~prompt_toolkit.filters.Filter`. Tell whether the default
-        styling for Pygments lexers has to be included. By default, this is
-        true, but it is recommended to be disabled if another Pygments style is
-        passed as the `style` argument, otherwise, two Pygments styles will be
-        merged.
-    :param style_transformation:
-        :class:`~prompt_toolkit.style.StyleTransformation` instance.
-    :param swap_light_and_dark_colors: `bool` or
-        :class:`~prompt_toolkit.filters.Filter`. When enabled, apply
-        :class:`~prompt_toolkit.style.SwapLightAndDarkStyleTransformation`.
-        This is useful for switching between dark and light terminal
-        backgrounds.
-    :param enable_system_prompt: `bool` or
-        :class:`~prompt_toolkit.filters.Filter`. Pressing Meta+'!' will show
-        a system prompt.
-    :param enable_suspend: `bool` or :class:`~prompt_toolkit.filters.Filter`.
-        Enable Control-Z style suspension.
-    :param enable_open_in_editor: `bool` or
-        :class:`~prompt_toolkit.filters.Filter`. Pressing 'v' in Vi mode or
-        C-X C-E in emacs mode will open an external editor.
-    :param history: :class:`~prompt_toolkit.history.History` instance.
-    :param clipboard: :class:`~prompt_toolkit.clipboard.Clipboard` instance.
-        (e.g. :class:`~prompt_toolkit.clipboard.InMemoryClipboard`)
-    :param rprompt: Text or formatted text to be displayed on the right side.
-        This can also be a callable that returns (formatted) text.
-    :param bottom_toolbar: Formatted text or callable which is supposed to
-        return formatted text.
-    :param prompt_continuation: Text that needs to be displayed for a multiline
-        prompt continuation. This can either be formatted text or a callable
-        that takes a `prompt_width`, `line_number` and `wrap_count` as input
-        and returns formatted text. When this is `None` (the default), then
-        `prompt_width` spaces will be used.
-    :param complete_style: ``CompleteStyle.COLUMN``,
-        ``CompleteStyle.MULTI_COLUMN`` or ``CompleteStyle.READLINE_LIKE``.
-    :param mouse_support: `bool` or :class:`~prompt_toolkit.filters.Filter`
-        to enable mouse support.
-    :param placeholder: Text to be displayed when no input has been given
-        yet. Unlike the `default` parameter, this won't be returned as part of
-        the output ever. This can be formatted text or a callable that returns
-        formatted text.
-    :param refresh_interval: (number; in seconds) When given, refresh the UI
-        every so many seconds.
-    :param input: `Input` object. (Note that the preferred way to change the
-        input/output is by creating an `AppSession`.)
-    :param output: `Output` object.
+        :param message: Plain text or formatted text to be shown before the prompt.
+            This can also be a callable that returns formatted text.
+        :param multiline: `bool` or :class:`~prompt_toolkit.filters.Filter`.
+            When True, prefer a layout that is more adapted for multiline input.
+            Text after newlines is automatically indented, and search/arg input is
+            shown below the input, instead of replacing the prompt.
+        :param wrap_lines: `bool` or :class:`~prompt_toolkit.filters.Filter`.
+            When True (the default), automatically wrap long lines instead of
+            scrolling horizontally.
+        :param is_password: Show asterisks instead of the actual typed characters.
+        :param editing_mode: ``EditingMode.VI`` or ``EditingMode.EMACS``.
+        :param vi_mode: `bool`, if True, Identical to ``editing_mode=EditingMode.VI``.
+        :param complete_while_typing: `bool` or
+            :class:`~prompt_toolkit.filters.Filter`. Enable autocompletion while
+            typing.
+        :param validate_while_typing: `bool` or
+            :class:`~prompt_toolkit.filters.Filter`. Enable input validation while
+            typing.
+        :param enable_history_search: `bool` or
+            :class:`~prompt_toolkit.filters.Filter`. Enable up-arrow parting
+            string matching.
+        :param search_ignore_case:
+            :class:`~prompt_toolkit.filters.Filter`. Search case insensitive.
+        :param lexer: :class:`~prompt_toolkit.lexers.Lexer` to be used for the
+            syntax highlighting.
+        :param validator: :class:`~prompt_toolkit.validation.Validator` instance
+            for input validation.
+        :param completer: :class:`~prompt_toolkit.completion.Completer` instance
+            for input completion.
+        :param complete_in_thread: `bool` or
+            :class:`~prompt_toolkit.filters.Filter`. Run the completer code in a
+            background thread in order to avoid blocking the user interface.
+            For ``CompleteStyle.READLINE_LIKE``, this setting has no effect. There
+            we always run the completions in the main thread.
+        :param reserve_space_for_menu: Space to be reserved for displaying the menu.
+    -        (Deprecated.  See `completion_menu_rows` instead.)
+        :param completion_menu_rows: Maximum number of rows of completions displayed.
+            Must be > 0, actual rows displayed depends on actual number of completions.
+        :param auto_suggest: :class:`~prompt_toolkit.auto_suggest.AutoSuggest`
+            instance for input suggestions.
+        :param style: :class:`.Style` instance for the color scheme.
+        :param include_default_pygments_style: `bool` or
+            :class:`~prompt_toolkit.filters.Filter`. Tell whether the default
+            styling for Pygments lexers has to be included. By default, this is
+            true, but it is recommended to be disabled if another Pygments style is
+            passed as the `style` argument, otherwise, two Pygments styles will be
+            merged.
+        :param style_transformation:
+            :class:`~prompt_toolkit.style.StyleTransformation` instance.
+        :param swap_light_and_dark_colors: `bool` or
+            :class:`~prompt_toolkit.filters.Filter`. When enabled, apply
+            :class:`~prompt_toolkit.style.SwapLightAndDarkStyleTransformation`.
+            This is useful for switching between dark and light terminal
+            backgrounds.
+        :param enable_system_prompt: `bool` or
+            :class:`~prompt_toolkit.filters.Filter`. Pressing Meta+'!' will show
+            a system prompt.
+        :param enable_suspend: `bool` or :class:`~prompt_toolkit.filters.Filter`.
+            Enable Control-Z style suspension.
+        :param enable_open_in_editor: `bool` or
+            :class:`~prompt_toolkit.filters.Filter`. Pressing 'v' in Vi mode or
+            C-X C-E in emacs mode will open an external editor.
+        :param history: :class:`~prompt_toolkit.history.History` instance.
+        :param clipboard: :class:`~prompt_toolkit.clipboard.Clipboard` instance.
+            (e.g. :class:`~prompt_toolkit.clipboard.InMemoryClipboard`)
+        :param rprompt: Text or formatted text to be displayed on the right side.
+            This can also be a callable that returns (formatted) text.
+        :param bottom_toolbar: Formatted text or callable which is supposed to
+            return formatted text.
+        :param prompt_continuation: Text that needs to be displayed for a multiline
+            prompt continuation. This can either be formatted text or a callable
+            that takes a `prompt_width`, `line_number` and `wrap_count` as input
+            and returns formatted text. When this is `None` (the default), then
+            `prompt_width` spaces will be used.
+        :param complete_style: ``CompleteStyle.COLUMN``,
+            ``CompleteStyle.MULTI_COLUMN`` or ``CompleteStyle.READLINE_LIKE``.
+        :param mouse_support: `bool` or :class:`~prompt_toolkit.filters.Filter`
+            to enable mouse support.
+        :param placeholder: Text to be displayed when no input has been given
+            yet. Unlike the `default` parameter, this won't be returned as part of
+            the output ever. This can be formatted text or a callable that returns
+            formatted text.
+        :param refresh_interval: (number; in seconds) When given, refresh the UI
+            every so many seconds.
+        :param input: `Input` object. (Note that the preferred way to change the
+            input/output is by creating an `AppSession`.)
+        :param output: `Output` object.
     """
 
+    # FIXME: where is this tuple referenced?
     _fields = (
         "message",
         "lexer",
@@ -360,7 +364,7 @@ class PromptSession(Generic[_T]):
         "enable_system_prompt",
         "enable_suspend",
         "enable_open_in_editor",
-        "reserve_space_for_menu",
+        "completion_menu_rows",
         "tempfile_suffix",
         "tempfile",
     )
@@ -385,7 +389,7 @@ class PromptSession(Generic[_T]):
         validator: Optional[Validator] = None,
         completer: Optional[Completer] = None,
         complete_in_thread: bool = False,
-        reserve_space_for_menu: int = 8,
+        completion_menu_rows: int = 5,
         complete_style: CompleteStyle = CompleteStyle.COLUMN,
         auto_suggest: Optional[AutoSuggest] = None,
         style: Optional[BaseStyle] = None,
@@ -408,6 +412,7 @@ class PromptSession(Generic[_T]):
         refresh_interval: float = 0,
         input: Optional[Input] = None,
         output: Optional[Output] = None,
+        reserve_space_for_menu: Optional[int] = None,
     ) -> None:
 
         history = history or InMemoryHistory()
@@ -454,15 +459,24 @@ class PromptSession(Generic[_T]):
         self.enable_system_prompt = enable_system_prompt
         self.enable_suspend = enable_suspend
         self.enable_open_in_editor = enable_open_in_editor
-        self.reserve_space_for_menu = reserve_space_for_menu
+        self.completion_menu_rows = completion_menu_rows
         self.tempfile_suffix = tempfile_suffix
         self.tempfile = tempfile
+
+        if reserve_space_for_menu is not None:
+            self.completion_menu_rows = (
+                reserve_space_for_menu if reserve_space_for_menu != 0 else 5
+            )
+            warnings.warn(
+                "PromptSession(,reserve_space_for_menu,...) is deprecated, specify parameter completion_menu_rows instead.",
+                DeprecationWarning,
+            )
 
         # Create buffers, layout and Application.
         self.history = history
         self.default_buffer = self._create_default_buffer()
         self.search_buffer = self._create_search_buffer()
-        self.layout = self._create_layout()
+        self.layout: Optional[Layout] = self._create_layout()
         self.app = self._create_application(editing_mode, erase_when_done)
 
     def _dyncond(self, attr_name: str) -> Condition:
@@ -608,7 +622,7 @@ class PromptSession(Generic[_T]):
 
         default_buffer_window = Window(
             default_buffer_control,
-            height=self._get_default_buffer_control_height,
+            height=Dimension(min=1, preferred=1, max=10000000000000000000),
             get_line_prefix=partial(
                 self._get_line_prefix, get_prompt_text_2=get_prompt_text_2
             ),
@@ -657,9 +671,10 @@ class PromptSession(Generic[_T]):
                         Float(
                             xcursor=True,
                             ycursor=True,
+                            dont_shrink_height=True,
                             transparent=True,
                             content=CompletionsMenu(
-                                max_height=16,
+                                max_height=self.completion_menu_rows,
                                 scroll_offset=1,
                                 extra_filter=has_focus(default_buffer)
                                 & ~multi_column_complete_style,
@@ -669,7 +684,9 @@ class PromptSession(Generic[_T]):
                             xcursor=True,
                             ycursor=True,
                             transparent=True,
+                            dont_shrink_height=True,
                             content=MultiColumnCompletionsMenu(
+                                max_rows=self.completion_menu_rows,
                                 show_meta=True,
                                 extra_filter=has_focus(default_buffer)
                                 & multi_column_complete_style,
@@ -678,7 +695,7 @@ class PromptSession(Generic[_T]):
                         # The right prompt.
                         Float(
                             right=0,
-                            bottom=0,
+                            top=0,  # floats to top of prompt.
                             hide_when_covering_content=True,
                             content=_RPrompt(lambda: self.rprompt),
                         ),
@@ -839,6 +856,14 @@ class PromptSession(Generic[_T]):
 
         return kb
 
+    def _rethink_layout(self):
+        """Update layout to reflect some parameter change and notify all interested parties.
+        Can't expect this to work if application is actually running.
+        """
+
+        self.layout = self._create_layout()
+        self.app.layout = self.layout
+
     def prompt(
         self,
         # When any of these arguments are passed, this value is overwritten
@@ -876,7 +901,7 @@ class PromptSession(Generic[_T]):
         mouse_support: Optional[FilterOrBool] = None,
         input_processors: Optional[List[Processor]] = None,
         placeholder: Optional[AnyFormattedText] = None,
-        reserve_space_for_menu: Optional[int] = None,
+        completion_menu_rows: Optional[int] = None,
         enable_system_prompt: Optional[FilterOrBool] = None,
         enable_suspend: Optional[FilterOrBool] = None,
         enable_open_in_editor: Optional[FilterOrBool] = None,
@@ -887,6 +912,7 @@ class PromptSession(Generic[_T]):
         accept_default: bool = False,
         pre_run: Optional[Callable[[], None]] = None,
         set_exception_handler: bool = True,
+        reserve_space_for_menu: Optional[int] = None,
     ) -> _T:
         """
         Display the prompt.
@@ -986,8 +1012,9 @@ class PromptSession(Generic[_T]):
             self.input_processors = input_processors
         if placeholder is not None:
             self.placeholder = placeholder
-        if reserve_space_for_menu is not None:
-            self.reserve_space_for_menu = reserve_space_for_menu
+        if completion_menu_rows is not None:
+            self.completion_menu_rows = completion_menu_rows
+            self.layout = None
         if enable_system_prompt is not None:
             self.enable_system_prompt = enable_system_prompt
         if enable_suspend is not None:
@@ -998,6 +1025,19 @@ class PromptSession(Generic[_T]):
             self.tempfile_suffix = tempfile_suffix
         if tempfile is not None:
             self.tempfile = tempfile
+
+        if reserve_space_for_menu is not None:
+            self.completion_menu_rows = (
+                reserve_space_for_menu if reserve_space_for_menu != 0 else 5
+            )
+            self.layout = None
+            warnings.warn(
+                "PromptSession(,reserve_space_for_menu,...) is deprecated, specify parameter completion_menu_rows instead.",
+                DeprecationWarning,
+            )
+
+        if self.layout is None:  # parameter change above forced rethinking layout
+            self._rethink_layout()
 
         self._add_pre_run_callables(pre_run, accept_default)
         self.default_buffer.reset(
@@ -1095,7 +1135,7 @@ class PromptSession(Generic[_T]):
         mouse_support: Optional[FilterOrBool] = None,
         input_processors: Optional[List[Processor]] = None,
         placeholder: Optional[AnyFormattedText] = None,
-        reserve_space_for_menu: Optional[int] = None,
+        completion_menu_rows: Optional[int] = None,
         enable_system_prompt: Optional[FilterOrBool] = None,
         enable_suspend: Optional[FilterOrBool] = None,
         enable_open_in_editor: Optional[FilterOrBool] = None,
@@ -1106,6 +1146,7 @@ class PromptSession(Generic[_T]):
         accept_default: bool = False,
         pre_run: Optional[Callable[[], None]] = None,
         set_exception_handler: bool = True,
+        reserve_space_for_menu: Optional[int] = None,
     ) -> _T:
 
         if message is not None:
@@ -1168,8 +1209,9 @@ class PromptSession(Generic[_T]):
             self.input_processors = input_processors
         if placeholder is not None:
             self.placeholder = placeholder
-        if reserve_space_for_menu is not None:
-            self.reserve_space_for_menu = reserve_space_for_menu
+        if completion_menu_rows is not None:
+            self.completion_menu_rows = completion_menu_rows
+            self.layout = None
         if enable_system_prompt is not None:
             self.enable_system_prompt = enable_system_prompt
         if enable_suspend is not None:
@@ -1180,6 +1222,18 @@ class PromptSession(Generic[_T]):
             self.tempfile_suffix = tempfile_suffix
         if tempfile is not None:
             self.tempfile = tempfile
+        if reserve_space_for_menu is not None:
+            self.completion_menu_rows = (
+                reserve_space_for_menu if reserve_space_for_menu != 0 else 5
+            )
+            self.layout = None
+            warnings.warn(
+                "PromptSession(,reserve_space_for_menu,...) is deprecated, specify parameter completion_menu_rows instead.",
+                DeprecationWarning,
+            )
+
+        if self.layout is None:  # parameter change above forced rethink of layout.
+            self._rethink_layout()
 
         self._add_pre_run_callables(pre_run, accept_default)
         self.default_buffer.reset(
@@ -1217,28 +1271,6 @@ class PromptSession(Generic[_T]):
     @editing_mode.setter
     def editing_mode(self, value: EditingMode) -> None:
         self.app.editing_mode = value
-
-    def _get_default_buffer_control_height(self) -> Dimension:
-        # If there is an autocompletion menu to be shown, make sure that our
-        # layout has at least a minimal height in order to display it.
-        if (
-            self.completer is not None
-            and self.complete_style != CompleteStyle.READLINE_LIKE
-        ):
-            space = self.reserve_space_for_menu
-        else:
-            space = 0
-
-        if space and not get_app().is_done:
-            buff = self.default_buffer
-
-            # Reserve the space, either when there are completions, or when
-            # `complete_while_typing` is true and we expect completions very
-            # soon.
-            if buff.complete_while_typing() or buff.complete_state is not None:
-                return Dimension(min=space)
-
-        return Dimension()
 
     def _get_prompt(self) -> StyleAndTextTuples:
         return to_formatted_text(self.message, style="class:prompt")
@@ -1362,6 +1394,7 @@ def prompt(
     mouse_support: Optional[FilterOrBool] = None,
     input_processors: Optional[List[Processor]] = None,
     placeholder: Optional[AnyFormattedText] = None,
+    completion_menu_rows: int = 5,
     reserve_space_for_menu: Optional[int] = None,
     enable_system_prompt: Optional[FilterOrBool] = None,
     enable_suspend: Optional[FilterOrBool] = None,
@@ -1412,6 +1445,7 @@ def prompt(
         mouse_support=mouse_support,
         input_processors=input_processors,
         placeholder=placeholder,
+        completion_menu_rows=completion_menu_rows,
         reserve_space_for_menu=reserve_space_for_menu,
         enable_system_prompt=enable_system_prompt,
         enable_suspend=enable_suspend,

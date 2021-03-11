@@ -304,16 +304,16 @@ class MultiColumnCompletionMenuControl(UIControl):
     When there are more completions than space for them to be displayed, an
     arrow is shown on the left or right side.
 
-    `min_rows` indicates how many rows will be available in any possible case.
-    When this is larger than one, it will try to use less columns and more
-    rows until this value is reached.
-    Be careful passing in a too big value, if less than the given amount of
-    rows are available, more columns would have been required, but
-    `preferred_width` doesn't know about that and reports a too small value.
-    This results in less completions displayed and additional scrolling.
-    (It's a limitation of how the layout engine currently works: first the
-    widths are calculated, then the heights.)
-
+    :param min_rows: indicates how many rows will be available.
+        When this is larger than one, it will try to use less columns and more
+        rows until this value is reached.
+        Be careful passing in a too big value, if less than the given amount of
+        rows are available, more columns would have been required, but
+        `preferred_width` doesn't know about that and reports a too small value.
+        This results in less completions displayed and additional scrolling.
+        (It's a limitation of how the layout engine currently works: first the
+        widths are calculated, then the heights.)
+    :param max_rows: maximum height of the completion menu. Must be > 0.
     :param suggested_max_column_width: The suggested max width of a column.
         The column can still be bigger than this, but if there is place for two
         columns of this width, we will display two columns. This to avoid that
@@ -321,16 +321,29 @@ class MultiColumnCompletionMenuControl(UIControl):
         reduce the amount of columns.
     """
 
-    _required_margin = 3  # One extra padding on the right + space for arrows.
+    _arrow_margin = 3  # One extra padding on the right + space for arrows.
 
-    def __init__(self, min_rows: int = 3, suggested_max_column_width: int = 30) -> None:
+    def __init__(
+        self,
+        min_rows: int = 1,
+        max_rows: int = 3,  # 3 is for backward comapt.
+        suggested_max_column_width: int = 30,
+    ) -> None:
         assert min_rows >= 1
 
         self.min_rows = min_rows
+        self.max_rows = max_rows
         self.suggested_max_column_width = suggested_max_column_width
         self.scroll = 0
 
+        # results cached during current render cycle
+        self._cur_num_cols = 0
+        self._cur_col_width = 0
+        self._cur_preferred_width = 0
+        self._cur_preferred_height = 0
+
         # Info of last rendering.
+        # FIXME: where is this used?
         self._rendered_rows = 0
         self._rendered_columns = 0
         self._total_columns = 0
@@ -348,27 +361,23 @@ class MultiColumnCompletionMenuControl(UIControl):
     def preferred_width(self, max_available_width: int) -> Optional[int]:
         """
         Preferred width: prefer to use at least min_rows, but otherwise as much
-        as possible horizontally.
+        as will fit horizontally.
+        Hueristics used when scanning completions to prevent a few really wide
+        ones from uglifying the menu.
         """
         complete_state = get_app().current_buffer.complete_state
         if complete_state is None:
             return 0
 
-        column_width = self._get_column_width(complete_state)
-        result = int(
-            column_width
-            * math.ceil(len(complete_state.completions) / float(self.min_rows))
+        self._cur_col_width = self._get_column_width(complete_state)
+        self._cur_num_cols = (
+            max_available_width - self._arrow_margin
+        ) // self._cur_col_width
+        # FIXME: doesn't obey min_rows
+        self._cur_preferred_width = (
+            self._arrow_margin + self._cur_num_cols * self._cur_col_width
         )
-
-        # When the desired width is still more than the maximum available,
-        # reduce by removing columns until we are less than the available
-        # width.
-        while (
-            result > column_width
-            and result > max_available_width - self._required_margin
-        ):
-            result -= column_width
-        return result + self._required_margin
+        return self._cur_preferred_width
 
     def preferred_height(
         self,
@@ -384,10 +393,16 @@ class MultiColumnCompletionMenuControl(UIControl):
         if complete_state is None:
             return 0
 
-        column_width = self._get_column_width(complete_state)
-        column_count = max(1, (width - self._required_margin) // column_width)
+        if width != self._cur_preferred_width:
+            # does happen often
+            self.preferred_width(width)
 
-        return int(math.ceil(len(complete_state.completions) / float(column_count)))
+        self._cur_preferred_height = min(
+            math.ceil(len(complete_state.completions) / float(self._cur_num_cols)),
+            self.max_rows,
+            max_available_height,
+        )
+        return self._cur_preferred_height
 
     def create_content(self, width: int, height: int) -> UIContent:
         """
@@ -396,9 +411,6 @@ class MultiColumnCompletionMenuControl(UIControl):
         complete_state = get_app().current_buffer.complete_state
         if complete_state is None:
             return UIContent()
-
-        column_width = self._get_column_width(complete_state)
-        self._render_pos_to_completion = {}
 
         _T = TypeVar("_T")
 
@@ -417,22 +429,14 @@ class MultiColumnCompletionMenuControl(UIControl):
                 and c == complete_state.current_completion
             )
 
-        # Space required outside of the regular columns, for displaying the
-        # left and right arrow.
-        HORIZONTAL_MARGIN_REQUIRED = 3
+        if width != self._cur_preferred_width:
+            self.preferred_width(width)
 
-        # There should be at least one column, but it cannot be wider than
-        # the available width.
-        column_width = min(width - HORIZONTAL_MARGIN_REQUIRED, column_width)
-
-        # However, when the columns tend to be very wide, because there are
-        # some very wide entries, shrink it anyway.
-        if column_width > self.suggested_max_column_width:
-            # `column_width` can still be bigger that `suggested_max_column_width`,
-            # but if there is place for two columns, we divide by two.
-            column_width //= column_width // self.suggested_max_column_width
-
-        visible_columns = max(1, (width - self._required_margin) // column_width)
+        assert self._cur_num_cols >= 1
+        assert self._cur_col_width < width
+        assert (
+            height <= self._cur_preferred_height
+        ), "rendered height > last preferred height?"
 
         columns_ = list(grouper(height, complete_state.completions))
         rows_ = list(zip(*columns_))
@@ -440,13 +444,14 @@ class MultiColumnCompletionMenuControl(UIControl):
         # Make sure the current completion is always visible: update scroll offset.
         selected_column = (complete_state.complete_index or 0) // height
         self.scroll = min(
-            selected_column, max(self.scroll, selected_column - visible_columns + 1)
+            selected_column, max(self.scroll, selected_column - self._cur_num_cols + 1)
         )
 
         render_left_arrow = self.scroll > 0
-        render_right_arrow = self.scroll < len(rows_[0]) - visible_columns
+        render_right_arrow = self.scroll < len(rows_[0]) - self._cur_num_cols
 
         # Write completions to screen.
+        self._render_pos_to_completion = {}
         fragments_for_line = []
 
         for row_index, row in enumerate(rows_):
@@ -462,19 +467,22 @@ class MultiColumnCompletionMenuControl(UIControl):
                 fragments.append(("", " "))
 
             # Draw row content.
-            for column_index, c in enumerate(row[self.scroll :][:visible_columns]):
+            for column_index, c in enumerate(row[self.scroll :][: self._cur_num_cols]):
                 if c is not None:
                     fragments += _get_menu_item_fragments(
-                        c, is_current_completion(c), column_width, space_after=False
+                        c,
+                        is_current_completion(c),
+                        self._cur_col_width,
+                        space_after=False,
                     )
 
                     # Remember render position for mouse click handler.
-                    for x in range(column_width):
+                    for x in range(self._cur_col_width):
                         self._render_pos_to_completion[
-                            (column_index * column_width + x, row_index)
+                            (column_index * self._cur_col_width + x, row_index)
                         ] = c
                 else:
-                    fragments.append(("class:completion", " " * column_width))
+                    fragments.append(("class:completion", " " * self._cur_col_width))
 
             # Draw trailing padding for this row.
             # (_get_menu_item_fragments only returns padding on the left.)
@@ -493,12 +501,15 @@ class MultiColumnCompletionMenuControl(UIControl):
             )
 
         self._rendered_rows = height
-        self._rendered_columns = visible_columns
+        self._rendered_columns = self._cur_num_cols
         self._total_columns = len(columns_)
         self._render_left_arrow = render_left_arrow
         self._render_right_arrow = render_right_arrow
         self._render_width = (
-            column_width * visible_columns + render_left_arrow + render_right_arrow + 1
+            self._cur_col_width * self._cur_num_cols
+            + render_left_arrow
+            + render_right_arrow
+            + 1
         )
 
         def get_line(i: int) -> StyleAndTextTuples:
@@ -509,10 +520,32 @@ class MultiColumnCompletionMenuControl(UIControl):
     def _get_column_width(self, complete_state: CompletionState) -> int:
         """
         Return the width of each column.
+        Prevent a few very long outliers from forcing too few columns.
+        Return not max but 90th percentile largest (e.g max of 9, but 2nd largest of 10)
         """
-        return max(get_cwidth(c.display_text) for c in complete_state.completions) + 1
 
-    def mouse_handler(self, mouse_event: MouseEvent) -> "NotImplementedOrNone":
+        top_n = (
+            1 + len(complete_state.completions) // 10
+        )  # number of top values to learn
+
+        if top_n <= 1:  # max of 1-10 completions
+            ret_val = (
+                max(get_cwidth(c.display_text) for c in complete_state.completions) + 1
+            )
+        else:  # 90th percentile longest length of more.
+            top_n_list = list([0 for i in range(top_n)])
+            for c in complete_state.completions:
+                cur_len = get_cwidth(c.display_text)
+                if cur_len > top_n_list[0]:
+                    top_n_list[0] = cur_len
+                    top_n_list.sort()
+            ret_val = top_n_list[0] + 1
+        # FIXME: should consider self.suggested_max_column_width, too.
+        return ret_val
+
+    def mouse_handler(
+        self, mouse_event: MouseEvent
+    ) -> Optional["NotImplementedOrNone"]:
         """
         Handle scroll and click events.
         """
@@ -612,11 +645,17 @@ class MultiColumnCompletionsMenu(HSplit):
     Container that displays the completions in several columns.
     When `show_meta` (a :class:`~prompt_toolkit.filters.Filter`) evaluates
     to True, it shows the meta information at the bottom.
+    :param min_rows: is minimum number of rows in the completions window.
+        meta window will add 1 additional row if it is visible.
+    :param max_rows: is maximum number of rows in the completions window.
+        Must be > 0.
+
     """
 
     def __init__(
         self,
-        min_rows: int = 3,
+        min_rows: int = 1,
+        max_rows: int = 3,
         suggested_max_column_width: int = 30,
         show_meta: FilterOrBool = True,
         extra_filter: FilterOrBool = True,
@@ -647,6 +686,7 @@ class MultiColumnCompletionsMenu(HSplit):
             content=Window(
                 content=MultiColumnCompletionMenuControl(
                     min_rows=min_rows,
+                    max_rows=max_rows,
                     suggested_max_column_width=suggested_max_column_width,
                 ),
                 width=Dimension(min=8),
