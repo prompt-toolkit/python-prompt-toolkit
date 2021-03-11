@@ -751,7 +751,7 @@ class FloatContainer(Container):
                        floats=[
                            Float(xcursor=True,
                                 ycursor=True,
-                                layout=CompletionMenu(...))
+                                content=CompletionMenu(...))
                        ])
 
     :param z_index: (int or None) When specified, this can be used to bring
@@ -1067,7 +1067,7 @@ class Float:
         allow_cover_cursor: bool = False,
         z_index: int = 1,
         transparent: bool = False,
-    ):
+    ) -> None:
 
         assert z_index >= 1
 
@@ -2700,7 +2700,7 @@ def to_container(container: AnyContainer) -> Container:
     if isinstance(container, Container):
         return container
     elif hasattr(container, "__pt_container__"):
-        return to_container(cast("MagicContainer", container).__pt_container__())
+        return to_container(container.__pt_container__())
     else:
         raise ValueError("Not a container object: %r" % (container,))
 

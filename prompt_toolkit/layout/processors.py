@@ -849,7 +849,7 @@ class ReverseSearchProcessor(Processor):
             include_default_input_processors=False,
             lexer=main_control.lexer,
             preview_search=True,
-            search_buffer_control=cast(SearchBufferControl, ti.buffer_control),
+            search_buffer_control=ti.buffer_control,
         )
 
         return buffer_control.create_content(ti.width, ti.height, preview_search=True)

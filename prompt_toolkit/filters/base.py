@@ -118,7 +118,7 @@ class _AndList(Filter):
 
         for f in filters:
             if isinstance(f, _AndList):  # Turn nested _AndLists into one.
-                self.filters.extend(cast(_AndList, f).filters)
+                self.filters.extend(f.filters)
             else:
                 self.filters.append(f)
 
@@ -139,7 +139,7 @@ class _OrList(Filter):
 
         for f in filters:
             if isinstance(f, _OrList):  # Turn nested _OrLists into one.
-                self.filters.extend(cast(_OrList, f).filters)
+                self.filters.extend(f.filters)
             else:
                 self.filters.append(f)
 
@@ -203,7 +203,7 @@ class Condition(Filter):
     :param func: Callable which takes no inputs and returns a boolean.
     """
 
-    def __init__(self, func: Callable[[], bool]):
+    def __init__(self, func: Callable[[], bool]) -> None:
         self.func = func
 
     def __call__(self) -> bool:

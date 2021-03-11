@@ -422,7 +422,7 @@ class Match:
             for r, re_match in self._re_matches:
                 for group_name, group_index in r.groupindex.items():
                     if group_name != _INVALID_TRAILING_INPUT:
-                        regs = cast(Tuple[Tuple[int, int], ...], re_match.regs)
+                        regs = re_match.regs
                         reg = regs[group_index]
                         node = self._group_names_to_nodes[group_name]
                         yield (node, reg)

@@ -1045,7 +1045,7 @@ class PromptSession(Generic[_T]):
             ),
         )
 
-        def on_text_changed(_) -> None:
+        def on_text_changed(_: object) -> None:
             self.output.write(self.default_buffer.document.text_before_cursor[-1:])
             self.output.flush()
 
