@@ -24,7 +24,7 @@ from prompt_toolkit.styles import (
 )
 
 if TYPE_CHECKING:
-    from prompt_toolkit.layout.containers import Container
+    from prompt_toolkit.layout.containers import AnyContainer
 
 __all__ = [
     "print_formatted_text",
@@ -141,7 +141,7 @@ def print_formatted_text(
 
 
 def print_container(
-    container: "Container",
+    container: "AnyContainer",
     file: Optional[TextIO] = None,
     style: Optional[BaseStyle] = None,
     include_default_pygments_style: bool = True,
