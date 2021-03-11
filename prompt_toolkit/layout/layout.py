@@ -217,7 +217,7 @@ class Layout:
         return self._stack[-1]
 
     @current_window.setter
-    def current_window(self, value: Window):
+    def current_window(self, value: Window) -> None:
         " Set the :class:`.Window` object to be currently focused. "
         self._stack.append(value)
 

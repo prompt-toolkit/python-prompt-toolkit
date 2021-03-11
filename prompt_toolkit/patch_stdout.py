@@ -120,7 +120,7 @@ class StdoutProxy:
     def __enter__(self) -> "StdoutProxy":
         return self
 
-    def __exit__(self, *args) -> None:
+    def __exit__(self, *args: object) -> None:
         self.close()
 
     def close(self) -> None:

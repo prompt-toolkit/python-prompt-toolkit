@@ -399,7 +399,7 @@ def load_vi_bindings() -> KeyBindingsBase:
         (
             ("g", "?"),
             Always(),
-            lambda string: cast(str, codecs.encode(string, "rot_13")),
+            lambda string: codecs.encode(string, "rot_13"),
         ),
         # To lowercase
         (("g", "u"), Always(), lambda string: string.lower()),
@@ -1964,7 +1964,7 @@ def load_vi_bindings() -> KeyBindingsBase:
             event.app.output.bell()
 
     @handle("delete", filter=vi_insert_multiple_mode)
-    def _delete_after_multiple_cursors(event):
+    def _delete_after_multiple_cursors(event: E) -> None:
         """
         Delete, using multiple cursors.
         """

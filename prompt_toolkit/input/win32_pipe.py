@@ -53,7 +53,7 @@ class Win32PipeInput(_Win32InputBase, PipeInput):
     def closed(self) -> bool:
         return self._closed
 
-    def fileno(self):
+    def fileno(self) -> int:
         """
         The windows pipe doesn't depend on the file handle.
         """

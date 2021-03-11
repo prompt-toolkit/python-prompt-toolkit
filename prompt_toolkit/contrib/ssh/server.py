@@ -97,7 +97,9 @@ class PromptToolkitSSHSession(asyncssh.SSHServerSession):
                 self._chan.close()
                 self._input.close()
 
-    def terminal_size_changed(self, width, height, pixwidth, pixheight):
+    def terminal_size_changed(
+        self, width: int, height: int, pixwidth, pixheight
+    ) -> None:
         # Send resize event to the current application.
         if self.app_session and self.app_session.app:
             self.app_session.app._on_resize()
@@ -144,7 +146,7 @@ class PromptToolkitSSHServer(asyncssh.SSHServer):
     ) -> None:
         self.interact = interact
 
-    def begin_auth(self, username):
+    def begin_auth(self, username: str) -> bool:
         # No authentication.
         return False
 

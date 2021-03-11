@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import Buffer
@@ -56,7 +56,7 @@ E = KeyPressEvent
 
 
 class FormattedTextToolbar(Window):
-    def __init__(self, text: AnyFormattedText, style: str = "", **kw) -> None:
+    def __init__(self, text: AnyFormattedText, style: str = "", **kw: Any) -> None:
         # Note: The style needs to be applied to the toolbar as a whole, not
         #       just the `FormattedTextControl`.
         super().__init__(

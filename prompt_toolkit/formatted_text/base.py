@@ -71,7 +71,7 @@ def to_formatted_text(
     elif isinstance(value, str):
         result = [("", value)]
     elif isinstance(value, list):
-        result = cast(StyleAndTextTuples, value)
+        result = value  # StyleAndTextTuples
     elif hasattr(value, "__pt_formatted_text__"):
         result = cast("MagicFormattedText", value).__pt_formatted_text__()
     elif callable(value):
@@ -146,7 +146,7 @@ class Template:
         self.text = text
 
     def format(self, *values: AnyFormattedText) -> AnyFormattedText:
-        def get_result():
+        def get_result() -> AnyFormattedText:
             # Split the template in parts.
             parts = self.text.split("{}")
             assert len(parts) - 1 == len(values)
@@ -166,7 +166,7 @@ def merge_formatted_text(items: Iterable[AnyFormattedText]) -> AnyFormattedText:
     Merge (Concatenate) several pieces of formatted text together.
     """
 
-    def _merge_formatted_text():
+    def _merge_formatted_text() -> AnyFormattedText:
         result = FormattedText()
         for i in items:
             result.extend(to_formatted_text(i))
