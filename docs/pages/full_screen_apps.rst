@@ -131,7 +131,7 @@ abstraction.
 
 - A higher level abstraction of building a layout is by using "widgets". A
   widget is a reusable layout component that can contain multiple containers
-  and controls. Widgets have a ``__pt__container__`` function, which returns
+  and controls. Widgets have a ``__pt_container__`` function, which returns
   the root container for this widget. Prompt_toolkit contains a couple of
   widgets like :class:`~prompt_toolkit.widgets.TextArea`,
   :class:`~prompt_toolkit.widgets.Button`,
