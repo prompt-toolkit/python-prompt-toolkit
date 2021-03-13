@@ -2,14 +2,13 @@
 """
 Nestedcompleter for completion of hierarchical data structures, with meta.
 """
+from dataclasses import dataclass
 from typing import Iterable
 
-from prompt_toolkit.completion import CompleteEvent, Completion, Completer
+from prompt_toolkit.completion import CompleteEvent, Completer, Completion
 from prompt_toolkit.completion.word_completer import WordCompleter
 from prompt_toolkit.document import Document
 from prompt_toolkit.formatted_text import AnyFormattedText
-
-from dataclasses import dataclass
 
 __all__ = ["NestedMetaData", "NestedMetaCompleter"]
 
@@ -18,13 +17,12 @@ __all__ = ["NestedMetaData", "NestedMetaCompleter"]
 class NestedMetaData:
     key: str
     meta: AnyFormattedText
-    data: Iterable['NestedMetaCompleter']
+    data: Iterable["NestedMetaCompleter"]
 
 
 class NestedMetaCompleter(Completer):
-
     def __init__(
-            self, data: Iterable['NestedMetaData'], ignore_case: bool = True
+        self, data: Iterable["NestedMetaData"], ignore_case: bool = True
     ) -> None:
 
         self.data = data
@@ -42,11 +40,11 @@ class NestedMetaCompleter(Completer):
         if " " in text:
             # Split document.
             first_term = text.split()[0]
-            completers = [item.data for item in self.data if item.key == first_term]
-            if not completers:
+            _completers = [item.data for item in self.data if item.key == first_term]
+            if not _completers:
                 return
             # If we have a sub completer, use this for the completions.
-            completers = completers[0]
+            completers = _completers[0]
             remaining_text = text[len(first_term) :].lstrip()
             stripped_len = len(document.text_before_cursor) - len(text)
             move_cursor = len(text) - len(remaining_text) + stripped_len
@@ -61,8 +59,10 @@ class NestedMetaCompleter(Completer):
 
         # No space in the input: behave exactly like `WordCompleter`.
         else:
-            completer = WordCompleter(
-                [item.key for item in self.data], ignore_case=False, meta_dict={item.key: item.meta for item in self.data},
+            w_completer = WordCompleter(
+                [item.key for item in self.data],
+                ignore_case=False,
+                meta_dict={item.key: item.meta for item in self.data},
             )
-            for c in completer.get_completions(document, complete_event):
+            for c in w_completer.get_completions(document, complete_event):
                 yield c

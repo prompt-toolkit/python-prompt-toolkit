@@ -9,6 +9,8 @@ from prompt_toolkit.completion import (
     DeduplicateCompleter,
     FuzzyWordCompleter,
     NestedCompleter,
+    NestedMetaCompleter,
+    NestedMetaData,
     PathCompleter,
     WordCompleter,
     merge_completers,
@@ -439,6 +441,85 @@ def test_nested_completer():
     # Test nested set.
     completions = completer.get_completions(
         Document("show ip interface br"), CompleteEvent()
+    )
+    assert {c.text for c in completions} == {"brief"}
+
+
+def test_nested_completer_meta():
+    completer = NestedMetaCompleter(
+        [
+            NestedMetaData(
+                "show",
+                "some show help",
+                [
+                    NestedMetaCompleter(
+                        [NestedMetaData("version", "show version meta", [])]
+                    ),
+                    NestedMetaCompleter(
+                        [NestedMetaData("clock", "[beta] show clock meta", [])]
+                    ),
+                    NestedMetaCompleter(
+                        [
+                            NestedMetaData(
+                                "ip",
+                                "show ip meta",
+                                [
+                                    NestedMetaCompleter(
+                                        [
+                                            NestedMetaData(
+                                                "interfaces",
+                                                "interfaces meta",
+                                                [
+                                                    NestedMetaCompleter(
+                                                        [
+                                                            NestedMetaData(
+                                                                "brief",
+                                                                "brief meta",
+                                                                [],
+                                                            )
+                                                        ]
+                                                    ),
+                                                ],
+                                            )
+                                        ]
+                                    ),
+                                ],
+                            )
+                        ]
+                    ),
+                ],
+            ),
+            NestedMetaData("exit", "now", []),
+        ]
+    )
+
+    # Empty input.
+    completions = completer.get_completions(Document(""), CompleteEvent())
+    assert {c.text for c in completions} == {"show", "exit"}
+
+    # One character.
+    completions = completer.get_completions(Document("s"), CompleteEvent())
+    assert {c.text for c in completions} == {"show"}
+
+    # One word.
+    completions = completer.get_completions(Document("show"), CompleteEvent())
+    assert {c.text for c in completions} == {"show"}
+
+    # One word + space.
+    completions = completer.get_completions(Document("show "), CompleteEvent())
+    assert {c.text for c in completions} == {"version", "clock", "ip"}
+
+    # One word + space + one character.
+    completions = completer.get_completions(Document("show i"), CompleteEvent())
+    assert {c.text for c in completions} == {"ip"}
+
+    # One space + one word + space + one character.
+    completions = completer.get_completions(Document(" show i"), CompleteEvent())
+    assert {c.text for c in completions} == {"ip"}
+
+    # Test nested set.
+    completions = completer.get_completions(
+        Document("show ip interfaces br"), CompleteEvent()
     )
     assert {c.text for c in completions} == {"brief"}
 
