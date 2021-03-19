@@ -3,6 +3,7 @@ import os
 import re
 import signal
 import sys
+import threading
 import time
 from asyncio import (
     AbstractEventLoop,
@@ -818,19 +819,57 @@ class Application(Generic[_AppResult]):
         self,
         pre_run: Optional[Callable[[], None]] = None,
         set_exception_handler: bool = True,
+        in_thread: bool = False,
     ) -> _AppResult:
         """
         A blocking 'run' call that waits until the UI is finished.
 
         This will start the current asyncio event loop. If no loop is set for
-        the current thread, then it will create a new loop.
+        the current thread, then it will create a new loop. If a new loop was
+        created, this won't close the new loop (if `in_thread=False`).
 
         :param pre_run: Optional callable, which is called right after the
             "reset" of the application.
         :param set_exception_handler: When set, in case of an exception, go out
             of the alternate screen and hide the application, display the
             exception, and wait for the user to press ENTER.
+        :param in_thread: When true, run the application in a background
+            thread, and block the current thread until the application
+            terminates. This is useful if we need to be sure the application
+            won't use the current event loop (asyncio does not support nested
+            event loops). A new event loop will be created in this background
+            thread, and that loop will also be closed when the background
+            thread terminates. This is used for instance in ptpython.
         """
+        if in_thread:
+            result: _AppResult
+            exception: Optional[BaseException] = None
+
+            def run_in_thread() -> None:
+                nonlocal result, exception
+                try:
+                    result = self.run(
+                        pre_run=pre_run, set_exception_handler=set_exception_handler
+                    )
+                except BaseException as e:
+                    exception = e
+                finally:
+                    # Make sure to close the event loop in this thread. Running
+                    # the application creates a new loop (because we're in
+                    # another thread), but it doesn't get closed automatically
+                    # (also not by the garbage collector).
+                    loop = get_event_loop()
+                    loop.run_until_complete(loop.shutdown_asyncgens())
+                    loop.close()
+
+            thread = threading.Thread(target=run_in_thread)
+            thread.start()
+            thread.join()
+
+            if exception is not None:
+                raise exception
+            return result
+
         # We don't create a new event loop by default, because we want to be
         # sure that when this is called multiple times, each call of `run()`
         # goes through the same event loop. This way, users can schedule

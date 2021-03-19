@@ -25,12 +25,14 @@ Example::
         result = s.prompt('Say something: ')
 """
 from asyncio import get_event_loop
+from contextlib import contextmanager
 from enum import Enum
 from functools import partial
 from typing import (
     TYPE_CHECKING,
     Callable,
     Generic,
+    Iterator,
     List,
     Optional,
     Tuple,
@@ -887,6 +889,7 @@ class PromptSession(Generic[_T]):
         accept_default: bool = False,
         pre_run: Optional[Callable[[], None]] = None,
         set_exception_handler: bool = True,
+        in_thread: bool = False,
     ) -> _T:
         """
         Display the prompt.
@@ -909,6 +912,9 @@ class PromptSession(Generic[_T]):
         :param accept_default: When `True`, automatically accept the default
             value without allowing the user to edit the input.
         :param pre_run: Callable, called at the start of `Application.run`.
+        :param in_thread: Run the prompt in a background thread; block the
+            current thread. This avoids interference with an event loop in the
+            current thread. Like `Application.run(in_thread=True)`.
 
         This method will raise ``KeyboardInterrupt`` when control-c has been
         pressed (for abort) and ``EOFError`` when control-d has been pressed
@@ -1008,13 +1014,17 @@ class PromptSession(Generic[_T]):
         # If we are using the default output, and have a dumb terminal. Use the
         # dumb prompt.
         if self._output is None and is_dumb_terminal():
-            return get_event_loop().run_until_complete(self._dumb_prompt(self.message))
+            with self._dumb_prompt(self.message) as dump_app:
+                return dump_app.run(in_thread=in_thread)
 
-        return self.app.run(set_exception_handler=set_exception_handler)
+        return self.app.run(
+            set_exception_handler=set_exception_handler, in_thread=in_thread
+        )
 
-    async def _dumb_prompt(self, message: AnyFormattedText = "") -> _T:
+    @contextmanager
+    def _dumb_prompt(self, message: AnyFormattedText = "") -> Iterator[Application[_T]]:
         """
-        Prompt function for dumb terminals.
+        Create prompt `Application` for prompt function for dumb terminals.
 
         Dumb terminals have minimum rendering capabilities. We can only print
         text to the screen. We can't use colors, and we can't do cursor
@@ -1050,13 +1060,15 @@ class PromptSession(Generic[_T]):
             self.output.flush()
 
         self.default_buffer.on_text_changed += on_text_changed
-        result = await application.run_async()
 
-        # Render line ending.
-        self.output.write("\r\n")
-        self.output.flush()
+        try:
+            yield application
+        finally:
+            # Render line ending.
+            self.output.write("\r\n")
+            self.output.flush()
 
-        return result
+            self.default_buffer.on_text_changed -= on_text_changed
 
     async def prompt_async(
         self,
@@ -1190,7 +1202,8 @@ class PromptSession(Generic[_T]):
         # If we are using the default output, and have a dumb terminal. Use the
         # dumb prompt.
         if self._output is None and is_dumb_terminal():
-            return await self._dumb_prompt(self.message)
+            with self._dumb_prompt(self.message) as dump_app:
+                return await dump_app.run_async()
 
         return await self.app.run_async(set_exception_handler=set_exception_handler)
 

@@ -41,18 +41,18 @@ async def generator_to_async_generator(
         """
         try:
             for item in get_iterable():
-                loop.call_soon_threadsafe(q.put_nowait, item)
-
                 # When this async generator was cancelled (closed), stop this
                 # thread.
                 if quitting:
                     break
 
+                loop.call_soon_threadsafe(q.put_nowait, item)
+
         finally:
             loop.call_soon_threadsafe(q.put_nowait, _done)
 
     # Start background thread.
-    run_in_executor_with_context(runner)
+    runner_f = run_in_executor_with_context(runner)
 
     try:
         while True:
@@ -65,3 +65,10 @@ async def generator_to_async_generator(
         # When this async generator is closed (GeneratorExit exception, stop
         # the background thread as well. - we don't need that anymore.)
         quitting = True
+
+        # Wait for the background thread to finish. (should happen right after
+        # the next item is yielded). If we don't do this, and the event loop
+        # gets closed before the runner is done, then we'll get a
+        # `RuntimeError: Event loop is closed` exception printed to stdout that
+        # we can't handle.
+        await runner_f
