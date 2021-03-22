@@ -46,3 +46,8 @@ class DummyApplication(Application[None]):
 
     def suspend_to_background(self, suspend_group: bool = True) -> None:
         raise NotImplementedError
+
+    def create_background_task(
+        self, coroutine: "Awaitable[None]"
+    ) -> "asyncio.Task[None]":
+        raise NotImplementedError
