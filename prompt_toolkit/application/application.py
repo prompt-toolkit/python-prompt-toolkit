@@ -5,6 +5,7 @@ import signal
 import sys
 import threading
 import time
+import warnings
 from asyncio import (
     AbstractEventLoop,
     CancelledError,
@@ -285,6 +286,8 @@ class Application(Generic[_AppResult]):
         self.loop: Optional[AbstractEventLoop] = None
         self.context: Optional[contextvars.Context] = None
 
+        self.background_tasks: List[Task[None]] = []
+
         #: Quoted insert. This flag is set if we go into quoted insert mode.
         self.quoted_insert = False
 
@@ -425,10 +428,7 @@ class Application(Generic[_AppResult]):
         # returning, and when we have multiple buffers, we clearly want the
         # content in the other buffers to remain unchanged between several
         # calls of `run`. (And the same is true for the focus stack.)
-
         self.exit_style = ""
-
-        self.background_tasks: List[Task[None]] = []
 
         self.renderer.reset()
         self.key_processor.reset()
@@ -937,14 +937,22 @@ class Application(Generic[_AppResult]):
         (If we had nurseries like Trio, this would be the `__aexit__` of a
         nursery.)
         """
-        for task in self.background_tasks:
+        tasks_to_be_cancelled = self.background_tasks
+        self.background_tasks = []
+
+        for task in tasks_to_be_cancelled:
             task.cancel()
 
-        for task in self.background_tasks:
+        for task in tasks_to_be_cancelled:
             try:
                 await task
             except CancelledError:
                 pass
+
+        if self.background_tasks:
+            warnings.warn(
+                "New background tasks were created while prompt_toolkit application terminates."
+            )
 
     async def _poll_output_size(self) -> None:
         """
