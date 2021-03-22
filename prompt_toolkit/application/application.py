@@ -839,7 +839,11 @@ class Application(Generic[_AppResult]):
             won't use the current event loop (asyncio does not support nested
             event loops). A new event loop will be created in this background
             thread, and that loop will also be closed when the background
-            thread terminates. This is used for instance in ptpython.
+            thread terminates. When this is used, it's especially important to
+            make sure that all asyncio background tasks are managed through
+            `get_appp().create_background_task()`, so that unfinished tasks are
+            properly cancelled before the event loop is closed. This is used
+            for instance in ptpython.
         """
         if in_thread:
             result: _AppResult
@@ -918,7 +922,10 @@ class Application(Generic[_AppResult]):
         self, coroutine: Awaitable[None]
     ) -> "asyncio.Task[None]":
         """
-        Start a background task (coroutine) for the running application.
+        Start a background task (coroutine) for the running application. When
+        the `Application` terminates, unfinished background tasks will be
+        cancelled.
+
         If asyncio had nurseries like Trio, we would create a nursery in
         `Application.run_async`, and run the given coroutine in that nursery.
 
