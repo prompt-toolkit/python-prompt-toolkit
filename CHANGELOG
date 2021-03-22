@@ -1,6 +1,18 @@
 CHANGELOG
 =========
 
+3.0.18: 2021-03-22
+------------------
+
+New features:
+- Added `in_thread` parameter to `Application.run`.
+  This is useful for running an application in a background thread, while the
+  main thread blocks. This way, we are sure not to interfere with an event loop
+  in the current thread. (This simplifies some code in ptpython and fixes an
+  issue regarding leaking file descriptors due to not closing the event loop
+  that was created in this background thread.)
+
+
 3.0.17: 2021-03-11
 ------------------
 
