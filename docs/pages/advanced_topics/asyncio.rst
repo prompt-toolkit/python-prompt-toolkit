@@ -12,7 +12,7 @@ Prompt_toolkit 3.0 uses asyncio natively. Calling ``Application.run()`` will
 automatically run the asyncio event loop.
 
 If however you want to run a prompt_toolkit ``Application`` within an asyncio
-environment, you have to call the ``prompt_async`` method, like this:
+environment, you have to call the ``run_async`` method, like this:
 
 .. code:: python
 
