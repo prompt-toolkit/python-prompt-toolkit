@@ -375,30 +375,14 @@ class _EscapeCodeCache(Dict[Attrs, str]):
 
 
 def _get_size(fileno: int) -> Tuple[int, int]:
-    # Thanks to fabric (fabfile.org), and
-    # http://sqizit.bartletts.id.au/2011/02/14/pseudo-terminals-in-python/
     """
     Get the size of this pseudo terminal.
 
     :param fileno: stdout.fileno()
     :returns: A (rows, cols) tuple.
     """
-    # Inline imports, because these modules are not available on Windows.
-    # (This file is used by ConEmuOutput, which is used on Windows.)
-    import fcntl
-    import termios
-
-    # Buffer for the C call
-    buf = array.array("h", [0, 0, 0, 0])
-
-    # Do TIOCGWINSZ (Get)
-    # Note: We should not pass 'True' as a fourth parameter to 'ioctl'. (True
-    #       is the default.) This causes segmentation faults on some systems.
-    #       See: https://github.com/jonathanslenders/python-prompt-toolkit/pull/364
-    fcntl.ioctl(fileno, termios.TIOCGWINSZ, buf)
-
-    # Return rows, cols
-    return buf[0], buf[1]
+    size = os.get_terminal_size(fileno)
+    return size.lines, size.columns
 
 
 class Vt100_Output(Output):
