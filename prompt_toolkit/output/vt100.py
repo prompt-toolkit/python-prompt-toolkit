@@ -669,6 +669,7 @@ class Vt100_Output(Output):
             return
 
         data = "".join(self._buffer)
+        self._buffer = []
 
         try:
             # Ensure that `self.stdout` is made blocking when writing into it.
@@ -708,8 +709,6 @@ class Vt100_Output(Output):
                 pass
             else:
                 raise
-
-        self._buffer = []
 
     def ask_for_cpr(self) -> None:
         """
