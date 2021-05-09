@@ -38,5 +38,5 @@ class PyperclipClipboard(Clipboard):
         else:
             return ClipboardData(
                 text=text,
-                type=SelectionType.LINES if "\n" in text else SelectionType.LINES,
+                type=SelectionType.LINES if "\n" in text else SelectionType.CHARACTERS,
             )
