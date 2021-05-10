@@ -292,7 +292,14 @@ class MenuContainer:
                         else:
                             style = ""
 
-                        yield ("class:menu", Border.VERTICAL)
+
+                        if item.text == "-":
+                            yield (
+                                style + "class:menu-border",
+                                Border.SPLIT_LEFT,mouse_handler,
+                            )
+                        else:
+                            yield ("class:menu", Border.VERTICAL)
                         if item.text == "-":
                             yield (
                                 style + "class:menu-border",
@@ -309,11 +316,26 @@ class MenuContainer:
                         if item.children:
                             yield (style, ">", mouse_handler)
                         else:
-                            yield (style, " ", mouse_handler)
+                            if item.text == "-":
+                                yield (
+                                    style + "class:menu-border",
+                                    Border.HORIZONTAL,
+                                    mouse_handler,
+                                )
+                            else:
+                                yield (style, " ", mouse_handler)
 
                         if i == selected_item:
                             yield ("[SetMenuPosition]", "")
-                        yield ("class:menu", Border.VERTICAL)
+
+                        if item.text == "-":
+                            yield (
+                                style + "class:menu-border",
+                                Border.SPLIT_RIGHT,
+                                mouse_handler,
+                            )
+                        else:
+                            yield ("class:menu", Border.VERTICAL)
 
                         yield ("", "\n")
 
