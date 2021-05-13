@@ -465,7 +465,7 @@ class FormattedTextControl(UIControl):
                 count = 0
                 for item in fragments:
                     count += len(item[1])
-                    if count >= xpos:
+                    if count > xpos:
                         if len(item) >= 3:
                             # Handler found. Call it.
                             # (Handler can return NotImplemented, so return
