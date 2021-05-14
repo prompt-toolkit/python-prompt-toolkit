@@ -26,6 +26,7 @@ import asyncio
 import os
 import select
 import selectors
+import sys
 import threading
 from asyncio import AbstractEventLoop, get_event_loop
 from selectors import BaseSelector
@@ -39,6 +40,12 @@ __all__ = [
     "InputHookSelector",
     "InputHookContext",
 ]
+
+
+# Fix for https://github.com/prompt-toolkit/python-prompt-toolkit/issues/1433
+# As documented at https://github.com/encode/httpx/issues/914#issuecomment-622586610
+if sys.version_info[0] == 3 and sys.version_info[1] >= 8 and sys.platform.startswith('win'):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 def new_eventloop_with_inputhook(
