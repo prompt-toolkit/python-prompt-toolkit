@@ -83,19 +83,19 @@ class TelnetProtocolParser:
         self.data_received_callback(data)
 
     def do_received(self, data: bytes) -> None:
-        """ Received telnet DO command. """
+        """Received telnet DO command."""
         logger.info("DO %r", data)
 
     def dont_received(self, data: bytes) -> None:
-        """ Received telnet DONT command. """
+        """Received telnet DONT command."""
         logger.info("DONT %r", data)
 
     def will_received(self, data: bytes) -> None:
-        """ Received telnet WILL command. """
+        """Received telnet WILL command."""
         logger.info("WILL %r", data)
 
     def wont_received(self, data: bytes) -> None:
-        """ Received telnet WONT command. """
+        """Received telnet WONT command."""
         logger.info("WONT %r", data)
 
     def command_received(self, command: bytes, data: bytes) -> None:

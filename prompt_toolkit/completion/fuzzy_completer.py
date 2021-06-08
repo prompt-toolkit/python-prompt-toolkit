@@ -105,7 +105,7 @@ class FuzzyCompleter(Completer):
                 )
 
         def sort_key(fuzzy_match: "_FuzzyMatch") -> Tuple[int, int]:
-            " Sort by start position, then by the length of the match. "
+            "Sort by start position, then by the length of the match."
             return fuzzy_match.start_pos, fuzzy_match.match_length
 
         fuzzy_matches = sorted(fuzzy_matches, key=sort_key)

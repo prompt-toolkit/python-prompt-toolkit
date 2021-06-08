@@ -141,7 +141,7 @@ def _display_completions_like_readline(
 
     # User interaction through an application generator function.
     async def run_compl() -> None:
-        " Coroutine. "
+        "Coroutine."
         async with in_terminal(render_cli_done=True):
             if len(completions) > completions_per_page:
                 # Ask confirmation if it doesn't fit on the screen.
@@ -198,6 +198,6 @@ def _create_more_session(message: str = "--MORE--") -> "PromptSession":
 
     @bindings.add(Keys.Any)
     def _ignore(event: E) -> None:
-        " Disable inserting of text. "
+        "Disable inserting of text."
 
     return PromptSession(message, key_bindings=bindings, erase_when_done=True)

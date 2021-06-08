@@ -86,13 +86,13 @@ kb = KeyBindings()
 @kb.add("q")
 @kb.add("c-c")
 def _(event):
-    " Quit application. "
+    "Quit application."
     event.app.exit()
 
 
 @kb.add("w")
 def _(event):
-    " Disable/enable wrapping. "
+    "Disable/enable wrapping."
     global wrap_lines
     wrap_lines = not wrap_lines
 

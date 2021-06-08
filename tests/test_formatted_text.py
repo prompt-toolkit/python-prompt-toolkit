@@ -190,7 +190,7 @@ def test_split_lines_2():
 
 
 def test_split_lines_3():
-    " Edge cases: inputs ending with newlines. "
+    "Edge cases: inputs ending with newlines."
     # -1-
     lines = list(split_lines([("class:a", "line1\nline2\n")]))
 

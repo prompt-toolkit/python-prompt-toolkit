@@ -202,7 +202,7 @@ class ScrollbarMargin(Margin):
         else:
 
             def is_scroll_button(row: int) -> bool:
-                " True if we should display a button on this row. "
+                "True if we should display a button on this row."
                 return scrollbar_top <= row <= scrollbar_top + scrollbar_height
 
             # Up arrow.
@@ -277,7 +277,7 @@ class PromptMargin(Margin):
         self.get_continuation = get_continuation
 
     def get_width(self, get_ui_content: Callable[[], UIContent]) -> int:
-        " Width to report to the `Window`. "
+        "Width to report to the `Window`."
         # Take the width from the first line.
         text = fragment_list_to_text(self.get_prompt())
         return get_cwidth(text)

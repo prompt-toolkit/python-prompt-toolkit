@@ -14,7 +14,7 @@ def main():
 
     @bindings.add("c-t")
     def _(event):
-        " When ControlT has been pressed, toggle visibility. "
+        "When ControlT has been pressed, toggle visibility."
         hidden[0] = not hidden[0]
 
     print("Type Control-T to toggle password visible.")

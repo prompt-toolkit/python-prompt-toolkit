@@ -51,7 +51,7 @@ class SimpleCache(Generic[_T, _U]):
             return value
 
     def clear(self) -> None:
-        " Clear cache. "
+        "Clear cache."
         self._data = {}
         self._keys = deque()
 

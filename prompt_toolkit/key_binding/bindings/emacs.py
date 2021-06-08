@@ -105,12 +105,12 @@ def load_emacs_bindings() -> KeyBindingsBase:
 
     @handle("c-n")
     def _next(event: E) -> None:
-        " Next line. "
+        "Next line."
         event.current_buffer.auto_down()
 
     @handle("c-p")
     def _prev(event: E) -> None:
-        " Previous line. "
+        "Previous line."
         event.current_buffer.auto_up(count=event.arg)
 
     def handle_digit(c: str) -> None:
@@ -168,24 +168,24 @@ def load_emacs_bindings() -> KeyBindingsBase:
 
     @handle("c-]", Keys.Any)
     def _goto_char(event: E) -> None:
-        " When Ctl-] + a character is pressed. go to that character. "
+        "When Ctl-] + a character is pressed. go to that character."
         # Also named 'character-search'
         character_search(event.current_buffer, event.data, event.arg)
 
     @handle("escape", "c-]", Keys.Any)
     def _goto_char_backwards(event: E) -> None:
-        " Like Ctl-], but backwards. "
+        "Like Ctl-], but backwards."
         # Also named 'character-search-backward'
         character_search(event.current_buffer, event.data, -event.arg)
 
     @handle("escape", "a")
     def _prev_sentence(event: E) -> None:
-        " Previous sentence. "
+        "Previous sentence."
         # TODO:
 
     @handle("escape", "e")
     def _end_of_sentence(event: E) -> None:
-        " Move to end of sentence. "
+        "Move to end of sentence."
         # TODO:
 
     @handle("escape", "t", filter=insert_mode)
@@ -381,7 +381,7 @@ def load_emacs_search_bindings() -> KeyBindingsBase:
 
     @handle("n", filter=is_read_only)
     def _jump_next(event: E) -> None:
-        " Jump to next match. "
+        "Jump to next match."
         event.current_buffer.apply_search(
             event.app.current_search_state,
             include_current_position=False,
@@ -390,7 +390,7 @@ def load_emacs_search_bindings() -> KeyBindingsBase:
 
     @handle("N", filter=is_read_only)
     def _jump_prev(event: E) -> None:
-        " Jump to previous match. "
+        "Jump to previous match."
         event.current_buffer.apply_search(
             ~event.app.current_search_state,
             include_current_position=False,

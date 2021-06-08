@@ -84,13 +84,13 @@ def _output_screen_diff(
     output.hide_cursor()
 
     def reset_attributes() -> None:
-        " Wrapper around Output.reset_attributes. "
+        "Wrapper around Output.reset_attributes."
         nonlocal last_style
         _output_reset_attributes()
         last_style = None  # Forget last char after resetting attributes.
 
     def move_cursor(new: Point) -> Point:
-        " Move cursor to this `new` point. Returns the given Point. "
+        "Move cursor to this `new` point. Returns the given Point."
         current_x, current_y = current_pos.x, current_pos.y
 
         if new.y > current_y:
@@ -262,7 +262,7 @@ def _output_screen_diff(
 
 
 class HeightIsUnknownError(Exception):
-    " Information unavailable. Did not yet receive the CPR response. "
+    "Information unavailable. Did not yet receive the CPR response."
 
 
 class _StyleStringToAttrsCache(Dict[str, Attrs]):
@@ -317,7 +317,7 @@ class _StyleStringHasStyleCache(Dict[str, bool]):
 
 
 class CPR_Support(Enum):
-    " Enum: whether or not CPR is supported. "
+    "Enum: whether or not CPR is supported."
     SUPPORTED = "SUPPORTED"
     NOT_SUPPORTED = "NOT_SUPPORTED"
     UNKNOWN = "UNKNOWN"

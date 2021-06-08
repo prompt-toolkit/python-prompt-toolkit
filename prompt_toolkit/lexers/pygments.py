@@ -236,14 +236,14 @@ class PygmentsLexer(Lexer):
         line_generators: Dict[LineGenerator, int] = {}
 
         def get_syntax_sync() -> SyntaxSync:
-            " The Syntax synchronisation object that we currently use. "
+            "The Syntax synchronisation object that we currently use."
             if self.sync_from_start():
                 return SyncFromStart()
             else:
                 return self.syntax_sync
 
         def find_closest_generator(i: int) -> Optional[LineGenerator]:
-            " Return a generator close to line 'i', or None if none was found. "
+            "Return a generator close to line 'i', or None if none was found."
             for generator, lineno in line_generators.items():
                 if lineno < i and i - lineno < self.REUSE_GENERATOR_MAX_DISTANCE:
                     return generator
@@ -309,7 +309,7 @@ class PygmentsLexer(Lexer):
             return generator
 
         def get_line(i: int) -> StyleAndTextTuples:
-            " Return the tokens for a given line number. "
+            "Return the tokens for a given line number."
             try:
                 return cache[i]
             except KeyError:

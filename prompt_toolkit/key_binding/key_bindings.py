@@ -522,7 +522,7 @@ class ConditionalKeyBindings(_Proxy):
         self.filter = to_filter(filter)
 
     def _update_cache(self) -> None:
-        " If the original key bindings was changed. Update our copy version. "
+        "If the original key bindings was changed. Update our copy version."
         expected_version = self.key_bindings._version
 
         if self._last_version != expected_version:

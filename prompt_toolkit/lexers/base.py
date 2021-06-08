@@ -53,7 +53,7 @@ class SimpleLexer(Lexer):
         lines = document.lines
 
         def get_line(lineno: int) -> StyleAndTextTuples:
-            " Return the tokens for the given line. "
+            "Return the tokens for the given line."
             try:
                 return [(self.style, lines[lineno])]
             except IndexError:

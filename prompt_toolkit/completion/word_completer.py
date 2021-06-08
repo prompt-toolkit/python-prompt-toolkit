@@ -72,7 +72,7 @@ class WordCompleter(Completer):
             word_before_cursor = word_before_cursor.lower()
 
         def word_matches(word: str) -> bool:
-            """ True when the word before the cursor matches. """
+            """True when the word before the cursor matches."""
             if self.ignore_case:
                 word = word.lower()
 

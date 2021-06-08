@@ -48,12 +48,12 @@ class Input(metaclass=ABCMeta):
         return []
 
     def flush(self) -> None:
-        " The event loop can call this when the input has to be flushed. "
+        "The event loop can call this when the input has to be flushed."
         pass
 
     @abstractproperty
     def closed(self) -> bool:
-        " Should be true when the input stream is closed. "
+        "Should be true when the input stream is closed."
         return False
 
     @abstractmethod
@@ -83,7 +83,7 @@ class Input(metaclass=ABCMeta):
         """
 
     def close(self) -> None:
-        " Close input. "
+        "Close input."
         pass
 
 

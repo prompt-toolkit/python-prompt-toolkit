@@ -747,11 +747,11 @@ class TabsProcessor(Processor):
         position_mappings[len(fragments) + 1] = pos + 1
 
         def source_to_display(from_position: int) -> int:
-            " Maps original cursor position to the new one. "
+            "Maps original cursor position to the new one."
             return position_mappings[from_position]
 
         def display_to_source(display_pos: int) -> int:
-            " Maps display cursor position to the original one. "
+            "Maps display cursor position to the original one."
             position_mappings_reversed = {v: k for k, v in position_mappings.items()}
 
             while display_pos >= 0:

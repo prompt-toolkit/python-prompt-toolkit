@@ -111,11 +111,11 @@ class Win32Output(Output):
             self.LOG = open(_DEBUG_RENDER_OUTPUT_FILENAME, "ab")
 
     def fileno(self) -> int:
-        " Return file descriptor. "
+        "Return file descriptor."
         return self.stdout.fileno()
 
     def encoding(self) -> str:
-        " Return encoding used for stdout. "
+        "Return encoding used for stdout."
         return self.stdout.encoding
 
     def write(self, data: str) -> None:
@@ -125,7 +125,7 @@ class Win32Output(Output):
         self._buffer.append(data)
 
     def write_raw(self, data: str) -> None:
-        " For win32, there is no difference between write and write_raw. "
+        "For win32, there is no difference between write and write_raw."
         self.write(data)
 
     def get_size(self) -> Size:
@@ -268,7 +268,7 @@ class Win32Output(Output):
         )
 
     def reset_attributes(self) -> None:
-        " Reset the console foreground/background color. "
+        "Reset the console foreground/background color."
         self._winapi(
             windll.kernel32.SetConsoleTextAttribute, self.hconsole, self.default_attrs
         )
@@ -533,7 +533,7 @@ class BACKGROUND_COLOR:
 
 
 def _create_ansi_color_dict(color_cls) -> Dict[str, int]:
-    " Create a table that maps the 16 named ansi colors to their Windows code. "
+    "Create a table that maps the 16 named ansi colors to their Windows code."
     return {
         "ansidefault": color_cls.BLACK,
         "ansiblack": color_cls.BLACK,

@@ -197,7 +197,7 @@ class ConsoleInputReader:
             self.handle = HANDLE(msvcrt.get_osfhandle(self._fdcon))
 
     def close(self) -> None:
-        " Close fdcon. "
+        "Close fdcon."
         if self._fdcon is not None:
             os.close(self._fdcon)
 

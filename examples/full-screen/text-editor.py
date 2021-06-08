@@ -161,7 +161,7 @@ bindings = KeyBindings()
 
 @bindings.add("c-c")
 def _(event):
-    " Focus menu. "
+    "Focus menu."
     event.app.layout.focus(root_container.window)
 
 
@@ -204,7 +204,7 @@ def show_message(title, text):
 
 
 async def show_dialog_as_float(dialog):
-    " Coroutine. "
+    "Coroutine."
     float_ = Float(content=dialog)
     root_container.floats.insert(0, float_)
 
