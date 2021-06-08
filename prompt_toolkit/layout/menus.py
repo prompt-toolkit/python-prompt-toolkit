@@ -405,12 +405,12 @@ class MultiColumnCompletionMenuControl(UIControl):
         def grouper(
             n: int, iterable: Iterable[_T], fillvalue: Optional[_T] = None
         ) -> Iterable[List[_T]]:
-            " grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx "
+            "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
             args = [iter(iterable)] * n
             return zip_longest(fillvalue=fillvalue, *args)
 
         def is_current_completion(completion: Completion) -> bool:
-            " Returns True when this completion is the currently selected one. "
+            "Returns True when this completion is the currently selected one."
             return (
                 complete_state is not None
                 and complete_state.complete_index is not None
@@ -567,7 +567,7 @@ class MultiColumnCompletionMenuControl(UIControl):
 
         @Condition
         def filter() -> bool:
-            " Only handle key bindings if this menu is visible. "
+            "Only handle key bindings if this menu is visible."
             app = get_app()
             complete_state = app.current_buffer.complete_state
 

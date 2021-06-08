@@ -78,7 +78,7 @@ bindings = KeyBindings()
 @bindings.add("c-c")
 @bindings.add("q")
 def _(event):
-    " Quit. "
+    "Quit."
     event.app.exit()
 
 

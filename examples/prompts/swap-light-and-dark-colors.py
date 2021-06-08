@@ -44,7 +44,7 @@ def main():
 
     @bindings.add("c-t")
     def _(event):
-        " When ControlT has been pressed, toggle light/dark colors. "
+        "When ControlT has been pressed, toggle light/dark colors."
         swapped[0] = not swapped[0]
 
     def bottom_toolbar():

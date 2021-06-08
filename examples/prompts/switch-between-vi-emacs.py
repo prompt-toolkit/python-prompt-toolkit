@@ -16,14 +16,14 @@ def run():
     # Add an additional key binding for toggling this flag.
     @bindings.add("f4")
     def _(event):
-        " Toggle between Emacs and Vi mode. "
+        "Toggle between Emacs and Vi mode."
         if event.app.editing_mode == EditingMode.VI:
             event.app.editing_mode = EditingMode.EMACS
         else:
             event.app.editing_mode = EditingMode.VI
 
     def bottom_toolbar():
-        " Display the current input mode. "
+        "Display the current input mode."
         if get_app().editing_mode == EditingMode.VI:
             return " [F4] Vi "
         else:

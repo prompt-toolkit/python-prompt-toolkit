@@ -122,13 +122,13 @@ class SystemToolbar:
         @handle("c-g", filter=focused)
         @handle("c-c", filter=focused)
         def _cancel(event: E) -> None:
-            " Hide system prompt. "
+            "Hide system prompt."
             self.system_buffer.reset()
             event.app.layout.focus_last()
 
         @handle("enter", filter=focused)
         async def _accept(event: E) -> None:
-            " Run system command. "
+            "Run system command."
             await event.app.run_system_command(
                 self.system_buffer.text,
                 display_before_text=self._get_display_before_text(),
@@ -143,14 +143,14 @@ class SystemToolbar:
         @handle("escape", filter=focused)
         @handle("c-c", filter=focused)
         def _cancel_vi(event: E) -> None:
-            " Hide system prompt. "
+            "Hide system prompt."
             event.app.vi_state.input_mode = InputMode.NAVIGATION
             self.system_buffer.reset()
             event.app.layout.focus_last()
 
         @handle("enter", filter=focused)
         async def _accept_vi(event: E) -> None:
-            " Run system command. "
+            "Run system command."
             event.app.vi_state.input_mode = InputMode.NAVIGATION
             event.app.run_system_command(
                 self.system_buffer.text,
@@ -166,12 +166,12 @@ class SystemToolbar:
 
         @handle(Keys.Escape, "!", filter=~focused & emacs_mode, is_global=True)
         def _focus_me(event: E) -> None:
-            " M-'!' will focus this user control. "
+            "M-'!' will focus this user control."
             event.app.layout.focus(self.window)
 
         @handle("!", filter=~focused & vi_mode & vi_navigation_mode, is_global=True)
         def _focus_me_vi(event: E) -> None:
-            " Focus. "
+            "Focus."
             event.app.vi_state.input_mode = InputMode.INSERT
             event.app.layout.focus(self.window)
 

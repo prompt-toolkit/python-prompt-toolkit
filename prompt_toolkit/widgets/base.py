@@ -97,7 +97,7 @@ E = KeyPressEvent
 
 
 class Border:
-    " Box drawing characters. (Thin) "
+    "Box drawing characters. (Thin)"
     HORIZONTAL = "\u2500"
     VERTICAL = "\u2502"
     TOP_LEFT = "\u250c"
@@ -448,7 +448,7 @@ class Button:
         ]
 
     def _get_key_bindings(self) -> KeyBindings:
-        " Key bindings for the Button. "
+        "Key bindings for the Button."
         kb = KeyBindings()
 
         @kb.add(" ")

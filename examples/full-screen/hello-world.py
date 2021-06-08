@@ -27,7 +27,7 @@ kb = KeyBindings()
 
 @kb.add("c-c")
 def _(event):
-    " Quit when control-c is pressed. "
+    "Quit when control-c is pressed."
     event.app.exit()
 
 

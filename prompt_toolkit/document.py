@@ -141,27 +141,27 @@ class Document:
 
     @property
     def text(self) -> str:
-        " The document text. "
+        "The document text."
         return self._text
 
     @property
     def cursor_position(self) -> int:
-        " The document cursor position. "
+        "The document cursor position."
         return self._cursor_position
 
     @property
     def selection(self) -> Optional[SelectionState]:
-        " :class:`.SelectionState` object. "
+        ":class:`.SelectionState` object."
         return self._selection
 
     @property
     def current_char(self) -> str:
-        """ Return character under cursor or an empty string. """
+        """Return character under cursor or an empty string."""
         return self._get_char_relative_to_cursor(0) or ""
 
     @property
     def char_before_cursor(self) -> str:
-        """ Return character before the cursor or an empty string. """
+        """Return character before the cursor or an empty string."""
         return self._get_char_relative_to_cursor(-1) or ""
 
     @property
@@ -174,13 +174,13 @@ class Document:
 
     @property
     def current_line_before_cursor(self) -> str:
-        """ Text from the start of the line until the cursor. """
+        """Text from the start of the line until the cursor."""
         _, _, text = self.text_before_cursor.rpartition("\n")
         return text
 
     @property
     def current_line_after_cursor(self) -> str:
-        """ Text from the cursor until the end of the line. """
+        """Text from the cursor until the end of the line."""
         text, _, _ = self.text_after_cursor.partition("\n")
         return text
 
@@ -244,7 +244,7 @@ class Document:
 
     @property
     def leading_whitespace_in_current_line(self) -> str:
-        """ The leading whitespace in the left margin of the current line.  """
+        """The leading whitespace in the left margin of the current line."""
         current_line = self.current_line
         length = len(current_line) - len(current_line.lstrip())
         return current_line[:length]
@@ -341,12 +341,12 @@ class Document:
 
     @property
     def is_cursor_at_the_end(self) -> bool:
-        """ True when the cursor is at the end of the text. """
+        """True when the cursor is at the end of the text."""
         return self.cursor_position == len(self.text)
 
     @property
     def is_cursor_at_the_end_of_line(self) -> bool:
-        """ True when the cursor is at the end of this line. """
+        """True when the cursor is at the end of this line."""
         return self.current_char in ("\n", "")
 
     def has_match_at_current_position(self, sub: str) -> bool:
@@ -836,15 +836,15 @@ class Document:
         return 0
 
     def get_start_of_document_position(self) -> int:
-        """ Relative position for the start of the document. """
+        """Relative position for the start of the document."""
         return -self.cursor_position
 
     def get_end_of_document_position(self) -> int:
-        """ Relative position for the end of the document. """
+        """Relative position for the end of the document."""
         return len(self.text) - self.cursor_position
 
     def get_start_of_line_position(self, after_whitespace: bool = False) -> int:
-        """ Relative position for the start of this line. """
+        """Relative position for the start of this line."""
         if after_whitespace:
             current_line = self.current_line
             return (
@@ -856,7 +856,7 @@ class Document:
             return -len(self.current_line_before_cursor)
 
     def get_end_of_line_position(self) -> int:
-        """ Relative position for the end of this line. """
+        """Relative position for the end of this line."""
         return len(self.current_line_after_cursor)
 
     def last_non_blank_of_current_line_position(self) -> int:

@@ -213,17 +213,17 @@ class Layout:
 
     @property
     def current_window(self) -> Window:
-        " Return the :class:`.Window` object that is currently focused. "
+        "Return the :class:`.Window` object that is currently focused."
         return self._stack[-1]
 
     @current_window.setter
     def current_window(self, value: Window) -> None:
-        " Set the :class:`.Window` object to be currently focused. "
+        "Set the :class:`.Window` object to be currently focused."
         self._stack.append(value)
 
     @property
     def is_searching(self) -> bool:
-        " True if we are searching right now. "
+        "True if we are searching right now."
         return self.current_control in self.search_links
 
     @property

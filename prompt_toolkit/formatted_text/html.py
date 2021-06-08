@@ -36,7 +36,7 @@ class HTML:
         bg_stack: List[str] = []
 
         def get_current_style() -> str:
-            " Build style string for current node. "
+            "Build style string for current node."
             parts = []
             if name_stack:
                 parts.append("class:" + ",".join(name_stack))
@@ -48,7 +48,7 @@ class HTML:
             return " ".join(parts)
 
         def process_node(node: Any) -> None:
-            " Process node recursively. "
+            "Process node recursively."
             for child in node.childNodes:
                 if child.nodeType == child.TEXT_NODE:
                     result.append((get_current_style(), child.data))

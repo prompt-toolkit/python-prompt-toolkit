@@ -84,7 +84,7 @@ kb = KeyBindings()
 @kb.add("q")
 @kb.add("c-c")
 def _(event):
-    " Quit application. "
+    "Quit application."
     event.app.exit()
 
 

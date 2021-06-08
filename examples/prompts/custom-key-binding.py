@@ -36,7 +36,7 @@ def main():
 
     @bindings.add("a", "b", "c")
     def _(event):
-        " Typing 'abc' should insert 'd'. "
+        "Typing 'abc' should insert 'd'."
         event.app.current_buffer.insert_text("d")
 
     @bindings.add("c-t")

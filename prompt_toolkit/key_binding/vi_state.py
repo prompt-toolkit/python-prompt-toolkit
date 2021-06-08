@@ -78,12 +78,12 @@ class ViState:
 
     @property
     def input_mode(self) -> InputMode:
-        " Get `InputMode`. "
+        "Get `InputMode`."
         return self.__input_mode
 
     @input_mode.setter
     def input_mode(self, value: InputMode) -> None:
-        " Set `InputMode`. "
+        "Set `InputMode`."
         if value == InputMode.NAVIGATION:
             self.waiting_for_digraph = False
             self.operator_func = None
