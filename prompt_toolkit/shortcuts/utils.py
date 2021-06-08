@@ -173,7 +173,7 @@ def print_container(
             style, include_default_pygments_style=include_default_pygments_style
         ),
     )
-    app.run(pre_run=exit_immediately)
+    app.run(pre_run=exit_immediately, in_thread=True)
 
 
 def _create_merged_style(
