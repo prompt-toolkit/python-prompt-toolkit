@@ -2,7 +2,7 @@ import sys
 import time
 from asyncio import AbstractEventLoop, get_event_loop
 from types import TracebackType
-from typing import Any, Awaitable, Callable, Dict, Optional, TypeVar
+from typing import Any, Awaitable, Callable, Dict, Optional, TypeVar, cast
 
 try:
     import contextvars
@@ -90,7 +90,7 @@ def get_traceback_from_context(context: Dict[str, Any]) -> Optional[TracebackTyp
     exception = context.get("exception")
     if exception:
         if hasattr(exception, "__traceback__"):
-            return exception.__traceback__
+            return cast(TracebackType, exception.__traceback__)
         else:
             # call_exception_handler() is usually called indirectly
             # from an except block. If it's not the case, the traceback

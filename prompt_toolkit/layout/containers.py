@@ -2674,8 +2674,18 @@ class DynamicContainer(Container):
     def preferred_height(self, width: int, max_available_height: int) -> Dimension:
         return self._get_container().preferred_height(width, max_available_height)
 
-    def write_to_screen(self, *a, **kw):
-        self._get_container().write_to_screen(*a, **kw)
+    def write_to_screen(
+        self,
+        screen: Screen,
+        mouse_handlers: MouseHandlers,
+        write_position: WritePosition,
+        parent_style: str,
+        erase_bg: bool,
+        z_index: Optional[int],
+    ) -> None:
+        self._get_container().write_to_screen(
+            screen, mouse_handlers, write_position, parent_style, erase_bg, z_index
+        )
 
     def is_modal(self) -> bool:
         return False

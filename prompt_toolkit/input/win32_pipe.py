@@ -1,4 +1,5 @@
 from ctypes import windll
+from ctypes.wintypes import HANDLE
 from typing import Callable, ContextManager, List
 
 from prompt_toolkit.eventloop.win32 import create_win32_event
@@ -60,7 +61,7 @@ class Win32PipeInput(_Win32InputBase, PipeInput):
         raise NotImplementedError
 
     @property
-    def handle(self):
+    def handle(self) -> HANDLE:
         "The handle used for registering this pipe in the event loop."
         return self._event
 

@@ -5,7 +5,17 @@ import bisect
 import re
 import string
 import weakref
-from typing import Callable, Dict, Iterable, List, Optional, Pattern, Tuple, cast
+from typing import (
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    NoReturn,
+    Optional,
+    Pattern,
+    Tuple,
+    cast,
+)
 
 from .clipboard import ClipboardData
 from .filters import vi_mode
@@ -42,13 +52,13 @@ _text_to_document_cache: Dict[str, "_DocumentCache"] = cast(
 )
 
 
-class _ImmutableLineList(list):
+class _ImmutableLineList(List[str]):
     """
     Some protection for our 'lines' list, which is assumed to be immutable in the cache.
     (Useful for detecting obvious bugs.)
     """
 
-    def _error(self, *a: object, **kw: object) -> None:
+    def _error(self, *a: object, **kw: object) -> NoReturn:
         raise NotImplementedError("Attempt to modify an immutable list.")
 
     __setitem__ = _error  # type: ignore

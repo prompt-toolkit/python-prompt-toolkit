@@ -14,7 +14,16 @@ if not SPHINX_AUTODOC_RUNNING:
 
 from ctypes import pointer
 from ctypes.wintypes import DWORD, HANDLE
-from typing import Callable, ContextManager, Dict, Iterable, List, Optional, TextIO
+from typing import (
+    Callable,
+    ContextManager,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    TextIO,
+)
 
 from prompt_toolkit.eventloop import run_in_executor_with_context
 from prompt_toolkit.eventloop.win32 import create_win32_event, wait_for_handles
@@ -280,7 +289,7 @@ class ConsoleInputReader:
 
         return KeyPress(key_press.key, data)
 
-    def _get_keys(self, read, input_records):
+    def _get_keys(self, read: DWORD, input_records) -> Iterator[KeyPress]:
         """
         Generator that yields `KeyPress` objects from the input records.
         """
@@ -305,7 +314,7 @@ class ConsoleInputReader:
                         yield key_press
 
     @staticmethod
-    def _is_paste(keys) -> bool:
+    def _is_paste(keys: List[KeyPress]) -> bool:
         """
         Return `True` when we should consider this list of keys as a paste
         event. Pasted text on windows will be turned into a
@@ -638,10 +647,10 @@ class raw_mode:
     `raw_input` method of `.vt100_input`.
     """
 
-    def __init__(self, fileno=None):
+    def __init__(self, fileno: Optional[int] = None) -> None:
         self.handle = HANDLE(windll.kernel32.GetStdHandle(STD_INPUT_HANDLE))
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         # Remember original mode.
         original_mode = DWORD()
         windll.kernel32.GetConsoleMode(self.handle, pointer(original_mode))

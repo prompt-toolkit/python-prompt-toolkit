@@ -547,7 +547,7 @@ class BufferControl(UIControl):
         search_buffer_control: Union[
             None, "SearchBufferControl", Callable[[], "SearchBufferControl"]
         ] = None,
-        menu_position: Optional[Callable] = None,
+        menu_position: Optional[Callable[[], Optional[int]]] = None,
         focus_on_click: FilterOrBool = False,
         key_bindings: Optional["KeyBindingsBase"] = None,
     ):

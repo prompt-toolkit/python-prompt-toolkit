@@ -8,8 +8,8 @@ except ImportError:
     from prompt_toolkit.eventloop.dummy_contextvars import ContextVar  # type: ignore
 
 if TYPE_CHECKING:
-    from prompt_toolkit.input.defaults import Input
-    from prompt_toolkit.output.defaults import Output
+    from prompt_toolkit.input.base import Input
+    from prompt_toolkit.output.base import Output
 
     from .application import Application
 
