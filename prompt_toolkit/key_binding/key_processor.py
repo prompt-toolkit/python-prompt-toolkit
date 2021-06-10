@@ -93,7 +93,7 @@ class KeyProcessor:
         self.before_key_press = Event(self)
         self.after_key_press = Event(self)
 
-        self._flush_wait_task: Optional[Task] = None
+        self._flush_wait_task: Optional[Task[None]] = None
 
         self.reset()
 
@@ -525,6 +525,6 @@ class KeyPressEvent:
         self.key_processor.arg = result
 
     @property
-    def cli(self) -> "Application":
+    def cli(self) -> "Application[Any]":
         "For backward-compatibility."
         return self.app

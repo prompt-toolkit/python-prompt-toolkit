@@ -1,8 +1,8 @@
 from typing import Any, Optional, TextIO
 
 from prompt_toolkit.data_structures import Size
-from prompt_toolkit.renderer import Output
 
+from .base import Output
 from .color_depth import ColorDepth
 from .vt100 import Vt100_Output
 from .win32 import Win32Output

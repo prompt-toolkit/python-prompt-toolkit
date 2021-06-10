@@ -10,10 +10,9 @@ from ctypes import (
     windll,
 )
 from ctypes.wintypes import DWORD, HANDLE
-from typing import Dict, List, Optional, TextIO, Tuple
+from typing import Callable, Dict, List, Optional, TextIO, Tuple, Type, TypeVar, Union
 
 from prompt_toolkit.data_structures import Size
-from prompt_toolkit.renderer import Output
 from prompt_toolkit.styles import ANSI_COLOR_NAMES, Attrs
 from prompt_toolkit.utils import get_cwidth
 from prompt_toolkit.win32_types import (
@@ -24,6 +23,7 @@ from prompt_toolkit.win32_types import (
     STD_OUTPUT_HANDLE,
 )
 
+from .base import Output
 from .color_depth import ColorDepth
 
 __all__ = [
@@ -31,7 +31,7 @@ __all__ = [
 ]
 
 
-def _coord_byval(coord):
+def _coord_byval(coord: COORD) -> c_long:
     """
     Turns a COORD object into a c_long.
     This will cause it to be passed by value instead of by reference. (That is what I think at least.)
@@ -77,6 +77,9 @@ class NoConsoleScreenBufferError(Exception):
         else:
             message = "No Windows console found. Are you running cmd.exe?"
         super().__init__(message)
+
+
+_T = TypeVar("_T")
 
 
 class Win32Output(Output):
@@ -148,7 +151,7 @@ class Win32Output(Output):
         # Create `Size` object.
         return Size(rows=height, columns=width)
 
-    def _winapi(self, func, *a, **kw):
+    def _winapi(self, func: Callable[..., _T], *a, **kw) -> _T:
         """
         Flush and call win API function.
         """
@@ -174,7 +177,9 @@ class Win32Output(Output):
                     ("    Error in %r %r %s\n" % (func.__name__, e, e)).encode("utf-8")
                 )
 
-    def get_win32_screen_buffer_info(self):
+            raise
+
+    def get_win32_screen_buffer_info(self) -> CONSOLE_SCREEN_BUFFER_INFO:
         """
         Return Screen buffer info.
         """
@@ -244,7 +249,7 @@ class Win32Output(Output):
 
         self._erase(start, length)
 
-    def _erase(self, start, length):
+    def _erase(self, start: COORD, length: int) -> None:
         chars_written = c_ulong()
 
         self._winapi(
@@ -532,7 +537,9 @@ class BACKGROUND_COLOR:
     INTENSITY = 0x0080  # Background color is intensified.
 
 
-def _create_ansi_color_dict(color_cls) -> Dict[str, int]:
+def _create_ansi_color_dict(
+    color_cls: Union[Type[FOREGROUND_COLOR], Type[BACKGROUND_COLOR]]
+) -> Dict[str, int]:
     "Create a table that maps the 16 named ansi colors to their Windows code."
     return {
         "ansidefault": color_cls.BLACK,

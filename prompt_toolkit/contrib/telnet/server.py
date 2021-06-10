@@ -279,7 +279,7 @@ class TelnetServer:
         self.interact = interact
         self.encoding = encoding
         self.style = style
-        self._application_tasks: List[asyncio.Task] = []
+        self._application_tasks: List[asyncio.Task[None]] = []
 
         self.connections: Set[TelnetConnection] = set()
         self._listen_socket: Optional[socket.socket] = None

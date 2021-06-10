@@ -1880,7 +1880,7 @@ class Buffer:
                 self.reset()
 
 
-_T = TypeVar("_T", bound=Callable[..., Awaitable])
+_T = TypeVar("_T", bound=Callable[..., Awaitable[None]])
 
 
 def _only_one_at_a_time(coroutine: _T) -> _T:

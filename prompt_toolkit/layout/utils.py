@@ -1,6 +1,9 @@
-from typing import Iterable, List, TypeVar, Union, cast, overload
+from typing import TYPE_CHECKING, Iterable, List, TypeVar, Union, cast, overload
 
 from prompt_toolkit.formatted_text.base import OneStyleAndTextTuple
+
+if TYPE_CHECKING:
+    from typing_extensions import SupportsIndex
 
 __all__ = [
     "explode_text_fragments",
@@ -31,7 +34,7 @@ class _ExplodedList(List[_T]):
     # TODO: When creating a copy() or [:], return also an _ExplodedList.
 
     @overload
-    def __setitem__(self, index: int, value: _T) -> None:
+    def __setitem__(self, index: "SupportsIndex", value: _T) -> None:
         ...
 
     @overload
@@ -39,14 +42,15 @@ class _ExplodedList(List[_T]):
         ...
 
     def __setitem__(
-        self, index: Union[int, slice], value: Union[_T, Iterable[_T]]
+        self, index: Union["SupportsIndex", slice], value: Union[_T, Iterable[_T]]
     ) -> None:
         """
         Ensure that when `(style_str, 'long string')` is set, the string will be
         exploded.
         """
         if not isinstance(index, slice):
-            index = slice(index, index + 1)
+            int_index = index.__index__()
+            index = slice(int_index, int_index + 1)
         if isinstance(value, tuple):  # In case of `OneStyleAndTextTuple`.
             value = cast("List[_T]", [value])
 

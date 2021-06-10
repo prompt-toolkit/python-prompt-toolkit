@@ -556,9 +556,9 @@ class Application(Generic[_AppResult]):
         Start a while/true loop in the background for automatic invalidation of
         the UI.
         """
-        if self.refresh_interval not in (None, 0):
+        if self.refresh_interval is not None and self.refresh_interval != 0:
 
-            async def auto_refresh(refresh_interval) -> None:
+            async def auto_refresh(refresh_interval: float) -> None:
                 while True:
                     await sleep(refresh_interval)
                     self.invalidate()

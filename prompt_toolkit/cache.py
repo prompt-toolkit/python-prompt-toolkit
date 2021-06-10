@@ -56,7 +56,7 @@ class SimpleCache(Generic[_T, _U]):
         self._keys = deque()
 
 
-_K = TypeVar("_K", bound=Tuple)
+_K = TypeVar("_K", bound=Tuple[Hashable, ...])
 _V = TypeVar("_V")
 
 

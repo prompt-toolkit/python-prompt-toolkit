@@ -253,11 +253,11 @@ class raw_mode:
             termios.tcsetattr(self.fileno, termios.TCSANOW, newattr)
 
     @classmethod
-    def _patch_lflag(cls, attrs):
+    def _patch_lflag(cls, attrs: int) -> int:
         return attrs & ~(termios.ECHO | termios.ICANON | termios.IEXTEN | termios.ISIG)
 
     @classmethod
-    def _patch_iflag(cls, attrs):
+    def _patch_iflag(cls, attrs: int) -> int:
         return attrs & ~(
             # Disable XON/XOFF flow control on output and input.
             # (Don't capture Ctrl-S and Ctrl-Q.)
@@ -292,11 +292,11 @@ class cooked_mode(raw_mode):
     """
 
     @classmethod
-    def _patch_lflag(cls, attrs):
+    def _patch_lflag(cls, attrs: int) -> int:
         return attrs | (termios.ECHO | termios.ICANON | termios.IEXTEN | termios.ISIG)
 
     @classmethod
-    def _patch_iflag(cls, attrs):
+    def _patch_iflag(cls, attrs: int) -> int:
         # Turn the ICRNL flag back on. (Without this, calling `input()` in
         # run_in_terminal doesn't work and displays ^M instead. Ptpython
         # evaluates commands using `run_in_terminal`, so it's important that
