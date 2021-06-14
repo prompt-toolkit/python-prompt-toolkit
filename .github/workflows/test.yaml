@@ -22,7 +22,7 @@ jobs:
         run: |
           sudo apt remove python3-pip
           python -m pip install --upgrade pip
-          python -m pip install . black coverage codecov flake8 isort==5.6.4 mypy pytest readme_renderer
+          python -m pip install . black coverage codecov flake8 isort==5.6.4 mypy pytest readme_renderer types-contextvars
           pip list
       - name: Run Tests
         run: |
