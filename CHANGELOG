@@ -1,6 +1,19 @@
 CHANGELOG
 =========
 
+3.0.19: 2021-06-17
+------------------
+
+Fixes:
+- Make the flush method of the vt100 output implementation re-entrant (fixes an
+  issue when using aiogevent).
+- Fix off-by-one in `FormattedTextControl` mouse logic.
+- Run `print_container` always in a thread (avoid interfering with possible
+  event loop).
+- Make sphinx autodoc generation platform agnostic (don't import Windows stuff
+  when generating Sphinx docs).
+
+
 3.0.18: 2021-03-22
 ------------------
 
