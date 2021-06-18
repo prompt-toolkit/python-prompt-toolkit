@@ -216,10 +216,10 @@ class Application(Generic[_AppResult]):
         max_render_postpone_time: Union[float, int, None] = 0.01,
         refresh_interval: Optional[float] = None,
         terminal_size_polling_interval: Optional[float] = 0.5,
-        on_reset: Optional[ApplicationEventHandler] = None,
-        on_invalidate: Optional[ApplicationEventHandler] = None,
-        before_render: Optional[ApplicationEventHandler] = None,
-        after_render: Optional[ApplicationEventHandler] = None,
+        on_reset: Optional["ApplicationEventHandler[_AppResult]"] = None,
+        on_invalidate: Optional["ApplicationEventHandler[_AppResult]"] = None,
+        before_render: Optional["ApplicationEventHandler[_AppResult]"] = None,
+        after_render: Optional["ApplicationEventHandler[_AppResult]"] = None,
         # I/O.
         input: Optional[Input] = None,
         output: Optional[Output] = None,
@@ -769,7 +769,7 @@ class Application(Generic[_AppResult]):
                         # Store unprocessed input as typeahead for next time.
                         store_typeahead(self.input, self.key_processor.empty_queue())
 
-                return result
+                return cast(_AppResult, result)
 
         async def _run_async2() -> _AppResult:
             self._is_running = True

@@ -1,5 +1,14 @@
 import os
-from ctypes import ArgumentError, byref, c_char, c_long, c_uint, c_ulong, pointer
+from ctypes import (
+    ArgumentError,
+    byref,
+    c_char,
+    c_long,
+    c_short,
+    c_uint,
+    c_ulong,
+    pointer,
+)
 
 from ..utils import SPHINX_AUTODOC_RUNNING
 
@@ -45,7 +54,7 @@ def _coord_byval(coord: COORD) -> c_long:
 
     More info: http://msdn.microsoft.com/en-us/library/windows/desktop/ms686025(v=vs.85).aspx
     """
-    return c_long(coord.Y * 0x10000 | coord.X & 0xFFFF)
+    return c_long(coord.Y.value * 0x10000 | coord.X.value & 0xFFFF)
 
 
 #: If True: write the output of the renderer also to the following file. This
@@ -107,7 +116,7 @@ class Win32Output(Output):
 
         # Remember the default console colors.
         info = self.get_win32_screen_buffer_info()
-        self.default_attrs = info.wAttributes if info else 15
+        self.default_attrs = info.wAttributes.value if info else 15
 
         if _DEBUG_RENDER_OUTPUT:
             self.LOG = open(_DEBUG_RENDER_OUTPUT_FILENAME, "ab")
@@ -137,20 +146,20 @@ class Win32Output(Output):
         # of the complete screen buffer. (Unless use_complete_width has been
         # set.)
         if self.use_complete_width:
-            width = info.dwSize.X
+            width = info.dwSize.X.value
         else:
-            width = info.srWindow.Right - info.srWindow.Left
+            width = info.srWindow.Right.value - info.srWindow.Left.value
 
-        height = info.srWindow.Bottom - info.srWindow.Top + 1
+        height = info.srWindow.Bottom.value - info.srWindow.Top.value + 1
 
         # We avoid the right margin, windows will wrap otherwise.
-        maxwidth = info.dwSize.X - 1
+        maxwidth = info.dwSize.X.value - 1
         width = min(maxwidth, width)
 
         # Create `Size` object.
         return Size(rows=height, columns=width)
 
-    def _winapi(self, func: Callable[..., _T], *a, **kw) -> _T:
+    def _winapi(self, func: Callable[..., _T], *a: object, **kw: object) -> _T:
         """
         Flush and call win API function.
         """
@@ -226,7 +235,7 @@ class Win32Output(Output):
     def erase_screen(self) -> None:
         start = COORD(0, 0)
         sbinfo = self.get_win32_screen_buffer_info()
-        length = sbinfo.dwSize.X * sbinfo.dwSize.Y
+        length = sbinfo.dwSize.X.value * sbinfo.dwSize.Y.value
 
         self.cursor_goto(row=0, column=0)
         self._erase(start, length)
@@ -236,7 +245,9 @@ class Win32Output(Output):
         size = sbinfo.dwSize
 
         start = sbinfo.dwCursorPosition
-        length = (size.X - size.X) + size.X * (size.Y - sbinfo.dwCursorPosition.Y)
+        length = (size.X.value - size.X.value) + size.X.value * (
+            size.Y.value - sbinfo.dwCursorPosition.Y.value
+        )
 
         self._erase(start, length)
 
@@ -244,7 +255,7 @@ class Win32Output(Output):
         """"""
         sbinfo = self.get_win32_screen_buffer_info()
         start = sbinfo.dwCursorPosition
-        length = sbinfo.dwSize.X - sbinfo.dwCursorPosition.X
+        length = sbinfo.dwSize.X.value - sbinfo.dwCursorPosition.X.value
 
         self._erase(start, length)
 
@@ -325,14 +336,14 @@ class Win32Output(Output):
         pass
 
     def cursor_goto(self, row: int = 0, column: int = 0) -> None:
-        pos = COORD(x=column, y=row)
+        pos = COORD(X=c_short(column), Y=c_short(row))
         self._winapi(
             windll.kernel32.SetConsoleCursorPosition, self.hconsole, _coord_byval(pos)
         )
 
     def cursor_up(self, amount: int) -> None:
         sr = self.get_win32_screen_buffer_info().dwCursorPosition
-        pos = COORD(sr.X, sr.Y - amount)
+        pos = COORD(X=sr.X, Y=c_short(sr.Y.value - amount))
         self._winapi(
             windll.kernel32.SetConsoleCursorPosition, self.hconsole, _coord_byval(pos)
         )
@@ -344,7 +355,7 @@ class Win32Output(Output):
         sr = self.get_win32_screen_buffer_info().dwCursorPosition
         #        assert sr.X + amount >= 0, 'Negative cursor position: x=%r amount=%r' % (sr.X, amount)
 
-        pos = COORD(max(0, sr.X + amount), sr.Y)
+        pos = COORD(X=c_short(max(0, sr.X.value + amount)), Y=sr.Y)
         self._winapi(
             windll.kernel32.SetConsoleCursorPosition, self.hconsole, _coord_byval(pos)
         )
@@ -384,7 +395,7 @@ class Win32Output(Output):
 
     def get_rows_below_cursor_position(self) -> int:
         info = self.get_win32_screen_buffer_info()
-        return info.srWindow.Bottom - info.dwCursorPosition.Y + 1
+        return info.srWindow.Bottom.value - info.dwCursorPosition.Y.value + 1
 
     def scroll_buffer_to_prompt(self) -> None:
         """
@@ -399,17 +410,17 @@ class Win32Output(Output):
         result = SMALL_RECT()
 
         # Scroll to the left.
-        result.Left = 0
-        result.Right = sr.Right - sr.Left
+        result.Left = c_short(0)
+        result.Right = c_short(sr.Right.value - sr.Left.value)
 
         # Scroll vertical
-        win_height = sr.Bottom - sr.Top
-        if 0 < sr.Bottom - cursor_pos.Y < win_height - 1:
+        win_height = sr.Bottom.value - sr.Top.value
+        if 0 < sr.Bottom.value - cursor_pos.Y.value < win_height - 1:
             # no vertical scroll if cursor already on the screen
             result.Bottom = sr.Bottom
         else:
-            result.Bottom = max(win_height, cursor_pos.Y)
-        result.Top = result.Bottom - win_height
+            result.Bottom = c_short(max(win_height, cursor_pos.Y.value))
+        result.Top = c_short(result.Bottom.value - win_height)
 
         # Scroll API
         self._winapi(

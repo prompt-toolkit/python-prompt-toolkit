@@ -12,7 +12,7 @@ if not SPHINX_AUTODOC_RUNNING:
     import msvcrt
     from ctypes import windll
 
-from ctypes import pointer
+from ctypes import Array, pointer
 from ctypes.wintypes import DWORD, HANDLE
 from typing import (
     Callable,
@@ -289,7 +289,9 @@ class ConsoleInputReader:
 
         return KeyPress(key_press.key, data)
 
-    def _get_keys(self, read: DWORD, input_records) -> Iterator[KeyPress]:
+    def _get_keys(
+        self, read: DWORD, input_records: "Array[INPUT_RECORD]"
+    ) -> Iterator[KeyPress]:
         """
         Generator that yields `KeyPress` objects from the input records.
         """
@@ -300,8 +302,8 @@ class ConsoleInputReader:
             # (For some reason the Windows console application 'cmder'
             # [http://gooseberrycreative.com/cmder/] can return '0' for
             # ir.EventType. -- Just ignore that.)
-            if ir.EventType in EventTypes:
-                ev = getattr(ir.Event, EventTypes[ir.EventType])
+            if ir.EventType.value in EventTypes:
+                ev = getattr(ir.Event, EventTypes[ir.EventType.value])
 
                 # Process if this is a key event. (We also have mouse, menu and
                 # focus events.)
@@ -343,7 +345,8 @@ class ConsoleInputReader:
 
         result: Optional[KeyPress] = None
 
-        u_char = ev.uChar.UnicodeChar
+        control_key_state = ev.ControlKeyState.value
+        u_char = ev.uChar.UnicodeChar.value
         ascii_char = u_char.encode("utf-8")
 
         # NOTE: We don't use `ev.uChar.AsciiChar`. That appears to be latin-1
@@ -352,8 +355,8 @@ class ConsoleInputReader:
         # https://github.com/jonathanslenders/python-prompt-toolkit/issues/389
 
         if u_char == "\x00":
-            if ev.VirtualKeyCode in self.keycodes:
-                result = KeyPress(self.keycodes[ev.VirtualKeyCode], "")
+            if ev.VirtualKeyCode.value in self.keycodes:
+                result = KeyPress(self.keycodes[ev.VirtualKeyCode.value], "")
         else:
             if ascii_char in self.mappings:
                 if self.mappings[ascii_char] == Keys.ControlJ:
@@ -367,10 +370,10 @@ class ConsoleInputReader:
         # First we handle Shift-Control-Arrow/Home/End (need to do this first)
         if (
             (
-                ev.ControlKeyState & self.LEFT_CTRL_PRESSED
-                or ev.ControlKeyState & self.RIGHT_CTRL_PRESSED
+                control_key_state & self.LEFT_CTRL_PRESSED
+                or control_key_state & self.RIGHT_CTRL_PRESSED
             )
-            and ev.ControlKeyState & self.SHIFT_PRESSED
+            and control_key_state & self.SHIFT_PRESSED
             and result
         ):
             mapping: Dict[str, str] = {
@@ -388,8 +391,8 @@ class ConsoleInputReader:
 
         # Correctly handle Control-Arrow/Home/End and Control-Insert/Delete keys.
         if (
-            ev.ControlKeyState & self.LEFT_CTRL_PRESSED
-            or ev.ControlKeyState & self.RIGHT_CTRL_PRESSED
+            control_key_state & self.LEFT_CTRL_PRESSED
+            or control_key_state & self.RIGHT_CTRL_PRESSED
         ) and result:
             mapping = {
                 Keys.Left: Keys.ControlLeft,
@@ -407,7 +410,7 @@ class ConsoleInputReader:
 
         # Turn 'Tab' into 'BackTab' when shift was pressed.
         # Also handle other shift-key combination
-        if ev.ControlKeyState & self.SHIFT_PRESSED and result:
+        if control_key_state & self.SHIFT_PRESSED and result:
             mapping = {
                 Keys.Tab: Keys.BackTab,
                 Keys.Left: Keys.ShiftLeft,
@@ -426,8 +429,8 @@ class ConsoleInputReader:
         # Turn 'Space' into 'ControlSpace' when control was pressed.
         if (
             (
-                ev.ControlKeyState & self.LEFT_CTRL_PRESSED
-                or ev.ControlKeyState & self.RIGHT_CTRL_PRESSED
+                control_key_state & self.LEFT_CTRL_PRESSED
+                or control_key_state & self.RIGHT_CTRL_PRESSED
             )
             and result
             and result.data == " "
@@ -438,8 +441,8 @@ class ConsoleInputReader:
         # detect this combination. But it's really practical on Windows.)
         if (
             (
-                ev.ControlKeyState & self.LEFT_CTRL_PRESSED
-                or ev.ControlKeyState & self.RIGHT_CTRL_PRESSED
+                control_key_state & self.LEFT_CTRL_PRESSED
+                or control_key_state & self.RIGHT_CTRL_PRESSED
             )
             and result
             and result.key == Keys.ControlJ
@@ -455,7 +458,7 @@ class ConsoleInputReader:
         #       all backslashes to be prefixed with escape. (Esc-\ has a
         #       meaning in E-macs, for instance.)
         if result:
-            meta_pressed = ev.ControlKeyState & self.LEFT_ALT_PRESSED
+            meta_pressed = control_key_state & self.LEFT_ALT_PRESSED
 
             if meta_pressed:
                 return [KeyPress(Keys.Escape, ""), result]
@@ -473,23 +476,26 @@ class ConsoleInputReader:
         MOUSE_MOVED = 0x0001
         MOUSE_WHEELED = 0x0004
 
+        event_flags = ev.EventFlags.value
+        button_state = ev.ButtonState.value
+
         result = []
         event_type: Optional[MouseEventType] = None
 
         # Move events.
-        if ev.EventFlags & MOUSE_MOVED:
-            if ev.ButtonState == FROM_LEFT_1ST_BUTTON_PRESSED:
+        if event_flags & MOUSE_MOVED:
+            if button_state == FROM_LEFT_1ST_BUTTON_PRESSED:
                 event_type = MouseEventType.MOUSE_DOWN_MOVE
 
         # Scroll events.
-        elif ev.EventFlags & MOUSE_WHEELED:
-            if ev.ButtonState > 0:
+        elif event_flags & MOUSE_WHEELED:
+            if button_state > 0:
                 event_type = MouseEventType.SCROLL_UP
             else:
                 event_type = MouseEventType.SCROLL_DOWN
 
         # Mouse down (left button).
-        elif ev.ButtonState == FROM_LEFT_1ST_BUTTON_PRESSED:
+        elif button_state == FROM_LEFT_1ST_BUTTON_PRESSED:
             event_type = MouseEventType.MOUSE_DOWN
 
         # No key pressed anymore: mouse up.
@@ -593,7 +599,9 @@ class _Win32Handles:
 
 
 @contextmanager
-def attach_win32_input(input: _Win32InputBase, callback: Callable[[], None]):
+def attach_win32_input(
+    input: _Win32InputBase, callback: Callable[[], None]
+) -> Iterator[None]:
     """
     Context manager that makes this input active in the current event loop.
 
@@ -620,7 +628,7 @@ def attach_win32_input(input: _Win32InputBase, callback: Callable[[], None]):
 
 
 @contextmanager
-def detach_win32_input(input: _Win32InputBase):
+def detach_win32_input(input: _Win32InputBase) -> Iterator[None]:
     win32_handles = input.win32_handles
     handle = input.handle
 

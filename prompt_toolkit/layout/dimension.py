@@ -2,7 +2,7 @@
 Layout dimensions are used to give the minimum, maximum and preferred
 dimensions for containers and controls.
 """
-from typing import Any, Callable, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, List, Optional, Union
 
 __all__ = [
     "Dimension",
@@ -13,6 +13,9 @@ __all__ = [
     "to_dimension",
     "is_dimension",
 ]
+
+if TYPE_CHECKING:
+    from typing_extensions import TypeGuard
 
 
 class Dimension:
@@ -193,7 +196,7 @@ def to_dimension(value: AnyDimension) -> Dimension:
     raise ValueError("Not an integer or Dimension object.")
 
 
-def is_dimension(value: object) -> bool:
+def is_dimension(value: object) -> "TypeGuard[AnyDimension]":
     """
     Test whether the given value could be a valid dimension.
     (For usage in an assertion. It's not guaranteed in case of a callable.)

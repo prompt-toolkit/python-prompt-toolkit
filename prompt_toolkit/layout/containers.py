@@ -59,7 +59,7 @@ from .screen import _CHAR_CACHE, Screen, WritePosition
 from .utils import explode_text_fragments
 
 if TYPE_CHECKING:
-    from typing_extensions import Protocol
+    from typing_extensions import Protocol, TypeGuard
 
     NotImplementedOrNone = object
 
@@ -2727,7 +2727,7 @@ def to_window(container: AnyContainer) -> Window:
         raise ValueError("Not a Window object: %r." % (container,))
 
 
-def is_container(value: object) -> bool:
+def is_container(value: object) -> "TypeGuard[AnyContainer]":
     """
     Checks whether the given value is a container object
     (for use in assert statements).

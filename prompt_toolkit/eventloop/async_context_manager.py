@@ -1,9 +1,12 @@
 """
 @asynccontextmanager code, copied from Python 3.7's contextlib.
 For usage in Python 3.6.
+Types have been added to this file, just enough to make Mypy happy.
 """
+# mypy: allow-untyped-defs
 import abc
 from functools import wraps
+from typing import TYPE_CHECKING, AsyncContextManager, AsyncIterator, Callable, TypeVar
 
 import _collections_abc
 
@@ -26,7 +29,7 @@ class AbstractAsyncContextManager(abc.ABC):
     @classmethod
     def __subclasshook__(cls, C):
         if cls is AbstractAsyncContextManager:
-            return _collections_abc._check_methods(C, "__aenter__", "__aexit__")
+            return _collections_abc._check_methods(C, "__aenter__", "__aexit__")  # type: ignore
         return NotImplemented
 
 
@@ -95,7 +98,12 @@ class _AsyncGeneratorContextManager(
                     raise
 
 
-def asynccontextmanager(func):
+_T = TypeVar("_T")
+
+
+def asynccontextmanager(
+    func: Callable[..., AsyncIterator[_T]]
+) -> Callable[..., AsyncContextManager[_T]]:
     """@asynccontextmanager decorator.
     Typical usage:
         @asynccontextmanager
@@ -119,6 +127,6 @@ def asynccontextmanager(func):
 
     @wraps(func)
     def helper(*args, **kwds):
-        return _AsyncGeneratorContextManager(func, args, kwds)
+        return _AsyncGeneratorContextManager(func, args, kwds)  # type: ignore
 
     return helper
