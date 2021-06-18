@@ -26,6 +26,7 @@ StyleAndTextTuples = List[OneStyleAndTextTuple]
 
 
 if TYPE_CHECKING:
+    from typing_extensions import TypeGuard
 
     class MagicFormattedText(Protocol):
         """
@@ -100,7 +101,7 @@ def to_formatted_text(
         return FormattedText(result)
 
 
-def is_formatted_text(value: object) -> bool:
+def is_formatted_text(value: object) -> "TypeGuard[AnyFormattedText]":
     """
     Check whether the input is valid formatted text (for use in assert
     statements).

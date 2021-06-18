@@ -44,7 +44,7 @@ def wait_for_handles(
     arrtype = HANDLE * len(handles)
     handle_array = arrtype(*handles)
 
-    ret = windll.kernel32.WaitForMultipleObjects(
+    ret: int = windll.kernel32.WaitForMultipleObjects(
         len(handle_array), handle_array, BOOL(False), DWORD(timeout)
     )
 

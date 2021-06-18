@@ -28,8 +28,17 @@ import select
 import selectors
 import threading
 from asyncio import AbstractEventLoop, get_event_loop
-from selectors import BaseSelector
-from typing import Callable
+from selectors import BaseSelector, SelectorKey
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    List,
+    Mapping,
+    NamedTuple,
+    Optional,
+    Tuple,
+)
 
 from prompt_toolkit.utils import is_windows
 
@@ -39,6 +48,11 @@ __all__ = [
     "InputHookSelector",
     "InputHookContext",
 ]
+
+if TYPE_CHECKING:
+    from _typeshed import FileDescriptor, FileDescriptorLike
+
+    _EventMask = int
 
 
 def new_eventloop_with_inputhook(
@@ -79,19 +93,25 @@ class InputHookSelector(BaseSelector):
         self.inputhook = inputhook
         self._r, self._w = os.pipe()
 
-    def register(self, fileobj, events, data=None):
+    def register(
+        self, fileobj: "FileDescriptorLike", events: "_EventMask", data: Any = None
+    ) -> "SelectorKey":
         return self.selector.register(fileobj, events, data=data)
 
-    def unregister(self, fileobj):
+    def unregister(self, fileobj: "FileDescriptorLike") -> "SelectorKey":
         return self.selector.unregister(fileobj)
 
-    def modify(self, fileobj, events, data=None):
+    def modify(
+        self, fileobj: "FileDescriptorLike", events: "_EventMask", data: Any = None
+    ) -> "SelectorKey":
         return self.selector.modify(fileobj, events, data=None)
 
-    def select(self, timeout=None):
+    def select(
+        self, timeout: Optional[float] = None
+    ) -> List[Tuple["SelectorKey", "_EventMask"]]:
         # If there are tasks in the current event loop,
         # don't run the input hook.
-        if len(get_event_loop()._ready) > 0:
+        if len(getattr(get_event_loop(), "_ready", [])) > 0:
             return self.selector.select(timeout=timeout)
 
         ready = False
@@ -140,6 +160,7 @@ class InputHookSelector(BaseSelector):
 
         # Wait for the real selector to be done.
         th.join()
+        assert result is not None
         return result
 
     def close(self) -> None:
@@ -153,7 +174,7 @@ class InputHookSelector(BaseSelector):
         self._r = self._w = -1
         self.selector.close()
 
-    def get_map(self):
+    def get_map(self) -> Mapping["FileDescriptorLike", "SelectorKey"]:
         return self.selector.get_map()
 
 

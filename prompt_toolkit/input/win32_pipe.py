@@ -65,7 +65,7 @@ class Win32PipeInput(_Win32InputBase, PipeInput):
         "The handle used for registering this pipe in the event loop."
         return self._event
 
-    def attach(self, input_ready_callback: Callable) -> ContextManager[None]:
+    def attach(self, input_ready_callback: Callable[[], None]) -> ContextManager[None]:
         """
         Return a context manager that makes this input active in the current
         event loop.

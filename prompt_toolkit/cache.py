@@ -101,7 +101,7 @@ class FastDictCache(Dict[_K, _V]):
         return result
 
 
-_F = TypeVar("_F", bound=Callable)
+_F = TypeVar("_F", bound=Callable[..., object])
 
 
 def memoized(maxsize: int = 1024) -> Callable[[_F], _F]:
