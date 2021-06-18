@@ -25,6 +25,7 @@ from typing import (
     Set,
     TextIO,
     Tuple,
+    cast,
 )
 
 from prompt_toolkit.data_structures import Size
@@ -679,12 +680,14 @@ class Vt100_Output(Output):
                 # UnicodeEncodeError crashes. E.g. u'\xb7' does not appear in 'ascii'.)
                 # My Arch Linux installation of july 2015 reported 'ANSI_X3.4-1968'
                 # for sys.stdout.encoding in xterm.
-                out: IO
+                out: IO[bytes]
                 if self.write_binary:
                     if hasattr(self.stdout, "buffer"):
-                        out = self.stdout.buffer  # Py3.
+                        out = self.stdout.buffer
                     else:
-                        out = self.stdout
+                        # IO[bytes] was given to begin with.
+                        # (Used in the unit tests, for instance.)
+                        out = cast(IO[bytes], self.stdout)
                     out.write(data.encode(self.stdout.encoding or "utf-8", "replace"))
                 else:
                     self.stdout.write(data)

@@ -95,7 +95,7 @@ def is_win_vt100_enabled() -> bool:
 
     try:
         # Try to enable VT100 sequences.
-        result = windll.kernel32.SetConsoleMode(
+        result: int = windll.kernel32.SetConsoleMode(
             hconsole, DWORD(ENABLE_PROCESSED_INPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING)
         )
 

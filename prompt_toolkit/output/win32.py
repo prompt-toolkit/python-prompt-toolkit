@@ -1,5 +1,14 @@
 import os
-from ctypes import ArgumentError, byref, c_char, c_long, c_uint, c_ulong, pointer
+from ctypes import (
+    ArgumentError,
+    byref,
+    c_char,
+    c_long,
+    c_short,
+    c_uint,
+    c_ulong,
+    pointer,
+)
 
 from ..utils import SPHINX_AUTODOC_RUNNING
 
@@ -150,7 +159,7 @@ class Win32Output(Output):
         # Create `Size` object.
         return Size(rows=height, columns=width)
 
-    def _winapi(self, func: Callable[..., _T], *a, **kw) -> _T:
+    def _winapi(self, func: Callable[..., _T], *a: object, **kw: object) -> _T:
         """
         Flush and call win API function.
         """
@@ -325,14 +334,14 @@ class Win32Output(Output):
         pass
 
     def cursor_goto(self, row: int = 0, column: int = 0) -> None:
-        pos = COORD(x=column, y=row)
+        pos = COORD(X=column, Y=row)
         self._winapi(
             windll.kernel32.SetConsoleCursorPosition, self.hconsole, _coord_byval(pos)
         )
 
     def cursor_up(self, amount: int) -> None:
         sr = self.get_win32_screen_buffer_info().dwCursorPosition
-        pos = COORD(sr.X, sr.Y - amount)
+        pos = COORD(X=sr.X, Y=sr.Y - amount)
         self._winapi(
             windll.kernel32.SetConsoleCursorPosition, self.hconsole, _coord_byval(pos)
         )
@@ -344,7 +353,7 @@ class Win32Output(Output):
         sr = self.get_win32_screen_buffer_info().dwCursorPosition
         #        assert sr.X + amount >= 0, 'Negative cursor position: x=%r amount=%r' % (sr.X, amount)
 
-        pos = COORD(max(0, sr.X + amount), sr.Y)
+        pos = COORD(X=max(0, sr.X + amount), Y=sr.Y)
         self._winapi(
             windll.kernel32.SetConsoleCursorPosition, self.hconsole, _coord_byval(pos)
         )

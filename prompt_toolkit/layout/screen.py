@@ -102,7 +102,7 @@ class Char:
         "\xa0": " ",
     }
 
-    def __init__(self, char: str = " ", style: str = ""):
+    def __init__(self, char: str = " ", style: str = "") -> None:
         # If this character has to be displayed otherwise, take that one.
         if char in self.display_mappings:
             if char == "\xa0":
@@ -119,13 +119,20 @@ class Char:
         # as a member for performance.)
         self.width = get_cwidth(char)
 
-    def __eq__(self, other) -> bool:
+    # In theory, `other` can be any type of object, but because of performance
+    # we don't want to do an `isinstance` check every time. We assume "other"
+    # is always a "Char".
+    def _equal(self, other: "Char") -> bool:
         return self.char == other.char and self.style == other.style
 
-    def __ne__(self, other) -> bool:
+    def _not_equal(self, other: "Char") -> bool:
         # Not equal: We don't do `not char.__eq__` here, because of the
         # performance of calling yet another function.
         return self.char != other.char or self.style != other.style
+
+    if not TYPE_CHECKING:
+        __eq__ = _equal
+        __ne__ = _not_equal
 
     def __repr__(self) -> str:
         return "%s(%r, %r)" % (self.__class__.__name__, self.char, self.style)
