@@ -81,6 +81,7 @@ _EMPTY_ATTRS = Attrs(
     bgcolor=None,
     bold=None,
     underline=None,
+    strike=None,
     italic=None,
     blink=None,
     reverse=None,
@@ -130,6 +131,10 @@ def _parse_style_str(style_str: str) -> Attrs:
             attrs = attrs._replace(underline=True)
         elif part == "nounderline":
             attrs = attrs._replace(underline=False)
+        elif part == "strike":
+            attrs = attrs._replace(strike=True)
+        elif part == "nostrike":
+            attrs = attrs._replace(strike=False)
 
         # prompt_toolkit extensions. Not in Pygments.
         elif part == "blink":
@@ -338,6 +343,7 @@ def _merge_attrs(list_of_attrs: List[Attrs]) -> Attrs:
         bgcolor=_or("", *[a.bgcolor for a in list_of_attrs]),
         bold=_or(False, *[a.bold for a in list_of_attrs]),
         underline=_or(False, *[a.underline for a in list_of_attrs]),
+        strike=_or(False, *[a.strike for a in list_of_attrs]),
         italic=_or(False, *[a.italic for a in list_of_attrs]),
         blink=_or(False, *[a.blink for a in list_of_attrs]),
         reverse=_or(False, *[a.reverse for a in list_of_attrs]),

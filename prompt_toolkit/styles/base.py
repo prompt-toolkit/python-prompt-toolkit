@@ -23,6 +23,7 @@ Attrs = NamedTuple(
         ("bgcolor", Optional[str]),
         ("bold", Optional[bool]),
         ("underline", Optional[bool]),
+        ("strike", Optional[bool]),
         ("italic", Optional[bool]),
         ("blink", Optional[bool]),
         ("reverse", Optional[bool]),
@@ -35,6 +36,7 @@ Attrs = NamedTuple(
 :param bgcolor: Hexadecimal string. E.g. 'ffffff' or Ansi color name: e.g. 'ansired'
 :param bold: Boolean
 :param underline: Boolean
+:param strike: Boolean
 :param italic: Boolean
 :param blink: Boolean
 :param reverse: Boolean
@@ -47,6 +49,7 @@ DEFAULT_ATTRS = Attrs(
     bgcolor="",
     bold=False,
     underline=False,
+    strike=False,
     italic=False,
     blink=False,
     reverse=False,
