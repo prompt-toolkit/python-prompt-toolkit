@@ -94,7 +94,7 @@ class Dimension:
         return cls.exact(amount=0)
 
     def is_zero(self) -> bool:
-        " True if this `Dimension` represents a zero size. "
+        "True if this `Dimension` represents a zero size."
         return self.preferred == 0 or self.max == 0
 
     def __repr__(self) -> str:

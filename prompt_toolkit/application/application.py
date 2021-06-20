@@ -503,7 +503,7 @@ class Application(Generic[_AppResult]):
 
     @property
     def invalidated(self) -> bool:
-        " True when a redraw operation has been scheduled. "
+        "True when a redraw operation has been scheduled."
         return self._invalidated
 
     def _redraw(self, render_as_done: bool = False) -> None:
@@ -650,7 +650,7 @@ class Application(Generic[_AppResult]):
         assert not self._is_running, "Application is already running."
 
         async def _run_async() -> _AppResult:
-            " Coroutine. "
+            "Coroutine."
             loop = get_event_loop()
             f = loop.create_future()
             self.future = f  # XXX: make sure to set this before calling '_redraw'.
@@ -946,17 +946,17 @@ class Application(Generic[_AppResult]):
 
     @overload
     def exit(self) -> None:
-        " Exit without arguments. "
+        "Exit without arguments."
 
     @overload
     def exit(self, *, result: _AppResult, style: str = "") -> None:
-        " Exit with `_AppResult`. "
+        "Exit with `_AppResult`."
 
     @overload
     def exit(
         self, *, exception: Union[BaseException, Type[BaseException]], style: str = ""
     ) -> None:
-        " Exit with exception. "
+        "Exit with exception."
 
     def exit(
         self,
@@ -1095,7 +1095,7 @@ class Application(Generic[_AppResult]):
 
     @property
     def is_running(self) -> bool:
-        " `True` when the application is currently active/running. "
+        "`True` when the application is currently active/running."
         return self._is_running
 
     @property
@@ -1234,7 +1234,7 @@ async def _do_wait_for_enter(wait_text: AnyFormattedText) -> None:
 
     @key_bindings.add(Keys.Any)
     def _ignore(event: E) -> None:
-        " Disallow typing. "
+        "Disallow typing."
         pass
 
     session: PromptSession[None] = PromptSession(

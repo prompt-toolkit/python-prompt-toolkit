@@ -6,7 +6,7 @@ from prompt_toolkit.history import InMemoryHistory
 
 @pytest.fixture
 def _history():
-    " Prefilled history. "
+    "Prefilled history."
     history = InMemoryHistory()
     history.append_string("alpha beta gamma delta")
     history.append_string("one two three four")

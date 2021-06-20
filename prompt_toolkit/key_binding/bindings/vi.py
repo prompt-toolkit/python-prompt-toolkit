@@ -1315,7 +1315,7 @@ def load_vi_bindings() -> KeyBindingsBase:
 
     @text_object("^")
     def _start_of_line(event: E) -> TextObject:
-        """ 'c^', 'd^' and '^': Soft start of line, after whitespace. """
+        """'c^', 'd^' and '^': Soft start of line, after whitespace."""
         return TextObject(
             event.current_buffer.document.get_start_of_line_position(
                 after_whitespace=True
@@ -2179,7 +2179,7 @@ def load_vi_search_bindings() -> KeyBindingsBase:
 
     @Condition
     def search_buffer_is_empty() -> bool:
-        " Returns True when the search buffer is empty. "
+        "Returns True when the search buffer is empty."
         return get_app().current_buffer.text == ""
 
     # Vi-style forward search.

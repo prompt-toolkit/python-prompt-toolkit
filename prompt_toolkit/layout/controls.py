@@ -191,7 +191,7 @@ class UIContent:
         self._line_heights_cache: Dict[Hashable, int] = {}
 
     def __getitem__(self, lineno: int) -> StyleAndTextTuples:
-        " Make it iterable (iterate line by line). "
+        "Make it iterable (iterate line by line)."
         if lineno < self.line_count:
             return self.get_line(lineno)
         else:
@@ -698,7 +698,7 @@ class BufferControl(UIControl):
         merged_processor = merge_processors(input_processors)
 
         def transform(lineno: int, fragments: StyleAndTextTuples) -> _ProcessedLine:
-            " Transform the fragments for a given line number. "
+            "Transform the fragments for a given line number."
             # Get cursor position at this line.
             def source_to_display(i: int) -> int:
                 """X position from the buffer to the x position in the
@@ -787,11 +787,11 @@ class BufferControl(UIControl):
         self._last_get_processed_line = get_processed_line
 
         def translate_rowcol(row: int, col: int) -> Point:
-            " Return the content column for this coordinate. "
+            "Return the content column for this coordinate."
             return Point(x=get_processed_line(row).source_to_display(col), y=row)
 
         def get_line(i: int) -> StyleAndTextTuples:
-            " Return the fragments for a given line number. "
+            "Return the fragments for a given line number."
             fragments = get_processed_line(i).fragments
 
             # Add a space at the end, because that is a possible cursor

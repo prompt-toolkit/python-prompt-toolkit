@@ -172,7 +172,8 @@ urxvt_mouse_events={
     96: (NO_BUTTON     , SCROLL_UP  , UNKNOWN_MODIFIER),
     97: (NO_BUTTON     , SCROLL_DOWN, UNKNOWN_MODIFIER),
 }
-#fmt:on
+# fmt:on
+
 
 def load_mouse_bindings() -> KeyBindings:
     """
@@ -196,7 +197,9 @@ def load_mouse_bindings() -> KeyBindings:
             mouse_event, x, y = map(ord, event.data[3:])
 
             # TODO: Is it possible to add modifiers here?
-            mouse_button,mouse_event_type,mouse_modifier = typical_mouse_events[mouse_event]
+            mouse_button, mouse_event_type, mouse_modifier = typical_mouse_events[
+                mouse_event
+            ]
 
             # Handle situations where `PosixStdinReader` used surrogateescapes.
             if x >= 0xDC00:
@@ -223,11 +226,15 @@ def load_mouse_bindings() -> KeyBindings:
 
             # Parse event type.
             if sgr:
-                mouse_button,mouse_event_type,mouse_modifier = xterm_sgr_mouse_events[mouse_event, m]
+                mouse_button, mouse_event_type, mouse_modifier = xterm_sgr_mouse_events[
+                    mouse_event, m
+                ]
             else:
                 # TODO: I don't know when this is triggered or how this mode works (though my Hyper terminal seems to use it), so I marked the buttons and modifiers UNKNOWN.
                 # By replacing these UNKNOWN values with the correct values in urxvt_mouse_events, we can get more functionality in different terminal varieties
-                mouse_button, mouse_event_type, mouse_modifier = urxvt_mouse_events.get(mouse_event, (UNKNOWN_BUTTON, MOUSE_MOVE, UNKNOWN_MODIFIER))
+                mouse_button, mouse_event_type, mouse_modifier = urxvt_mouse_events.get(
+                    mouse_event, (UNKNOWN_BUTTON, MOUSE_MOVE, UNKNOWN_MODIFIER)
+                )
 
         x -= 1
         y -= 1

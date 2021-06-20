@@ -28,12 +28,12 @@ def main():
 
     @kb.add("q")
     def _(event):
-        " Quit by setting cancel flag. "
+        "Quit by setting cancel flag."
         cancel[0] = True
 
     @kb.add("x")
     def _(event):
-        " Quit by sending SIGINT to the main thread. "
+        "Quit by sending SIGINT to the main thread."
         os.kill(os.getpid(), signal.SIGINT)
 
     # Use `patch_stdout`, to make sure that prints go above the

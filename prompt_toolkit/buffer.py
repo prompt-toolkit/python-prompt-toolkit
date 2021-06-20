@@ -61,11 +61,11 @@ logger = logging.getLogger(__name__)
 
 
 class EditReadOnlyBuffer(Exception):
-    " Attempt editing of read-only :class:`.Buffer`. "
+    "Attempt editing of read-only :class:`.Buffer`."
 
 
 class ValidationState(Enum):
-    " The validation state of a buffer. This is set after the validation. "
+    "The validation state of a buffer. This is set after the validation."
     VALID = "VALID"
     INVALID = "INVALID"
     UNKNOWN = "UNKNOWN"
@@ -440,7 +440,7 @@ class Buffer:
     # <getters/setters>
 
     def _set_text(self, value: str) -> bool:
-        """ set text at current working_index. Return whether it changed. """
+        """set text at current working_index. Return whether it changed."""
         working_index = self.working_index
         working_lines = self._working_lines
 
@@ -460,7 +460,7 @@ class Buffer:
         return False
 
     def _set_cursor_position(self, value: int) -> bool:
-        """ Set cursor position. Return whether it changed. """
+        """Set cursor position. Return whether it changed."""
         original_position = self.__cursor_position
         self.__cursor_position = max(0, value)
 
@@ -725,7 +725,7 @@ class Buffer:
         self.cursor_position += self.document.get_cursor_right_position(count=count)
 
     def cursor_up(self, count: int = 1) -> None:
-        """ (for multiline edit). Move cursor to the previous line.  """
+        """(for multiline edit). Move cursor to the previous line."""
         original_column = self.preferred_column or self.document.cursor_position_col
         self.cursor_position += self.document.get_cursor_up_position(
             count=count, preferred_column=original_column
@@ -735,7 +735,7 @@ class Buffer:
         self.preferred_column = original_column
 
     def cursor_down(self, count: int = 1) -> None:
-        """ (for multiline edit). Move cursor to the next line.  """
+        """(for multiline edit). Move cursor to the next line."""
         original_column = self.preferred_column or self.document.cursor_position_col
         self.cursor_position += self.document.get_cursor_down_position(
             count=count, preferred_column=original_column
@@ -1918,7 +1918,7 @@ def _only_one_at_a_time(coroutine: _T) -> _T:
 
 
 class _Retry(Exception):
-    " Retry in `_only_one_at_a_time`. "
+    "Retry in `_only_one_at_a_time`."
 
 
 def indent(buffer: Buffer, from_row: int, to_row: int, count: int = 1) -> None:

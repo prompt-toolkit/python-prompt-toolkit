@@ -295,7 +295,7 @@ class ScrollablePane(Container):
         mouse_handler_wrappers: Dict[MouseHandler, MouseHandler] = {}
 
         def wrap_mouse_handler(handler: MouseHandler) -> MouseHandler:
-            " Wrap mouse handler. Translate coordinates in `MouseEvent`. "
+            "Wrap mouse handler. Translate coordinates in `MouseEvent`."
             if handler not in mouse_handler_wrappers:
 
                 def new_handler(event: MouseEvent) -> None:
@@ -448,7 +448,7 @@ class ScrollablePane(Container):
         else:
 
             def is_scroll_button(row: int) -> bool:
-                " True if we should display a button on this row. "
+                "True if we should display a button on this row."
                 return scrollbar_top <= row <= scrollbar_top + scrollbar_height
 
             xpos = write_position.xpos + write_position.width - 1

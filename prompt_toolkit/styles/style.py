@@ -327,7 +327,7 @@ def _merge_attrs(list_of_attrs: List[Attrs]) -> Attrs:
     """
 
     def _or(*values: _T) -> _T:
-        " Take first not-None value, starting at the end. "
+        "Take first not-None value, starting at the end."
         for v in values[::-1]:
             if v is not None:
                 return v
@@ -375,7 +375,7 @@ class _MergedStyle(BaseStyle):
 
     @property
     def _merged_style(self) -> Style:
-        " The `Style` object that has the other styles merged together. "
+        "The `Style` object that has the other styles merged together."
 
         def get() -> Style:
             return Style(self.style_rules)

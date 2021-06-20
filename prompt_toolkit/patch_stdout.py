@@ -68,7 +68,7 @@ def patch_stdout(raw: bool = False) -> Generator[None, None, None]:
 
 
 class _Done:
-    " Sentinel value for stopping the stdout proxy. "
+    "Sentinel value for stopping the stdout proxy."
 
 
 class StdoutProxy:

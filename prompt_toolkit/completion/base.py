@@ -93,21 +93,21 @@ class Completion:
 
     @property
     def display_text(self) -> str:
-        " The 'display' field as plain text. "
+        "The 'display' field as plain text."
         from prompt_toolkit.formatted_text import fragment_list_to_text
 
         return fragment_list_to_text(self.display)
 
     @property
     def display_meta(self) -> StyleAndTextTuples:
-        " Return meta-text. (This is lazy when using a callable). "
+        "Return meta-text. (This is lazy when using a callable)."
         from prompt_toolkit.formatted_text import to_formatted_text
 
         return to_formatted_text(self._display_meta or "")
 
     @property
     def display_meta_text(self) -> str:
-        " The 'meta' field as plain text. "
+        "The 'meta' field as plain text."
         from prompt_toolkit.formatted_text import fragment_list_to_text
 
         return fragment_list_to_text(self.display_meta)

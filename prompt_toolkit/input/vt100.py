@@ -95,7 +95,7 @@ class Vt100Input(Input):
         return _detached_input(self)
 
     def read_keys(self) -> List[KeyPress]:
-        " Read list of KeyPress. "
+        "Read list of KeyPress."
         # Read text from stdin.
         data = self.stdin_reader.read()
 

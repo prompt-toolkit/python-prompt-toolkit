@@ -31,7 +31,7 @@ _mouse_event_prefix_re = re.compile("^" + re.escape("\x1b[") + r"(<?[\d;]*|M.{0,
 
 
 class _Flush:
-    """ Helper object to indicate flush operation to the parser. """
+    """Helper object to indicate flush operation to the parser."""
 
     pass
 

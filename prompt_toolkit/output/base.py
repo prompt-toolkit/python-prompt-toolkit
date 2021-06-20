@@ -29,7 +29,7 @@ class Output(metaclass=ABCMeta):
 
     @abstractmethod
     def fileno(self) -> int:
-        " Return the file descriptor to which we can write for the output. "
+        "Return the file descriptor to which we can write for the output."
 
     @abstractmethod
     def encoding(self) -> str:
@@ -42,23 +42,23 @@ class Output(metaclass=ABCMeta):
 
     @abstractmethod
     def write(self, data: str) -> None:
-        " Write text (Terminal escape sequences will be removed/escaped.) "
+        "Write text (Terminal escape sequences will be removed/escaped.)"
 
     @abstractmethod
     def write_raw(self, data: str) -> None:
-        " Write text. "
+        "Write text."
 
     @abstractmethod
     def set_title(self, title: str) -> None:
-        " Set terminal title. "
+        "Set terminal title."
 
     @abstractmethod
     def clear_title(self) -> None:
-        " Clear title again. (or restore previous title.) "
+        "Clear title again. (or restore previous title.)"
 
     @abstractmethod
     def flush(self) -> None:
-        " Write to output stream and flush. "
+        "Write to output stream and flush."
 
     @abstractmethod
     def erase_screen(self) -> None:
@@ -69,19 +69,19 @@ class Output(metaclass=ABCMeta):
 
     @abstractmethod
     def enter_alternate_screen(self) -> None:
-        " Go to the alternate screen buffer. (For full screen applications). "
+        "Go to the alternate screen buffer. (For full screen applications)."
 
     @abstractmethod
     def quit_alternate_screen(self) -> None:
-        " Leave the alternate screen buffer. "
+        "Leave the alternate screen buffer."
 
     @abstractmethod
     def enable_mouse_support(self) -> None:
-        " Enable mouse. "
+        "Enable mouse."
 
     @abstractmethod
     def disable_mouse_support(self) -> None:
-        " Disable mouse. "
+        "Disable mouse."
 
     @abstractmethod
     def erase_end_of_line(self) -> None:
@@ -98,47 +98,47 @@ class Output(metaclass=ABCMeta):
 
     @abstractmethod
     def reset_attributes(self) -> None:
-        " Reset color and styling attributes. "
+        "Reset color and styling attributes."
 
     @abstractmethod
     def set_attributes(self, attrs: Attrs, color_depth: ColorDepth) -> None:
-        " Set new color and styling attributes. "
+        "Set new color and styling attributes."
 
     @abstractmethod
     def disable_autowrap(self) -> None:
-        " Disable auto line wrapping. "
+        "Disable auto line wrapping."
 
     @abstractmethod
     def enable_autowrap(self) -> None:
-        " Enable auto line wrapping. "
+        "Enable auto line wrapping."
 
     @abstractmethod
     def cursor_goto(self, row: int = 0, column: int = 0) -> None:
-        " Move cursor position. "
+        "Move cursor position."
 
     @abstractmethod
     def cursor_up(self, amount: int) -> None:
-        " Move cursor `amount` place up. "
+        "Move cursor `amount` place up."
 
     @abstractmethod
     def cursor_down(self, amount: int) -> None:
-        " Move cursor `amount` place down. "
+        "Move cursor `amount` place down."
 
     @abstractmethod
     def cursor_forward(self, amount: int) -> None:
-        " Move cursor `amount` place forward. "
+        "Move cursor `amount` place forward."
 
     @abstractmethod
     def cursor_backward(self, amount: int) -> None:
-        " Move cursor `amount` place backward. "
+        "Move cursor `amount` place backward."
 
     @abstractmethod
     def hide_cursor(self) -> None:
-        " Hide cursor. "
+        "Hide cursor."
 
     @abstractmethod
     def show_cursor(self) -> None:
-        " Show cursor. "
+        "Show cursor."
 
     def ask_for_cpr(self) -> None:
         """
@@ -164,16 +164,16 @@ class Output(metaclass=ABCMeta):
 
     @abstractmethod
     def get_size(self) -> Size:
-        " Return the size of the output window. "
+        "Return the size of the output window."
 
     def bell(self) -> None:
-        " Sound bell. "
+        "Sound bell."
 
     def enable_bracketed_paste(self) -> None:
-        " For vt100 only. "
+        "For vt100 only."
 
     def disable_bracketed_paste(self) -> None:
-        " For vt100 only. "
+        "For vt100 only."
 
     def reset_cursor_key_mode(self) -> None:
         """
@@ -184,10 +184,10 @@ class Output(metaclass=ABCMeta):
         """
 
     def scroll_buffer_to_prompt(self) -> None:
-        " For Win32 only. "
+        "For Win32 only."
 
     def get_rows_below_cursor_position(self) -> int:
-        " For Windows only. "
+        "For Windows only."
         raise NotImplementedError
 
     @abstractmethod
@@ -214,7 +214,7 @@ class DummyOutput(Output):
     """
 
     def fileno(self) -> int:
-        " There is no sensible default for fileno(). "
+        "There is no sensible default for fileno()."
         raise NotImplementedError
 
     def encoding(self) -> str:

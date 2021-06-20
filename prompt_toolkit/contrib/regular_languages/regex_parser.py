@@ -199,7 +199,7 @@ def parse_regex(regex_tokens: List[str]) -> Node:
     tokens: List[str] = [")"] + regex_tokens[::-1]
 
     def wrap(lst: List[Node]) -> Node:
-        """ Turn list into sequence when it contains several items. """
+        """Turn list into sequence when it contains several items."""
         if len(lst) == 1:
             return lst[0]
         else:

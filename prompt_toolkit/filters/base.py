@@ -78,7 +78,7 @@ class _AndCache(Dict[Tuple[Filter, Filter], "_AndList"]):
 
 
 class _OrCache(Dict[Tuple[Filter, Filter], "_OrList"]):
-    """ Cache for Or operation between filters. """
+    """Cache for Or operation between filters."""
 
     def __missing__(self, filters: Tuple[Filter, Filter]) -> Filter:
         a, b = filters
@@ -95,7 +95,7 @@ class _OrCache(Dict[Tuple[Filter, Filter], "_OrList"]):
 
 
 class _InvertCache(Dict[Filter, "_Invert"]):
-    """ Cache for inversion operator. """
+    """Cache for inversion operator."""
 
     def __missing__(self, filter: Filter) -> Filter:
         result = _Invert(filter)

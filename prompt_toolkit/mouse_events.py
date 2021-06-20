@@ -86,5 +86,3 @@ class MouseEvent:
             self.button,
             self.modifier,
         )
-
-

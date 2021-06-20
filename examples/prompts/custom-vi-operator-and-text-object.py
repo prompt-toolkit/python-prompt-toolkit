@@ -26,7 +26,7 @@ def main():
 
     @operator("R")
     def _(event, text_object):
-        " Custom operator that reverses text. "
+        "Custom operator that reverses text."
         buff = event.current_buffer
 
         # Get relative start/end coordinates.
@@ -43,7 +43,7 @@ def main():
 
     @text_object("A")
     def _(event):
-        " A custom text object that involves everything. "
+        "A custom text object that involves everything."
         # Note that a `TextObject` has coordinates, relative to the cursor position.
         buff = event.current_buffer
         return TextObject(

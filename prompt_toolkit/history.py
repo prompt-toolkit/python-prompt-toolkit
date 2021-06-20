@@ -68,7 +68,7 @@ class History(metaclass=ABCMeta):
         return self._loaded_strings[::-1]
 
     def append_string(self, string: str) -> None:
-        " Add string to the history. "
+        "Add string to the history."
         self._loaded_strings.insert(0, string)
         self.store_string(string)
 

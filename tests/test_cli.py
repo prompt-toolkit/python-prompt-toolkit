@@ -504,7 +504,7 @@ def test_emacs_record_macro():
 
 
 def test_emacs_nested_macro():
-    " Test calling the macro within a macro. "
+    "Test calling the macro within a macro."
     # Calling a macro within a macro should take the previous recording (if one
     # exists), not the one that is in progress.
     operations = (
@@ -671,7 +671,7 @@ def test_vi_digraphs():
 
 
 def test_vi_block_editing():
-    " Test Vi Control-V style block insertion. "
+    "Test Vi Control-V style block insertion."
     feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI, multiline=True)
 
     operations = (
@@ -705,7 +705,7 @@ def test_vi_block_editing():
 
 
 def test_vi_block_editing_empty_lines():
-    " Test block editing on empty lines. "
+    "Test block editing on empty lines."
     feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI, multiline=True)
 
     operations = (
@@ -805,7 +805,7 @@ def test_vi_visual_empty_line():
 
 
 def test_vi_character_delete_after_cursor():
-    " Test 'x' keypress. "
+    "Test 'x' keypress."
     feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI, multiline=True)
 
     # Delete one character.
@@ -830,7 +830,7 @@ def test_vi_character_delete_after_cursor():
 
 
 def test_vi_character_delete_before_cursor():
-    " Test 'X' keypress. "
+    "Test 'X' keypress."
     feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI, multiline=True)
 
     # Delete one character.

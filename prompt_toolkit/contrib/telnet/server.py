@@ -149,17 +149,17 @@ class TelnetConnection:
         self.stdout = cast(TextIO, _ConnectionStdout(conn, encoding=encoding))
 
         def data_received(data: bytes) -> None:
-            """ TelnetProtocolParser 'data_received' callback """
+            """TelnetProtocolParser 'data_received' callback"""
             self.vt100_input.send_bytes(data)
 
         def size_received(rows: int, columns: int) -> None:
-            """ TelnetProtocolParser 'size_received' callback """
+            """TelnetProtocolParser 'size_received' callback"""
             self.size = Size(rows=rows, columns=columns)
             if self.vt100_output is not None:
                 get_app()._on_resize()
 
         def ttype_received(ttype: str) -> None:
-            """ TelnetProtocolParser 'ttype_received' callback """
+            """TelnetProtocolParser 'ttype_received' callback"""
             self.vt100_output = Vt100_Output(
                 self.stdout, get_size, term=ttype, write_binary=False
             )

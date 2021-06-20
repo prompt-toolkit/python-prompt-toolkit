@@ -11,7 +11,7 @@ from prompt_toolkit.utils import is_windows
 
 
 class _Capture:
-    " Emulate an stdout object. "
+    "Emulate an stdout object."
     encoding = "utf-8"
 
     def __init__(self):

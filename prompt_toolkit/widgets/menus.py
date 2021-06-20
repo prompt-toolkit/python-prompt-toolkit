@@ -16,7 +16,7 @@ from prompt_toolkit.layout.containers import (
     Window,
 )
 from prompt_toolkit.layout.controls import FormattedTextControl
-from prompt_toolkit.mouse_events import MouseEvent, MouseEventType
+from prompt_toolkit.mouse_events import MouseEvent, MouseEventType, MouseButton
 from prompt_toolkit.utils import get_cwidth
 from prompt_toolkit.widgets import Shadow
 
@@ -78,7 +78,7 @@ class MenuContainer:
         @kb.add("c-c", filter=in_main_menu)
         @kb.add("c-g", filter=in_main_menu)
         def _cancel(event: E) -> None:
-            " Leave menu. "
+            "Leave menu."
             event.app.layout.focus_last()
 
         # Sub menu navigation.
@@ -87,13 +87,13 @@ class MenuContainer:
         @kb.add("c-g", filter=in_sub_menu)
         @kb.add("c-c", filter=in_sub_menu)
         def _back(event: E) -> None:
-            " Go back to parent menu. "
+            "Go back to parent menu."
             if len(self.selected_menu) > 1:
                 self.selected_menu.pop()
 
         @kb.add("right", filter=in_sub_menu)
         def _submenu(event: E) -> None:
-            " go into sub menu. "
+            "go into sub menu."
             if self._get_menu(len(self.selected_menu) - 1).children:
                 self.selected_menu.append(0)
 
@@ -110,7 +110,7 @@ class MenuContainer:
 
         @kb.add("up", filter=in_sub_menu)
         def _up_in_submenu(event: E) -> None:
-            " Select previous (enabled) menu item or return to main menu. "
+            "Select previous (enabled) menu item or return to main menu."
             # Look for previous enabled items in this sub menu.
             menu = self._get_menu(len(self.selected_menu) - 2)
             index = self.selected_menu[-1]
@@ -129,7 +129,7 @@ class MenuContainer:
 
         @kb.add("down", filter=in_sub_menu)
         def _down_in_submenu(event: E) -> None:
-            " Select next (enabled) menu item. "
+            "Select next (enabled) menu item."
             menu = self._get_menu(len(self.selected_menu) - 2)
             index = self.selected_menu[-1]
 
@@ -144,7 +144,7 @@ class MenuContainer:
 
         @kb.add("enter")
         def _click(event: E) -> None:
-            " Click the selected menu item. "
+            "Click the selected menu item."
             item = self._get_menu(len(self.selected_menu) - 1)
             if item.handler:
                 event.app.layout.focus_last()
@@ -233,14 +233,16 @@ class MenuContainer:
         # Generate text fragments for the main menu.
         def one_item(i: int, item: MenuItem) -> Iterable[OneStyleAndTextTuple]:
             def mouse_handler(mouse_event: MouseEvent) -> None:
-                if mouse_event.event_type == MouseEventType.MOUSE_UP:
+                hover = mouse_event.event_type == MouseEventType.MOUSE_MOVE
+                if mouse_event.event_type == MouseEventType.MOUSE_DOWN or hover and focused:
                     # Toggle focus.
                     app = get_app()
-                    if app.layout.has_focus(self.window):
-                        if self.selected_menu == [i]:
-                            app.layout.focus_last()
-                    else:
-                        app.layout.focus(self.window)
+                    if not hover:
+                        if app.layout.has_focus(self.window):
+                            if self.selected_menu == [i]:
+                                app.layout.focus_last()
+                        else:
+                            app.layout.focus(self.window)
                     self.selected_menu = [i]
 
             yield ("class:menu-bar", " ", mouse_handler)
@@ -276,9 +278,14 @@ class MenuContainer:
                         i: int, item: MenuItem
                     ) -> Iterable[OneStyleAndTextTuple]:
                         def mouse_handler(mouse_event: MouseEvent) -> None:
-                            if mouse_event.event_type == MouseEventType.MOUSE_UP:
+                            if item.disabled:
+                                # The arrow keys can't interact with menu items that are disabled.
+                                # The mouse shouldn't be able to either.
+                                return
+                            hover = mouse_event.event_type == MouseEventType.MOUSE_MOVE
+                            if mouse_event.event_type == MouseEventType.MOUSE_UP or hover:
                                 app = get_app()
-                                if item.handler:
+                                if not hover and item.handler:
                                     app.layout.focus_last()
                                     item.handler()
                                 else:
