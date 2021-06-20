@@ -862,7 +862,7 @@ class BufferControl(UIControl):
                     buffer.cursor_position = index
 
                 elif (
-                    mouse_event.event_type == MouseEventType.MOUSE_DRAG
+                    mouse_event.event_type == MouseEventType.MOUSE_MOVE
                     and mouse_event.button != MouseButton.NO_BUTTON
                 ):
                     # Click and drag to highlight a selection
