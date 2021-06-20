@@ -234,7 +234,11 @@ class MenuContainer:
         def one_item(i: int, item: MenuItem) -> Iterable[OneStyleAndTextTuple]:
             def mouse_handler(mouse_event: MouseEvent) -> None:
                 hover = mouse_event.event_type == MouseEventType.MOUSE_MOVE
-                if mouse_event.event_type == MouseEventType.MOUSE_DOWN or hover and focused:
+                if (
+                    mouse_event.event_type == MouseEventType.MOUSE_DOWN
+                    or hover
+                    and focused
+                ):
                     # Toggle focus.
                     app = get_app()
                     if not hover:
@@ -283,7 +287,10 @@ class MenuContainer:
                                 # The mouse shouldn't be able to either.
                                 return
                             hover = mouse_event.event_type == MouseEventType.MOUSE_MOVE
-                            if mouse_event.event_type == MouseEventType.MOUSE_UP or hover:
+                            if (
+                                mouse_event.event_type == MouseEventType.MOUSE_UP
+                                or hover
+                            ):
                                 app = get_app()
                                 if not hover and item.handler:
                                     app.layout.focus_last()
