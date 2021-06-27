@@ -279,7 +279,17 @@ class _EscapeCodeCache(Dict[Attrs, str]):
         self.color_depth = color_depth
 
     def __missing__(self, attrs: Attrs) -> str:
-        fgcolor, bgcolor, bold, underline, strike, italic, blink, reverse, hidden = attrs
+        (
+            fgcolor,
+            bgcolor,
+            bold,
+            underline,
+            strike,
+            italic,
+            blink,
+            reverse,
+            hidden,
+        ) = attrs
         parts: List[str] = []
 
         parts.extend(self._colors_to_code(fgcolor or "", bgcolor or ""))
