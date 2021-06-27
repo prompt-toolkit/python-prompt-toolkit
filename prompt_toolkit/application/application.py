@@ -11,7 +11,6 @@ from asyncio import (
     Future,
     Task,
     ensure_future,
-    get_event_loop,
     new_event_loop,
     set_event_loop,
     sleep,
@@ -87,7 +86,7 @@ from prompt_toolkit.styles import (
     default_ui_style,
     merge_styles,
 )
-from prompt_toolkit.utils import Event, in_main_thread
+from prompt_toolkit.utils import Event, get_event_loop, in_main_thread
 
 from .current import get_app_session, set_app
 from .run_in_terminal import in_terminal, run_in_terminal
@@ -1317,7 +1316,7 @@ def attach_winch_signal_handler(
 
     # Keep track of the previous handler.
     # (Only UnixSelectorEventloop has `_signal_handlers`.)
-    loop = asyncio.get_event_loop()
+    loop = get_event_loop()
     previous_winch_handler = getattr(loop, "_signal_handlers", {}).get(sigwinch)
 
     try:

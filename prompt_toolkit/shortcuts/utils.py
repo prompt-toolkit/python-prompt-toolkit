@@ -1,4 +1,3 @@
-from asyncio import get_event_loop
 from typing import TYPE_CHECKING, Any, Optional, TextIO
 
 from prompt_toolkit.application import Application
@@ -22,6 +21,7 @@ from prompt_toolkit.styles import (
     default_ui_style,
     merge_styles,
 )
+from prompt_toolkit.utils import get_event_loop
 
 if TYPE_CHECKING:
     from prompt_toolkit.layout.containers import AnyContainer

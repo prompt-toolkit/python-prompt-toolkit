@@ -27,11 +27,11 @@ import os
 import select
 import selectors
 import threading
-from asyncio import AbstractEventLoop, get_event_loop
+from asyncio import AbstractEventLoop
 from selectors import BaseSelector
 from typing import Callable
 
-from prompt_toolkit.utils import is_windows
+from prompt_toolkit.utils import get_event_loop, is_windows
 
 __all__ = [
     "new_eventloop_with_inputhook",

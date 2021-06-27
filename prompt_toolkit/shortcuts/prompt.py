@@ -24,7 +24,6 @@ Example::
         s = PromptSession()
         result = s.prompt('Say something: ')
 """
-from asyncio import get_event_loop
 from contextlib import contextmanager
 from enum import Enum
 from functools import partial
@@ -121,6 +120,7 @@ from prompt_toolkit.styles import (
 )
 from prompt_toolkit.utils import (
     get_cwidth,
+    get_event_loop,
     is_dumb_terminal,
     suspend_to_background_supported,
     to_str,

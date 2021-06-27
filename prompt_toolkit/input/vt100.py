@@ -3,7 +3,7 @@ import io
 import sys
 import termios
 import tty
-from asyncio import AbstractEventLoop, get_event_loop
+from asyncio import AbstractEventLoop
 from typing import (
     Callable,
     ContextManager,
@@ -16,6 +16,8 @@ from typing import (
     Tuple,
     Union,
 )
+
+from prompt_toolkit.utils import get_event_loop
 
 from ..key_binding import KeyPress
 from .base import Input

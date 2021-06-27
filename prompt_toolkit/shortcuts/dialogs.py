@@ -1,5 +1,4 @@
 import functools
-from asyncio import get_event_loop
 from typing import Any, Callable, List, Optional, Tuple, TypeVar
 
 from prompt_toolkit.application import Application
@@ -16,6 +15,7 @@ from prompt_toolkit.layout import Layout
 from prompt_toolkit.layout.containers import AnyContainer, HSplit
 from prompt_toolkit.layout.dimension import Dimension as D
 from prompt_toolkit.styles import BaseStyle
+from prompt_toolkit.utils import get_event_loop
 from prompt_toolkit.validation import Validator
 from prompt_toolkit.widgets import (
     Box,

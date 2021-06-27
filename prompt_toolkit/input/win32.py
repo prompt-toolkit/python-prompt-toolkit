@@ -1,8 +1,9 @@
 import os
 import sys
 from abc import abstractmethod
-from asyncio import get_event_loop
 from contextlib import contextmanager
+
+from prompt_toolkit.utils import get_event_loop
 
 from ..utils import SPHINX_AUTODOC_RUNNING
 

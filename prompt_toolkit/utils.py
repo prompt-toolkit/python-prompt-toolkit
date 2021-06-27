@@ -1,3 +1,4 @@
+import asyncio
 import os
 import signal
 import sys
@@ -323,3 +324,8 @@ def is_dumb_terminal(term: Optional[str] = None) -> bool:
         return is_dumb_terminal(os.environ.get("TERM", ""))
 
     return term.lower() in ["dumb", "unknown"]
+
+
+def get_event_loop() -> asyncio.AbstractEventLoop:
+    """An alias to asyncio.get_event_loop(). Added to fix DeprecationWarning since py3.10"""
+    return asyncio.get_event_loop_policy().get_event_loop()
