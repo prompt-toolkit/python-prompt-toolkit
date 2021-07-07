@@ -1,8 +1,10 @@
 from asyncio import get_event_loop
+from asyncio.events import AbstractEventLoop
 from typing import TYPE_CHECKING, Any, Optional, TextIO
 
 from prompt_toolkit.application import Application
-from prompt_toolkit.application.current import get_app_session
+from prompt_toolkit.application.current import get_app_or_none, get_app_session
+from prompt_toolkit.application.run_in_terminal import run_in_terminal
 from prompt_toolkit.formatted_text import (
     FormattedText,
     StyleAndTextTuples,
@@ -86,6 +88,11 @@ def print_formatted_text(
     :class:`~prompt_toolkit.formatted_text.PygmentsTokens` to do the
     conversion.
 
+    If a prompt_toolkit `Application` is currently running, this will always
+    print above the application or prompt (similar to `patch_stdout`). So,
+    `print_formatted_text` will erase the current application, print the text,
+    and render the application again.
+
     :param values: Any kind of printable object, or formatted string.
     :param sep: String inserted between values, default a space.
     :param end: String appended after the last value, default a newline.
@@ -125,19 +132,35 @@ def print_formatted_text(
     fragments.extend(to_text(end))
 
     # Print output.
-    renderer_print_formatted_text(
-        output,
-        fragments,
-        _create_merged_style(
-            style, include_default_pygments_style=include_default_pygments_style
-        ),
-        color_depth=color_depth,
-        style_transformation=style_transformation,
-    )
+    def render() -> None:
+        assert isinstance(output, Output)
 
-    # Flush the output stream.
-    if flush:
-        output.flush()
+        renderer_print_formatted_text(
+            output,
+            fragments,
+            _create_merged_style(
+                style, include_default_pygments_style=include_default_pygments_style
+            ),
+            color_depth=color_depth,
+            style_transformation=style_transformation,
+        )
+
+        # Flush the output stream.
+        if flush:
+            output.flush()
+
+    # If an application is running, print above the app. This does not require
+    # `patch_stdout`.
+    loop: Optional[AbstractEventLoop] = None
+
+    app = get_app_or_none()
+    if app is not None:
+        loop = app.loop
+
+    if loop is not None:
+        loop.call_soon_threadsafe(lambda: run_in_terminal(render))
+    else:
+        render()
 
 
 def print_container(
