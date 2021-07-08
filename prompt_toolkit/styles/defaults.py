@@ -197,7 +197,7 @@ PYGMENTS_DEFAULT_STYLE = {
     "pygments.literal.number": "#666666",
     "pygments.generic.heading": "bold #000080",
     "pygments.generic.subheading": "bold #800080",
-    "pygments.generic.deleted": "strike",
+    "pygments.generic.deleted": "#a00000",
     "pygments.generic.inserted": "#00a000",
     "pygments.generic.error": "#ff0000",
     "pygments.generic.emph": "italic",
