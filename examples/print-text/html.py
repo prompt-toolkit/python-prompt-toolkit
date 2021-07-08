@@ -18,6 +18,7 @@ def main():
     print(HTML("    <i>Italic</i>"))
     print(HTML("    <reverse>Reverse</reverse>"))
     print(HTML("    <u>Underline</u>"))
+    print(HTML("    <s>Strike</s>"))
     print(HTML("    <hidden>Hidden</hidden> (hidden)"))
 
     # Ansi colors.

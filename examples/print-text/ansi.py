@@ -22,6 +22,7 @@ def main():
     print(ANSI("    \x1b[3mItalic"))
     print(ANSI("    \x1b[7mReverse"))
     print(ANSI("    \x1b[4mUnderline"))
+    print(ANSI("    \x1b[9mStrike"))
     print(ANSI("    \x1b[8mHidden\x1b[0m (Hidden)"))
 
     # Ansi colors.
