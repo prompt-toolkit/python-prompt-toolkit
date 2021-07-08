@@ -37,6 +37,7 @@ Shells:
 - `athenacli <https://github.com/dbcli/athenacli>`_: A CLI for AWS Athena.
 - `vulcano <https://github.com/dgarana/vulcano>`_: A framework for creating command-line applications that also runs in REPL mode.
 - `kafka-shell <https://github.com/devshawn/kafka-shell>`_: A supercharged shell for Apache Kafka.
+- `starterTree <https://github.com/thomas10-10/starterTree>`_: A command launcher organised in a tree structure with fuzzy autocompletion 
 
 Full screen applications:
 
