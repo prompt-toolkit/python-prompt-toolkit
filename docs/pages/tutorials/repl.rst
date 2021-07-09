@@ -19,7 +19,7 @@ Read User Input
 Let's start accepting input using the
 :func:`~prompt_toolkit.shortcuts.prompt()` function. This will ask the user for
 input, and echo back whatever the user typed. We wrap it in a ``main()``
-function as a good practise.
+function as a good practice.
 
 .. code:: python
 
