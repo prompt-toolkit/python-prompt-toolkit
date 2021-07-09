@@ -35,6 +35,7 @@ class ANSI:
         self._bgcolor: Optional[str] = None
         self._bold = False
         self._underline = False
+        self._strike = False
         self._italic = False
         self._blink = False
         self._reverse = False
@@ -138,6 +139,8 @@ class ANSI:
                 self._reverse = True
             elif attr == 8:
                 self._hidden = True
+            elif attr == 9:
+                self._strike = True
             elif attr == 22:
                 self._bold = False
             elif attr == 23:
@@ -148,11 +151,14 @@ class ANSI:
                 self._blink = False
             elif attr == 27:
                 self._reverse = False
+            elif attr == 29:
+                self._strike = False
             elif not attr:
                 self._color = None
                 self._bgcolor = None
                 self._bold = False
                 self._underline = False
+                self._strike = False
                 self._italic = False
                 self._blink = False
                 self._reverse = False
@@ -199,6 +205,8 @@ class ANSI:
             result.append("bold")
         if self._underline:
             result.append("underline")
+        if self._strike:
+            result.append("strike")
         if self._italic:
             result.append("italic")
         if self._blink:

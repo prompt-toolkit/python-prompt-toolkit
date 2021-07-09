@@ -102,18 +102,22 @@ PROMPT_TOOLKIT_STYLE = [
     # Default styling of HTML elements.
     ("i", "italic"),
     ("u", "underline"),
+    ("s", "strike"),
     ("b", "bold"),
     ("em", "italic"),
     ("strong", "bold"),
+    ("del", "strike"),
     ("hidden", "hidden"),
     # It should be possible to use the style names in HTML.
     # <reverse>...</reverse>  or <noreverse>...</noreverse>.
     ("italic", "italic"),
     ("underline", "underline"),
+    ("strike", "strike"),
     ("bold", "bold"),
     ("reverse", "reverse"),
     ("noitalic", "noitalic"),
     ("nounderline", "nounderline"),
+    ("nostrike", "nostrike"),
     ("nobold", "nobold"),
     ("noreverse", "noreverse"),
     # Prompt bottom toolbar
@@ -193,7 +197,7 @@ PYGMENTS_DEFAULT_STYLE = {
     "pygments.literal.number": "#666666",
     "pygments.generic.heading": "bold #000080",
     "pygments.generic.subheading": "bold #800080",
-    "pygments.generic.deleted": "#a00000",
+    "pygments.generic.deleted": "strike",
     "pygments.generic.inserted": "#00a000",
     "pygments.generic.error": "#ff0000",
     "pygments.generic.emph": "italic",

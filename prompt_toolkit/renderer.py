@@ -308,6 +308,7 @@ class _StyleStringHasStyleCache(Dict[str, bool]):
             attrs.color
             or attrs.bgcolor
             or attrs.underline
+            or attrs.strike
             or attrs.blink
             or attrs.reverse
         )

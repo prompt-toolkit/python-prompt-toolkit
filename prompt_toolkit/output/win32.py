@@ -279,7 +279,17 @@ class Win32Output(Output):
         self._hidden = False
 
     def set_attributes(self, attrs: Attrs, color_depth: ColorDepth) -> None:
-        fgcolor, bgcolor, bold, underline, italic, blink, reverse, hidden = attrs
+        (
+            fgcolor,
+            bgcolor,
+            bold,
+            underline,
+            strike,
+            italic,
+            blink,
+            reverse,
+            hidden,
+        ) = attrs
         self._hidden = bool(hidden)
 
         # Start from the default attributes.

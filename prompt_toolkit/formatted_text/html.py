@@ -16,10 +16,11 @@ class HTML:
         # Turn something into red.
         HTML('<style fg="ansired" bg="#00ff44">...</style>')
 
-        # Italic, bold and underline.
+        # Italic, bold, underline and strike.
         HTML('<i>...</i>')
         HTML('<b>...</b>')
         HTML('<u>...</u>')
+        HTML('<s>...</s>')
 
     All HTML elements become available as a "class" in the style sheet.
     E.g. ``<username>...</username>`` can be styled, by setting a style for

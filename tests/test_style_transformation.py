@@ -10,6 +10,7 @@ def default_attrs():
         bgcolor="",
         bold=False,
         underline=False,
+        strike=False,
         italic=False,
         blink=False,
         reverse=False,
