@@ -42,7 +42,7 @@ Now we want to call the :meth:`~prompt_toolkit.shortcuts.PromptSession.prompt`
 method in a loop. In order to keep the history, the easiest way to do it is to
 use a :class:`~prompt_toolkit.shortcuts.PromptSession`. This uses an
 :class:`~prompt_toolkit.history.InMemoryHistory` underneath that keeps track of
-the history, so that if the user presses the up-arrow, he'll see the previous
+the history, so that if the user presses the up-arrow, they'll see the previous
 entries.
 
 The :meth:`~prompt_toolkit.shortcuts.PromptSession.prompt` method raises
