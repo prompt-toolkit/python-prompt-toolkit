@@ -103,7 +103,7 @@ Pytest fixtures
 
 In order to get rid of the boilerplate of creating the input, the
 :class:`~prompt_toolkit.output.DummyOutput`, and the
-:class:`~prompt_toolkit.application.current.AppSession`, we create create a
+:class:`~prompt_toolkit.application.current.AppSession`, we create a
 single fixture that does it for every test. Something like this:
 
 .. code:: python
