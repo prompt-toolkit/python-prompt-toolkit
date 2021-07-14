@@ -227,6 +227,8 @@ class Buffer:
     :param multiline: :class:`~prompt_toolkit.filters.Filter` or `bool`. When
         not set, pressing `Enter` will call the `accept_handler`.  Otherwise,
         pressing `Esc-Enter` is required.
+    :param enable_undo_redo: :class:`~prompt_toolkit.filters.Filter` or `bool`. 
+        When False, undo and redo stacks will never get populated.
     """
 
     def __init__(
@@ -245,6 +247,7 @@ class Buffer:
         accept_handler: Optional[BufferAcceptHandler] = None,
         read_only: FilterOrBool = False,
         multiline: FilterOrBool = True,
+        enable_undo_redo: FilterOrBool = True,
         on_text_changed: Optional[BufferEventHandler] = None,
         on_text_insert: Optional[BufferEventHandler] = None,
         on_cursor_position_changed: Optional[BufferEventHandler] = None,
@@ -273,6 +276,7 @@ class Buffer:
         self.enable_history_search = enable_history_search
         self.read_only = read_only
         self.multiline = multiline
+        self.enable_undo_redo = enable_undo_redo
 
         # Text width. (For wrapping, used by the Vi 'gq' operator.)
         self.text_width = 0
@@ -639,12 +643,14 @@ class Buffer:
         Safe current state (input text and cursor position), so that we can
         restore it by calling undo.
         """
-        # Safe if the text is different from the text at the top of the stack
-        # is different. If the text is the same, just update the cursor position.
-        if self._undo_stack and self._undo_stack[-1][0] == self.text:
-            self._undo_stack[-1] = (self._undo_stack[-1][0], self.cursor_position)
-        else:
-            self._undo_stack.append((self.text, self.cursor_position))
+        
+        if self.enable_undo_redo:
+            # Safe if the text is different from the text at the top of the stack
+            # is different. If the text is the same, just update the cursor position.
+            if self._undo_stack and self._undo_stack[-1][0] == self.text:
+                self._undo_stack[-1] = (self._undo_stack[-1][0], self.cursor_position)
+            else:
+                self._undo_stack.append((self.text, self.cursor_position))
 
         # Saving anything to the undo stack, clears the redo stack.
         if clear_redo_stack:
@@ -1280,7 +1286,7 @@ class Buffer:
         # the current text. (The current logic of `save_to_undo_stack` will
         # cause that the top of the undo stack is usually the same as the
         # current text, so in that case we have to pop twice.)
-        while self._undo_stack:
+        while self._undo_stack and self.enable_undo_redo:
             text, pos = self._undo_stack.pop()
 
             if text != self.text:
@@ -1292,7 +1298,7 @@ class Buffer:
                 break
 
     def redo(self) -> None:
-        if self._redo_stack:
+        if self._redo_stack and self.enable_undo_redo:
             # Copy current state on undo stack.
             self.save_to_undo_stack(clear_redo_stack=False)
 
