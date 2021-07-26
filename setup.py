@@ -29,9 +29,10 @@ setup(
     packages=find_packages("."),
     package_data={"prompt_toolkit": ["py.typed"]},
     install_requires=["wcwidth"],
-    # We require Python 3.6.1 for two reasons:
+    # We require Python 3.6.2 for three reasons:
     # - Syntax for variable annotations - PEP 526.
     # - Asynchronous generators - PEP 525.
+    # - New type annotations in 3.6.2 (i.e. NoReturn)
     # Also, 3.6.0 doesn't have `typing.AsyncGenerator` yet. 3.6.1 does.
     # Python 3.7 is suggested, because:
     # - Context variables - PEP 567
@@ -40,7 +41,7 @@ setup(
     # does run fine on any older Python version starting from Python 2.6, and
     # it is possible to write code that runs both against prompt_toolkit
     # version 2 and 3.
-    python_requires=">=3.6.1",
+    python_requires=">=3.6.2",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
