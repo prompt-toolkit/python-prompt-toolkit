@@ -17,6 +17,7 @@ from asyncio import get_event_loop, new_event_loop, set_event_loop
 from typing import (
     Generic,
     Iterable,
+    Iterator,
     List,
     Optional,
     Sequence,
@@ -334,7 +335,7 @@ class ProgressBarCounter(Generic[_CounterItem]):
         else:
             self.total = total
 
-    def __iter__(self) -> Iterable[_CounterItem]:
+    def __iter__(self) -> Iterator[_CounterItem]:
         if self.data is not None:
             try:
                 for item in self.data:
