@@ -263,7 +263,7 @@ class ConsoleInputReader:
                 # Pasting: if the current key consists of text or \n, turn it
                 # into a BracketedPaste.
                 data = []
-                while k and (isinstance(k.key, str) or k.key == Keys.ControlJ):
+                while k and (not isinstance(k.key, Keys) or k.key == Keys.ControlJ):
                     data.append(k.data)
                     try:
                         k = next(gen)
@@ -366,7 +366,7 @@ class ConsoleInputReader:
         newline_count = 0
 
         for k in keys:
-            if isinstance(k.key, str):
+            if not isinstance(k.key, Keys):
                 text_count += 1
             if k.key == Keys.ControlM:
                 newline_count += 1
