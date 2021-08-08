@@ -252,6 +252,9 @@ class ConsoleInputReader:
         # Fill in 'data' for key presses.
         all_keys = [self._insert_key_data(key) for key in all_keys]
 
+        # Correct non-bmp characters that are passed as separate surrogate codes
+        all_keys = list(self._merge_paired_surrogates(all_keys))
+
         if self.recognize_paste and self._is_paste(all_keys):
             gen = iter(all_keys)
             k: Optional[KeyPress]
@@ -316,6 +319,32 @@ class ConsoleInputReader:
                         yield key_press
 
     @staticmethod
+    def _merge_paired_surrogates(key_presses: List[KeyPress]) -> Iterator[KeyPress]:
+        buffered_high_surrogate = None
+        for key in key_presses:
+            is_text = not isinstance(key.key, Keys)
+            is_high_surrogate = is_text and '\uD800' <= key.key <= '\uDBFF'
+            is_low_surrogate = is_text and '\uDC00' <= key.key <= '\uDFFF'
+
+            if buffered_high_surrogate:
+                if is_low_surrogate:
+                    fullchar = ((buffered_high_surrogate.key + key.key)
+                        .encode('utf-16-le', 'surrogatepass')
+                        .decode('utf-16-le'))
+                    key = KeyPress(fullchar, fullchar)
+                else:
+                    yield buffered_high_surrogate
+                buffered_high_surrogate = None
+
+            if is_high_surrogate:
+                buffered_high_surrogate = key
+            else:
+                yield key
+
+        if buffered_high_surrogate:
+            yield buffered_high_surrogate
+
+    @staticmethod
     def _is_paste(keys: List[KeyPress]) -> bool:
         """
         Return `True` when we should consider this list of keys as a paste
@@ -347,10 +376,11 @@ class ConsoleInputReader:
 
         control_key_state = ev.ControlKeyState
         u_char = ev.uChar.UnicodeChar
-        ascii_char = u_char.encode("utf-8")
+        # Use surrogatepass because u_char may be an unmatched surrogate
+        ascii_char = u_char.encode("utf-8", "surrogatepass")
 
-        # NOTE: We don't use `ev.uChar.AsciiChar`. That appears to be latin-1
-        #       encoded. See also:
+        # NOTE: We don't use `ev.uChar.AsciiChar`. That appears to be the
+        # unicode code point truncated to 1 byte. See also:
         # https://github.com/ipython/ipython/issues/10004
         # https://github.com/jonathanslenders/python-prompt-toolkit/issues/389
 
