@@ -320,6 +320,10 @@ class ConsoleInputReader:
 
     @staticmethod
     def _merge_paired_surrogates(key_presses: List[KeyPress]) -> Iterator[KeyPress]:
+        """
+        Combines consecutive KeyPresses with high and low surrogates into
+        single characters
+        """
         buffered_high_surrogate = None
         for key in key_presses:
             is_text = not isinstance(key.key, Keys)
@@ -328,6 +332,7 @@ class ConsoleInputReader:
 
             if buffered_high_surrogate:
                 if is_low_surrogate:
+                    # convert high surrogate + low surrogate to single character
                     fullchar = ((buffered_high_surrogate.key + key.key)
                         .encode('utf-16-le', 'surrogatepass')
                         .decode('utf-16-le'))
