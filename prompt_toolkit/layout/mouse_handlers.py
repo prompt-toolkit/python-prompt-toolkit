@@ -1,15 +1,18 @@
 from collections import defaultdict
-from itertools import product
-from typing import Callable, DefaultDict, Tuple
+from typing import TYPE_CHECKING, Callable, DefaultDict
 
 from prompt_toolkit.mouse_events import MouseEvent
+
+if TYPE_CHECKING:
+    from prompt_toolkit.key_binding.key_bindings import NotImplementedOrNone
 
 __all__ = [
     "MouseHandler",
     "MouseHandlers",
 ]
 
-MouseHandler = Callable[[MouseEvent], None]
+
+MouseHandler = Callable[[MouseEvent], "NotImplementedOrNone"]
 
 
 class MouseHandlers:
@@ -18,10 +21,11 @@ class MouseHandlers:
     """
 
     def __init__(self) -> None:
-        def dummy_callback(mouse_event: MouseEvent) -> None:
+        def dummy_callback(mouse_event: MouseEvent) -> "NotImplementedOrNone":
             """
             :param mouse_event: `MouseEvent` instance.
             """
+            return NotImplemented
 
         # NOTE: Previously, the data structure was a dictionary mapping (x,y)
         # to the handlers. This however would be more inefficient when copying
@@ -38,7 +42,7 @@ class MouseHandlers:
         x_max: int,
         y_min: int,
         y_max: int,
-        handler: Callable[[MouseEvent], None],
+        handler: Callable[[MouseEvent], "NotImplementedOrNone"],
     ) -> None:
         """
         Set mouse handler for a region.

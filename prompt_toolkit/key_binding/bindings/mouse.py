@@ -1,4 +1,4 @@
-from typing import FrozenSet
+from typing import TYPE_CHECKING, FrozenSet
 
 from prompt_toolkit.data_structures import Point
 from prompt_toolkit.key_binding.key_processor import KeyPress, KeyPressEvent
@@ -12,6 +12,9 @@ from prompt_toolkit.mouse_events import (
 from prompt_toolkit.utils import is_windows
 
 from ..key_bindings import KeyBindings
+
+if TYPE_CHECKING:
+    from prompt_toolkit.key_binding.key_bindings import NotImplementedOrNone
 
 __all__ = [
     "load_mouse_bindings",
@@ -185,7 +188,7 @@ def load_mouse_bindings() -> KeyBindings:
     key_bindings = KeyBindings()
 
     @key_bindings.add(Keys.Vt100MouseEvent)
-    def _(event: E) -> None:
+    def _(event: E) -> "NotImplementedOrNone":
         """
         Handling of incoming mouse event.
         """
@@ -235,7 +238,7 @@ def load_mouse_bindings() -> KeyBindings:
                         mouse_modifiers,
                     ) = xterm_sgr_mouse_events[mouse_event, m]
                 except KeyError:
-                    return
+                    return NotImplemented
 
             else:
                 # Some other terminals, like urxvt, Hyper terminal, ...
@@ -259,11 +262,16 @@ def load_mouse_bindings() -> KeyBindings:
             try:
                 y -= event.app.renderer.rows_above_layout
             except HeightIsUnknownError:
-                return
+                return NotImplemented
 
             # Call the mouse handler from the renderer.
+
+            # Note: This can return `NotImplemented` if no mouse handler was
+            #       found for this position, or if no repainting needs to
+            #       happen. this way, we avoid excessive repaints during mouse
+            #       movements.
             handler = event.app.renderer.mouse_handlers.mouse_handlers[y][x]
-            handler(
+            return handler(
                 MouseEvent(
                     position=Point(x=x, y=y),
                     event_type=mouse_event_type,
@@ -271,6 +279,8 @@ def load_mouse_bindings() -> KeyBindings:
                     modifiers=mouse_modifiers,
                 )
             )
+
+        return NotImplemented
 
     @key_bindings.add(Keys.ScrollUp)
     def _scroll_up(event: E) -> None:
@@ -289,7 +299,7 @@ def load_mouse_bindings() -> KeyBindings:
         event.key_processor.feed(KeyPress(Keys.Down), first=True)
 
     @key_bindings.add(Keys.WindowsMouseEvent)
-    def _mouse(event: E) -> None:
+    def _mouse(event: E) -> "NotImplementedOrNone":
         """
         Handling of mouse events for Windows.
         """
@@ -317,8 +327,10 @@ def load_mouse_bindings() -> KeyBindings:
             y -= rows_above_cursor
 
             # Call the mouse event handler.
+            # (Can return `NotImplemented`.)
             handler = event.app.renderer.mouse_handlers.mouse_handlers[y][x]
-            handler(
+
+            return handler(
                 MouseEvent(
                     position=Point(x=x, y=y),
                     event_type=event_type,
@@ -326,5 +338,9 @@ def load_mouse_bindings() -> KeyBindings:
                     modifiers=UNKNOWN_MODIFIER,
                 )
             )
+
+        # No mouse handler found. Return `NotImplemented` so that we don't
+        # invalidate the UI.
+        return NotImplemented
 
     return key_bindings

@@ -35,6 +35,7 @@ been assigned, through the `key_binding` decorator.::
     kb.add(Keys.A, my_key_binding)
 """
 from abc import ABCMeta, abstractmethod, abstractproperty
+from inspect import isawaitable
 from typing import (
     TYPE_CHECKING,
     Awaitable,
@@ -53,12 +54,27 @@ from prompt_toolkit.cache import SimpleCache
 from prompt_toolkit.filters import FilterOrBool, Never, to_filter
 from prompt_toolkit.keys import KEY_ALIASES, Keys
 
-# Avoid circular imports.
 if TYPE_CHECKING:
+    # Avoid circular imports.
     from .key_processor import KeyPressEvent
+
+    # The only two return values for a mouse hander (and key bindings) are
+    # `None` and `NotImplemented`. For the type checker it's best to annotate
+    # this as `object`. (The consumer never expects a more specific instance:
+    # checking for NotImplemented can be done using `is NotImplemented`.)
+    NotImplementedOrNone = object
+    # Other non-working options are:
+    # * Optional[Literal[NotImplemented]]
+    #      --> Doesn't work, Literal can't take an Any.
+    # * None
+    #      --> Doesn't work. We can't assign the result of a function that
+    #          returns `None` to a variable.
+    # * Any
+    #      --> Works, but too broad.
 
 
 __all__ = [
+    "NotImplementedOrNone",
     "Binding",
     "KeyBindingsBase",
     "KeyBindings",
@@ -68,7 +84,13 @@ __all__ = [
     "GlobalOnlyKeyBindings",
 ]
 
-KeyHandlerCallable = Callable[["KeyPressEvent"], Union[None, Awaitable[None]]]
+# Key bindings can be regular functions or coroutines.
+# In both cases, if they return `NotImplemented`, the UI won't be invalidated.
+# This is mainly used in case of mouse move events, to prevent excessive
+# repainting during mouse move events.
+KeyHandlerCallable = Callable[
+    ["KeyPressEvent"], Union["NotImplementedOrNone", Awaitable["NotImplementedOrNone"]]
+]
 
 
 class Binding:
@@ -102,8 +124,18 @@ class Binding:
         result = self.handler(event)
 
         # If the handler is a coroutine, create an asyncio task.
-        if result is not None:
-            event.app.create_background_task(result)
+        if isawaitable(result):
+            awaitable = cast(Awaitable["NotImplementedOrNone"], result)
+
+            async def bg_task() -> None:
+                result = await awaitable
+                if result != NotImplemented:
+                    event.app.invalidate()
+
+            event.app.create_background_task(bg_task())
+
+        elif result != NotImplemented:
+            event.app.invalidate()
 
     def __repr__(self) -> str:
         return "%s(keys=%r, handler=%r)" % (

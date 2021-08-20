@@ -61,7 +61,8 @@ from .utils import explode_text_fragments
 if TYPE_CHECKING:
     from typing_extensions import Protocol, TypeGuard
 
-    NotImplementedOrNone = object
+    from prompt_toolkit.key_binding.key_bindings import NotImplementedOrNone
+
 
 __all__ = [
     "AnyContainer",
@@ -1829,13 +1830,16 @@ class Window(Container):
         self.render_info = render_info
 
         # Set mouse handlers.
-        def mouse_handler(mouse_event: MouseEvent) -> None:
-            """Wrapper around the mouse_handler of the `UIControl` that turns
-            screen coordinates into line coordinates."""
+        def mouse_handler(mouse_event: MouseEvent) -> "NotImplementedOrNone":
+            """
+            Wrapper around the mouse_handler of the `UIControl` that turns
+            screen coordinates into line coordinates.
+            Returns `NotImplemented` if no UI invalidation should be done.
+            """
             # Don't handle mouse events outside of the current modal part of
             # the UI.
             if self not in get_app().layout.walk_through_modal_area():
-                return
+                return NotImplemented
 
             # Find row/col position first.
             yx_to_rowcol = {v: k for k, v in rowcol_to_yx.items()}
@@ -1882,7 +1886,9 @@ class Window(Container):
 
             # If it returns NotImplemented, handle it here.
             if result == NotImplemented:
-                self._mouse_handler(mouse_event)
+                result = self._mouse_handler(mouse_event)
+
+            return result
 
         mouse_handlers.set_mouse_handler_for_range(
             x_min=write_position.xpos + sum(left_margin_widths),
@@ -2552,15 +2558,22 @@ class Window(Container):
             ),
         )
 
-    def _mouse_handler(self, mouse_event: MouseEvent) -> None:
+    def _mouse_handler(self, mouse_event: MouseEvent) -> "NotImplementedOrNone":
         """
         Mouse handler. Called when the UI control doesn't handle this
         particular event.
+
+        Return `NotImplemented` if nothing was done as a consequence of this
+        key binding (no UI invalidate required in that case).
         """
         if mouse_event.event_type == MouseEventType.SCROLL_DOWN:
             self._scroll_down()
+            return None
         elif mouse_event.event_type == MouseEventType.SCROLL_UP:
             self._scroll_up()
+            return None
+
+        return NotImplemented
 
     def _scroll_down(self) -> None:
         "Scroll window down."
