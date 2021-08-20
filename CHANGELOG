@@ -1,6 +1,25 @@
 CHANGELOG
 =========
 
+3.0.20: 2021-08-20
+------------------
+
+New features:
+- Add support for strikethrough text attributes.
+- Set up custom breakpointhook while an application is running (if no other
+  breakpointhook was installed). This enhances the usage of PDB for debugging
+  applications.
+- Strict type checking is now enabled.
+
+Fixes:
+- Ensure that `print_formatted_text` is always printed above the running
+  application, like `patch_stdout`. (Before, `patch_stdout` was even completely
+  ignored in case of `print_formatted_text, so there was no proper way to use
+  it in a running application.)
+- Fix handling of non-bmp unicode input on Windows.
+- Set minimum Python version to 3.6.2 (Some 3.6.2 features were used).
+
+
 3.0.19: 2021-06-17
 ------------------
 
