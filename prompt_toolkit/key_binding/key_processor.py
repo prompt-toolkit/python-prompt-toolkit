@@ -255,12 +255,9 @@ class KeyProcessor:
             else:
                 return self.input_queue.popleft()
 
-        keys_processed = False
         is_flush = False
 
         while not_empty():
-            keys_processed = True
-
             # Process next key.
             key_press = get_next()
 
@@ -277,15 +274,10 @@ class KeyProcessor:
                 # an exception was raised) restart the processor for next time.
                 self.reset()
                 self.empty_queue()
-                app.invalidate()
                 raise
 
             if not is_flush and not is_cpr:
                 self.after_key_press.fire()
-
-        if keys_processed:
-            # Invalidate user interface.
-            app.invalidate()
 
         # Skip timeout if the last key was flush.
         if not is_flush:

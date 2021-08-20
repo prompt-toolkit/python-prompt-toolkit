@@ -40,9 +40,11 @@ from .dimension import Dimension
 from .margins import ScrollbarMargin
 
 if TYPE_CHECKING:
-    from prompt_toolkit.key_binding.key_bindings import KeyBindings
+    from prompt_toolkit.key_binding.key_bindings import (
+        KeyBindings,
+        NotImplementedOrNone,
+    )
 
-    NotImplementedOrNone = object
 
 __all__ = [
     "CompletionsMenu",
