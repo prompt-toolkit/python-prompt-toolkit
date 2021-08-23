@@ -55,6 +55,7 @@ Libraries:
 
 - `ptterm <https://github.com/prompt-toolkit/ptterm>`_: A terminal emulator widget for prompt_toolkit.
 - `PyInquirer <https://github.com/CITGuru/PyInquirer/>`_: A Python library that wants to make it easy for existing Inquirer.js users to write immersive command line applications in Python.
+- `clintermission <https://github.com/sebageek/clintermission>`_: Non-fullscreen command-line selection menu
 
 Other libraries and implementations in other languages
 ******************************************************
