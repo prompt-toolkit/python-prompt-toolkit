@@ -1,3 +1,4 @@
 Sphinx==4.1.2
 wcwidth==0.2.5
 pyperclip==1.8.2
+sphinx_rtd_theme==0.5.2
