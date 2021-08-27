@@ -23,6 +23,7 @@ from typing import (
     Optional,
     Set,
     Tuple,
+    Type,
     TypeVar,
     Union,
     cast,
@@ -250,6 +251,7 @@ class Buffer:
         on_cursor_position_changed: Optional[BufferEventHandler] = None,
         on_completions_changed: Optional[BufferEventHandler] = None,
         on_suggestion_set: Optional[BufferEventHandler] = None,
+        document_class: Type[Document] = Document,
     ):
 
         # Accept both filters and booleans as input.
@@ -298,7 +300,7 @@ class Buffer:
         # Document cache. (Avoid creating new Document instances.)
         self._document_cache: FastDictCache[
             Tuple[str, int, Optional[SelectionState]], Document
-        ] = FastDictCache(Document, size=10)
+        ] = FastDictCache(document_class, size=10)
 
         # Create completer / auto suggestion / validation coroutines.
         self._async_suggester = self._create_auto_suggest_coroutine()
@@ -309,6 +311,7 @@ class Buffer:
         self._load_history_task: Optional[asyncio.Future[None]] = None
 
         # Reset other attributes.
+        self.document_class = document_class
         self.reset(document=document)
 
     def __repr__(self) -> str:
@@ -328,7 +331,7 @@ class Buffer:
         if append_to_history:
             self.append_to_history()
 
-        document = document or Document()
+        document = document or self.document_class()
 
         self.__cursor_position = document.cursor_position
 
@@ -574,7 +577,7 @@ class Buffer:
     def document(self) -> Document:
         """
         Return :class:`~prompt_toolkit.document.Document` instance from the
-        current text, cursor position and selection state.
+        current text, cursor position and selection state
         """
         return self._document_cache[
             self.text, self.cursor_position, self.selection_state
@@ -798,7 +801,7 @@ class Buffer:
             new_cursor_position = self.cursor_position - len(deleted)
 
             # Set new Document atomically.
-            self.document = Document(new_text, new_cursor_position)
+            self.document = self.document_class(new_text, new_cursor_position)
 
         return deleted
 
@@ -851,7 +854,7 @@ class Buffer:
         lines = [l.lstrip(" ") + separator for l in lines]
 
         # Set new document.
-        self.document = Document(
+        self.document = self.document_class(
             text=before + "".join(lines) + after,
             cursor_position=len(before + "".join(lines[:-1])) - 1,
         )
@@ -992,7 +995,7 @@ class Buffer:
 
         # Set text/cursor position
         new_text, new_cursor_position = state.new_text_and_position()
-        self.document = Document(new_text, new_cursor_position)
+        self.document = self.document_class(new_text, new_cursor_position)
 
         # (changing text/cursor position will unset complete_state.)
         self.complete_state = state
@@ -1261,7 +1264,7 @@ class Buffer:
         # (Set text and cursor position at the same time. Otherwise, setting
         # the text will fire a change event before the cursor position has been
         # set. It works better to have this atomic.)
-        self.document = Document(text, cpos)
+        self.document = self.document_class(text, cpos)
 
         # Fire 'on_text_insert' event.
         if fire_event:  # XXX: rename to `start_complete`.
@@ -1288,7 +1291,7 @@ class Buffer:
                 self._redo_stack.append((self.text, self.cursor_position))
 
                 # Set new text/cursor_position.
-                self.document = Document(text, cursor_position=pos)
+                self.document = self.document_class(text, cursor_position=pos)
                 break
 
     def redo(self) -> None:
@@ -1298,7 +1301,7 @@ class Buffer:
 
             # Pop state from redo stack.
             text, pos = self._redo_stack.pop()
-            self.document = Document(text, cursor_position=pos)
+            self.document = self.document_class(text, cursor_position=pos)
 
     def validate(self, set_cursor: bool = False) -> bool:
         """
@@ -1418,7 +1421,9 @@ class Buffer:
                 if new_index is not None:
                     return (
                         working_index,
-                        Document(document.text, document.cursor_position + new_index),
+                        self.document_class(
+                            document.text, document.cursor_position + new_index
+                        ),
                     )
                 else:
                     # No match, go forward in the history. (Include len+1 to wrap around.)
@@ -1427,12 +1432,12 @@ class Buffer:
                     for i in range(working_index + 1, len(self._working_lines) + 1):
                         i %= len(self._working_lines)
 
-                        document = Document(self._working_lines[i], 0)
+                        document = self.document_class(self._working_lines[i], 0)
                         new_index = document.find(
                             text, include_current_position=True, ignore_case=ignore_case
                         )
                         if new_index is not None:
-                            return (i, Document(document.text, new_index))
+                            return (i, self.document_class(document.text, new_index))
             else:
                 # Try find at the current input.
                 new_index = document.find_backwards(text, ignore_case=ignore_case)
@@ -1440,14 +1445,16 @@ class Buffer:
                 if new_index is not None:
                     return (
                         working_index,
-                        Document(document.text, document.cursor_position + new_index),
+                        self.document_class(
+                            document.text, document.cursor_position + new_index
+                        ),
                     )
                 else:
                     # No match, go back in the history. (Include -1 to wrap around.)
                     for i in range(working_index - 1, -2, -1):
                         i %= len(self._working_lines)
 
-                        document = Document(
+                        document = self.document_class(
                             self._working_lines[i], len(self._working_lines[i])
                         )
                         new_index = document.find_backwards(
@@ -1456,7 +1463,9 @@ class Buffer:
                         if new_index is not None:
                             return (
                                 i,
-                                Document(document.text, len(document.text) + new_index),
+                                self.document_class(
+                                    document.text, len(document.text) + new_index
+                                ),
                             )
             return None
 
@@ -1493,7 +1502,7 @@ class Buffer:
             else:
                 selection = None
 
-            return Document(
+            return self.document_class(
                 self._working_lines[working_index], cursor_position, selection=selection
             )
 
@@ -1620,7 +1629,9 @@ class Buffer:
                         if text.endswith("\n"):
                             text = text[:-1]
 
-                        self.document = Document(text=text, cursor_position=len(text))
+                        self.document = self.document_class(
+                            text=text, cursor_position=len(text)
+                        )
 
                     # Accept the input.
                     if validate_and_handle:
@@ -1930,8 +1941,9 @@ def indent(buffer: Buffer, from_row: int, to_row: int, count: int = 1) -> None:
 
     # Apply transformation.
     new_text = buffer.transform_lines(line_range, lambda l: "    " * count + l)
-    buffer.document = Document(
-        new_text, Document(new_text).translate_row_col_to_index(current_row, 0)
+    buffer.document = buffer.document_class(
+        new_text,
+        buffer.document_class(new_text).translate_row_col_to_index(current_row, 0),
     )
 
     # Go to the start of the line.
@@ -1956,8 +1968,9 @@ def unindent(buffer: Buffer, from_row: int, to_row: int, count: int = 1) -> None
 
     # Apply transformation.
     new_text = buffer.transform_lines(line_range, transform)
-    buffer.document = Document(
-        new_text, Document(new_text).translate_row_col_to_index(current_row, 0)
+    buffer.document = buffer.document_class(
+        new_text,
+        buffer.document_class(new_text).translate_row_col_to_index(current_row, 0),
     )
 
     # Go to the start of the line.
@@ -2008,7 +2021,7 @@ def reshape_text(buffer: Buffer, from_row: int, to_row: int) -> None:
             reshaped_text.append("\n")
 
         # Apply result.
-        buffer.document = Document(
+        buffer.document = buffer.document_class(
             text="".join(lines_before + reshaped_text + lines_after),
             cursor_position=len("".join(lines_before + reshaped_text)),
         )
