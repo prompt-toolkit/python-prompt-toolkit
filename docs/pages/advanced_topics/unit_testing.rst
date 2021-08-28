@@ -23,7 +23,7 @@ these.
   :class:`~prompt_toolkit.input.win32_pipe.Win32PipeInput` depending on the
   platform.
 - For the output, we want a :class:`~prompt_toolkit.output.DummyOutput`. This is
-  an output device that doesn't render anything. we don't want to render
+  an output device that doesn't render anything. We don't want to render
   anything to `sys.stdout` in the unit tests.
 
 .. note::
@@ -35,10 +35,10 @@ these.
     :class:`~prompt_toolkit.application.Application` or test how data
     structures (like text buffers) change over time.
 
-So, we programmatically feed some input to the input pipe, have the key
+So we programmatically feed some input to the input pipe, have the key
 bindings process the input and then test what comes out of it. 
 
-In the following example, we use a
+In the following example we use a
 :class:`~prompt_toolkit.shortcuts.PromptSession`, but the same works for any
 :class:`~prompt_toolkit.application.Application`.
 
@@ -71,8 +71,9 @@ wait forever for some more input to receive.
 Using an :class:`~prompt_toolkit.application.current.AppSession`
 ----------------------------------------------------------------
 
-Sometimes, it's not convenient to pass input or output objects to the
-:class:`~prompt_toolkit.application.Application` or not even possible at all.
+Sometimes it's not convenient to pass input or output objects to the
+:class:`~prompt_toolkit.application.Application`, and in some situations it's
+not even possible at all.
 This happens when these parameters are not passed down the call stack, through
 all function calls.
 
