@@ -326,7 +326,7 @@ class PromptSession(Generic[_T]):
     :param input: `Input` object. (Note that the preferred way to change the
         input/output is by creating an `AppSession`.)
     :param output: `Output` object.
-    :param enable_undo_redo: :class:`~prompt_toolkit.filters.Filter` or `bool`. 
+    :param enable_undo_redo: :class:`~prompt_toolkit.filters.Filter` or `bool`.
         When False, undo and redo stacks will never get populated.
     """
 
@@ -525,7 +525,7 @@ class PromptSession(Generic[_T]):
             accept_handler=accept,
             tempfile_suffix=lambda: to_str(self.tempfile_suffix or ""),
             tempfile=lambda: to_str(self.tempfile or ""),
-            enable_undo_redo=self.enable_undo_redo
+            enable_undo_redo=self.enable_undo_redo,
         )
 
     def _create_search_buffer(self) -> Buffer:

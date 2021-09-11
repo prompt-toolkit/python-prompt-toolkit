@@ -227,7 +227,7 @@ class Buffer:
     :param multiline: :class:`~prompt_toolkit.filters.Filter` or `bool`. When
         not set, pressing `Enter` will call the `accept_handler`.  Otherwise,
         pressing `Esc-Enter` is required.
-    :param enable_undo_redo: :class:`~prompt_toolkit.filters.Filter` or `bool`. 
+    :param enable_undo_redo: :class:`~prompt_toolkit.filters.Filter` or `bool`.
         When False, undo and redo stacks will never get populated.
     """
 
@@ -643,7 +643,7 @@ class Buffer:
         Safe current state (input text and cursor position), so that we can
         restore it by calling undo.
         """
-        
+
         if self.enable_undo_redo:
             # Safe if the text is different from the text at the top of the stack
             # is different. If the text is the same, just update the cursor position.
