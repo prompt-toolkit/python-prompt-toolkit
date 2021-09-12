@@ -466,13 +466,13 @@ takes a :class:`~prompt_toolkit.document.Document` as input and raises
 
 .. image:: ../images/number-validator.png
 
-By default, the input is only validated when the user presses the enter key,
-but prompt_toolkit can also validate in real-time while typing:
+By default, the input is validated in real-time while the user is typing, but
+prompt_toolkit can also validate after the user presses the enter key:
 
 .. code:: python
 
     prompt('Give a number: ', validator=NumberValidator(),
-           validate_while_typing=True)
+           validate_while_typing=False)
 
 If the input validation contains some heavy CPU intensive code, but you don't
 want to block the event loop, then it's recommended to wrap the validator class
