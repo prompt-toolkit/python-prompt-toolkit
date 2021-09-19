@@ -55,7 +55,15 @@ class ANSI:
         formatted_text = self._formatted_text
 
         while True:
+
+            # NOTE: CSI is a special token within a stream of characters that
+            # introduces an ANSI control sequence used to set the foreground /
+            # background colors of the following characters, set the cursor
+            # position of the next printable character, ... the csi flag is
+            # used here to help evaluating the respective control sequence.
+
             csi = False
+
             c = yield
 
             # Everything between \001 and \002 should become a ZeroWidthEscape.
@@ -70,6 +78,8 @@ class ANSI:
                     else:
                         escaped_text += c
 
+
+            # check for CSI
             if c == "\x1b":
                 # Start of color escape sequence.
                 square_bracket = yield
@@ -80,33 +90,56 @@ class ANSI:
             elif c == "\x9b":
                 csi = True
 
+
+            # IF CSI was detected
             if csi:
-                # Got a CSI sequence. Color codes are following.
                 current = ""
                 params = []
+
+                # get next char from input sequence
                 while True:
                     char = yield
+
+                    # construct number
                     if char.isdigit():
                         current += char
+
+                    # eval number
                     else:
+
+                        # limit and save number value
                         params.append(min(int(current or 0), 9999))
+
+                        # get delimiter token if present
                         if char == ";":
                             current = ""
+
+                        # check and evaluate color codes
                         elif char == "m":
                             # Set attributes and token.
                             self._select_graphic_rendition(params)
                             style = self._create_style_string()
                             break
+
+                        # check and evaluate cursor forward
+                        elif char == "C":
+                            for i in range(params[0]):
+                                # add <SPACE> using current style
+                                formatted_text.append((style, " "))
+                            break
+
+                        # further control sequences?
                         else:
                             # Ignore unsupported sequence.
                             break
             else:
-                # Add current character.
+
                 # NOTE: At this point, we could merge the current character
-                #       into the previous tuple if the style did not change,
-                #       however, it's not worth the effort given that it will
-                #       be "Exploded" once again when it's rendered to the
-                #       output.
+                # into the previous tuple if the style did not change, however,
+                # it's not worth the effort given that it will be "Exploded"
+                # once again when it's rendered to the output.
+
+                # add current character
                 formatted_text.append((style, c))
 
     def _select_graphic_rendition(self, attrs: List[int]) -> None:
@@ -127,14 +160,16 @@ class ANSI:
                 self._bgcolor = _bg_colors[attr]
             elif attr == 1:
                 self._bold = True
+            # elif attr == 2:
+                # self._faint = True
             elif attr == 3:
                 self._italic = True
             elif attr == 4:
                 self._underline = True
             elif attr == 5:
-                self._blink = True
+                self._blink = True  # slow blink
             elif attr == 6:
-                self._blink = True  # Fast blink.
+                self._blink = True  # fast blink
             elif attr == 7:
                 self._reverse = True
             elif attr == 8:
@@ -142,7 +177,7 @@ class ANSI:
             elif attr == 9:
                 self._strike = True
             elif attr == 22:
-                self._bold = False
+                self._bold = False  # normal intensity
             elif attr == 23:
                 self._italic = False
             elif attr == 24:
@@ -151,10 +186,12 @@ class ANSI:
                 self._blink = False
             elif attr == 27:
                 self._reverse = False
+            elif attr == 28:
+                self._hidden = False
             elif attr == 29:
                 self._strike = False
             elif not attr:
-                self._color = None
+                self._color = None          # reset all style attributes
                 self._bgcolor = None
                 self._bold = False
                 self._underline = False
