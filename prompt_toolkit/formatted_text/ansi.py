@@ -55,7 +55,11 @@ class ANSI:
         formatted_text = self._formatted_text
 
         while True:
+            # NOTE: CSI is a special token within a stream of characters that
+            #       introduces an ANSI control sequence used to set the
+            #       style attributes of the following characters.
             csi = False
+
             c = yield
 
             # Everything between \001 and \002 should become a ZeroWidthEscape.
@@ -70,6 +74,7 @@ class ANSI:
                     else:
                         escaped_text += c
 
+            # Check for CSI
             if c == "\x1b":
                 # Start of color escape sequence.
                 square_bracket = yield
@@ -84,19 +89,37 @@ class ANSI:
                 # Got a CSI sequence. Color codes are following.
                 current = ""
                 params = []
+
                 while True:
                     char = yield
+
+                    # Construct number
                     if char.isdigit():
                         current += char
+
+                    # Eval number
                     else:
+                        # Limit and save number value
                         params.append(min(int(current or 0), 9999))
+
+                        # Get delimiter token if present
                         if char == ";":
                             current = ""
+
+                        # Check and evaluate color codes
                         elif char == "m":
                             # Set attributes and token.
                             self._select_graphic_rendition(params)
                             style = self._create_style_string()
                             break
+
+                        # Check and evaluate cursor forward
+                        elif char == "C":
+                            for i in range(params[0]):
+                                # add <SPACE> using current style
+                                formatted_text.append((style, " "))
+                            break
+
                         else:
                             # Ignore unsupported sequence.
                             break
@@ -127,14 +150,16 @@ class ANSI:
                 self._bgcolor = _bg_colors[attr]
             elif attr == 1:
                 self._bold = True
+            # elif attr == 2:
+            #   self._faint = True
             elif attr == 3:
                 self._italic = True
             elif attr == 4:
                 self._underline = True
             elif attr == 5:
-                self._blink = True
+                self._blink = True  # Slow blink
             elif attr == 6:
-                self._blink = True  # Fast blink.
+                self._blink = True  # Fast blink
             elif attr == 7:
                 self._reverse = True
             elif attr == 8:
@@ -142,7 +167,7 @@ class ANSI:
             elif attr == 9:
                 self._strike = True
             elif attr == 22:
-                self._bold = False
+                self._bold = False  # Normal intensity
             elif attr == 23:
                 self._italic = False
             elif attr == 24:
@@ -151,9 +176,12 @@ class ANSI:
                 self._blink = False
             elif attr == 27:
                 self._reverse = False
+            elif attr == 28:
+                self._hidden = False
             elif attr == 29:
                 self._strike = False
             elif not attr:
+                # Reset all style attributes
                 self._color = None
                 self._bgcolor = None
                 self._bold = False
