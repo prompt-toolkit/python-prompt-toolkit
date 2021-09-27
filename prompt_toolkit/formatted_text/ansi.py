@@ -78,7 +78,6 @@ class ANSI:
                     else:
                         escaped_text += c
 
-
             # check for CSI
             if c == "\x1b":
                 # Start of color escape sequence.
@@ -89,7 +88,6 @@ class ANSI:
                     continue
             elif c == "\x9b":
                 csi = True
-
 
             # IF CSI was detected
             if csi:
