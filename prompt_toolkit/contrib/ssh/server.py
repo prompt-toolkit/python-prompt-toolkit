@@ -9,6 +9,7 @@ import asyncssh
 
 from prompt_toolkit.application.current import AppSession, create_app_session
 from prompt_toolkit.data_structures import Size
+from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output.vt100 import Vt100_Output
 
@@ -70,7 +71,7 @@ class PromptToolkitSSHSession(asyncssh.SSHServerSession):  # type: ignore
         return True
 
     def session_started(self) -> None:
-        self.interact_task = asyncio.get_event_loop().create_task(self._interact())
+        self.interact_task = get_event_loop().create_task(self._interact())
 
     async def _interact(self) -> None:
         if self._chan is None:

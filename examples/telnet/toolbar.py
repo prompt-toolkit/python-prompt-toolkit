@@ -4,10 +4,10 @@ Example of a telnet application that displays a bottom toolbar and completions
 in the prompt.
 """
 import logging
-from asyncio import get_event_loop
 
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.contrib.telnet.server import TelnetServer
+from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.shortcuts import PromptSession
 
 # Set up logging

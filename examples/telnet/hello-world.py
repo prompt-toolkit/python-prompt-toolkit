@@ -7,9 +7,9 @@ Also see the `hello-world-asyncio.py` example which uses an asyncio coroutine.
 That is probably the preferred way if you only need Python 3 support.
 """
 import logging
-from asyncio import get_event_loop
 
 from prompt_toolkit.contrib.telnet.server import TelnetServer
+from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.shortcuts import clear, prompt
 
 # Set up logging

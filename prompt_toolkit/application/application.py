@@ -11,7 +11,6 @@ from asyncio import (
     Future,
     Task,
     ensure_future,
-    get_event_loop,
     new_event_loop,
     set_event_loop,
     sleep,
@@ -48,7 +47,7 @@ from prompt_toolkit.eventloop import (
     get_traceback_from_context,
     run_in_executor_with_context,
 )
-from prompt_toolkit.eventloop.utils import call_soon_threadsafe
+from prompt_toolkit.eventloop.utils import call_soon_threadsafe, get_event_loop
 from prompt_toolkit.filters import Condition, Filter, FilterOrBool, to_filter
 from prompt_toolkit.formatted_text import AnyFormattedText
 from prompt_toolkit.input.base import Input
@@ -1366,7 +1365,7 @@ def attach_winch_signal_handler(
 
     # Keep track of the previous handler.
     # (Only UnixSelectorEventloop has `_signal_handlers`.)
-    loop = asyncio.get_event_loop()
+    loop = get_event_loop()
     previous_winch_handler = getattr(loop, "_signal_handlers", {}).get(sigwinch)
 
     try:

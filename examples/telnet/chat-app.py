@@ -6,9 +6,9 @@ each other.
 """
 import logging
 import random
-from asyncio import get_event_loop
 
 from prompt_toolkit.contrib.telnet.server import TelnetServer
+from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.shortcuts import PromptSession, clear, prompt
 

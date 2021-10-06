@@ -1,6 +1,4 @@
-from asyncio import get_event_loop
-
-from prompt_toolkit.eventloop import generator_to_async_generator
+from prompt_toolkit.eventloop import generator_to_async_generator, get_event_loop
 
 
 def _sync_generator():
