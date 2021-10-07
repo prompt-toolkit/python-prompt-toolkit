@@ -1,10 +1,10 @@
 import os
 import sys
 from abc import abstractmethod
-from asyncio import get_event_loop
 from contextlib import contextmanager
 
 from ..utils import SPHINX_AUTODOC_RUNNING
+from prompt_toolkit.eventloop import get_event_loop
 
 # Do not import win32-specific stuff when generating documentation.
 # Otherwise RTD would be unable to generate docs for this module.

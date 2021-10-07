@@ -1,6 +1,6 @@
+import asyncio
 import sys
 import time
-from asyncio import AbstractEventLoop, get_event_loop
 from types import TracebackType
 from typing import Any, Awaitable, Callable, Dict, Optional, TypeVar, cast
 
@@ -13,13 +13,14 @@ __all__ = [
     "run_in_executor_with_context",
     "call_soon_threadsafe",
     "get_traceback_from_context",
+    "get_event_loop",
 ]
 
 _T = TypeVar("_T")
 
 
 def run_in_executor_with_context(
-    func: Callable[..., _T], *args: Any, loop: Optional[AbstractEventLoop] = None
+    func: Callable[..., _T], *args: Any, loop: Optional[asyncio.AbstractEventLoop] = None
 ) -> Awaitable[_T]:
     """
     Run a function in an executor, but make sure it uses the same contextvars.
@@ -36,7 +37,7 @@ def run_in_executor_with_context(
 def call_soon_threadsafe(
     func: Callable[[], None],
     max_postpone_time: Optional[float] = None,
-    loop: Optional[AbstractEventLoop] = None,
+    loop: Optional[asyncio.AbstractEventLoop] = None,
 ) -> None:
     """
     Wrapper around asyncio's `call_soon_threadsafe`.
@@ -98,3 +99,18 @@ def get_traceback_from_context(context: Dict[str, Any]) -> Optional[TracebackTyp
             return sys.exc_info()[2]
 
     return None
+
+
+def get_event_loop() -> asyncio.AbstractEventLoop:
+    """Backward compatible way to get the event loop"""
+    # Python 3.6 doesn't have get_running_loop
+    # Python 3.10 deprecated get_event_loop
+    try:
+        getloop = asyncio.get_running_loop
+    except AttributeError:
+        getloop = asyncio.get_event_loop
+
+    try:
+        return getloop()
+    except RuntimeError:
+        return asyncio.get_event_loop_policy().get_event_loop()

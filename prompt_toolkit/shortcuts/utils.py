@@ -1,10 +1,10 @@
-from asyncio import get_event_loop
 from asyncio.events import AbstractEventLoop
 from typing import TYPE_CHECKING, Any, Optional, TextIO
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app_or_none, get_app_session
 from prompt_toolkit.application.run_in_terminal import run_in_terminal
+from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.formatted_text import (
     FormattedText,
     StyleAndTextTuples,

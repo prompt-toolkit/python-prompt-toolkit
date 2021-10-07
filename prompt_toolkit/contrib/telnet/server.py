@@ -4,12 +4,12 @@ Telnet server.
 import asyncio
 import contextvars  # Requires Python3.7!
 import socket
-from asyncio import get_event_loop
 from typing import Awaitable, Callable, List, Optional, Set, TextIO, Tuple, cast
 
 from prompt_toolkit.application.current import create_app_session, get_app
 from prompt_toolkit.application.run_in_terminal import run_in_terminal
 from prompt_toolkit.data_structures import Size
+from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.formatted_text import AnyFormattedText, to_formatted_text
 from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output.vt100 import Vt100_Output
