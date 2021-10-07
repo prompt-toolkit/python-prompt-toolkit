@@ -100,7 +100,8 @@ def get_traceback_from_context(context: Dict[str, Any]) -> Optional[TracebackTyp
 
     return None
 
-def get_event_loop():
+
+def get_event_loop() -> asyncio.AbstractEventLoop:
     """Backward compatible way to get the event loop"""
     # Python 3.6 doesn't have get_running_loop
     # Python 3.10 deprecated get_event_loop
