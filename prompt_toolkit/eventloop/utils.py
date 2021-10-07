@@ -20,7 +20,9 @@ _T = TypeVar("_T")
 
 
 def run_in_executor_with_context(
-    func: Callable[..., _T], *args: Any, loop: Optional[asyncio.AbstractEventLoop] = None
+    func: Callable[..., _T],
+    *args: Any,
+    loop: Optional[asyncio.AbstractEventLoop] = None,
 ) -> Awaitable[_T]:
     """
     Run a function in an executor, but make sure it uses the same contextvars.

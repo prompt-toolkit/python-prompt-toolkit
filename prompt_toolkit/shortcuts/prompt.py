@@ -47,8 +47,8 @@ from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.clipboard import Clipboard, DynamicClipboard, InMemoryClipboard
 from prompt_toolkit.completion import Completer, DynamicCompleter, ThreadedCompleter
 from prompt_toolkit.document import Document
-from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.enums import DEFAULT_BUFFER, SEARCH_BUFFER, EditingMode
+from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.filters import (
     Condition,
     FilterOrBool,

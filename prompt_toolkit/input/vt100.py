@@ -18,6 +18,7 @@ from typing import (
 )
 
 from prompt_toolkit.eventloop import get_event_loop
+
 from ..key_binding import KeyPress
 from .base import Input
 from .posix_utils import PosixStdinReader

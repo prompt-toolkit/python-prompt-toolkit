@@ -40,8 +40,9 @@ from typing import (
     Tuple,
 )
 
-from .utils import get_event_loop
 from prompt_toolkit.utils import is_windows
+
+from .utils import get_event_loop
 
 __all__ = [
     "new_eventloop_with_inputhook",
