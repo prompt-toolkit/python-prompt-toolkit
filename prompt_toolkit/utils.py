@@ -66,7 +66,7 @@ class Event(Generic[_Sender]):
 
     def __init__(
         self, sender: _Sender, handler: Optional[Callable[[_Sender], None]] = None
-    ):
+    ) -> None:
         self.sender = sender
         self._handlers: List[Callable[[_Sender], None]] = []
 

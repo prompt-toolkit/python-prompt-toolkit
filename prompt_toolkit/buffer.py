@@ -81,7 +81,7 @@ class CompletionState:
         original_document: "Document",
         completions: Optional[List["Completion"]] = None,
         complete_index: Optional[int] = None,
-    ):
+    ) -> None:
 
         #: Document as it was when the completion started.
         self.original_document = original_document
@@ -153,7 +153,7 @@ class YankNthArgState:
 
     def __init__(
         self, history_position: int = 0, n: int = -1, previous_inserted_word: str = ""
-    ):
+    ) -> None:
 
         self.history_position = history_position
         self.previous_inserted_word = previous_inserted_word
