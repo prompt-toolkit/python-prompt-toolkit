@@ -107,9 +107,9 @@ def get_event_loop() -> asyncio.AbstractEventLoop:
     """Backward compatible way to get the event loop"""
     # Python 3.6 doesn't have get_running_loop
     # Python 3.10 deprecated get_event_loop
-    try:
+    if sys.version_info >= (3, 7):
         getloop = asyncio.get_running_loop
-    except AttributeError:
+    else:
         getloop = asyncio.get_event_loop
 
     try:
