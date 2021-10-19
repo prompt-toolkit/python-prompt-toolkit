@@ -121,6 +121,14 @@ ANSI_SEQUENCES: Dict[str, Union[Keys, Tuple[Keys, ...]]] = {
     "\x1b[23;2~": Keys.F23,
     "\x1b[24;2~": Keys.F24,
     # --
+    # CSI 27 disambiguated modified "other" keys (xterm)
+    # Ref: https://invisible-island.net/xterm/modified-keys.html
+    # These are currently unsupported, so just re-map some common ones to the
+    # unmodified versions
+    "\x1b[27;2;13~": Keys.ControlM,  # Shift + Enter
+    "\x1b[27;5;13~": Keys.ControlM,  # Ctrl + Enter
+    "\x1b[27;6;13~": Keys.ControlM,  # Ctrl + Shift + Enter
+    # --
     # Control + function keys.
     "\x1b[1;5P": Keys.ControlF1,
     "\x1b[1;5Q": Keys.ControlF2,
