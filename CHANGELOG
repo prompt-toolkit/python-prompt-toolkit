@@ -1,6 +1,16 @@
 CHANGELOG
 =========
 
+3.0.21: 2021-10-21
+------------------
+
+New features:
+- Improved mouse support:
+  * Support for click-drag, which is useful for selecting text.
+  * Detect mouse movements when no button is pressed.
+- Support for Python 3.10.
+
+
 3.0.20: 2021-08-20
 ------------------
 
