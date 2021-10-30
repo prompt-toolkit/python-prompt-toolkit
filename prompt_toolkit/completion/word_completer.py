@@ -86,8 +86,8 @@ class WordCompleter(Completer):
                 display = self.display_dict.get(a, a)
                 display_meta = self.meta_dict.get(a, "")
                 yield Completion(
-                    a,
-                    -len(word_before_cursor),
+                    text=a,
+                    start_position=-len(word_before_cursor),
                     display=display,
                     display_meta=display_meta,
                 )

@@ -971,7 +971,7 @@ class Buffer:
 
                         completions.append(
                             Completion(
-                                l,
+                                text=l,
                                 start_position=-len(current_line),
                                 display_meta=display_meta,
                             )

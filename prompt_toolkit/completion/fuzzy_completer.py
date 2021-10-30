@@ -114,7 +114,7 @@ class FuzzyCompleter(Completer):
             # Include these completions, but set the correct `display`
             # attribute and `start_position`.
             yield Completion(
-                match.completion.text,
+                text=match.completion.text,
                 start_position=match.completion.start_position
                 - len(word_before_cursor),
                 display_meta=match.completion.display_meta,
