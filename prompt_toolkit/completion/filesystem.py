@@ -93,7 +93,11 @@ class PathCompleter(Completer):
                 if not self.file_filter(full_name):
                     continue
 
-                yield Completion(completion, 0, display=filename)
+                yield Completion(
+                    text=completion,
+                    start_position=0,
+                    display=filename,
+                )
         except OSError:
             pass
 
