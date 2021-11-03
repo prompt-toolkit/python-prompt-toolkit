@@ -316,7 +316,10 @@ class TelnetServer:
             t.cancel()
 
         for t in self._application_tasks:
-            await t
+            try:
+                await t
+            except asyncio.CancelledError:
+                logger.debug("Task %s cancelled", str(t))
 
     def _accept(self) -> None:
         """
