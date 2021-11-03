@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+3.0.22: 2021-11-04
+------------------
+
+Fixes:
+- Fix stopping of telnet server (capture cancellation exception).
+
+
 3.0.21: 2021-10-21
 ------------------
 
