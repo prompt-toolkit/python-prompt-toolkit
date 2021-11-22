@@ -271,7 +271,10 @@ class ConsoleInputReader:
                 # Pasting: if the current key consists of text or \n, turn it
                 # into a BracketedPaste.
                 data = []
-                while k and (not isinstance(k.key, Keys) or k.key == Keys.ControlJ):
+                while k and (
+                    not isinstance(k.key, Keys)
+                    or k.key in {Keys.ControlJ, Keys.ControlM}
+                ):
                     data.append(k.data)
                     try:
                         k = next(gen)
@@ -379,7 +382,7 @@ class ConsoleInputReader:
             if k.key == Keys.ControlM:
                 newline_count += 1
 
-        return newline_count >= 1 and text_count > 1
+        return newline_count >= 1 and text_count >= 1
 
     def _event_to_key_presses(self, ev: KEY_EVENT_RECORD) -> List[KeyPress]:
         """
