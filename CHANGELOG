@@ -1,6 +1,17 @@
 CHANGELOG
 =========
 
+3.0.23: 2021-11-26
+------------------
+
+Fixes:
+- Fix multiline bracketed paste on Windows
+
+New features:
+- Add support for some CSI 27 modified variants of "Enter" for xterm in the
+  vt100 input parser.
+
+
 3.0.22: 2021-11-04
 ------------------
 
