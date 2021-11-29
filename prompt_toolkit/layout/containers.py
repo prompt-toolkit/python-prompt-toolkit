@@ -2059,7 +2059,7 @@ class Window(Container):
                             return x, y  # Break out of all for loops.
 
                     # Set character in screen and shift 'x'.
-                    if x >= 0 and y >= 0 and x < write_position.width:
+                    if x >= 0 and y >= 0 and x < width:
                         new_buffer_row[x + xpos] = char
 
                         # When we print a multi width character, make sure
