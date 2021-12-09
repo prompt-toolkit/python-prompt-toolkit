@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+3.0.24: 2021-12-09
+------------------
+
+Fixes:
+- Prevent window content overflowing when using scrollbars.
+- Handle `PermissionError` when trying to attach /dev/null in vt100 input.
+
+
 3.0.23: 2021-11-26
 ------------------
 
