@@ -411,6 +411,13 @@ class KeyProcessor:
             self._flush_wait_task.cancel()
         self._flush_wait_task = app.create_background_task(wait())
 
+    def send_sigint(self) -> None:
+        """
+        Send SIGINT. Immediately call the SIGINT key handler.
+        """
+        self.feed(KeyPress(key=Keys.SIGINT), first=True)
+        self.process_keys()
+
 
 class KeyPressEvent:
     """
