@@ -358,6 +358,28 @@ possible. Check the `custom-vi-operator-and-text-object.py` example for more
 information.
 
 
+Handling SIGINT
+---------------
+
+The SIGINT Unix signal can be handled by binding ``<sigint>``. For instance:
+
+.. code:: python
+
+    @bindings.add('<sigint>')
+    def _(event):
+        # ...
+        pass
+
+This will handle a SIGINT that was sent by an external application into the
+process. Handling control-c should be done by binding ``c-c``. (The terminal
+input is set to raw mode, which means that a ``c-c`` won't be translated into a
+SIGINT.)
+
+For a ``PromptSession``, there is a default binding for ``<sigint>`` that
+corresponds to ``c-c``: it will exit the prompt, raising a
+``KeyboardInterrupt`` exception.
+
+
 Processing `.inputrc`
 ---------------------
 

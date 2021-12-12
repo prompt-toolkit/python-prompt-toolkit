@@ -807,6 +807,7 @@ class PromptSession(Generic[_T]):
             display_completions_like_readline(event)
 
         @handle("c-c", filter=default_focused)
+        @handle("<sigint>")
         def _keyboard_interrupt(event: E) -> None:
             "Abort when Control-C has been pressed."
             event.app.exit(exception=KeyboardInterrupt, style="class:aborting")

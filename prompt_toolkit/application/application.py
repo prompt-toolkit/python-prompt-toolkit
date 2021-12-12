@@ -630,6 +630,7 @@ class Application(Generic[_AppResult]):
         self,
         pre_run: Optional[Callable[[], None]] = None,
         set_exception_handler: bool = True,
+        handle_sigint: bool = True,
     ) -> _AppResult:
         """
         Run the prompt_toolkit :class:`~prompt_toolkit.application.Application`
@@ -646,8 +647,15 @@ class Application(Generic[_AppResult]):
         :param set_exception_handler: When set, in case of an exception, go out
             of the alternate screen and hide the application, display the
             exception, and wait for the user to press ENTER.
+        :param handle_sigint: Handle SIGINT signal if possible. This will call
+            the `<sigint>` key binding when a SIGINT is received. (This only
+            works in the main thread.)
         """
         assert not self._is_running, "Application is already running."
+
+        if not in_main_thread():
+            # Handling signals in other threads is not supported.
+            handle_sigint = False
 
         async def _run_async() -> _AppResult:
             "Coroutine."
@@ -781,6 +789,15 @@ class Application(Generic[_AppResult]):
             self._invalidated = False
 
             loop = get_event_loop()
+
+            if handle_sigint:
+                loop.add_signal_handler(
+                    signal.SIGINT,
+                    lambda *_: loop.call_soon_threadsafe(
+                        self.key_processor.send_sigint
+                    ),
+                )
+
             if set_exception_handler:
                 previous_exc_handler = loop.get_exception_handler()
                 loop.set_exception_handler(self._handle_exception)
@@ -812,12 +829,16 @@ class Application(Generic[_AppResult]):
                 if set_exception_handler:
                     loop.set_exception_handler(previous_exc_handler)
 
+                if handle_sigint:
+                    loop.remove_signal_handler(signal.SIGINT)
+
         return await _run_async2()
 
     def run(
         self,
         pre_run: Optional[Callable[[], None]] = None,
         set_exception_handler: bool = True,
+        handle_sigint: bool = True,
         in_thread: bool = False,
     ) -> _AppResult:
         """
@@ -843,6 +864,8 @@ class Application(Generic[_AppResult]):
             `get_appp().create_background_task()`, so that unfinished tasks are
             properly cancelled before the event loop is closed. This is used
             for instance in ptpython.
+        :param handle_sigint: Handle SIGINT signal. Call the key binding for
+            `Keys.SIGINT`. (This only works in the main thread.)
         """
         if in_thread:
             result: _AppResult
@@ -852,7 +875,10 @@ class Application(Generic[_AppResult]):
                 nonlocal result, exception
                 try:
                     result = self.run(
-                        pre_run=pre_run, set_exception_handler=set_exception_handler
+                        pre_run=pre_run,
+                        set_exception_handler=set_exception_handler,
+                        # Signal handling only works in the main thread.
+                        handle_sigint=False,
                     )
                 except BaseException as e:
                     exception = e

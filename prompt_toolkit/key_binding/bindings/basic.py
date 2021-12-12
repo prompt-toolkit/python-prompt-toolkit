@@ -120,6 +120,7 @@ def load_basic_bindings() -> KeyBindings:
     @handle("insert")
     @handle("s-insert")
     @handle("c-insert")
+    @handle("<sigint>")
     @handle(Keys.Ignore)
     def _ignore(event: E) -> None:
         """
