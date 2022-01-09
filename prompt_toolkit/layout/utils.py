@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING, Iterable, List, TypeVar, Union, cast, overload
+
 from typing_extensions import SupportsIndex
 
 from prompt_toolkit.formatted_text.base import OneStyleAndTextTuple
