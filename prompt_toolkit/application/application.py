@@ -1156,15 +1156,16 @@ class Application(Generic[_AppResult]):
         if _SIGTSTP is not None:
 
             def run() -> None:
+                signal = cast(int, _SIGTSTP)
                 # Send `SIGTSTP` to own process.
                 # This will cause it to suspend.
 
                 # Usually we want the whole process group to be suspended. This
                 # handles the case when input is piped from another process.
                 if suspend_group:
-                    os.kill(0, _SIGTSTP)
+                    os.kill(0, signal)
                 else:
-                    os.kill(os.getpid(), _SIGTSTP)
+                    os.kill(os.getpid(), signal)
 
             run_in_terminal(run)
 

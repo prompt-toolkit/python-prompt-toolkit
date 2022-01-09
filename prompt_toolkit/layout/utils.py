@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING, Iterable, List, TypeVar, Union, cast, overload
+from typing_extensions import SupportsIndex
 
 from prompt_toolkit.formatted_text.base import OneStyleAndTextTuple
 
@@ -28,7 +29,7 @@ class _ExplodedList(List[_T]):
     def extend(self, lst: Iterable[_T]) -> None:
         super().extend(explode_text_fragments(lst))
 
-    def insert(self, index: int, item: _T) -> None:
+    def insert(self, index: SupportsIndex, item: _T) -> None:
         raise NotImplementedError  # TODO
 
     # TODO: When creating a copy() or [:], return also an _ExplodedList.
