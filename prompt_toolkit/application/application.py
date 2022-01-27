@@ -780,57 +780,57 @@ class Application(Generic[_AppResult]):
 
         async def _run_async2() -> _AppResult:
             self._is_running = True
-
-            # Make sure to set `_invalidated` to `False` to begin with,
-            # otherwise we're not going to paint anything. This can happen if
-            # this application had run before on a different event loop, and a
-            # paint was scheduled using `call_soon_threadsafe` with
-            # `max_postpone_time`.
-            self._invalidated = False
-
-            loop = get_event_loop()
-
-            if handle_sigint:
-                loop.add_signal_handler(
-                    signal.SIGINT,
-                    lambda *_: loop.call_soon_threadsafe(
-                        self.key_processor.send_sigint
-                    ),
-                )
-
-            if set_exception_handler:
-                previous_exc_handler = loop.get_exception_handler()
-                loop.set_exception_handler(self._handle_exception)
-
             try:
-                with set_app(self), self._enable_breakpointhook():
-                    try:
-                        result = await _run_async()
-                    finally:
-                        # Wait for the background tasks to be done. This needs to
-                        # go in the finally! If `_run_async` raises
-                        # `KeyboardInterrupt`, we still want to wait for the
-                        # background tasks.
-                        await self.cancel_and_wait_for_background_tasks()
+                # Make sure to set `_invalidated` to `False` to begin with,
+                # otherwise we're not going to paint anything. This can happen if
+                # this application had run before on a different event loop, and a
+                # paint was scheduled using `call_soon_threadsafe` with
+                # `max_postpone_time`.
+                self._invalidated = False
 
-                        # Set the `_is_running` flag to `False`. Normally this
-                        # happened already in the finally block in `run_async`
-                        # above, but in case of exceptions, that's not always the
-                        # case.
-                        self._is_running = False
-
-                        # Also remove the Future again. (This brings the
-                        # application back to its initial state, where it also
-                        # doesn't have a Future.)
-                        self.future = None
-
-                    return result
-            finally:
-                if set_exception_handler:
-                    loop.set_exception_handler(previous_exc_handler)
+                loop = get_event_loop()
 
                 if handle_sigint:
-                    loop.remove_signal_handler(signal.SIGINT)
+                    loop.add_signal_handler(
+                        signal.SIGINT,
+                        lambda *_: loop.call_soon_threadsafe(
+                            self.key_processor.send_sigint
+                        ),
+                    )
+
+                if set_exception_handler:
+                    previous_exc_handler = loop.get_exception_handler()
+                    loop.set_exception_handler(self._handle_exception)
+
+                try:
+                    with set_app(self), self._enable_breakpointhook():
+                        try:
+                            result = await _run_async()
+                        finally:
+                            # Wait for the background tasks to be done. This needs to
+                            # go in the finally! If `_run_async` raises
+                            # `KeyboardInterrupt`, we still want to wait for the
+                            # background tasks.
+                            await self.cancel_and_wait_for_background_tasks()
+
+                            # Also remove the Future again. (This brings the
+                            # application back to its initial state, where it also
+                            # doesn't have a Future.)
+                            self.future = None
+
+                        return result
+                finally:
+                    if set_exception_handler:
+                        loop.set_exception_handler(previous_exc_handler)
+
+                    if handle_sigint:
+                        loop.remove_signal_handler(signal.SIGINT)
+
+            finally:
+                # Set the `_is_running` flag to `False`. Normally this happened
+                # already in the finally block in `run_async` above, but in
+                # case of exceptions, that's not always the case.
+                self._is_running = False
 
         return await _run_async2()
 
