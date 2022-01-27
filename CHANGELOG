@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+3.0.26: 2022-01-27
+------------------
+
+Fixes:
+- Fixes issue introduced in 3.0.25: Don't handle SIGINT on Windows.
+
+
 3.0.25: 2022-01-27
 ------------------
 
