@@ -88,6 +88,7 @@ from prompt_toolkit.styles import (
 )
 from prompt_toolkit.utils import Event, in_main_thread
 
+from ..utils import is_windows
 from .current import get_app_session, set_app
 from .run_in_terminal import in_terminal, run_in_terminal
 
@@ -659,8 +660,11 @@ class Application(Generic[_AppResult]):
         """
         assert not self._is_running, "Application is already running."
 
-        if not in_main_thread():
+        if not in_main_thread() or is_windows():
             # Handling signals in other threads is not supported.
+            # Also on Windows, `add_signal_handler(signal.SIGINT, ...)` raises
+            # `NotImplementedError`.
+            # See: https://github.com/prompt-toolkit/python-prompt-toolkit/issues/1553
             handle_sigint = False
 
         async def _run_async() -> _AppResult:
