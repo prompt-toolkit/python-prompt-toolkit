@@ -8,7 +8,7 @@ from prompt_toolkit.utils import (
     is_windows,
 )
 
-from .base import Output
+from .base import DummyOutput, Output
 from .color_depth import ColorDepth
 
 __all__ = [
@@ -43,9 +43,17 @@ def create_output(
 
         if always_prefer_tty:
             for io in [sys.stdout, sys.stderr]:
-                if io.isatty():
+                if io is not None and io.isatty():
+                    # (This is `None` when using `pythonw.exe` on Windows.)
                     stdout = io
                     break
+
+    # If the output is still `None`, use a DummyOutput.
+    # This happens for instance on Windows, when running the application under
+    # `pythonw.exe`. In that case, there won't be a terminal Window, and
+    # stdin/stdout/stderr are `None`.
+    if stdout is None:
+        return DummyOutput()
 
     # If the patch_stdout context manager has been used, then sys.stdout is
     # replaced by this proxy. For prompt_toolkit applications, we want to use
