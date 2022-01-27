@@ -1,6 +1,22 @@
 CHANGELOG
 =========
 
+3.0.25: 2022-01-27
+------------------
+
+Fixes:
+- Use `DummyOutput` when `sys.stdout` is `None` and `DummyInput` when
+  `sys.stdin` is `None`. This fixes an issue when the code runs on windows,
+  using pythonw.exe and still tries to interact with the terminal.
+- Correctly reset `Application._is_running` flag in case of exceptions in some
+  situations.
+- Handle SIGINT (when sent from another process) and allow binding it to a key
+  binding. For prompt sessions, the behavior is now identical to pressing
+  control-c.
+- Increase the event loop `slow_duration_callback` by default to 0.5. This
+  prevents printing warnings if rendering takes too long on slow systems.
+
+
 3.0.24: 2021-12-09
 ------------------
 
