@@ -631,6 +631,7 @@ class Application(Generic[_AppResult]):
         pre_run: Optional[Callable[[], None]] = None,
         set_exception_handler: bool = True,
         handle_sigint: bool = True,
+        slow_callback_duration: float = 0.5,
     ) -> _AppResult:
         """
         Run the prompt_toolkit :class:`~prompt_toolkit.application.Application`
@@ -650,6 +651,11 @@ class Application(Generic[_AppResult]):
         :param handle_sigint: Handle SIGINT signal if possible. This will call
             the `<sigint>` key binding when a SIGINT is received. (This only
             works in the main thread.)
+        :param slow_callback_duration: Display warnings if code scheduled in
+            the asyncio event loop takes more time than this. The asyncio
+            default of `0.1` is sometimes not sufficient on a slow system,
+            because exceptionally, the drawing of the app, which happens in the
+            event loop, can take a bit longer from time to time.
         """
         assert not self._is_running, "Application is already running."
 
@@ -728,12 +734,13 @@ class Application(Generic[_AppResult]):
             with self.input.raw_mode(), self.input.attach(
                 read_from_input
             ), attach_winch_signal_handler(self._on_resize):
-                self.create_background_task(self._poll_output_size())
 
                 # Draw UI.
                 self._request_absolute_cursor_position()
                 self._redraw()
                 self._start_auto_refresh_task()
+
+                self.create_background_task(self._poll_output_size())
 
                 # Wait for UI to finish.
                 try:
@@ -802,6 +809,10 @@ class Application(Generic[_AppResult]):
                     previous_exc_handler = loop.get_exception_handler()
                     loop.set_exception_handler(self._handle_exception)
 
+                # Set slow_callback_duration.
+                original_slow_callback_duration = loop.slow_callback_duration
+                loop.slow_callback_duration = slow_callback_duration
+
                 try:
                     with set_app(self), self._enable_breakpointhook():
                         try:
@@ -825,6 +836,9 @@ class Application(Generic[_AppResult]):
 
                     if handle_sigint:
                         loop.remove_signal_handler(signal.SIGINT)
+
+                    # Reset slow_callback_duration.
+                    loop.slow_callback_duration = original_slow_callback_duration
 
             finally:
                 # Set the `_is_running` flag to `False`. Normally this happened

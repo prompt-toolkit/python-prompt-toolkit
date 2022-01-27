@@ -34,6 +34,7 @@ class DummyApplication(Application[None]):
         pre_run: Optional[Callable[[], None]] = None,
         set_exception_handler: bool = True,
         handle_sigint: bool = True,
+        slow_callback_duration: float = 0.5,
     ) -> None:
         raise NotImplementedError("A DummyApplication is not supposed to run.")
 
