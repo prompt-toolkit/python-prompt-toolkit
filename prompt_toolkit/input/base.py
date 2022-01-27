@@ -126,6 +126,13 @@ class DummyInput(Input):
         return _dummy_context_manager()
 
     def attach(self, input_ready_callback: Callable[[], None]) -> ContextManager[None]:
+        # Call the callback immediately once after attaching.
+        # This tells the callback to call `read_keys` and check the
+        # `input.closed` flag, after which it won't receive any keys, but knows
+        # that `EOFError` should be raised. This unblocks `read_from_input` in
+        # `application.py`.
+        input_ready_callback()
+
         return _dummy_context_manager()
 
     def detach(self) -> ContextManager[None]:
