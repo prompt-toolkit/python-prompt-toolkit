@@ -3,7 +3,7 @@ from typing import Optional, TextIO
 
 from prompt_toolkit.utils import is_windows
 
-from .base import Input, PipeInput
+from .base import DummyInput, Input, PipeInput
 
 __all__ = [
     "create_input",
@@ -25,6 +25,11 @@ def create_input(
     """
     if is_windows():
         from .win32 import Win32Input
+
+        # If `stdin` was assigned `None` (which happens with pythonw.exe), use
+        # a `DummyInput`. This triggers `EOFError` in the application code.
+        if stdin is None and sys.stdin is None:
+            return DummyInput()
 
         return Win32Input(stdin or sys.stdin)
     else:
