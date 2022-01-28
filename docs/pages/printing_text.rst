@@ -261,7 +261,8 @@ to_formatted_text
 A useful function to know about is
 :func:`~prompt_toolkit.formatted_text.to_formatted_text`. This ensures that the
 given input is valid formatted text. While doing so, an additional style can be
-applied as well.
+applied as well. The output will be the canonical form of formatted text, which
+is a list of ``(style, text)`` tuples.
 
 .. code:: python
 
@@ -272,3 +273,50 @@ applied as well.
     text = to_formatted_text(html, style='class:my_html bg:#00ff00 italic')
 
     print_formatted_text(text)
+
+
+String concatenation
+^^^^^^^^^^^^^^^^^^^^
+
+Formatted text can be concatenated (or merged) together, with the
+:func:`~prompt_toolkit.formatted_text.merge_formatted_text` helper. This helper
+can take multiple text objects which either are plain text or formatted text,
+and will concatenate them into one formatted text object.
+
+
+.. code:: python
+
+    from prompt_toolkit import print_formatted_text
+    from prompt_toolkit.formatted_text import ANSI, HTML, merge_formatted_text
+
+
+    def main():
+        html = HTML("<u><ansired>Hello</ansired></u> ")
+        ansi = ANSI("\x1b[32mworld\n")
+
+        merged_text = merge_formatted_text([html, ansi])
+
+        print_formatted_text(merged_text)
+
+
+    if __name__ == "__main__":
+        main()
+
+
+Other utility functions
+^^^^^^^^^^^^^^^^^^^^^^^
+
+- :func:`~prompt_toolkit.formatted_text.formatted_text_width`: Turn the
+  formatted text string back into a plain text string.
+- :func:`~prompt_toolkit.formatted_text.formatted_text_len`: This returns the
+  amount of characters in a formatted text string. It's the same as turning the
+  formatted text back into a plain text string, and calling ``len()``.
+- :func:`~prompt_toolkit.formatted_text.formatted_text_width`: This returns the
+  amount of space the formatted text takes when printed in a terminal. It's
+  especially useful for aligning text that contains double width characters.
+- :func:`~prompt_toolkit.formatted_text.formatted_text_split_lines`: Split the
+  lines and return a list of formatted text objects.
+- :func:`~prompt_toolkit.formatted_text.formatted_text_indent`: Indent all the
+  lines and return a a new formatted text object.
+- :func:`~prompt_toolkit.formatted_text.formatted_text_strip`: Strip
+  surrounding whitespace and return a new formatted text object.

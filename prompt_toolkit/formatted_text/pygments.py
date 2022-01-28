@@ -16,6 +16,12 @@ class PygmentsTokens:
     """
     Turn a pygments token list into a list of prompt_toolkit text fragments
     (``(style_str, text)`` tuples).
+
+    Usage::
+
+        from pygments.lexers import PythonLexer
+        tokens = list(PythonLexer().get_tokens("def hello(): pass"))
+        PygmentsTokens(tokens)
     """
 
     def __init__(self, token_list: List[Tuple["Token", str]]) -> None:
