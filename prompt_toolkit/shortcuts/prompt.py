@@ -46,6 +46,11 @@ from prompt_toolkit.auto_suggest import AutoSuggest, DynamicAutoSuggest
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.clipboard import Clipboard, DynamicClipboard, InMemoryClipboard
 from prompt_toolkit.completion import Completer, DynamicCompleter, ThreadedCompleter
+from prompt_toolkit.cursor_shapes import (
+    AnyCursorShapeConfig,
+    CursorShapeConfig,
+    DynamicCursorShapeConfig,
+)
 from prompt_toolkit.document import Document
 from prompt_toolkit.enums import DEFAULT_BUFFER, SEARCH_BUFFER, EditingMode
 from prompt_toolkit.eventloop import get_event_loop
@@ -342,6 +347,7 @@ class PromptSession(Generic[_T]):
         "style_transformation",
         "swap_light_and_dark_colors",
         "color_depth",
+        "cursor",
         "include_default_pygments_style",
         "rprompt",
         "multiline",
@@ -394,6 +400,7 @@ class PromptSession(Generic[_T]):
         style_transformation: Optional[StyleTransformation] = None,
         swap_light_and_dark_colors: FilterOrBool = False,
         color_depth: Optional[ColorDepth] = None,
+        cursor: AnyCursorShapeConfig = None,
         include_default_pygments_style: FilterOrBool = True,
         history: Optional[History] = None,
         clipboard: Optional[Clipboard] = None,
@@ -436,6 +443,7 @@ class PromptSession(Generic[_T]):
         self.style_transformation = style_transformation
         self.swap_light_and_dark_colors = swap_light_and_dark_colors
         self.color_depth = color_depth
+        self.cursor = cursor
         self.include_default_pygments_style = include_default_pygments_style
         self.rprompt = rprompt
         self.multiline = multiline
@@ -751,6 +759,7 @@ class PromptSession(Generic[_T]):
             erase_when_done=erase_when_done,
             reverse_vi_search_direction=True,
             color_depth=lambda: self.color_depth,
+            cursor=DynamicCursorShapeConfig(lambda: self.cursor),
             refresh_interval=self.refresh_interval,
             input=self._input,
             output=self._output,
@@ -861,6 +870,7 @@ class PromptSession(Generic[_T]):
         bottom_toolbar: Optional[AnyFormattedText] = None,
         style: Optional[BaseStyle] = None,
         color_depth: Optional[ColorDepth] = None,
+        cursor: Optional[AnyCursorShapeConfig] = None,
         include_default_pygments_style: Optional[FilterOrBool] = None,
         style_transformation: Optional[StyleTransformation] = None,
         swap_light_and_dark_colors: Optional[FilterOrBool] = None,
@@ -957,6 +967,8 @@ class PromptSession(Generic[_T]):
             self.style = style
         if color_depth is not None:
             self.color_depth = color_depth
+        if cursor is not None:
+            self.cursor = cursor
         if include_default_pygments_style is not None:
             self.include_default_pygments_style = include_default_pygments_style
         if style_transformation is not None:
@@ -1090,6 +1102,7 @@ class PromptSession(Generic[_T]):
         bottom_toolbar: Optional[AnyFormattedText] = None,
         style: Optional[BaseStyle] = None,
         color_depth: Optional[ColorDepth] = None,
+        cursor: Optional[CursorShapeConfig] = None,
         include_default_pygments_style: Optional[FilterOrBool] = None,
         style_transformation: Optional[StyleTransformation] = None,
         swap_light_and_dark_colors: Optional[FilterOrBool] = None,
@@ -1145,6 +1158,8 @@ class PromptSession(Generic[_T]):
             self.style = style
         if color_depth is not None:
             self.color_depth = color_depth
+        if cursor is not None:
+            self.cursor = cursor
         if include_default_pygments_style is not None:
             self.include_default_pygments_style = include_default_pygments_style
         if style_transformation is not None:
@@ -1358,6 +1373,7 @@ def prompt(
     bottom_toolbar: Optional[AnyFormattedText] = None,
     style: Optional[BaseStyle] = None,
     color_depth: Optional[ColorDepth] = None,
+    cursor: AnyCursorShapeConfig = None,
     include_default_pygments_style: Optional[FilterOrBool] = None,
     style_transformation: Optional[StyleTransformation] = None,
     swap_light_and_dark_colors: Optional[FilterOrBool] = None,
@@ -1408,6 +1424,7 @@ def prompt(
         bottom_toolbar=bottom_toolbar,
         style=style,
         color_depth=color_depth,
+        cursor=cursor,
         include_default_pygments_style=include_default_pygments_style,
         style_transformation=style_transformation,
         swap_light_and_dark_colors=swap_light_and_dark_colors,

@@ -1,5 +1,6 @@
 from typing import List, TextIO
 
+from prompt_toolkit.cursor_shapes import CursorShape
 from prompt_toolkit.data_structures import Size
 from prompt_toolkit.styles import Attrs
 
@@ -111,6 +112,12 @@ class PlainTextOutput(Output):
         pass
 
     def show_cursor(self) -> None:
+        pass
+
+    def set_cursor_shape(self, cursor_shape: CursorShape) -> None:
+        pass
+
+    def reset_cursor_shape(self) -> None:
         pass
 
     def ask_for_cpr(self) -> None:

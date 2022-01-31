@@ -923,6 +923,30 @@ asterisks (``*`` characters).
     prompt('Enter password: ', is_password=True)
 
 
+Cursor shapes
+-------------
+
+Many terminals support displaying different types of cursor shapes. The most
+common are block, beam or underscore. Either blinking or not. It is possible to
+decide which cursor to display while asking for input, or in case of Vi input
+mode, have a modal prompt for which its cursor shape changes according to the
+input mode.
+
+.. code:: python
+
+    from prompt_toolkit import prompt
+    from prompt_toolkit.cursor_shapes import CursorShape, ModalCursorShapeConfig
+
+    # Several possible values for the `cursor_shape_config` parameter:
+    prompt('>', cursor=CursorShape.BLOCK)
+    prompt('>', cursor=CursorShape.UNDERLINE)
+    prompt('>', cursor=CursorShape.BEAM)
+    prompt('>', cursor=CursorShape.BLINKING_BLOCK)
+    prompt('>', cursor=CursorShape.BLINKING_UNDERLINE)
+    prompt('>', cursor=CursorShape.BLINKING_BEAM)
+    prompt('>', cursor=ModalCursorShapeConfig())
+
+
 Prompt in an `asyncio` application
 ----------------------------------
 
