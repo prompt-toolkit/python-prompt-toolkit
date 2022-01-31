@@ -26,6 +26,7 @@ from typing import (
     cast,
 )
 
+from prompt_toolkit.cursor_shapes import CursorShape
 from prompt_toolkit.data_structures import Size
 from prompt_toolkit.output import Output
 from prompt_toolkit.styles import ANSI_COLOR_NAMES, Attrs
@@ -442,6 +443,11 @@ class Vt100_Output(Output):
             ColorDepth.DEPTH_24_BIT: _EscapeCodeCache(ColorDepth.DEPTH_24_BIT),
         }
 
+        # Keep track of whether the cursor shape was ever changed.
+        # (We don't restore the cursor shape if it was never changed - by
+        # default, we don't change them.)
+        self._cursor_shape_changed = False
+
     @classmethod
     def from_pty(
         cls,
@@ -661,6 +667,31 @@ class Vt100_Output(Output):
 
     def show_cursor(self) -> None:
         self.write_raw("\x1b[?12l\x1b[?25h")  # Stop blinking cursor and show.
+
+    def set_cursor_shape(self, cursor_shape: CursorShape) -> None:
+        if cursor_shape == CursorShape._NEVER_CHANGE:
+            return
+
+        self._cursor_shape_changed = True
+        self.write_raw(
+            {
+                CursorShape.BLOCK: "\x1b[2 q",
+                CursorShape.BEAM: "\x1b[6 q",
+                CursorShape.UNDERLINE: "\x1b[4 q",
+                CursorShape.BLINKING_BLOCK: "\x1b[1 q",
+                CursorShape.BLINKING_BEAM: "\x1b[5 q",
+                CursorShape.BLINKING_UNDERLINE: "\x1b[3 q",
+            }.get(cursor_shape, "")
+        )
+
+    def reset_cursor_shape(self) -> None:
+        "Reset cursor shape."
+        # (Only reset cursor shape, if we ever changed it.)
+        if self._cursor_shape_changed:
+            self._cursor_shape_changed = False
+
+            # Reset cursor shape.
+            self.write_raw("\x1b[0 q")
 
     def flush(self) -> None:
         """

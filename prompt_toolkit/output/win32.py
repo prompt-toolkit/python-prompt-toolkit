@@ -20,6 +20,7 @@ if not SPHINX_AUTODOC_RUNNING:
 from ctypes.wintypes import DWORD, HANDLE
 from typing import Callable, Dict, List, Optional, TextIO, Tuple, Type, TypeVar, Union
 
+from prompt_toolkit.cursor_shapes import CursorShape
 from prompt_toolkit.data_structures import Size
 from prompt_toolkit.styles import ANSI_COLOR_NAMES, Attrs
 from prompt_toolkit.utils import get_cwidth
@@ -496,6 +497,12 @@ class Win32Output(Output):
         pass
 
     def show_cursor(self) -> None:
+        pass
+
+    def set_cursor_shape(self, cursor_shape: CursorShape) -> None:
+        pass
+
+    def reset_cursor_shape(self) -> None:
         pass
 
     @classmethod

@@ -8,6 +8,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Callable, Deque, Dict, Hashable, Optional, Tuple
 
 from prompt_toolkit.application.current import get_app
+from prompt_toolkit.cursor_shapes import CursorShape
 from prompt_toolkit.data_structures import Point, Size
 from prompt_toolkit.filters import FilterOrBool, to_filter
 from prompt_toolkit.formatted_text import AnyFormattedText, to_formatted_text
@@ -385,6 +386,7 @@ class Renderer:
         self._last_screen: Optional[Screen] = None
         self._last_size: Optional[Size] = None
         self._last_style: Optional[str] = None
+        self._last_cursor_shape: Optional[CursorShape] = None
 
         # Default MouseHandlers. (Just empty.)
         self.mouse_handlers = MouseHandlers()
@@ -704,6 +706,16 @@ class Renderer:
         self._last_size = size
         self.mouse_handlers = mouse_handlers
 
+        # Handle cursor shapes.
+        new_cursor_shape = app.cursor.get_cursor_shape(app)
+        if (
+            self._last_cursor_shape is None
+            or self._last_cursor_shape != new_cursor_shape
+        ):
+            output.set_cursor_shape(new_cursor_shape)
+            self._last_cursor_shape = new_cursor_shape
+
+        # Flush buffered output.
         output.flush()
 
         # Set visible windows in layout.
@@ -728,6 +740,8 @@ class Renderer:
         output.erase_down()
         output.reset_attributes()
         output.enable_autowrap()
+        output.reset_cursor_shape()
+
         output.flush()
 
         self.reset(leave_alternate_screen=leave_alternate_screen)
