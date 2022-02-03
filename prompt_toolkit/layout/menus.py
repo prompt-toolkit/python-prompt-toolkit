@@ -277,7 +277,7 @@ class CompletionsMenu(ConditionalContainer):
         scroll_offset: Union[int, Callable[[], int]] = 0,
         extra_filter: FilterOrBool = True,
         display_arrows: FilterOrBool = False,
-        z_index: int = 10 ** 8,
+        z_index: int = 10**8,
     ) -> None:
 
         extra_filter = to_filter(extra_filter)
@@ -622,7 +622,7 @@ class MultiColumnCompletionsMenu(HSplit):
         suggested_max_column_width: int = 30,
         show_meta: FilterOrBool = True,
         extra_filter: FilterOrBool = True,
-        z_index: int = 10 ** 8,
+        z_index: int = 10**8,
     ) -> None:
 
         show_meta = to_filter(show_meta)

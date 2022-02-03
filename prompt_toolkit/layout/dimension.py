@@ -58,7 +58,7 @@ class Dimension:
         if min is None:
             min = 0  # Smallest possible value.
         if max is None:  # 0-values are allowed, so use "is None"
-            max = 1000 ** 10  # Something huge.
+            max = 1000**10  # Something huge.
         if preferred is None:
             preferred = min
         if weight is None:

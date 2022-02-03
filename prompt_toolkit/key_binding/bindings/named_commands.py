@@ -205,7 +205,7 @@ def end_of_history(event: E) -> None:
     """
     Move to the end of the input history, i.e., the line currently being entered.
     """
-    event.current_buffer.history_forward(count=10 ** 100)
+    event.current_buffer.history_forward(count=10**100)
     buff = event.current_buffer
     buff.go_to_history(len(buff._working_lines) - 1)
 

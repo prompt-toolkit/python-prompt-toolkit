@@ -263,7 +263,7 @@ def progress_dialog(
         focusable=False,
         # Prefer this text area as big as possible, to avoid having a window
         # that keeps resizing when we add text to it.
-        height=D(preferred=10 ** 10),
+        height=D(preferred=10**10),
     )
 
     dialog = Dialog(

@@ -4,7 +4,7 @@ Telnet server.
 import asyncio
 import socket
 import sys
-from typing import Awaitable, Callable, List, Optional, Set, TextIO, Tuple, cast, Any
+from typing import Any, Awaitable, Callable, List, Optional, Set, TextIO, Tuple, cast
 
 from prompt_toolkit.application.current import create_app_session, get_app
 from prompt_toolkit.application.run_in_terminal import run_in_terminal
