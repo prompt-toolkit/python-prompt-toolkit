@@ -343,6 +343,7 @@ class Label:
         width: AnyDimension = None,
         dont_extend_height: bool = True,
         dont_extend_width: bool = False,
+        align: Union[WindowAlign, Callable[[], WindowAlign]] = WindowAlign.LEFT,
     ) -> None:
 
         self.text = text
@@ -368,6 +369,7 @@ class Label:
             style="class:label " + style,
             dont_extend_height=dont_extend_height,
             dont_extend_width=dont_extend_width,
+            align=align,
         )
 
     def __pt_container__(self) -> Container:
