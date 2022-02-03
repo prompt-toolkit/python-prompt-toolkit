@@ -10,6 +10,7 @@ from prompt_toolkit.utils import (
 
 from .base import DummyOutput, Output
 from .color_depth import ColorDepth
+from .plain_text import PlainTextOutput
 
 __all__ = [
     "create_output",
@@ -17,7 +18,7 @@ __all__ = [
 
 
 def create_output(
-    stdout: Optional[TextIO] = None, always_prefer_tty: bool = True
+    stdout: Optional[TextIO] = None, always_prefer_tty: bool = False
 ) -> Output:
     """
     Return an :class:`~prompt_toolkit.output.Output` instance for the command
@@ -25,9 +26,13 @@ def create_output(
 
     :param stdout: The stdout object
     :param always_prefer_tty: When set, look for `sys.stderr` if `sys.stdout`
-        is not a TTY. (The prompt_toolkit render output is not meant to be
-        consumed by something other then a terminal, so this is a reasonable
-        default.)
+        is not a TTY. Useful if `sys.stdout` is redirected to a file, but we
+        still want user input and output on the terminal.
+
+        By default, this is `False`. If `sys.stdout` is not a terminal (maybe
+        it's redirected to a file), then a `PlainTextOutput` will be returned.
+        That way, tools like `print_formatted_text` will write plain text into
+        that file.
     """
     # Consider TERM, PROMPT_TOOLKIT_BELL, and PROMPT_TOOLKIT_COLOR_DEPTH
     # environment variables. Notice that PROMPT_TOOLKIT_COLOR_DEPTH value is
@@ -81,6 +86,12 @@ def create_output(
             return Win32Output(stdout, default_color_depth=color_depth_from_env)
     else:
         from .vt100 import Vt100_Output
+
+        # Stdout is not a TTY? Render as plain text.
+        # This is mostly useful if stdout is redirected to a file, and
+        # `print_formatted_text` is used.
+        if not stdout.isatty():
+            return PlainTextOutput(stdout)
 
         return Vt100_Output.from_pty(
             stdout,
