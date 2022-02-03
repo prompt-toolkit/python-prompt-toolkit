@@ -2,6 +2,7 @@ from .application import Application
 from .current import (
     AppSession,
     create_app_session,
+    create_app_session_from_tty,
     get_app,
     get_app_or_none,
     get_app_session,
@@ -17,6 +18,7 @@ __all__ = [
     "AppSession",
     "get_app_session",
     "create_app_session",
+    "create_app_session_from_tty",
     "get_app",
     "get_app_or_none",
     "set_app",
