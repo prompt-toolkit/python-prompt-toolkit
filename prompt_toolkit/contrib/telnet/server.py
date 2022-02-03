@@ -2,9 +2,9 @@
 Telnet server.
 """
 import asyncio
-import contextvars  # Requires Python3.7!
 import socket
-from typing import Awaitable, Callable, List, Optional, Set, TextIO, Tuple, cast
+import sys
+from typing import Awaitable, Callable, List, Optional, Set, TextIO, Tuple, cast, Any
 
 from prompt_toolkit.application.current import create_app_session, get_app
 from prompt_toolkit.application.run_in_terminal import run_in_terminal
@@ -32,6 +32,11 @@ from .protocol import (
     WILL,
     TelnetProtocolParser,
 )
+
+if sys.version_info >= (3, 7):
+    import contextvars  # Requires Python3.7!
+else:
+    contextvars: Any = None
 
 __all__ = [
     "TelnetServer",
