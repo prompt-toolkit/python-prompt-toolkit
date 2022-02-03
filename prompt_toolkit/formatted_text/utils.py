@@ -8,14 +8,27 @@ from typing import Iterable, cast
 
 from prompt_toolkit.utils import get_cwidth
 
-from .base import OneStyleAndTextTuple, StyleAndTextTuples
+from .base import (
+    AnyFormattedText,
+    OneStyleAndTextTuple,
+    StyleAndTextTuples,
+    to_formatted_text,
+)
 
 __all__ = [
+    "to_plain_text",
     "fragment_list_len",
     "fragment_list_width",
     "fragment_list_to_text",
     "split_lines",
 ]
+
+
+def to_plain_text(value: AnyFormattedText) -> str:
+    """
+    Turn any kind of formatted text back into plain text.
+    """
+    return fragment_list_to_text(to_formatted_text(value))
 
 
 def fragment_list_len(fragments: StyleAndTextTuples) -> int:

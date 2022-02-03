@@ -27,6 +27,7 @@ from .utils import (
     fragment_list_to_text,
     fragment_list_width,
     split_lines,
+    to_plain_text,
 )
 
 __all__ = [
@@ -49,4 +50,5 @@ __all__ = [
     "fragment_list_width",
     "fragment_list_to_text",
     "split_lines",
+    "to_plain_text",
 ]
