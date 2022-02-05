@@ -3,6 +3,7 @@ Formatter classes for the progress bar.
 Each progress bar consists of a list of these formatters.
 """
 import datetime
+import math
 import time
 from abc import ABCMeta, abstractmethod
 from typing import TYPE_CHECKING, List, Tuple
@@ -12,9 +13,10 @@ from prompt_toolkit.formatted_text import (
     AnyFormattedText,
     StyleAndTextTuples,
     to_formatted_text,
+    merge_formatted_text,
 )
 from prompt_toolkit.formatted_text.utils import fragment_list_width
-from prompt_toolkit.layout.dimension import AnyDimension, D
+from prompt_toolkit.layout.dimension import AnyDimension, D, to_dimension
 from prompt_toolkit.layout.utils import explode_text_fragments
 from prompt_toolkit.utils import get_cwidth
 
@@ -27,6 +29,8 @@ __all__ = [
     "Label",
     "Percentage",
     "Bar",
+    "Total",
+    "Counter",
     "Progress",
     "TimeElapsed",
     "TimeLeft",
@@ -211,12 +215,15 @@ class Bar(Formatter):
         return D(min=9)
 
 
-class Progress(Formatter):
+class Total(Formatter):
     """
-    Display the progress as text.  E.g. "8/20"
+    Display the total items to compete as text.  E.g. "20"
     """
 
-    template = "<current>{current:>3}</current>/<total>{total:>3}</total>"
+    total_template = "<total>{{total:>{digits}}}</total>"
+
+    def _get_digits(self, n: int) -> int:
+        return int(math.log10(n)) + 1
 
     def format(
         self,
@@ -225,16 +232,71 @@ class Progress(Formatter):
         width: int,
     ) -> AnyFormattedText:
 
-        return HTML(self.template).format(
-            current=progress.items_completed, total=progress.total or "?"
+        return (
+            HTML(self.total_template)
+            .format(digits=self._get_digits(progress.total or 0))
+            .format(total=progress.total or "?")
         )
 
     def get_width(self, progress_bar: "ProgressBar") -> AnyDimension:
-        all_lengths = [
-            len("{0:>3}".format(c.total or "?")) for c in progress_bar.counters
-        ]
-        all_lengths.append(1)
-        return D.exact(max(all_lengths) * 2 + 1)
+        biggest = max(c.total or 0 for c in progress_bar.counters)
+        return D.exact(self._get_digits(biggest))
+
+
+class Counter(Total):
+    """
+    Display the items competed as text.  E.g. "8"
+    """
+
+    current_template = "<current>{{current:>{digits}}}</current>"
+
+    def format(
+        self,
+        progress_bar: "ProgressBar",
+        progress: "ProgressBarCounter[object]",
+        width: int,
+    ) -> AnyFormattedText:
+
+        current = progress.items_completed
+        digits = self._get_digits(progress.total or current)
+        return HTML(self.current_template).format(digits=digits).format(current=current)
+
+    def get_width(self, progress_bar: "ProgressBar") -> AnyDimension:
+        biggest = max(c.total or c.items_completed for c in progress_bar.counters)
+        return D.exact(self._get_digits(biggest))
+
+
+class Progress(Counter):
+    """
+    Display the progress as text.  E.g. "8/20"
+    """
+
+    sep_template = "/"
+
+    def format(
+        self,
+        progress_bar: "ProgressBar",
+        progress: "ProgressBarCounter[object]",
+        width: int,
+    ) -> AnyFormattedText:
+
+        return merge_formatted_text(
+            (
+                Counter.format(self, progress_bar, progress, width),
+                "/",
+                Total.format(self, progress_bar, progress, width),
+            )
+        )
+
+    def get_width(self, progress_bar: "ProgressBar") -> AnyDimension:
+        counter = to_dimension(Counter.get_width(self, progress_bar))
+        sep = len(self.sep_template)
+        total = to_dimension(Total.get_width(self, progress_bar))
+        return D(
+            min=counter.min + sep + total.min,
+            max=counter.max + sep + total.max,
+            preferred=counter.preferred + sep + total.preferred,
+        )
 
 
 def _format_timedelta(timedelta: datetime.timedelta) -> str:
