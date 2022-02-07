@@ -1,5 +1,5 @@
 import functools
-from typing import Any, Callable, List, Optional, Tuple, TypeVar
+from typing import Any, Callable, List, Optional, Sequence, Tuple, TypeVar
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app
@@ -174,7 +174,8 @@ def radiolist_dialog(
     text: AnyFormattedText = "",
     ok_text: str = "Ok",
     cancel_text: str = "Cancel",
-    values: Optional[List[Tuple[_T, AnyFormattedText]]] = None,
+    values: Optional[Sequence[Tuple[_T, AnyFormattedText]]] = None,
+    default: Optional[_T] = None,
     style: Optional[BaseStyle] = None,
 ) -> Application[_T]:
     """
@@ -189,7 +190,7 @@ def radiolist_dialog(
     def ok_handler() -> None:
         get_app().exit(result=radio_list.current_value)
 
-    radio_list = RadioList(values)
+    radio_list = RadioList(values=values, default=default)
 
     dialog = Dialog(
         title=title,
@@ -212,7 +213,8 @@ def checkboxlist_dialog(
     text: AnyFormattedText = "",
     ok_text: str = "Ok",
     cancel_text: str = "Cancel",
-    values: Optional[List[Tuple[_T, AnyFormattedText]]] = None,
+    values: Optional[Sequence[Tuple[_T, AnyFormattedText]]] = None,
+    default_values: Optional[Sequence[_T]] = None,
     style: Optional[BaseStyle] = None,
 ) -> Application[List[_T]]:
     """
@@ -227,7 +229,7 @@ def checkboxlist_dialog(
     def ok_handler() -> None:
         get_app().exit(result=cb_list.current_values)
 
-    cb_list = CheckboxList(values)
+    cb_list = CheckboxList(values=values, default_values=default_values)
 
     dialog = Dialog(
         title=title,
