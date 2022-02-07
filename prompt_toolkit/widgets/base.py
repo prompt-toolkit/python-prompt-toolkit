@@ -686,14 +686,27 @@ class _DialogList(Generic[_T]):
     multiple_selection: bool = False
     show_scrollbar: bool = True
 
-    def __init__(self, values: Sequence[Tuple[_T, AnyFormattedText]]) -> None:
+    def __init__(
+        self,
+        values: Sequence[Tuple[_T, AnyFormattedText]],
+        default_values: List[_T]
+    ) -> None:
         assert len(values) > 0
 
         self.values = values
         # current_values will be used in multiple_selection,
         # current_value will be used otherwise.
-        self.current_values: List[_T] = []
-        self.current_value: _T = values[0][0]
+        candidate: List[_T] = [value for (value, _) in values]
+        self.current_values: List[_T] = [ 
+            default_value
+            for default_value in default_values
+            if (default_value in candidate)
+        ]
+        self.current_value: _T = (
+            default_values[0] 
+            if len(default_values) and default_values[0] in candidate
+            else values[0][0]
+        )
         self._selected_index = 0
 
         # Key bindings.

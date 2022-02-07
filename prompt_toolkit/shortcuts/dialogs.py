@@ -175,6 +175,7 @@ def radiolist_dialog(
     ok_text: str = "Ok",
     cancel_text: str = "Cancel",
     values: Optional[List[Tuple[_T, AnyFormattedText]]] = None,
+    default_values :List[_T] = [],
     style: Optional[BaseStyle] = None,
 ) -> Application[_T]:
     """
@@ -189,7 +190,7 @@ def radiolist_dialog(
     def ok_handler() -> None:
         get_app().exit(result=radio_list.current_value)
 
-    radio_list = RadioList(values)
+    radio_list = RadioList(values=values, default_values = default_values)
 
     dialog = Dialog(
         title=title,
@@ -213,6 +214,7 @@ def checkboxlist_dialog(
     ok_text: str = "Ok",
     cancel_text: str = "Cancel",
     values: Optional[List[Tuple[_T, AnyFormattedText]]] = None,
+    default_values: List[_T] = [],
     style: Optional[BaseStyle] = None,
 ) -> Application[List[_T]]:
     """
@@ -227,7 +229,7 @@ def checkboxlist_dialog(
     def ok_handler() -> None:
         get_app().exit(result=cb_list.current_values)
 
-    cb_list = CheckboxList(values)
+    cb_list = CheckboxList(values = values, default_values = default_values)
 
     dialog = Dialog(
         title=title,
