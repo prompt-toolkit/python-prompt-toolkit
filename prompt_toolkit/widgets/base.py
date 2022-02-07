@@ -687,9 +687,7 @@ class _DialogList(Generic[_T]):
     show_scrollbar: bool = True
 
     def __init__(
-        self,
-        values: Sequence[Tuple[_T, AnyFormattedText]],
-        default_values: List[_T]
+        self, values: Sequence[Tuple[_T, AnyFormattedText]], default_values: List[_T]
     ) -> None:
         assert len(values) > 0
 
