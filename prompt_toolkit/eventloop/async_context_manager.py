@@ -6,7 +6,7 @@ Types have been added to this file, just enough to make Mypy happy.
 # mypy: allow-untyped-defs
 import abc
 from functools import wraps
-from typing import TYPE_CHECKING, AsyncContextManager, AsyncIterator, Callable, TypeVar
+from typing import AsyncContextManager, AsyncIterator, Callable, TypeVar
 
 import _collections_abc
 

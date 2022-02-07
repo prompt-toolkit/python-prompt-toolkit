@@ -51,7 +51,6 @@ from prompt_toolkit.layout.controls import UIContent, UIControl
 from prompt_toolkit.layout.dimension import AnyDimension, D
 from prompt_toolkit.output import ColorDepth, Output
 from prompt_toolkit.styles import BaseStyle
-from prompt_toolkit.utils import in_main_thread
 
 from .formatters import Formatter, create_default_formatters
 

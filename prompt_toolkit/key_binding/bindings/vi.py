@@ -3,7 +3,7 @@ import codecs
 import string
 from enum import Enum
 from itertools import accumulate
-from typing import Callable, Iterable, List, Optional, Tuple, TypeVar, Union, cast
+from typing import Callable, Iterable, List, Optional, Tuple, TypeVar, Union
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import Buffer, indent, reshape_text, unindent
