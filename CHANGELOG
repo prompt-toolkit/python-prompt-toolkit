@@ -1,6 +1,30 @@
 CHANGELOG
 =========
 
+3.0.27: 2022-02-07
+------------------
+
+New features:
+- Support for cursor shapes. The cursor shape for prompts/applications can now
+  be configured, either as a fixed cursor shape, or in case of Vi input mode,
+  according to the current input mode.
+- Handle "cursor forward" command in ANSI formatted text. This makes it
+  possible to render many kinds of generated ANSI art.
+- Accept `align` attribute in `Label` widget.
+- Added `PlainTextOutput`: an output implementation that doesn't render any
+  ANSI escape sequences. This will be used by default when redirecting stdout
+  to a file.
+- Added `create_app_session_from_tty`: a context manager that enforces
+  input/output to go to the current TTY, even if stdin/stdout are attached to
+  pipes.
+- Added `to_plain_text` utility for converting formatted text into plain text.
+
+Fixes:
+- Don't automatically use `sys.stderr` for output when `sys.stdout` is not a
+  TTY, but `sys.stderr` is. The previous behavior was confusing, especially
+  when rendering formatted text to the output, and we expect it to follow
+  redirection.
+
 3.0.26: 2022-01-27
 ------------------
 
