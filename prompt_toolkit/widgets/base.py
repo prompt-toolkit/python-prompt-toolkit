@@ -697,13 +697,13 @@ class _DialogList(Generic[_T]):
         # current_values will be used in multiple_selection,
         # current_value will be used otherwise.
         candidate: List[_T] = [value for (value, _) in values]
-        self.current_values: List[_T] = [ 
+        self.current_values: List[_T] = [
             default_value
             for default_value in default_values
             if (default_value in candidate)
         ]
         self.current_value: _T = (
-            default_values[0] 
+            default_values[0]
             if len(default_values) and default_values[0] in candidate
             else values[0][0]
         )
