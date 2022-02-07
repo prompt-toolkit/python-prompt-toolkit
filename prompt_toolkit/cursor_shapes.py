@@ -13,6 +13,8 @@ __all__ = [
     "CursorShapeConfig",
     "SimpleCursorShapeConfig",
     "ModalCursorShapeConfig",
+    "DynamicCursorShapeConfig",
+    "to_cursor_shape_config",
 ]
 
 

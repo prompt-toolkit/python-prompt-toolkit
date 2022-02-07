@@ -6,24 +6,20 @@ A lot of thanks, regarding outputting of colors, goes to the Pygments project:
 everything has been highly optimized.)
 http://pygments.org/
 """
-import array
 import io
 import os
 import sys
 from typing import (
-    IO,
     Callable,
     Dict,
     Hashable,
     Iterable,
-    Iterator,
     List,
     Optional,
     Sequence,
     Set,
     TextIO,
     Tuple,
-    cast,
 )
 
 from prompt_toolkit.cursor_shapes import CursorShape

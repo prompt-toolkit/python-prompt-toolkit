@@ -29,16 +29,7 @@ import selectors
 import threading
 from asyncio import AbstractEventLoop
 from selectors import BaseSelector, SelectorKey
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    List,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Tuple,
-)
+from typing import TYPE_CHECKING, Any, Callable, List, Mapping, Optional, Tuple
 
 from prompt_toolkit.utils import is_windows
 
@@ -52,7 +43,7 @@ __all__ = [
 ]
 
 if TYPE_CHECKING:
-    from _typeshed import FileDescriptor, FileDescriptorLike
+    from _typeshed import FileDescriptorLike
 
     _EventMask = int
 

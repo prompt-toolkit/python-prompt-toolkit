@@ -1,14 +1,5 @@
 import os
-from ctypes import (
-    ArgumentError,
-    byref,
-    c_char,
-    c_long,
-    c_short,
-    c_uint,
-    c_ulong,
-    pointer,
-)
+from ctypes import ArgumentError, byref, c_char, c_long, c_uint, c_ulong, pointer
 
 from ..utils import SPHINX_AUTODOC_RUNNING
 

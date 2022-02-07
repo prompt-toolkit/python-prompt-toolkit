@@ -41,7 +41,7 @@ Partial matches are possible::
 import re
 from typing import Callable, Dict, Iterable, Iterator, List
 from typing import Match as RegexMatch
-from typing import Optional, Pattern, Tuple, cast
+from typing import Optional, Pattern, Tuple
 
 from .regex_parser import (
     AnyNode,
