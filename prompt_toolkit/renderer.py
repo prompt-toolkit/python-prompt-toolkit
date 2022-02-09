@@ -416,6 +416,8 @@ class Renderer:
             self.output.disable_bracketed_paste()
             self._bracketed_paste_enabled = False
 
+        self.output.reset_cursor_shape()
+
         # NOTE: No need to set/reset cursor key mode here.
 
         # Flush output. `disable_mouse_support` needs to write to stdout.
@@ -740,7 +742,6 @@ class Renderer:
         output.erase_down()
         output.reset_attributes()
         output.enable_autowrap()
-        output.reset_cursor_shape()
 
         output.flush()
 
