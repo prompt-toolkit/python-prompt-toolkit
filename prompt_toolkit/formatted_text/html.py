@@ -1,6 +1,6 @@
 import xml.dom.minidom as minidom
-from typing import Any, List, Tuple, Union
 from string import Formatter
+from typing import Any, List, Tuple, Union
 
 from .base import FormattedText, StyleAndTextTuples
 
@@ -122,7 +122,7 @@ class HTML:
 
 
 class HTMLFormatter(Formatter):
-    def format_field(self, value, format_spec):
+    def format_field(self, value: object, format_spec: str) -> str:
         return html_escape(format(value, format_spec))
 
 
