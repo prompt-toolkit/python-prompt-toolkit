@@ -1,4 +1,5 @@
 import xml.dom.minidom as minidom
+from string import Formatter
 from typing import Any, List, Tuple, Union
 
 from .base import FormattedText, StyleAndTextTuples
@@ -107,11 +108,7 @@ class HTML:
         Like `str.format`, but make sure that the arguments are properly
         escaped.
         """
-        # Escape all the arguments.
-        escaped_args = [html_escape(a) for a in args]
-        escaped_kwargs = {k: html_escape(v) for k, v in kwargs.items()}
-
-        return HTML(self.value.format(*escaped_args, **escaped_kwargs))
+        return HTML(FORMATTER.vformat(self.value, args, kwargs))
 
     def __mod__(self, value: Union[object, Tuple[object, ...]]) -> "HTML":
         """
@@ -122,6 +119,11 @@ class HTML:
 
         value = tuple(html_escape(i) for i in value)
         return HTML(self.value % value)
+
+
+class HTMLFormatter(Formatter):
+    def format_field(self, value: object, format_spec: str) -> str:
+        return html_escape(format(value, format_spec))
 
 
 def html_escape(text: object) -> str:
@@ -136,3 +138,6 @@ def html_escape(text: object) -> str:
         .replace(">", "&gt;")
         .replace('"', "&quot;")
     )
+
+
+FORMATTER = HTMLFormatter()
