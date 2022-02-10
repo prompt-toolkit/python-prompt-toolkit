@@ -110,7 +110,7 @@ class HTML:
         """
         return HTML(FORMATTER.vformat(self.value, args, kwargs))
 
-    def __mod__(self, value: Union[object, Tuple[object, ...]]) -> "HTML":
+    def __mod__(self, value: object) -> "HTML":
         """
         HTML('<b>%s</b>') % value
         """
