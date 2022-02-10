@@ -54,7 +54,7 @@ def main():
                 input_field.text, eval(input_field.text)
             )  # Don't do 'eval' in real code!
         except BaseException as e:
-            output = "\n\n{}".format(e)
+            output = f"\n\n{e}"
         new_text = output_field.text + output
 
         # Add text to output buffer.

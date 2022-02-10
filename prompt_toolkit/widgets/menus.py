@@ -310,13 +310,13 @@ class MenuContainer:
                         if item.text == "-":
                             yield (
                                 style + "class:menu-border",
-                                "{}".format(Border.HORIZONTAL * (menu.width + 3)),
+                                f"{Border.HORIZONTAL * (menu.width + 3)}",
                                 mouse_handler,
                             )
                         else:
                             yield (
                                 style,
-                                " {}".format(item.text).ljust(menu.width + 3),
+                                f" {item.text}".ljust(menu.width + 3),
                                 mouse_handler,
                             )
 

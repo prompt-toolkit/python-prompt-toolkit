@@ -118,7 +118,8 @@ class _CompiledGrammar:
         # input contains some additional characters at the end that don't match the grammar.)
         self._re_prefix_with_trailing_input = [
             re.compile(
-                r"(?:%s)(?P<%s>.*?)$" % (t.rstrip("$"), _INVALID_TRAILING_INPUT), flags
+                r"(?:{})(?P<{}>.*?)$".format(t.rstrip("$"), _INVALID_TRAILING_INPUT),
+                flags,
             )
             for t in self._re_prefix_patterns
         ]
@@ -168,7 +169,7 @@ class _CompiledGrammar:
 
             # A `Variable` wraps the children into a named group.
             elif isinstance(node, Variable):
-                return "(?P<%s>%s)" % (
+                return "(?P<{}>{})".format(
                     create_group_func(node),
                     transform(node.childnode),
                 )
@@ -186,13 +187,13 @@ class _CompiledGrammar:
                         ("" if node.max_repeat is None else str(node.max_repeat)),
                     )
 
-                return "(?:%s)%s%s" % (
+                return "(?:{}){}{}".format(
                     transform(node.childnode),
                     repeat_sign,
                     ("" if node.greedy else "?"),
                 )
             else:
-                raise TypeError("Got %r" % (node,))
+                raise TypeError(f"Got {node!r}")
 
         return transform(root_node)
 
@@ -327,7 +328,7 @@ class _CompiledGrammar:
                 # (Note that we should not append a '?' here. the 'transform'
                 # method will already recursively do that.)
                 for c_str in transform(node.childnode):
-                    yield "(?P<%s>%s)" % (create_group_func(node), c_str)
+                    yield f"(?P<{create_group_func(node)}>{c_str})"
 
             elif isinstance(node, Repeat):
                 # If we have a repetition of 8 times. That would mean that the
@@ -343,7 +344,7 @@ class _CompiledGrammar:
                             repeat_sign = "{,%i}" % (node.max_repeat - 1)
                         else:
                             repeat_sign = "*"
-                        yield "(?:%s)%s%s%s" % (
+                        yield "(?:{}){}{}{}".format(
                             prefix,
                             repeat_sign,
                             ("" if node.greedy else "?"),
@@ -498,9 +499,9 @@ class Variables:
         self._tuples = tuples
 
     def __repr__(self) -> str:
-        return "%s(%s)" % (
+        return "{}({})".format(
             self.__class__.__name__,
-            ", ".join("%s=%r" % (k, v) for k, v, _ in self._tuples),
+            ", ".join(f"{k}={v!r}" for k, v, _ in self._tuples),
         )
 
     def get(self, key: str, default: Optional[str] = None) -> Optional[str]:
@@ -540,7 +541,7 @@ class MatchVariable:
         self.stop = self.slice[1]
 
     def __repr__(self) -> str:
-        return "%s(%r, %r)" % (self.__class__.__name__, self.varname, self.value)
+        return f"{self.__class__.__name__}({self.varname!r}, {self.value!r})"
 
 
 def compile(

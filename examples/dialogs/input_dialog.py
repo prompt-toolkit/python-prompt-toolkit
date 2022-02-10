@@ -10,7 +10,7 @@ def main():
         title="Input dialog example", text="Please type your name:"
     ).run()
 
-    print("Result = {}".format(result))
+    print(f"Result = {result}")
 
 
 if __name__ == "__main__":

@@ -218,7 +218,7 @@ def _get_menu_item_fragments(
     width.
     """
     if is_current_completion:
-        style_str = "class:completion-menu.completion.current %s %s" % (
+        style_str = "class:completion-menu.completion.current {} {}".format(
             completion.style,
             completion.selected_style,
         )

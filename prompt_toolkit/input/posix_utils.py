@@ -71,7 +71,7 @@ class PosixStdinReader:
         try:
             if not select.select([self.stdin_fd], [], [], 0)[0]:
                 return ""
-        except IOError:
+        except OSError:
             # Happens for instance when the file descriptor was closed.
             # (We had this in ptterm, where the FD became ready, a callback was
             # scheduled, but in the meantime another callback closed it already.)

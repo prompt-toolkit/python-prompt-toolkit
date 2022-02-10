@@ -58,7 +58,7 @@ class SearchState:
         self.ignore_case = to_filter(ignore_case)
 
     def __repr__(self) -> str:
-        return "%s(%r, direction=%r, ignore_case=%r)" % (
+        return "{}({!r}, direction={!r}, ignore_case={!r})".format(
             self.__class__.__name__,
             self.text,
             self.direction,

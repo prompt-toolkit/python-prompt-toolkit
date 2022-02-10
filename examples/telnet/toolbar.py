@@ -31,7 +31,7 @@ async def interact(connection):
         "Say something: ", bottom_toolbar=get_toolbar, completer=animal_completer
     )
 
-    connection.send("You said: {}\n".format(result))
+    connection.send(f"You said: {result}\n")
     connection.send("Bye.\n")
 
 

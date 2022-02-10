@@ -106,7 +106,7 @@ class Document:
         # Check cursor position. It can also be right after the end. (Where we
         # insert text.)
         assert cursor_position is None or cursor_position <= len(text), AssertionError(
-            "cursor_position=%r, len_text=%r" % (cursor_position, len(text))
+            f"cursor_position={cursor_position!r}, len_text={len(text)!r}"
         )
 
         # By default, if no cursor position was given, make sure to put the
@@ -137,7 +137,7 @@ class Document:
         # assert self._cache
 
     def __repr__(self) -> str:
-        return "%s(%r, %r)" % (self.__class__.__name__, self.text, self.cursor_position)
+        return f"{self.__class__.__name__}({self.text!r}, {self.cursor_position!r})"
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Document):

@@ -196,14 +196,9 @@ class Priority(Enum):
     MOST_PRECISE = "MOST_PRECISE"
 
 
-# In the latest python verions, we take the dictionary ordering like it is,
-# In older versions, we sort by by precision. If you need to write code that
-# runs on all Python versions, it's best to sort them manually, with the most
-# precise rules at the bottom.
-if sys.version_info >= (3, 6):
-    default_priority = Priority.DICT_KEY_ORDER
-else:
-    default_priority = Priority.MOST_PRECISE
+# We don't support Python versions older than 3.6 anymore, so we can always
+# depend on dictionary ordering. This is the default.
+default_priority = Priority.DICT_KEY_ORDER
 
 
 class Style(BaseStyle):

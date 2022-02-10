@@ -25,7 +25,7 @@ async def interact(connection):
     result = await prompt(message="Say something: ", async_=True)
 
     # Send output.
-    connection.send("You said: {}\n".format(result))
+    connection.send(f"You said: {result}\n")
     connection.send("Bye.\n")
 
 

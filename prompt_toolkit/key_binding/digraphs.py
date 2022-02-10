@@ -1,4 +1,3 @@
-# encoding: utf-8
 """
 Vi Digraphs.
 This is a list of special characters that can be inserted in Vi insert mode by

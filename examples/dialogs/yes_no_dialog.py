@@ -10,7 +10,7 @@ def main():
         title="Yes/No dialog example", text="Do you want to confirm?"
     ).run()
 
-    print("Result = {}".format(result))
+    print(f"Result = {result}")
 
 
 if __name__ == "__main__":

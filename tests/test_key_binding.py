@@ -10,7 +10,7 @@ from prompt_toolkit.layout import Layout, Window
 from prompt_toolkit.output import DummyOutput
 
 
-class Handlers(object):
+class Handlers:
     def __init__(self):
         self.called = []
 

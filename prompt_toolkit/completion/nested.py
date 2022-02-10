@@ -33,7 +33,7 @@ class NestedCompleter(Completer):
         self.ignore_case = ignore_case
 
     def __repr__(self) -> str:
-        return "NestedCompleter(%r, ignore_case=%r)" % (self.options, self.ignore_case)
+        return f"NestedCompleter({self.options!r}, ignore_case={self.ignore_case!r})"
 
     @classmethod
     def from_nested_dict(cls, data: NestedDict) -> "NestedCompleter":
@@ -97,13 +97,11 @@ class NestedCompleter(Completer):
                     cursor_position=document.cursor_position - move_cursor,
                 )
 
-                for c in completer.get_completions(new_document, complete_event):
-                    yield c
+                yield from completer.get_completions(new_document, complete_event)
 
         # No space in the input: behave exactly like `WordCompleter`.
         else:
             completer = WordCompleter(
                 list(self.options.keys()), ignore_case=self.ignore_case
             )
-            for c in completer.get_completions(document, complete_event):
-                yield c
+            yield from completer.get_completions(document, complete_event)

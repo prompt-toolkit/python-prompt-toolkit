@@ -26,7 +26,7 @@ class COORD(Structure):
     ]
 
     def __repr__(self) -> str:
-        return "%s(X=%r, Y=%r, type_x=%r, type_y=%r)" % (
+        return "{}(X={!r}, Y={!r}, type_x={!r}, type_y={!r})".format(
             self.__class__.__name__,
             self.X,
             self.Y,
@@ -195,7 +195,7 @@ class CONSOLE_SCREEN_BUFFER_INFO(Structure):
     ]
 
     def __repr__(self) -> str:
-        return "CONSOLE_SCREEN_BUFFER_INFO(%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r)" % (
+        return "CONSOLE_SCREEN_BUFFER_INFO({!r},{!r},{!r},{!r},{!r},{!r},{!r},{!r},{!r},{!r},{!r})".format(
             self.dwSize.Y,
             self.dwSize.X,
             self.dwCursorPosition.Y,

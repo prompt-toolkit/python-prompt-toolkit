@@ -78,7 +78,7 @@ def to_formatted_text(
     elif callable(value):
         return to_formatted_text(value(), style=style)
     elif auto_convert:
-        result = [("", "{}".format(value))]
+        result = [("", f"{value}")]
     else:
         raise ValueError(
             "No formatted text. Expecting a unicode object, "

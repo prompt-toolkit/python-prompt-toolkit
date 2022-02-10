@@ -138,7 +138,7 @@ class Binding:
             event.app.invalidate()
 
     def __repr__(self) -> str:
-        return "%s(keys=%r, handler=%r)" % (
+        return "{}(keys={!r}, handler={!r})".format(
             self.__class__.__name__,
             self.keys,
             self.handler,
@@ -359,7 +359,7 @@ class KeyBindings(KeyBindingsBase):
             self._clear_cache()
         else:
             # No key binding found for this function. Raise ValueError.
-            raise ValueError("Binding not found: %r" % (function,))
+            raise ValueError(f"Binding not found: {function!r}")
 
     # For backwards-compatibility.
     add_binding = add
@@ -449,7 +449,7 @@ def _parse_key(key: Union[Keys, str]) -> Union[str, Keys]:
 
     # Final validation.
     if len(key) != 1:
-        raise ValueError("Invalid key: %s" % (key,))
+        raise ValueError(f"Invalid key: {key}")
 
     return key
 

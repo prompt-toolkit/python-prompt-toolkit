@@ -12,7 +12,7 @@ def main():
         password=True,
     ).run()
 
-    print("Result = {}".format(result))
+    print(f"Result = {result}")
 
 
 if __name__ == "__main__":

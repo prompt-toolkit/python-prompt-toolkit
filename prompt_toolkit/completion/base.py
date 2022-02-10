@@ -65,13 +65,13 @@ class Completion:
 
     def __repr__(self) -> str:
         if isinstance(self.display, str) and self.display == self.text:
-            return "%s(text=%r, start_position=%r)" % (
+            return "{}(text={!r}, start_position={!r})".format(
                 self.__class__.__name__,
                 self.text,
                 self.start_position,
             )
         else:
-            return "%s(text=%r, start_position=%r, display=%r)" % (
+            return "{}(text={!r}, start_position={!r}, display={!r})".format(
                 self.__class__.__name__,
                 self.text,
                 self.start_position,
@@ -155,7 +155,7 @@ class CompleteEvent:
         self.completion_requested = completion_requested
 
     def __repr__(self) -> str:
-        return "%s(text_inserted=%r, completion_requested=%r)" % (
+        return "{}(text_inserted={!r}, completion_requested={!r})".format(
             self.__class__.__name__,
             self.text_inserted,
             self.completion_requested,
@@ -230,7 +230,7 @@ class ThreadedCompleter(Completer):
             yield completion
 
     def __repr__(self) -> str:
-        return "ThreadedCompleter(%r)" % (self.completer,)
+        return f"ThreadedCompleter({self.completer!r})"
 
 
 class DummyCompleter(Completer):
@@ -274,7 +274,7 @@ class DynamicCompleter(Completer):
             yield completion
 
     def __repr__(self) -> str:
-        return "DynamicCompleter(%r -> %r)" % (self.get_completer, self.get_completer())
+        return f"DynamicCompleter({self.get_completer!r} -> {self.get_completer()!r})"
 
 
 class ConditionalCompleter(Completer):
@@ -291,15 +291,14 @@ class ConditionalCompleter(Completer):
         self.filter = to_filter(filter)
 
     def __repr__(self) -> str:
-        return "ConditionalCompleter(%r, filter=%r)" % (self.completer, self.filter)
+        return f"ConditionalCompleter({self.completer!r}, filter={self.filter!r})"
 
     def get_completions(
         self, document: Document, complete_event: CompleteEvent
     ) -> Iterable[Completion]:
         # Get all completions in a blocking way.
         if self.filter():
-            for c in self.completer.get_completions(document, complete_event):
-                yield c
+            yield from self.completer.get_completions(document, complete_event)
 
     async def get_completions_async(
         self, document: Document, complete_event: CompleteEvent
@@ -326,8 +325,7 @@ class _MergedCompleter(Completer):
     ) -> Iterable[Completion]:
         # Get all completions from the other completers in a blocking way.
         for completer in self.completers:
-            for c in completer.get_completions(document, complete_event):
-                yield c
+            yield from completer.get_completions(document, complete_event)
 
     async def get_completions_async(
         self, document: Document, complete_event: CompleteEvent

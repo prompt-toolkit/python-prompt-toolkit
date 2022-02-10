@@ -135,7 +135,7 @@ class Char:
         __ne__ = _not_equal
 
     def __repr__(self) -> str:
-        return "%s(%r, %r)" % (self.__class__.__name__, self.char, self.style)
+        return f"{self.__class__.__name__}({self.char!r}, {self.style!r})"
 
 
 _CHAR_CACHE: FastDictCache[Tuple[str, str], Char] = FastDictCache(
@@ -318,7 +318,7 @@ class WritePosition:
         self.height = height
 
     def __repr__(self) -> str:
-        return "%s(x=%r, y=%r, width=%r, height=%r)" % (
+        return "{}(x={!r}, y={!r}, width={!r}, height={!r})".format(
             self.__class__.__name__,
             self.xpos,
             self.ypos,

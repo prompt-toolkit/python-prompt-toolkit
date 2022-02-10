@@ -12,7 +12,7 @@ def main():
         buttons=[("Yes", True), ("No", False), ("Maybe...", None)],
     ).run()
 
-    print("Result = {}".format(result))
+    print(f"Result = {result}")
 
 
 if __name__ == "__main__":

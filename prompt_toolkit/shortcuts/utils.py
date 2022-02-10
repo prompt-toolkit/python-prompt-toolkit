@@ -119,7 +119,7 @@ def print_formatted_text(
         # Normal lists which are not instances of `FormattedText` are
         # considered plain text.
         if isinstance(val, list) and not isinstance(val, FormattedText):
-            return to_formatted_text("{0}".format(val))
+            return to_formatted_text(f"{val}")
         return to_formatted_text(val, auto_convert=True)
 
     fragments = []

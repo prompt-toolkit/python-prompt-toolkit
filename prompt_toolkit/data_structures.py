@@ -6,5 +6,11 @@ __all__ = [
 ]
 
 
-Point = NamedTuple("Point", [("x", int), ("y", int)])
-Size = NamedTuple("Size", [("rows", int), ("columns", int)])
+class Point(NamedTuple):
+    x: int
+    y: int
+
+
+class Size(NamedTuple):
+    rows: int
+    columns: int

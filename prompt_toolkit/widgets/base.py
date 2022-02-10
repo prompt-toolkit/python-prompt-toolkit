@@ -433,7 +433,7 @@ class Button:
         width = self.width - (
             get_cwidth(self.left_symbol) + get_cwidth(self.right_symbol)
         )
-        text = ("{{:^{}}}".format(width)).format(self.text)
+        text = (f"{{:^{width}}}").format(self.text)
 
         def handler(mouse_event: MouseEvent) -> None:
             if (
@@ -874,7 +874,7 @@ class Checkbox(CheckboxList[str]):
             self.current_values = []
 
 
-class VerticalLine(object):
+class VerticalLine:
     """
     A simple vertical line with a width of 1.
     """
@@ -943,7 +943,7 @@ class ProgressBar:
     @percentage.setter
     def percentage(self, value: int) -> None:
         self._percentage = value
-        self.label.text = "{0}%".format(value)
+        self.label.text = f"{value}%"
 
     def __pt_container__(self) -> Container:
         return self.container

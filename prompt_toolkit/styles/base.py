@@ -16,20 +16,17 @@ __all__ = [
 
 
 #: Style attributes.
-Attrs = NamedTuple(
-    "Attrs",
-    [
-        ("color", Optional[str]),
-        ("bgcolor", Optional[str]),
-        ("bold", Optional[bool]),
-        ("underline", Optional[bool]),
-        ("strike", Optional[bool]),
-        ("italic", Optional[bool]),
-        ("blink", Optional[bool]),
-        ("reverse", Optional[bool]),
-        ("hidden", Optional[bool]),
-    ],
-)
+class Attrs(NamedTuple):
+    color: Optional[str]
+    bgcolor: Optional[str]
+    bold: Optional[bool]
+    underline: Optional[bool]
+    strike: Optional[bool]
+    italic: Optional[bool]
+    blink: Optional[bool]
+    reverse: Optional[bool]
+    hidden: Optional[bool]
+
 
 """
 :param color: Hexadecimal string. E.g. '000000' or Ansi color name: e.g. 'ansiblue'

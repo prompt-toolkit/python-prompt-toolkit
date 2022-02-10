@@ -99,7 +99,7 @@ class _ConnectionStdout:
     def flush(self) -> None:
         try:
             self._connection.send(b"".join(self._buffer))
-        except socket.error as e:
+        except OSError as e:
             logger.warning("Couldn't send data over socket: %s" % e)
 
         self._buffer = []

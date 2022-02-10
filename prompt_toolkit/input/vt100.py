@@ -137,7 +137,7 @@ class Vt100Input(Input):
         return self.stdin.fileno()
 
     def typeahead_hash(self) -> str:
-        return "fd-%s" % (self._fileno,)
+        return f"fd-{self._fileno}"
 
 
 _current_callbacks: Dict[
