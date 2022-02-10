@@ -103,6 +103,66 @@ def test_ansi_true_color():
     ]
 
 
+def test_ansi_interpolation():
+    # %-style interpolation.
+    value = ANSI("\x1b[1m%s\x1b[0m") % "hello"
+    assert to_formatted_text(value) == [
+        ("bold", "h"),
+        ("bold", "e"),
+        ("bold", "l"),
+        ("bold", "l"),
+        ("bold", "o"),
+    ]
+
+    value = ANSI("\x1b[1m%s\x1b[0m") % ("hello",)
+    assert to_formatted_text(value) == [
+        ("bold", "h"),
+        ("bold", "e"),
+        ("bold", "l"),
+        ("bold", "l"),
+        ("bold", "o"),
+    ]
+
+    value = ANSI("\x1b[32m%s\x1b[45m%s") % ("He", "llo")
+    assert to_formatted_text(value) == [
+        ("ansigreen", "H"),
+        ("ansigreen", "e"),
+        ("ansigreen bg:ansimagenta", "l"),
+        ("ansigreen bg:ansimagenta", "l"),
+        ("ansigreen bg:ansimagenta", "o"),
+    ]
+
+    # Format function.
+    value = ANSI("\x1b[32m{0}\x1b[45m{1}").format("He", "llo")
+    assert to_formatted_text(value) == [
+        ("ansigreen", "H"),
+        ("ansigreen", "e"),
+        ("ansigreen bg:ansimagenta", "l"),
+        ("ansigreen bg:ansimagenta", "l"),
+        ("ansigreen bg:ansimagenta", "o"),
+    ]
+
+    value = ANSI("\x1b[32m{a}\x1b[45m{b}").format(a="He", b="llo")
+    assert to_formatted_text(value) == [
+        ("ansigreen", "H"),
+        ("ansigreen", "e"),
+        ("ansigreen bg:ansimagenta", "l"),
+        ("ansigreen bg:ansimagenta", "l"),
+        ("ansigreen bg:ansimagenta", "o"),
+    ]
+
+    value = ANSI("\x1b[32m{:02d}\x1b[45m{:.3f}").format(3, 3.14159)
+    assert to_formatted_text(value) == [
+        ("ansigreen", "0"),
+        ("ansigreen", "3"),
+        ("ansigreen bg:ansimagenta", "3"),
+        ("ansigreen bg:ansimagenta", "."),
+        ("ansigreen bg:ansimagenta", "1"),
+        ("ansigreen bg:ansimagenta", "4"),
+        ("ansigreen bg:ansimagenta", "2"),
+    ]
+
+
 def test_interpolation():
     value = Template(" {} ").format(HTML("<b>hello</b>"))
 
