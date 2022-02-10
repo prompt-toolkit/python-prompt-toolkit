@@ -260,7 +260,7 @@ class ANSI:
         """
         return ANSI(FORMATTER.vformat(self.value, args, kwargs))
 
-    def __mod__(self, value: Union[object, Tuple[object, ...]]) -> "ANSI":
+    def __mod__(self, value: object) -> "ANSI":
         """
         ANSI('<b>%s</b>') % value
         """

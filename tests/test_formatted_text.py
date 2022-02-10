@@ -105,8 +105,19 @@ def test_ansi_true_color():
 
 def test_ansi_interpolation():
     # %-style interpolation.
-    value = ANSI("\x1b[1m%s\x1b[0m") % "hello"
+    value = ANSI("\x1b[1m%s\x1b[0m") % "hello\x1b"
     assert to_formatted_text(value) == [
+        ("bold", "h"),
+        ("bold", "e"),
+        ("bold", "l"),
+        ("bold", "l"),
+        ("bold", "o"),
+        ("bold", "?"),
+    ]
+
+    value = ANSI("\x1b[1m%s\x1b[0m") % ("\x1bhello",)
+    assert to_formatted_text(value) == [
+        ("bold", "?"),
         ("bold", "h"),
         ("bold", "e"),
         ("bold", "l"),
@@ -114,36 +125,30 @@ def test_ansi_interpolation():
         ("bold", "o"),
     ]
 
-    value = ANSI("\x1b[1m%s\x1b[0m") % ("hello",)
-    assert to_formatted_text(value) == [
-        ("bold", "h"),
-        ("bold", "e"),
-        ("bold", "l"),
-        ("bold", "l"),
-        ("bold", "o"),
-    ]
-
-    value = ANSI("\x1b[32m%s\x1b[45m%s") % ("He", "llo")
+    value = ANSI("\x1b[32m%s\x1b[45m%s") % ("He", "\x1bllo")
     assert to_formatted_text(value) == [
         ("ansigreen", "H"),
         ("ansigreen", "e"),
+        ("ansigreen bg:ansimagenta", "?"),
         ("ansigreen bg:ansimagenta", "l"),
         ("ansigreen bg:ansimagenta", "l"),
         ("ansigreen bg:ansimagenta", "o"),
     ]
 
     # Format function.
-    value = ANSI("\x1b[32m{0}\x1b[45m{1}").format("He", "llo")
+    value = ANSI("\x1b[32m{0}\x1b[45m{1}").format("He\x1b", "llo")
     assert to_formatted_text(value) == [
         ("ansigreen", "H"),
         ("ansigreen", "e"),
+        ("ansigreen", "?"),
         ("ansigreen bg:ansimagenta", "l"),
         ("ansigreen bg:ansimagenta", "l"),
         ("ansigreen bg:ansimagenta", "o"),
     ]
 
-    value = ANSI("\x1b[32m{a}\x1b[45m{b}").format(a="He", b="llo")
+    value = ANSI("\x1b[32m{a}\x1b[45m{b}").format(a="\x1bHe", b="llo")
     assert to_formatted_text(value) == [
+        ("ansigreen", "?"),
         ("ansigreen", "H"),
         ("ansigreen", "e"),
         ("ansigreen bg:ansimagenta", "l"),
@@ -185,18 +190,18 @@ def test_interpolation():
 
 def test_html_interpolation():
     # %-style interpolation.
-    value = HTML("<b>%s</b>") % "hello"
-    assert to_formatted_text(value) == [("class:b", "hello")]
+    value = HTML("<b>%s</b>") % "&hello"
+    assert to_formatted_text(value) == [("class:b", "&hello")]
 
-    value = HTML("<b>%s</b>") % ("hello",)
-    assert to_formatted_text(value) == [("class:b", "hello")]
+    value = HTML("<b>%s</b>") % ("<hello>",)
+    assert to_formatted_text(value) == [("class:b", "<hello>")]
 
-    value = HTML("<b>%s</b><u>%s</u>") % ("hello", "world")
-    assert to_formatted_text(value) == [("class:b", "hello"), ("class:u", "world")]
+    value = HTML("<b>%s</b><u>%s</u>") % ("<hello>", "</world>")
+    assert to_formatted_text(value) == [("class:b", "<hello>"), ("class:u", "</world>")]
 
     # Format function.
-    value = HTML("<b>{0}</b><u>{1}</u>").format("hello", "world")
-    assert to_formatted_text(value) == [("class:b", "hello"), ("class:u", "world")]
+    value = HTML("<b>{0}</b><u>{1}</u>").format("'hello'", '"world"')
+    assert to_formatted_text(value) == [("class:b", "'hello'"), ("class:u", '"world"')]
 
     value = HTML("<b>{a}</b><u>{b}</u>").format(a="hello", b="world")
     assert to_formatted_text(value) == [("class:b", "hello"), ("class:u", "world")]
