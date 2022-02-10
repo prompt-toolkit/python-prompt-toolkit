@@ -336,7 +336,7 @@ class FormattedTextControl(UIControl):
         return self.focusable()
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (self.__class__.__name__, self.text)
+        return f"{self.__class__.__name__}({self.text!r})"
 
     def _get_formatted_text_cached(self) -> StyleAndTextTuples:
         """
@@ -495,14 +495,10 @@ class DummyControl(UIControl):
         return False
 
 
-_ProcessedLine = NamedTuple(
-    "_ProcessedLine",
-    [
-        ("fragments", StyleAndTextTuples),
-        ("source_to_display", Callable[[int], int]),
-        ("display_to_source", Callable[[int], int]),
-    ],
-)
+class _ProcessedLine(NamedTuple):
+    fragments: StyleAndTextTuples
+    source_to_display: Callable[[int], int]
+    display_to_source: Callable[[int], int]
 
 
 class BufferControl(UIControl):
@@ -573,7 +569,7 @@ class BufferControl(UIControl):
         self._last_get_processed_line: Optional[Callable[[int], _ProcessedLine]] = None
 
     def __repr__(self) -> str:
-        return "<%s buffer=%r at %r>" % (self.__class__.__name__, self.buffer, id(self))
+        return f"<{self.__class__.__name__} buffer={self.buffer!r} at {id(self)!r}>"
 
     @property
     def search_buffer_control(self) -> Optional["SearchBufferControl"]:

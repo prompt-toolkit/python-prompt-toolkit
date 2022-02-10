@@ -40,8 +40,7 @@ class GrammarCompleter(Completer):
                 self._get_completions_for_match(m, complete_event)
             )
 
-            for c in completions:
-                yield c
+            yield from completions
 
     def _get_completions_for_match(
         self, match: Match, complete_event: CompleteEvent

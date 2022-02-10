@@ -13,8 +13,7 @@ def data():
     A generator that produces items. len() doesn't work here, so the progress
     bar can't estimate the time it will take.
     """
-    for i in range(1000):
-        yield i
+    yield from range(1000)
 
 
 def main():

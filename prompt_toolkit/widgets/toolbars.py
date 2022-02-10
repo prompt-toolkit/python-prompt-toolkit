@@ -352,7 +352,7 @@ class ValidationToolbar:
                 )
 
                 if show_position:
-                    text = "%s (line=%s column=%s)" % (
+                    text = "{} (line={} column={})".format(
                         buff.validation_error.message,
                         row + 1,
                         column + 1,

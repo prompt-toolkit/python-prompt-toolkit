@@ -80,7 +80,7 @@ class MouseEvent:
         self.modifiers = modifiers
 
     def __repr__(self) -> str:
-        return "MouseEvent(%r,%r,%r,%r)" % (
+        return "MouseEvent({!r},{!r},{!r},{!r})".format(
             self.position,
             self.event_type,
             self.button,

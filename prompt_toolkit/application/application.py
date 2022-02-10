@@ -583,8 +583,7 @@ class Application(Generic[_AppResult]):
         # (All controls are able to invalidate themselves.)
         def gather_events() -> Iterable[Event[object]]:
             for c in self.layout.find_all_controls():
-                for ev in c.get_invalidate_events():
-                    yield ev
+                yield from c.get_invalidate_events()
 
         self._invalidate_events = list(gather_events())
 
@@ -959,7 +958,7 @@ class Application(Generic[_AppResult]):
                 # but don't use logger. (This works better on Python 2.)
                 print("\nUnhandled exception in event loop:")
                 print(formatted_tb)
-                print("Exception %s" % (context.get("exception"),))
+                print("Exception {}".format(context.get("exception")))
 
                 await _do_wait_for_enter("Press ENTER to continue...")
 
@@ -1256,10 +1255,8 @@ class Application(Generic[_AppResult]):
 
         if attrs_for_style:
             return sorted(
-                [
-                    re.sub(r"\s+", " ", style_str).strip()
-                    for style_str in attrs_for_style.keys()
-                ]
+                re.sub(r"\s+", " ", style_str).strip()
+                for style_str in attrs_for_style.keys()
             )
 
         return []

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # prompt_toolkit documentation build configuration file, created by
 # sphinx-quickstart on Thu Jul 31 14:17:08 2014.

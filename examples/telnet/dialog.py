@@ -18,7 +18,7 @@ async def interact(connection):
         title="Yes/no dialog demo", text="Press yes or no"
     ).run_async()
 
-    connection.send("You said: {}\n".format(result))
+    connection.send(f"You said: {result}\n")
     connection.send("Bye.\n")
 
 

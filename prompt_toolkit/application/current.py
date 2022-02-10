@@ -53,7 +53,7 @@ class AppSession:
         self.app: Optional["Application[Any]"] = None
 
     def __repr__(self) -> str:
-        return "AppSession(app=%r)" % (self.app,)
+        return f"AppSession(app={self.app!r})"
 
     @property
     def input(self) -> "Input":

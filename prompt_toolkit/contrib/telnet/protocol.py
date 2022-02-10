@@ -122,7 +122,7 @@ class TelnetProtocolParser:
             # NOTE: the first parameter of struct.unpack should be
             # a 'str' object. Both on Py2/py3. This crashes on OSX
             # otherwise.
-            columns, rows = struct.unpack(str("!HH"), data)
+            columns, rows = struct.unpack("!HH", data)
             self.size_received_callback(rows, columns)
         else:
             logger.warning("Wrong number of NAWS bytes")

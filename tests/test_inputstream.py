@@ -4,7 +4,7 @@ from prompt_toolkit.input.vt100_parser import Vt100Parser
 from prompt_toolkit.keys import Keys
 
 
-class _ProcessorMock(object):
+class _ProcessorMock:
     def __init__(self):
         self.keys = []
 

@@ -32,7 +32,7 @@ def flush_stdout(stdout: TextIO, data: str, write_binary: bool) -> None:
                 stdout.write(data)
 
             stdout.flush()
-    except IOError as e:
+    except OSError as e:
         if e.args and e.args[0] == errno.EINTR:
             # Interrupted system call. Can happen in case of a window
             # resize signal. (Just ignore. The resize handler will render

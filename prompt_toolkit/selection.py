@@ -53,7 +53,7 @@ class SelectionState:
         self.shift_mode = True
 
     def __repr__(self) -> str:
-        return "%s(original_cursor_position=%r, type=%r)" % (
+        return "{}(original_cursor_position={!r}, type={!r})".format(
             self.__class__.__name__,
             self.original_cursor_position,
             self.type,

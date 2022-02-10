@@ -18,7 +18,7 @@ def main():
         text="Please select a color:",
     ).run()
 
-    print("Result = {}".format(result))
+    print(f"Result = {result}")
 
     # With HTML.
     result = radiolist_dialog(
@@ -32,7 +32,7 @@ def main():
         text="Please select a color:",
     ).run()
 
-    print("Result = {}".format(result))
+    print(f"Result = {result}")
 
 
 if __name__ == "__main__":

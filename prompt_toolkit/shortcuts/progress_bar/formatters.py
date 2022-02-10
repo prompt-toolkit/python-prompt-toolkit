@@ -231,7 +231,7 @@ class Progress(Formatter):
 
     def get_width(self, progress_bar: "ProgressBar") -> AnyDimension:
         all_lengths = [
-            len("{0:>3}".format(c.total or "?")) for c in progress_bar.counters
+            len("{:>3}".format(c.total or "?")) for c in progress_bar.counters
         ]
         all_lengths.append(1)
         return D.exact(max(all_lengths) * 2 + 1)
@@ -241,7 +241,7 @@ def _format_timedelta(timedelta: datetime.timedelta) -> str:
     """
     Return hh:mm:ss, or mm:ss if the amount of hours is zero.
     """
-    result = "{0}".format(timedelta).split(".")[0]
+    result = f"{timedelta}".split(".")[0]
     if result.startswith("0:"):
         result = result[2:]
     return result
@@ -327,7 +327,7 @@ class IterationsPerSecond(Formatter):
 
     def get_width(self, progress_bar: "ProgressBar") -> AnyDimension:
         all_values = [
-            len("{0:.2f}".format(c.items_completed / c.time_elapsed.total_seconds()))
+            len(f"{c.items_completed / c.time_elapsed.total_seconds():.2f}")
             for c in progress_bar.counters
         ]
         if all_values:

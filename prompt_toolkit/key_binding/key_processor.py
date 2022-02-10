@@ -1,4 +1,3 @@
-# *** encoding: utf-8 ***
 """
 An :class:`~.KeyProcessor` receives callbacks for the keystrokes parsed from
 the input in the :class:`~prompt_toolkit.inputstream.InputStream` instance.
@@ -50,7 +49,7 @@ class KeyPress:
         self.data = data
 
     def __repr__(self) -> str:
-        return "%s(key=%r, data=%r)" % (self.__class__.__name__, self.key, self.data)
+        return f"{self.__class__.__name__}(key={self.key!r}, data={self.data!r})"
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, KeyPress):
@@ -137,9 +136,9 @@ class KeyProcessor:
         # Note that we transform it into a `set`, because we don't care about
         # the actual bindings and executing it more than once doesn't make
         # sense. (Many key bindings share the same filter.)
-        filters = set(
+        filters = {
             b.filter for b in self._bindings.get_bindings_starting_with_keys(keys)
-        )
+        }
 
         # When any key binding is active, return True.
         return any(f() for f in filters)
@@ -450,7 +449,7 @@ class KeyPressEvent:
         self._app = get_app()
 
     def __repr__(self) -> str:
-        return "KeyPressEvent(arg=%r, key_sequence=%r, is_repeat=%r)" % (
+        return "KeyPressEvent(arg={!r}, key_sequence={!r}, is_repeat={!r})".format(
             self.arg,
             self.key_sequence,
             self.is_repeat,
@@ -519,7 +518,7 @@ class KeyPressEvent:
         elif current is None:
             result = data
         else:
-            result = "%s%s" % (current, data)
+            result = f"{current}{data}"
 
         self.key_processor.arg = result
 

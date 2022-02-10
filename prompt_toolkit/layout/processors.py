@@ -201,8 +201,8 @@ class HighlightSearchProcessor(Processor):
         ) = transformation_input.unpack()
 
         search_text = self._get_search_text(buffer_control)
-        searchmatch_fragment = " class:%s " % (self._classname,)
-        searchmatch_current_fragment = " class:%s " % (self._classname_current,)
+        searchmatch_fragment = f" class:{self._classname} "
+        searchmatch_current_fragment = f" class:{self._classname_current} "
 
         if search_text and not get_app().is_done:
             # For each search match, replace the style string.
@@ -526,7 +526,7 @@ class BeforeInput(Processor):
         )
 
     def __repr__(self) -> str:
-        return "BeforeInput(%r, %r)" % (self.text, self.style)
+        return f"BeforeInput({self.text!r}, {self.style!r})"
 
 
 class ShowArg(BeforeInput):
@@ -580,7 +580,7 @@ class AfterInput(Processor):
             return Transformation(fragments=ti.fragments)
 
     def __repr__(self) -> str:
-        return "%s(%r, style=%r)" % (self.__class__.__name__, self.text, self.style)
+        return f"{self.__class__.__name__}({self.text!r}, style={self.style!r})"
 
 
 class AppendAutoSuggestion(Processor):
@@ -940,7 +940,7 @@ class ConditionalProcessor(Processor):
             return Transformation(transformation_input.fragments)
 
     def __repr__(self) -> str:
-        return "%s(processor=%r, filter=%r)" % (
+        return "{}(processor={!r}, filter={!r})".format(
             self.__class__.__name__,
             self.processor,
             self.filter,

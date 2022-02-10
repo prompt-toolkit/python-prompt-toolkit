@@ -70,7 +70,7 @@ class Layout:
         self.visible_windows: List[Window] = []  # List of `Window` objects.
 
     def __repr__(self) -> str:
-        return "Layout(%r, current_window=%r)" % (self.container, self.current_window)
+        return f"Layout({self.container!r}, current_window={self.current_window!r})"
 
     def find_all_windows(self) -> Generator[Window, None, None]:
         """
@@ -103,9 +103,7 @@ class Layout:
                 if isinstance(control, BufferControl) and control.buffer.name == value:
                     self.focus(control)
                     return
-            raise ValueError(
-                "Couldn't find Buffer in the current layout: %r." % (value,)
-            )
+            raise ValueError(f"Couldn't find Buffer in the current layout: {value!r}.")
 
         # BufferControl by buffer object.
         elif isinstance(value, Buffer):
@@ -113,9 +111,7 @@ class Layout:
                 if isinstance(control, BufferControl) and control.buffer == value:
                     self.focus(control)
                     return
-            raise ValueError(
-                "Couldn't find Buffer in the current layout: %r." % (value,)
-            )
+            raise ValueError(f"Couldn't find Buffer in the current layout: {value!r}.")
 
         # Focus UIControl.
         elif isinstance(value, UIControl):
@@ -164,7 +160,7 @@ class Layout:
                     return
 
                 raise ValueError(
-                    "Invalid value. Container cannot be focused: %r" % (value,)
+                    f"Invalid value. Container cannot be focused: {value!r}"
                 )
 
     def has_focus(self, value: FocusableElement) -> bool:
@@ -342,8 +338,7 @@ class Layout:
         """
         Walk through all the layout nodes (and their children) and yield them.
         """
-        for i in walk(self.container):
-            yield i
+        yield from walk(self.container)
 
     def walk_through_modal_area(self) -> Iterable[Container]:
         """
@@ -356,8 +351,7 @@ class Layout:
         while not root.is_modal() and root in self._child_to_parent:
             root = self._child_to_parent[root]
 
-        for container in walk(root):
-            yield container
+        yield from walk(root)
 
     def update_parents_relations(self) -> None:
         """

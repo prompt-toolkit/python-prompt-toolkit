@@ -15,9 +15,7 @@ def main():
     ) as pb:
 
         for i in pb(range(6), label="Main task"):
-            for j in pb(
-                range(200), label="Subtask <%s>" % (i + 1,), remove_when_done=True
-            ):
+            for j in pb(range(200), label=f"Subtask <{i + 1}>", remove_when_done=True):
                 time.sleep(0.01)
 
 

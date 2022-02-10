@@ -30,7 +30,7 @@ class HTML:
 
     def __init__(self, value: str) -> None:
         self.value = value
-        document = minidom.parseString("<html-root>%s</html-root>" % (value,))
+        document = minidom.parseString(f"<html-root>{value}</html-root>")
 
         result: StyleAndTextTuples = []
         name_stack: List[str] = []
@@ -98,7 +98,7 @@ class HTML:
         self.formatted_text = FormattedText(result)
 
     def __repr__(self) -> str:
-        return "HTML(%r)" % (self.value,)
+        return f"HTML({self.value!r})"
 
     def __pt_formatted_text__(self) -> StyleAndTextTuples:
         return self.formatted_text
@@ -130,7 +130,7 @@ def html_escape(text: object) -> str:
     # The string interpolation functions also take integers and other types.
     # Convert to string first.
     if not isinstance(text, str):
-        text = "{}".format(text)
+        text = f"{text}"
 
     return (
         text.replace("&", "&amp;")

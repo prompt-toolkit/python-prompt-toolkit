@@ -185,8 +185,8 @@ def do_open_file():
             try:
                 with open(path, "rb") as f:
                     text_field.text = f.read().decode("utf-8", errors="ignore")
-            except IOError as e:
-                show_message("Error", "{}".format(e))
+            except OSError as e:
+                show_message("Error", f"{e}")
 
     ensure_future(coroutine())
 

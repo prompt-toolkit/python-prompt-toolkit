@@ -19,7 +19,7 @@ def worker(set_percentage, log_text):
     percentage = 0
     for dirpath, dirnames, filenames in os.walk("../.."):
         for f in filenames:
-            log_text("{} / {}\n".format(dirpath, f))
+            log_text(f"{dirpath} / {f}\n")
             set_percentage(percentage + 1)
             percentage += 2
             time.sleep(0.1)

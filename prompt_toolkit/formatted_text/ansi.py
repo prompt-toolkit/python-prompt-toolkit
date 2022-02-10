@@ -207,7 +207,7 @@ class ANSI:
                 # True colors.
                 if n == 2 and len(attrs) >= 3:
                     try:
-                        color_str = "#%02x%02x%02x" % (
+                        color_str = "#{:02x}{:02x}{:02x}".format(
                             attrs.pop(),
                             attrs.pop(),
                             attrs.pop(),
@@ -247,7 +247,7 @@ class ANSI:
         return " ".join(result)
 
     def __repr__(self) -> str:
-        return "ANSI(%r)" % (self.value,)
+        return f"ANSI({self.value!r})"
 
     def __pt_formatted_text__(self) -> StyleAndTextTuples:
         return self._formatted_text
@@ -272,7 +272,7 @@ _bg_colors = {v: k for k, v in BG_ANSI_COLORS.items()}
 _256_colors = {}
 
 for i, (r, g, b) in enumerate(_256_colors_table.colors):
-    _256_colors[i] = "#%02x%02x%02x" % (r, g, b)
+    _256_colors[i] = f"#{r:02x}{g:02x}{b:02x}"
 
 
 def ansi_escape(text: str) -> str:

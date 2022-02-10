@@ -211,7 +211,7 @@ class ThreadedHistory(History):
         self.history.store_string(string)
 
     def __repr__(self) -> str:
-        return "ThreadedHistory(%r)" % (self.history,)
+        return f"ThreadedHistory({self.history!r})"
 
 
 class InMemoryHistory(History):
@@ -231,8 +231,7 @@ class InMemoryHistory(History):
             self._storage = list(history_strings)
 
     def load_history_strings(self) -> Iterable[str]:
-        for item in self._storage[::-1]:
-            yield item
+        yield from self._storage[::-1]
 
     def store_string(self, string: str) -> None:
         self._storage.append(string)
@@ -261,7 +260,7 @@ class FileHistory(History):
 
     def __init__(self, filename: str) -> None:
         self.filename = filename
-        super(FileHistory, self).__init__()
+        super().__init__()
 
     def load_history_strings(self) -> Iterable[str]:
         strings: List[str] = []

@@ -54,7 +54,7 @@ class AnyNode(Node):
         return AnyNode(self.children + [other_node])
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (self.__class__.__name__, self.children)
+        return f"{self.__class__.__name__}({self.children!r})"
 
 
 class NodeSequence(Node):
@@ -70,7 +70,7 @@ class NodeSequence(Node):
         return NodeSequence(self.children + [other_node])
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (self.__class__.__name__, self.children)
+        return f"{self.__class__.__name__}({self.children!r})"
 
 
 class Regex(Node):
@@ -84,7 +84,7 @@ class Regex(Node):
         self.regex = regex
 
     def __repr__(self) -> str:
-        return "%s(/%s/)" % (self.__class__.__name__, self.regex)
+        return f"{self.__class__.__name__}(/{self.regex}/)"
 
 
 class Lookahead(Node):
@@ -97,7 +97,7 @@ class Lookahead(Node):
         self.negative = negative
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (self.__class__.__name__, self.childnode)
+        return f"{self.__class__.__name__}({self.childnode!r})"
 
 
 class Variable(Node):
@@ -114,7 +114,7 @@ class Variable(Node):
         self.varname = varname
 
     def __repr__(self) -> str:
-        return "%s(childnode=%r, varname=%r)" % (
+        return "{}(childnode={!r}, varname={!r})".format(
             self.__class__.__name__,
             self.childnode,
             self.varname,
@@ -135,7 +135,7 @@ class Repeat(Node):
         self.greedy = greedy
 
     def __repr__(self) -> str:
-        return "%s(childnode=%r)" % (self.__class__.__name__, self.childnode)
+        return f"{self.__class__.__name__}(childnode={self.childnode!r})"
 
 
 def tokenize_regex(input: str) -> List[str]:
@@ -261,7 +261,7 @@ def parse_regex(regex_tokens: List[str]) -> Node:
 
             elif t.startswith("{"):
                 # TODO: implement!
-                raise Exception("{}-style repetition not yet supported".format(t))
+                raise Exception(f"{t}-style repetition not yet supported")
 
             elif t.startswith("(?"):
                 raise Exception("%r not supported" % t)

@@ -1,4 +1,3 @@
-# encoding: utf-8
 """
 These are almost end-to-end tests. They create a Prompt, feed it with some
 input and check the result.
