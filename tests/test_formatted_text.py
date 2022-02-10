@@ -141,8 +141,8 @@ def test_html_interpolation():
     value = HTML("<b>{a}</b><u>{b}</u>").format(a="hello", b="world")
     assert to_formatted_text(value) == [("class:b", "hello"), ("class:u", "world")]
 
-    value = HTML("<b>{:d}</b><u>{:f}</u>").format(3, 3.14)
-    assert to_formatted_text(value) == [("class:b", "3"), ("class:u", "3.140000")]
+    value = HTML("<b>{:02d}</b><u>{:.3f}</u>").format(3, 3.14159)
+    assert to_formatted_text(value) == [("class:b", "03"), ("class:u", "3.142")]
 
 
 def test_merge_formatted_text():
