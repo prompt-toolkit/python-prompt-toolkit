@@ -1,6 +1,17 @@
 CHANGELOG
 =========
 
+3.0.28: 2022-02-11
+------------------
+
+New features:
+- Support format specifiers for HTML and ANSI formatted text.
+- Accept defaults for checkbox and radio list, and their corresponding dialogs.
+
+Fixes:
+- Fix resetting of cursor shape after the application terminates.
+
+
 3.0.27: 2022-02-07
 ------------------
 
