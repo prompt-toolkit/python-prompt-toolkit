@@ -13,6 +13,7 @@ from .deduplicate import DeduplicateCompleter
 from .filesystem import ExecutableCompleter, PathCompleter
 from .fuzzy_completer import FuzzyCompleter, FuzzyWordCompleter
 from .nested import NestedCompleter
+from .nested_meta import NestedMetaCompleter, NestedMetaData
 from .word_completer import WordCompleter
 
 __all__ = [
@@ -34,6 +35,8 @@ __all__ = [
     "FuzzyWordCompleter",
     # Nested.
     "NestedCompleter",
+    "NestedMetaCompleter",
+    "NestedMetaData",
     # Word completer.
     "WordCompleter",
     # Deduplicate
