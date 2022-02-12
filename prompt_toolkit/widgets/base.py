@@ -104,6 +104,8 @@ class Border:
     TOP_RIGHT = "\u2510"
     BOTTOM_LEFT = "\u2514"
     BOTTOM_RIGHT = "\u2518"
+    SPLIT_LEFT = "\u251c"
+    SPLIT_RIGHT = "\u2524"
 
 
 class TextArea:
