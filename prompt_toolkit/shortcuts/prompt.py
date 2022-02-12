@@ -331,6 +331,8 @@ class PromptSession(Generic[_T]):
     :param input: `Input` object. (Note that the preferred way to change the
         input/output is by creating an `AppSession`.)
     :param output: `Output` object.
+    :param enable_undo_redo: :class:`~prompt_toolkit.filters.Filter` or `bool`.
+        When False, undo and redo stacks will never get populated.
     """
 
     _fields = (
@@ -371,6 +373,7 @@ class PromptSession(Generic[_T]):
         "reserve_space_for_menu",
         "tempfile_suffix",
         "tempfile",
+        "enable_undo_redo",
     )
 
     def __init__(
@@ -417,6 +420,7 @@ class PromptSession(Generic[_T]):
         refresh_interval: float = 0,
         input: Optional[Input] = None,
         output: Optional[Output] = None,
+        enable_undo_redo: FilterOrBool = True,
     ) -> None:
 
         history = history or InMemoryHistory()
@@ -467,6 +471,7 @@ class PromptSession(Generic[_T]):
         self.reserve_space_for_menu = reserve_space_for_menu
         self.tempfile_suffix = tempfile_suffix
         self.tempfile = tempfile
+        self.enable_undo_redo = enable_undo_redo
 
         # Create buffers, layout and Application.
         self.history = history
@@ -528,6 +533,7 @@ class PromptSession(Generic[_T]):
             accept_handler=accept,
             tempfile_suffix=lambda: to_str(self.tempfile_suffix or ""),
             tempfile=lambda: to_str(self.tempfile or ""),
+            enable_undo_redo=self.enable_undo_redo,
         )
 
     def _create_search_buffer(self) -> Buffer:
