@@ -202,7 +202,7 @@ def load_mouse_bindings() -> KeyBindings:
             mouse_event, x, y = map(ord, event.data[3:])
 
             # TODO: Is it possible to add modifiers here?
-            mouse_button, mouse_event_type, mouse_modifier = typical_mouse_events[
+            mouse_button, mouse_event_type, mouse_modifiers = typical_mouse_events[
                 mouse_event
             ]
 
