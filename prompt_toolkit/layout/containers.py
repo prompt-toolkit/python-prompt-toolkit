@@ -3,7 +3,7 @@ Container for the layout.
 (Containers can contain other containers or user interface controls.)
 """
 from abc import ABCMeta, abstractmethod
-from enum import Enum
+from enum import Enum, auto
 from functools import partial
 from typing import (
     TYPE_CHECKING,
@@ -741,6 +741,17 @@ class VSplit(_Split):
             )
 
 
+class Relative(Enum):
+    """ Relative positioning constants used with xcursor and ycursor """
+
+    # Not relative to cursor
+    NONE = auto()
+    # Position before the cursor
+    BEFORE = auto()
+    # Position after the cursor
+    AFTER = auto()
+
+
 class FloatContainer(Container):
     """
     Container which can contain another container for the background, as well
@@ -895,7 +906,7 @@ class FloatContainer(Container):
             xpos = write_position.width - fl.right - fl_width
             width = fl_width
         # Near x position of cursor.
-        elif fl.xcursor:
+        elif fl.xcursor is Relative.AFTER:
             if fl_width is None:
                 width = fl.content.preferred_width(write_position.width).preferred
                 width = min(write_position.width, width)
@@ -905,6 +916,17 @@ class FloatContainer(Container):
             xpos = cursor_position.x
             if xpos + width > write_position.width:
                 xpos = max(0, write_position.width - width)
+        # Position before the cursor
+        elif fl.xcursor is Relative.BEFORE:
+            if fl_width is None:
+                width = fl.content.preferred_width(write_position.width).preferred
+                width = min(write_position.width, width)
+            else:
+                width = fl_width
+
+            xpos = max(0, cursor_position.x - width)
+            # Ensure we aren't wider than the space we have
+            width = min(width, cursor_position.x)
         # Only width given -> center horizontally.
         elif fl_width:
             xpos = int((write_position.width - fl_width) / 2)
@@ -936,7 +958,7 @@ class FloatContainer(Container):
             ypos = write_position.height - fl_height - fl.bottom
             height = fl_height
         # Near cursor.
-        elif fl.ycursor:
+        elif fl.ycursor == Relative.AFTER:
             ypos = cursor_position.y + (0 if fl.allow_cover_cursor else 1)
 
             if fl_height is None:
@@ -957,7 +979,18 @@ class FloatContainer(Container):
                     # Otherwise, fit the float above the cursor.
                     height = min(height, cursor_position.y)
                     ypos = cursor_position.y - height
+        elif fl.ycursor == Relative.BEFORE:
+            if fl_height is None:
+                height = fl.content.preferred_height(
+                    width, write_position.height
+                ).preferred
+            else:
+                height = fl_height
 
+            ypos = max(0, cursor_position.y - height) + (
+                1 if fl.allow_cover_cursor else 0
+            )
+            height = min(height, cursor_position.y)
         # Only height given -> center vertically.
         elif fl_height:
             ypos = int((write_position.height - fl_height) / 2)
@@ -1061,8 +1094,8 @@ class Float:
         left: Optional[int] = None,
         width: Optional[Union[int, Callable[[], int]]] = None,
         height: Optional[Union[int, Callable[[], int]]] = None,
-        xcursor: bool = False,
-        ycursor: bool = False,
+        xcursor: Union[bool, Relative] = Relative.NONE,
+        ycursor: Union[bool, Relative] = Relative.NONE,
         attach_to_window: Optional[AnyContainer] = None,
         hide_when_covering_content: bool = False,
         allow_cover_cursor: bool = False,
@@ -1071,6 +1104,16 @@ class Float:
     ) -> None:
 
         assert z_index >= 1
+
+        if isinstance(xcursor, bool) and xcursor:
+            xcursor = Relative.AFTER
+        elif isinstance(xcursor, bool):
+            xcursor = Relative.NONE
+
+        if isinstance(ycursor, bool) and ycursor:
+            ycursor = Relative.AFTER
+        elif isinstance(ycursor, bool):
+            ycursor = Relative.NONE
 
         self.left = left
         self.right = right

@@ -671,6 +671,27 @@ directly to the ``rprompt`` argument of the
 :func:`~prompt_toolkit.shortcuts.prompt` function. It does not have to be a
 callable.
 
+Asking for input from a toolbar
+-------------------------------
+
+The :func:`~prompt_toolkit.shortcuts.prompt` function as out of the box support
+to place the input prompt in a toolbar at the bottom of the screen similar to
+how the ``tmux`` ":" shortcut prompts by default in the toolbar.
+
+Setting the `prompt_in_toolbar` argument to ``True`` will enable this feature.
+This option also automatically turns on ``erase_when_done`` to clear the toolbar
+after completion.
+
+.. code:: python
+    
+    from prompt_toolkit import prompt
+
+    answer = prompt(": ", prompt_in_toolbar=True)
+
+This sort of prompt does not work well with readline-like completers due to the
+floating nature of the toolbar. If you are implementing completers for a
+toolbar-based prompt, it is recommended to use one of the default floating
+completers.
 
 Vi input mode
 -------------

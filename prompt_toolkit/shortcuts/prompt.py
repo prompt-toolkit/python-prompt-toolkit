@@ -89,8 +89,8 @@ from prompt_toolkit.key_binding.key_bindings import (
 )
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.keys import Keys
-from prompt_toolkit.layout import Float, FloatContainer, HSplit, Window
-from prompt_toolkit.layout.containers import ConditionalContainer, WindowAlign
+from prompt_toolkit.layout import DummyControl, Float, FloatContainer, HSplit, Window
+from prompt_toolkit.layout.containers import ConditionalContainer, Relative, WindowAlign
 from prompt_toolkit.layout.controls import (
     BufferControl,
     FormattedTextControl,
@@ -330,6 +330,8 @@ class PromptSession(Generic[_T]):
         every so many seconds.
     :param input: `Input` object. (Note that the preferred way to change the
         input/output is by creating an `AppSession`.)
+    :param prompt_in_toolbar: `bool`. Whether to display the prompt in a
+        toolbar at the bottom of the screen (automatically enables erase_when_done).
     :param output: `Output` object.
     """
 
@@ -417,6 +419,7 @@ class PromptSession(Generic[_T]):
         refresh_interval: float = 0,
         input: Optional[Input] = None,
         output: Optional[Output] = None,
+        prompt_in_toolbar: Optional[bool] = False,
     ) -> None:
 
         history = history or InMemoryHistory()
@@ -429,6 +432,13 @@ class PromptSession(Generic[_T]):
         # Store all settings in this class.
         self._input = input
         self._output = output
+
+        # New option: allow this prompt to display as a bottom toolbar. By
+        # default, erase the content on exit so that the toolbar doesn't stick
+        # around.
+        self.prompt_in_toolbar = prompt_in_toolbar
+        if self.prompt_in_toolbar:
+            erase_when_done = True
 
         # Store attributes.
         # (All except 'editing_mode'.)
@@ -616,18 +626,31 @@ class PromptSession(Generic[_T]):
             preview_search=True,
         )
 
+        # Only use "_get_default_buffer_control_height" if we are not on in the
+        # toolbar. This function creates padding, which needs to be above the
+        # prompt, if we are in the toolbar.
         default_buffer_window = Window(
             default_buffer_control,
-            height=self._get_default_buffer_control_height,
+            height=self._get_default_buffer_control_height
+            if not self.prompt_in_toolbar
+            else Dimension(),
             get_line_prefix=partial(
                 self._get_line_prefix, get_prompt_text_2=get_prompt_text_2
             ),
             wrap_lines=dyncond("wrap_lines"),
+            # Added to match the "toolbar" above if we specified a toolbar
+            # prompt
+            style="class:bottom-toolbar" if self.prompt_in_toolbar else "",
+            dont_extend_height=bool(self.prompt_in_toolbar),
         )
 
         @Condition
         def multi_column_complete_style() -> bool:
             return self.complete_style == CompleteStyle.MULTI_COLUMN
+
+        @Condition
+        def is_prompt_in_toolbar() -> bool:
+            return bool(self.prompt_in_toolbar)
 
         # Build the layout.
         layout = HSplit(
@@ -636,6 +659,19 @@ class PromptSession(Generic[_T]):
                 FloatContainer(
                     HSplit(
                         [
+                            # This control fills the output so that our toolbar
+                            # prompt ends up on the last line of the terminal.
+                            # We also set height to get_default_buffer_control_height
+                            # here to create padding above the prompt if needed.
+                            ConditionalContainer(
+                                Window(
+                                    DummyControl(),
+                                    height=self._get_default_buffer_control_height
+                                    if self.prompt_in_toolbar
+                                    else Dimension(),
+                                ),
+                                is_prompt_in_toolbar,
+                            ),
                             ConditionalContainer(
                                 Window(
                                     FormattedTextControl(get_prompt_text_1),
@@ -666,7 +702,9 @@ class PromptSession(Generic[_T]):
                         #       rectangular due to the meta-text below the menu.
                         Float(
                             xcursor=True,
-                            ycursor=True,
+                            ycursor=Relative.BEFORE
+                            if self.prompt_in_toolbar
+                            else Relative.AFTER,
                             transparent=True,
                             content=CompletionsMenu(
                                 max_height=16,
@@ -677,7 +715,9 @@ class PromptSession(Generic[_T]):
                         ),
                         Float(
                             xcursor=True,
-                            ycursor=True,
+                            ycursor=Relative.BEFORE
+                            if self.prompt_in_toolbar
+                            else Relative.AFTER,
                             transparent=True,
                             content=MultiColumnCompletionsMenu(
                                 show_meta=True,
@@ -1398,6 +1438,7 @@ def prompt(
     enable_open_in_editor: Optional[FilterOrBool] = None,
     tempfile_suffix: Optional[Union[str, Callable[[], str]]] = None,
     tempfile: Optional[Union[str, Callable[[], str]]] = None,
+    prompt_in_toolbar: Optional[bool] = False,
     # Following arguments are specific to the current `prompt()` call.
     default: str = "",
     accept_default: bool = False,
@@ -1409,7 +1450,9 @@ def prompt(
     """
     # The history is the only attribute that has to be passed to the
     # `PromptSession`, it can't be passed into the `prompt()` method.
-    session: PromptSession[str] = PromptSession(history=history)
+    session: PromptSession[str] = PromptSession(
+        history=history, prompt_in_toolbar=prompt_in_toolbar
+    )
 
     return session.prompt(
         message,
