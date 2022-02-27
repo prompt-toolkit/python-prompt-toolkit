@@ -121,6 +121,7 @@ class Application(Generic[_AppResult]):
     :param key_bindings:
         :class:`~prompt_toolkit.key_binding.KeyBindingsBase` instance for
         the key bindings.
+    :param exit_on_key: (str|tuple) auto-bind key to exit the application
     :param clipboard: :class:`~prompt_toolkit.clipboard.Clipboard` to use.
     :param full_screen: When True, run the application on the alternate screen buffer.
     :param color_depth: Any :class:`~.ColorDepth` value, a callable that
@@ -200,6 +201,7 @@ class Application(Generic[_AppResult]):
         include_default_pygments_style: FilterOrBool = True,
         style_transformation: Optional[StyleTransformation] = None,
         key_bindings: Optional[KeyBindingsBase] = None,
+        exit_on_key: Optional[Union[str, tuple]] = None,
         clipboard: Optional[Clipboard] = None,
         full_screen: bool = False,
         color_depth: Union[
@@ -249,6 +251,8 @@ class Application(Generic[_AppResult]):
 
         # Key bindings.
         self.key_bindings = key_bindings
+        self.exit_on_key = (exit_on_key,) if type(exit_on_key) is str else exit_on_key
+        self._merge_exit_key_binding()
         self._default_bindings = load_key_bindings()
         self._page_navigation_bindings = load_page_navigation_bindings()
 
@@ -348,6 +352,20 @@ class Application(Generic[_AppResult]):
 
         # Trigger initialize callback.
         self.reset()
+
+    def _merge_exit_key_binding(self) -> None:
+        if self.exit_on_key is None:
+            return
+
+        kb = KeyBindings()
+        kb.add(*self.exit_on_key)(handle_exit_on_key)
+
+        if self.key_bindings is None:
+            self.key_bindings = kb
+        else:
+            self.key_bindings = merge_key_bindings([kb, self.key_bindings])
+
+        return
 
     def _create_merged_style(self, include_default_pygments_style: Filter) -> BaseStyle:
         """
@@ -1426,3 +1444,11 @@ def attach_winch_signal_handler(
                 previous_winch_handler._callback,
                 *previous_winch_handler._args,
             )
+
+
+def handle_exit_on_key(event: KeyPressEvent) -> None:
+    """
+    Exit application function, to be used with a key binding
+    """
+    event.app.exit()
+    return

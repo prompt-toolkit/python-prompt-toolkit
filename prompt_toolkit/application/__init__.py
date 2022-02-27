@@ -1,4 +1,4 @@
-from .application import Application
+from .application import Application, handle_exit_on_key
 from .current import (
     AppSession,
     create_app_session,
@@ -14,6 +14,7 @@ from .run_in_terminal import in_terminal, run_in_terminal
 __all__ = [
     # Application.
     "Application",
+    "handle_exit_on_key",
     # Current.
     "AppSession",
     "get_app_session",

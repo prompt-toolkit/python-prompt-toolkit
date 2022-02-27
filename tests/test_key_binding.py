@@ -21,14 +21,17 @@ class Handlers:
         return func
 
 
-def set_dummy_app():
+def set_dummy_app(**kwargs):
     """
     Return a context manager that makes sure that this dummy application is
     active. This is important, because we need an `Application` with
     `is_done=False` flag, otherwise no keys will be processed.
     """
     app = Application(
-        layout=Layout(Window()), output=DummyOutput(), input=create_pipe_input()
+        layout=Layout(Window()),
+        output=DummyOutput(),
+        input=create_pipe_input(),
+        **kwargs,
     )
     return set_app(app)
 
