@@ -2583,10 +2583,26 @@ class Window(Container):
             return
 
         if self.vertical_scroll < info.content_height - info.window_height:
+            should_scroll = True
+        elif self.allow_scroll_beyond_bottom() and self.vertical_scroll < info.content_height - 1:
+            should_scroll = True
+        elif self.vertical_scroll == info.content_height - 1:
+            should_scroll = False
+        else:
+            # Cycle through remaining lines for a line with more than one line
+            height = 0
+            for line in range(self.vertical_scroll, info.content_height):
+                height += info.get_height_for_line(line)
+                if height > info.window_height:
+                    should_scroll = True
+                    break
+            else:
+                should_scroll = False
+
+        if should_scroll:
+            self.vertical_scroll += 1
             if info.cursor_position.y <= info.configured_scroll_offsets.top:
                 self.content.move_cursor_down()
-
-            self.vertical_scroll += 1
 
     def _scroll_up(self) -> None:
         "Scroll window up."
