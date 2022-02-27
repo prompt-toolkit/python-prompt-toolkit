@@ -13,7 +13,7 @@ from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.formatted_text import AnyFormattedText, to_formatted_text
 from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output.vt100 import Vt100_Output
-from prompt_toolkit.renderer import print_formatted_text as print_formatted_text
+from prompt_toolkit.renderer import print_formatted_text
 from prompt_toolkit.styles import BaseStyle, DummyStyle
 
 from .log import logger

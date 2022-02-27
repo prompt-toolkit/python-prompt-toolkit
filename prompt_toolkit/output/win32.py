@@ -160,12 +160,10 @@ class Win32Output(Output):
         if _DEBUG_RENDER_OUTPUT:
             self.LOG.write(("%r" % func.__name__).encode("utf-8") + b"\n")
             self.LOG.write(
-                b"     " + ", ".join(["%r" % i for i in a]).encode("utf-8") + b"\n"
+                b"     " + ", ".join("%r" % i for i in a).encode("utf-8") + b"\n"
             )
             self.LOG.write(
-                b"     "
-                + ", ".join(["%r" % type(i) for i in a]).encode("utf-8")
-                + b"\n"
+                b"     " + ", ".join("%r" % type(i) for i in a).encode("utf-8") + b"\n"
             )
             self.LOG.flush()
 
