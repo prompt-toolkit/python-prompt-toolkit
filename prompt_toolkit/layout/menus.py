@@ -251,7 +251,7 @@ def _trim_formatted_text(
         result = []  # Text fragments.
         remaining_width = max_width - 3
 
-        for style_and_ch in explode_text_fragments(formatted_text):
+        for style_and_ch in explode_text_fragments(formatted_text)[::-1]:
             ch_width = get_cwidth(style_and_ch[1])
 
             if ch_width <= remaining_width:
@@ -262,7 +262,7 @@ def _trim_formatted_text(
 
         result.append(("", "..."))
 
-        return result, max_width - remaining_width
+        return result[::-1], max_width - remaining_width
     else:
         return formatted_text, width
 
