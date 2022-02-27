@@ -179,9 +179,9 @@ def _create_more_session(message: str = "--MORE--") -> "PromptSession[bool]":
 
     bindings = KeyBindings()
 
-    @bindings.add(" ")
     @bindings.add("y")
     @bindings.add("Y")
+    @bindings.add(Keys.Space)
     @bindings.add(Keys.ControlJ)
     @bindings.add(Keys.ControlM)
     @bindings.add(Keys.ControlI)  # Tab.
