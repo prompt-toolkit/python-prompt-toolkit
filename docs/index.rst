@@ -49,7 +49,9 @@ Have a look at :ref:`the gallery <gallery>` to get an idea of what is possible.
 Getting started
 ---------------
 
-Go to :ref:`getting started <getting_started>` and build your first prompt.
+Go to :ref:`getting started <getting_started>` and build your first prompt. 
+Issues are tracked `on the Github project
+<https://github.com/prompt-toolkit/python-prompt-toolkit>`_.
 
 
 Thanks to:
