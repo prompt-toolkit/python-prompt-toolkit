@@ -900,6 +900,7 @@ class PromptSession(Generic[_T]):
         accept_default: bool = False,
         pre_run: Optional[Callable[[], None]] = None,
         set_exception_handler: bool = True,
+        handle_sigint: bool = True,
         in_thread: bool = False,
     ) -> _T:
         """
@@ -1028,10 +1029,12 @@ class PromptSession(Generic[_T]):
         # dumb prompt.
         if self._output is None and is_dumb_terminal():
             with self._dumb_prompt(self.message) as dump_app:
-                return dump_app.run(in_thread=in_thread)
+                return dump_app.run(in_thread=in_thread, handle_sigint=handle_sigint)
 
         return self.app.run(
-            set_exception_handler=set_exception_handler, in_thread=in_thread
+            set_exception_handler=set_exception_handler,
+            in_thread=in_thread,
+            handle_sigint=handle_sigint,
         )
 
     @contextmanager
@@ -1132,6 +1135,7 @@ class PromptSession(Generic[_T]):
         accept_default: bool = False,
         pre_run: Optional[Callable[[], None]] = None,
         set_exception_handler: bool = True,
+        handle_sigint: bool = True,
     ) -> _T:
 
         if message is not None:
@@ -1219,9 +1223,11 @@ class PromptSession(Generic[_T]):
         # dumb prompt.
         if self._output is None and is_dumb_terminal():
             with self._dumb_prompt(self.message) as dump_app:
-                return await dump_app.run_async()
+                return await dump_app.run_async(handle_sigint=handle_sigint)
 
-        return await self.app.run_async(set_exception_handler=set_exception_handler)
+        return await self.app.run_async(
+            set_exception_handler=set_exception_handler, handle_sigint=handle_sigint
+        )
 
     def _add_pre_run_callables(
         self, pre_run: Optional[Callable[[], None]], accept_default: bool
