@@ -935,7 +935,11 @@ class Application(Generic[_AppResult]):
             set_event_loop(loop)
 
         return loop.run_until_complete(
-            self.run_async(pre_run=pre_run, set_exception_handler=set_exception_handler)
+            self.run_async(
+                pre_run=pre_run,
+                set_exception_handler=set_exception_handler,
+                handle_sigint=handle_sigint,
+            )
         )
 
     def _handle_exception(
