@@ -1,5 +1,5 @@
 import sys
-from typing import Optional, TextIO
+from typing import ContextManager, Optional, TextIO
 
 from prompt_toolkit.utils import is_windows
 
@@ -48,16 +48,24 @@ def create_input(
         return Vt100Input(stdin)
 
 
-def create_pipe_input() -> PipeInput:
+def create_pipe_input() -> ContextManager[PipeInput]:
     """
     Create an input pipe.
     This is mostly useful for unit testing.
+
+    Usage::
+
+        with create_pipe_input() as input:
+            input.send_text('inputdata')
+
+    Breaking change: In prompt_toolkit 3.0.28 and earlier, this was returning
+    the `PipeInput` directly, rather than through a context manager.
     """
     if is_windows():
         from .win32_pipe import Win32PipeInput
 
-        return Win32PipeInput()
+        return Win32PipeInput.create()
     else:
         from .posix_pipe import PosixPipeInput
 
-        return PosixPipeInput()
+        return PosixPipeInput.create()

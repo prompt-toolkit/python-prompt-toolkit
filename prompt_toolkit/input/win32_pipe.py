@@ -1,6 +1,7 @@
+from contextlib import contextmanager
 from ctypes import windll
 from ctypes.wintypes import HANDLE
-from typing import Callable, ContextManager, List
+from typing import Callable, ContextManager, Iterator, List
 
 from prompt_toolkit.eventloop.win32 import create_win32_event
 
@@ -31,7 +32,7 @@ class Win32PipeInput(_Win32InputBase, PipeInput):
 
     _id = 0
 
-    def __init__(self) -> None:
+    def __init__(self, _event: HANDLE) -> None:
         super().__init__()
         # Event (handle) for registering this input in the event loop.
         # This event is set when there is data available to read from the pipe.
@@ -49,6 +50,15 @@ class Win32PipeInput(_Win32InputBase, PipeInput):
         # Identifier for every PipeInput for the hash.
         self.__class__._id += 1
         self._id = self.__class__._id
+
+    @classmethod
+    @contextmanager
+    def create(cls) -> Iterator["Win32PipeInput"]:
+        event = create_win32_event()
+        try:
+            yield Win32PipeInput(_event=event)
+        finally:
+            windll.kernel32.CloseHandle(event)
 
     @property
     def closed(self) -> bool:
@@ -87,7 +97,9 @@ class Win32PipeInput(_Win32InputBase, PipeInput):
         self._buffer = []
 
         # Reset event.
-        windll.kernel32.ResetEvent(self._event)
+        if not self._closed:
+            # (If closed, the event should not reset.)
+            windll.kernel32.ResetEvent(self._event)
 
         return result
 
@@ -111,6 +123,9 @@ class Win32PipeInput(_Win32InputBase, PipeInput):
 
     def send_text(self, text: str) -> None:
         "Send text to the input."
+        if self._closed:
+            raise ValueError("Attempt to write into a closed pipe.")
+
         # Pass it through our vt100 parser.
         self.vt100_parser.feed(text)
 
@@ -124,9 +139,9 @@ class Win32PipeInput(_Win32InputBase, PipeInput):
         return DummyContext()
 
     def close(self) -> None:
-        "Close pipe handles."
-        windll.kernel32.CloseHandle(self._event)
+        "Close write-end of the pipe."
         self._closed = True
+        windll.kernel32.SetEvent(self._event)
 
     def typeahead_hash(self) -> str:
         """

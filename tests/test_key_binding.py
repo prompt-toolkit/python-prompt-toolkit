@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 import pytest
 
 from prompt_toolkit.application import Application
@@ -21,16 +23,21 @@ class Handlers:
         return func
 
 
+@contextmanager
 def set_dummy_app():
     """
     Return a context manager that makes sure that this dummy application is
     active. This is important, because we need an `Application` with
     `is_done=False` flag, otherwise no keys will be processed.
     """
-    app = Application(
-        layout=Layout(Window()), output=DummyOutput(), input=create_pipe_input()
-    )
-    return set_app(app)
+    with create_pipe_input() as pipe_input:
+        app = Application(
+            layout=Layout(Window()),
+            output=DummyOutput(),
+            input=pipe_input,
+        )
+        with set_app(app):
+            yield
 
 
 @pytest.fixture
