@@ -20,6 +20,7 @@ from typing import (
 from prompt_toolkit.eventloop import get_event_loop
 
 from ..key_binding import KeyPress
+from ..utils import DummyContext
 from .base import Input
 from .posix_utils import PosixStdinReader
 from .vt100_parser import Vt100Parser
@@ -46,7 +47,9 @@ class Vt100Input(Input):
         # (Idle reports stdin to be a TTY, but fileno() is not implemented.)
         try:
             # This should not raise, but can return 0.
-            stdin.fileno()
+            fileno = stdin.fileno()
+        except ValueError:
+            raise EOFError  # stdin closed?
         except io.UnsupportedOperation as e:
             if "idlelib.run" in sys.modules:
                 raise io.UnsupportedOperation(
@@ -74,10 +77,10 @@ class Vt100Input(Input):
 
         # Create a backup of the fileno(). We want this to work even if the
         # underlying file is closed, so that `typeahead_hash()` keeps working.
-        self._fileno = stdin.fileno()
+        self._fileno = fileno
 
         self._buffer: List[KeyPress] = []  # Buffer to collect the Key objects.
-        self.stdin_reader = PosixStdinReader(self._fileno, encoding=stdin.encoding)
+        self.stdin_reader = PosixStdinReader(fileno, encoding=stdin.encoding)
         self.vt100_parser = Vt100Parser(
             lambda key_press: self._buffer.append(key_press)
         )
@@ -125,16 +128,40 @@ class Vt100Input(Input):
 
     @property
     def closed(self) -> bool:
-        return self.stdin_reader.closed
+        # See: https://github.com/prompt-toolkit/ptpython/issues/463
+        # For ptpython, if the user does `sys.stdin.close()`, then
+        # `stdin_reader` will not yet be closed, but `stdin` will be closed.
+        # After this, `stdin.fileno()` and `stdin.read()` will both raise
+        # `ValueError`.
+        return self.stdin.closed or self.stdin_reader.closed
 
     def raw_mode(self) -> ContextManager[None]:
-        return raw_mode(self.stdin.fileno())
+        try:
+            fileno = self.stdin.fileno()
+        except ValueError:
+            # Stdin closed?
+            return DummyContext()
+
+        return raw_mode(fileno)
 
     def cooked_mode(self) -> ContextManager[None]:
-        return cooked_mode(self.stdin.fileno())
+        try:
+            fileno = self.stdin.fileno()
+        except ValueError:
+            # Stdin closed?
+            return DummyContext()
+
+        return cooked_mode(fileno)
 
     def fileno(self) -> int:
-        return self.stdin.fileno()
+        """
+        Return file descriptor.
+        Raises `EOFError` when the input is closed.
+        """
+        try:
+            return self.stdin.fileno()
+        except ValueError:
+            raise EOFError
 
     def typeahead_hash(self) -> str:
         return f"fd-{self._fileno}"
