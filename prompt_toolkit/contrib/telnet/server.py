@@ -137,6 +137,7 @@ class TelnetConnection:
         self._closed = False
         self._ready = asyncio.Event()
         self.vt100_output = None
+        self._task = None
 
         # Create "Output" object.
         self.size = Size(rows=40, columns=79)
@@ -186,6 +187,9 @@ class TelnetConnection:
                 # Connection closed by client.
                 logger.info("Connection closed by client. %r %r" % self.addr)
                 self.close()
+                # to abort the prompt app
+                if self._task:
+                    self._task.cancel()
 
         # Add reader.
         loop = get_event_loop()
@@ -196,7 +200,9 @@ class TelnetConnection:
             await self._ready.wait()
             with create_app_session(input=self.vt100_input, output=self.vt100_output):
                 self.context = contextvars.copy_context()
-                await self.interact(self)
+                self._task = asyncio.create_task(self.interact(self))
+                await self._task
+                self._task = None
         except Exception as e:
             print("Got %s" % type(e).__name__, e)
             import traceback
