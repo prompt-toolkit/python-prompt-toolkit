@@ -1901,34 +1901,55 @@ class Window(Container):
         # Render and copy margins.
         move_x = 0
 
-        def render_margin(m: Margin, width: int) -> UIContent:
+        def render_margin(
+            m: Margin, width: int
+        ) -> Tuple[UIContent, Callable[[MouseEvent], object]]:
             "Render margin. Return `Screen`."
             # Retrieve margin fragments.
             fragments = m.create_margin(render_info, width, write_position.height)
 
             # Turn it into a UIContent object.
+            margin_control = FormattedTextControl(fragments)
+
             # already rendered those fragments using this size.)
-            return FormattedTextControl(fragments).create_content(
-                width + 1, write_position.height
+            return (
+                margin_control.create_content(width + 1, write_position.height),
+                margin_control.mouse_handler,
             )
 
         for m, width in zip(self.left_margins, left_margin_widths):
             if width > 0:  # (ConditionalMargin returns a zero width. -- Don't render.)
                 # Create screen for margin.
-                margin_content = render_margin(m, width)
+                margin_content, margin_mouse_handler = render_margin(m, width)
 
                 # Copy and shift X.
-                self._copy_margin(margin_content, screen, write_position, move_x, width)
+                self._copy_margin(
+                    margin_content,
+                    margin_mouse_handler,
+                    screen,
+                    mouse_handlers,
+                    write_position,
+                    move_x,
+                    width,
+                )
                 move_x += width
 
         move_x = write_position.width - sum(right_margin_widths)
 
         for m, width in zip(self.right_margins, right_margin_widths):
             # Create screen for margin.
-            margin_content = render_margin(m, width)
+            margin_content, margin_mouse_handler = render_margin(m, width)
 
             # Copy and shift X.
-            self._copy_margin(margin_content, screen, write_position, move_x, width)
+            self._copy_margin(
+                margin_content,
+                margin_mouse_handler,
+                screen,
+                mouse_handlers,
+                write_position,
+                move_x,
+                width,
+            )
             move_x += width
 
         # Apply 'self.style'
@@ -2307,7 +2328,9 @@ class Window(Container):
     def _copy_margin(
         self,
         margin_content: UIContent,
+        margin_mouse_handler: Callable[[MouseEvent], "NotImplementedOrNone"],
         new_screen: Screen,
+        mouse_handlers: MouseHandlers,
         write_position: WritePosition,
         move_x: int,
         width: int,
@@ -2320,6 +2343,21 @@ class Window(Container):
 
         margin_write_position = WritePosition(xpos, ypos, width, write_position.height)
         self._copy_body(margin_content, new_screen, margin_write_position, 0, width)
+
+        def _wrap_handler(mouse_event: MouseEvent) -> "None":
+            mouse_event.position = Point(
+                mouse_event.position.x - xpos,
+                mouse_event.position.y - ypos,
+            )
+            margin_mouse_handler(mouse_event)
+
+        mouse_handlers.set_mouse_handler_for_range(
+            x_min=margin_write_position.xpos,
+            x_max=margin_write_position.xpos + margin_write_position.width,
+            y_min=margin_write_position.ypos,
+            y_max=margin_write_position.ypos + margin_write_position.height,
+            handler=_wrap_handler,
+        )
 
     def _scroll(self, ui_content: UIContent, width: int, height: int) -> None:
         """
