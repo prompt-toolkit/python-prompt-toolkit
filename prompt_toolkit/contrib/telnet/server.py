@@ -87,6 +87,7 @@ class _ConnectionStdout:
         self._connection = connection
         self._errors = "strict"
         self._buffer: List[bytes] = []
+        self._closed = False
 
     def write(self, data: str) -> None:
         data = data.replace("\n", "\r\n")
@@ -98,11 +99,15 @@ class _ConnectionStdout:
 
     def flush(self) -> None:
         try:
-            self._connection.send(b"".join(self._buffer))
+            if not self._closed:
+                self._connection.send(b"".join(self._buffer))
         except OSError as e:
             logger.warning("Couldn't send data over socket: %s" % e)
 
         self._buffer = []
+
+    def close(self) -> None:
+        self._closed = True
 
     @property
     def encoding(self) -> str:
@@ -137,6 +142,7 @@ class TelnetConnection:
         self._closed = False
         self._ready = asyncio.Event()
         self.vt100_output = None
+        self._task: Any = None
 
         # Create "Output" object.
         self.size = Size(rows=40, columns=79)
@@ -186,6 +192,9 @@ class TelnetConnection:
                 # Connection closed by client.
                 logger.info("Connection closed by client. %r %r" % self.addr)
                 self.close()
+                # to abort the prompt app
+                if self._task:
+                    self._task.cancel()
 
         # Add reader.
         loop = get_event_loop()
@@ -196,7 +205,10 @@ class TelnetConnection:
             await self._ready.wait()
             with create_app_session(input=self.vt100_input, output=self.vt100_output):
                 self.context = contextvars.copy_context()
-                await self.interact(self)
+                self._task = get_event_loop().create_task(self.interact(self))
+                if self._task:
+                    await self._task
+                    self._task = None
         except Exception as e:
             print("Got %s" % type(e).__name__, e)
             import traceback
@@ -222,6 +234,7 @@ class TelnetConnection:
             self.vt100_input.close()
             get_event_loop().remove_reader(self.conn)
             self.conn.close()
+            self.stdout.close()
 
     def send(self, formatted_text: AnyFormattedText) -> None:
         """
