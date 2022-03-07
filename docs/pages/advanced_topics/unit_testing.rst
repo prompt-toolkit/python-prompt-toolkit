@@ -49,9 +49,7 @@ In the following example we use a
     from prompt_toolkit.output import DummyOutput
 
     def test_prompt_session():
-        inp = create_pipe_input()
-
-        try:
+        with create_pipe_input() as inp:
             inp.send_text("hello\n")
             session = PromptSession(
                 input=inp,
@@ -59,8 +57,6 @@ In the following example we use a
             )
 
             result = session.prompt()
-        finally:
-            inp.close()
 
         assert result == "hello"
 
@@ -116,12 +112,9 @@ single fixture that does it for every test. Something like this:
 
     @pytest.fixture(autouse=True, scope="function")
     def mock_input():
-        pipe_input = create_pipe_input()
-        try:
+        with create_pipe_input() as pipe_input:
             with create_app_session(input=pipe_input, output=DummyOutput()):
                 yield pipe_input
-        finally:
-            pipe_input.close()
 
 
 Type checking

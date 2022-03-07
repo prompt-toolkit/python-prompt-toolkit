@@ -9,6 +9,7 @@ from prompt_toolkit.key_binding import KeyPress
 
 __all__ = [
     "Input",
+    "PipeInput",
     "DummyInput",
 ]
 

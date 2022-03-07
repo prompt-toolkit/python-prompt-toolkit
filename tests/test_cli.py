@@ -45,9 +45,7 @@ def _feed_cli_with_input(
     if check_line_ending:
         assert text.endswith("\r")
 
-    inp = create_pipe_input()
-
-    try:
+    with create_pipe_input() as inp:
         inp.send_text(text)
         session = PromptSession(
             input=inp,
@@ -61,9 +59,6 @@ def _feed_cli_with_input(
 
         result = session.prompt()
         return session.default_buffer.document, session.app
-
-    finally:
-        inp.close()
 
 
 def test_simple_text_input():
@@ -933,15 +928,12 @@ def test_accept_default():
     """
     Test `prompt(accept_default=True)`.
     """
-    inp = create_pipe_input()
+    with create_pipe_input() as inp:
+        session = PromptSession(input=inp, output=DummyOutput())
+        result = session.prompt(default="hello", accept_default=True)
+        assert result == "hello"
 
-    session = PromptSession(input=inp, output=DummyOutput())
-    result = session.prompt(default="hello", accept_default=True)
-    assert result == "hello"
-
-    # Test calling prompt() for a second time. (We had an issue where the
-    # prompt reset between calls happened at the wrong time, breaking this.)
-    result = session.prompt(default="world", accept_default=True)
-    assert result == "world"
-
-    inp.close()
+        # Test calling prompt() for a second time. (We had an issue where the
+        # prompt reset between calls happened at the wrong time, breaking this.)
+        result = session.prompt(default="world", accept_default=True)
+        assert result == "world"
