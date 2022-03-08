@@ -110,6 +110,7 @@ ApplicationEventHandler = Callable[["Application[_AppResult]"], None]
 
 _SIGWINCH = getattr(signal, "SIGWINCH", None)
 _SIGTSTP = getattr(signal, "SIGTSTP", None)
+_SIGQUIT = getattr(signal, "SIGQUIT", None)
 
 
 class Application(Generic[_AppResult]):
@@ -1219,6 +1220,21 @@ class Application(Generic[_AppResult]):
                     os.kill(os.getpid(), signal)
 
             run_in_terminal(run)
+
+    def do_sigquit(self) -> None:
+        r"""
+        (Not thread safe -- to be called from inside the key bindings.)
+        Trigger SIGQUIT. Usually bound to ctrl-\.
+
+        (We need this because prompt_toolkit puts the terminal in raw mode, and
+        the TTY doesn't handle this signal anymore.)
+        """
+        if _SIGQUIT is not None:
+
+            def run() -> None:
+                os.kill(os.getpid(), _SIGQUIT)
+
+            run_in_terminal(run, render_cli_done=True)
 
     def print_text(
         self, text: AnyFormattedText, style: Optional[BaseStyle] = None
