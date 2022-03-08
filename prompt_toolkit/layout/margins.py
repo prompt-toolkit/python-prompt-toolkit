@@ -3,6 +3,7 @@ Margin implementations for a :class:`~prompt_toolkit.layout.containers.Window`.
 """
 from abc import ABCMeta, abstractmethod
 from typing import TYPE_CHECKING, Callable, Optional
+import math
 
 from prompt_toolkit.filters import FilterOrBool, to_filter
 from prompt_toolkit.formatted_text import (
@@ -181,66 +182,61 @@ class ScrollbarMargin(Margin):
         self, window_render_info: "WindowRenderInfo", width: int, height: int
     ) -> StyleAndTextTuples:
         content_height = window_render_info.content_height
+        if content_height == 0:
+            return []
+
+        # Scrollbar body.
+        scrollbar_background = "class:scrollbar.background"
+        scrollbar_background_start = "class:scrollbar.background,scrollbar.start"
+        scrollbar_button = "class:scrollbar.button"
+        scrollbar_button_end = "class:scrollbar.button,scrollbar.end"
+
         window_height = window_render_info.window_height
         display_arrows = self.display_arrows()
 
         if display_arrows:
             window_height -= 2
 
-        try:
-            fraction_visible = len(window_render_info.displayed_lines) / float(
-                content_height
-            )
-            fraction_above = window_render_info.vertical_scroll / float(content_height)
+        fraction_visible = len(window_render_info.displayed_lines) / content_height
 
-            scrollbar_height = int(
-                min(window_height, max(1, window_height * fraction_visible))
-            )
-            scrollbar_top = int(window_height * fraction_above)
-        except ZeroDivisionError:
-            return []
-        else:
+        fraction_above = window_render_info.vertical_scroll / content_height
+        scrollbar_height = min(
+            window_height,
+            int(math.ceil(window_height * fraction_visible)),
+        )
+        # Without math.ceil, the scrollbar will never reach the end.
+        # Unless you increase the scrollbar height by one (like it was done
+        # before, implicitly) which makes it less accurate, and may also
+        # cause a misconception that there are no items after the last visible
+        # item when scrollbar reaches the end before the last item is visible
+        scrollbar_top = int(window_height * fraction_above)
+        scrollbar_bottom = window_height - scrollbar_height - scrollbar_top
 
-            def is_scroll_button(row: int) -> bool:
-                "True if we should display a button on this row."
-                return scrollbar_top <= row <= scrollbar_top + scrollbar_height
+        # Up arrow.
+        result: StyleAndTextTuples = []
 
-            # Up arrow.
-            result: StyleAndTextTuples = []
-            if display_arrows:
-                result.extend(
-                    [
-                        ("class:scrollbar.arrow", self.up_arrow_symbol),
-                        ("class:scrollbar", "\n"),
-                    ]
-                )
+        if display_arrows:
+            result.append(("class:scrollbar.arrow", self.up_arrow_symbol))
+            result.append(("class:scrollbar", "\n"))
 
-            # Scrollbar body.
-            scrollbar_background = "class:scrollbar.background"
-            scrollbar_background_start = "class:scrollbar.background,scrollbar.start"
-            scrollbar_button = "class:scrollbar.button"
-            scrollbar_button_end = "class:scrollbar.button,scrollbar.end"
-
-            for i in range(window_height):
-                if is_scroll_button(i):
-                    if not is_scroll_button(i + 1):
-                        # Give the last cell a different style, because we
-                        # want to underline this.
-                        result.append((scrollbar_button_end, " "))
-                    else:
-                        result.append((scrollbar_button, " "))
-                else:
-                    if is_scroll_button(i + 1):
-                        result.append((scrollbar_background_start, " "))
-                    else:
-                        result.append((scrollbar_background, " "))
+        def add_rows(count: int, style: str) -> None:
+            for i in range(count):
+                result.append((style, " "))
                 result.append(("", "\n"))
 
-            # Down arrow
-            if display_arrows:
-                result.append(("class:scrollbar.arrow", self.down_arrow_symbol))
+        if scrollbar_top > 0:
+            add_rows(scrollbar_top - 1, scrollbar_background)
+            add_rows(1, scrollbar_background_start)
 
-            return result
+        add_rows(scrollbar_height - 1, scrollbar_button)
+        add_rows(1, scrollbar_button_end)
+        add_rows(scrollbar_bottom, scrollbar_background)
+
+        # Down arrow
+        if display_arrows:
+            result.append(("class:scrollbar.arrow", self.down_arrow_symbol))
+
+        return result
 
 
 class PromptMargin(Margin):
