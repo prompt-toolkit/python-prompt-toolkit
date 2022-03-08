@@ -81,6 +81,8 @@ PROMPT_TOOLKIT_STYLE = [
     ("scrollbar.background", "bg:#aaaaaa"),
     ("scrollbar.button", "bg:#444444"),
     ("scrollbar.arrow", "noinherit bold"),
+    ("scrollbar.start", "fg:#444444"),
+    ("scrollbar.end", "fg:#444444 reverse"),
     # Start/end of scrollbars. Adding 'underline' here provides a nice little
     # detail to the progress bar, but it doesn't look good on all terminals.
     # ('scrollbar.start',                          'underline #ffffff'),
