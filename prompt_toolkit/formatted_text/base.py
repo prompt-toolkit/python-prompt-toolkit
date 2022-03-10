@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Sequence, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Callable, List, Iterable, Sequence, Tuple, Union, cast
 
 from prompt_toolkit.mouse_events import MouseEvent
 
@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 __all__ = [
     "OneStyleAndTextTuple",
     "StyleAndTextTuples",
+    "StyleAndTextTuplesType",
     "MagicFormattedText",
     "AnyFormattedText",
     "to_formatted_text",
@@ -21,9 +22,11 @@ OneStyleAndTextTuple = Union[
     Tuple[str, str], Tuple[str, str, Callable[[MouseEvent], None]]
 ]
 
-# Sequence (covariant version of list) of (style, text) tuples.
-StyleAndTextTuples = Sequence[OneStyleAndTextTuple]
-
+# List (covariant version of list) of (style, text) tuples
+# Not there is a subclass of this 
+StyleAndTextTuples = List[OneStyleAndTextTuple]
+# For typing stuff, we prefer an Iterable as it is more flexible
+StyleAndTextTuplesType = Iterable[OneStyleAndTextTuple]
 
 if TYPE_CHECKING:
     from typing_extensions import TypeGuard
