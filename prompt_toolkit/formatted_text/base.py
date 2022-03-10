@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Callable, Iterable, List, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Sequence, Tuple, Union, cast
 
 from prompt_toolkit.mouse_events import MouseEvent
 
@@ -21,8 +21,8 @@ OneStyleAndTextTuple = Union[
     Tuple[str, str], Tuple[str, str, Callable[[MouseEvent], None]]
 ]
 
-# List of (style, text) tuples.
-StyleAndTextTuples = List[OneStyleAndTextTuple]
+# Sequence (covariant version of list) of (style, text) tuples.
+StyleAndTextTuples = Sequence[OneStyleAndTextTuple]
 
 
 if TYPE_CHECKING:
