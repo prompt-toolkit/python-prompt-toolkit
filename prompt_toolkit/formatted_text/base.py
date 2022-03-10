@@ -44,7 +44,7 @@ if TYPE_CHECKING:
 AnyFormattedText = Union[
     str,
     "MagicFormattedText",
-    StyleAndTextTuples,
+    StyleAndTextTuplesTypes,
     # Callable[[], 'AnyFormattedText']  # Recursive definition not supported by mypy.
     Callable[[], Any],
     None,
