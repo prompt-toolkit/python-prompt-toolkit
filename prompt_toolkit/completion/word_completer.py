@@ -1,4 +1,4 @@
-from typing import Callable, Iterable, List, Mapping, Optional, Pattern, Union
+from typing import Callable, Iterable, Mapping, Optional, Pattern, Union
 
 from prompt_toolkit.completion import CompleteEvent, Completer, Completion
 from prompt_toolkit.document import Document
@@ -31,7 +31,7 @@ class WordCompleter(Completer):
 
     def __init__(
         self,
-        words: Union[List[str], Callable[[], List[str]]],
+        words: Union[Iterable[str], Callable[[], Iterable[str]]],
         ignore_case: bool = False,
         display_dict: Optional[Mapping[str, AnyFormattedText]] = None,
         meta_dict: Optional[Mapping[str, AnyFormattedText]] = None,
