@@ -99,7 +99,8 @@ class _ConnectionStdout:
 
     def flush(self) -> None:
         try:
-            self._connection.send(b"".join(self._buffer))
+            if not self._closed:
+                self._connection.send(b"".join(self._buffer))
         except OSError as e:
             logger.warning("Couldn't send data over socket: %s" % e)
 
@@ -355,6 +356,15 @@ class TelnetServer:
                     finally:
                         self.connections.remove(connection)
                         logger.info("Stopping interaction %r %r", *addr)
+            except EOFError:
+                # Happens either when the connection is closed by the client
+                # (e.g., when the user types 'control-]', then 'quit' in the
+                # telnet client) or when the user types control-d in a prompt
+                # and this is not handled by the interact function.
+                logger.info("Unhandled EOFError in telnet application.")
+            except KeyboardInterrupt:
+                # Unhandled control-c propagated by a prompt.
+                logger.info("Unhandled KeyboardInterrupt in telnet application.")
             except BaseException as e:
                 print("Got %s" % type(e).__name__, e)
                 import traceback
