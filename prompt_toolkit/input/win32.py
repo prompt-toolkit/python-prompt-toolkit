@@ -170,7 +170,7 @@ class ConsoleInputReader:
         b"\x1d": Keys.ControlSquareClose,  # Control-]
         b"\x1e": Keys.ControlCircumflex,  # Control-^
         b"\x1f": Keys.ControlUnderscore,  # Control-underscore (Also for Ctrl-hyphen.)
-        b"\x7f": Keys.Backspace,  # (127) Backspace   (ASCII Delete.)
+        b"\x7f": Keys.ControlBackspace,  # (127) Backspace   (ASCII Delete.)
     }
 
     # Keys that don't carry character data.
@@ -412,7 +412,7 @@ class ConsoleInputReader:
             else:
                 result = KeyPress(u_char, u_char)
 
-        # First we handle Shift-Control-Arrow/Home/End (need to do this first)
+        # First we handle Shift-Control-Arrow/Home/End/Ins/Del/PgUp/PgDown/BS (need to do this first)
         if (
             (
                 control_key_state & self.LEFT_CTRL_PRESSED
@@ -429,8 +429,10 @@ class ConsoleInputReader:
                 Keys.Home: Keys.ControlShiftHome,
                 Keys.End: Keys.ControlShiftEnd,
                 Keys.Insert: Keys.ControlShiftInsert,
+                Keys.Delete: Keys.ControlShiftDelete,
                 Keys.PageUp: Keys.ControlShiftPageUp,
                 Keys.PageDown: Keys.ControlShiftPageDown,
+                Keys.Backspace: Keys.ControlShiftBackspace,
             }
             result.key = mapping.get(result.key, result.key)
 
@@ -468,6 +470,7 @@ class ConsoleInputReader:
                 Keys.Delete: Keys.ShiftDelete,
                 Keys.PageUp: Keys.ShiftPageUp,
                 Keys.PageDown: Keys.ShiftPageDown,
+                Keys.Backspace: Keys.ShiftBackspace,
             }
             result.key = mapping.get(result.key, result.key)
 

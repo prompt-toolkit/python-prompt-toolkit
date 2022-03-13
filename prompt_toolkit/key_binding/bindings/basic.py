@@ -88,6 +88,9 @@ def load_basic_bindings() -> KeyBindings:
     @handle("c-^")
     @handle("c-_")
     @handle("backspace")
+    @handle("s-backspace")
+    @handle("c-backspace")
+    @handle("c-s-backspace")
     @handle("up")
     @handle("down")
     @handle("right")
@@ -103,6 +106,7 @@ def load_basic_bindings() -> KeyBindings:
     @handle("delete")
     @handle("s-delete")
     @handle("c-delete")
+    @handle("c-s-delete")
     @handle("pageup")
     @handle("pagedown")
     @handle("s-tab")
@@ -145,6 +149,9 @@ def load_basic_bindings() -> KeyBindings:
     handle("c-k", filter=insert_mode)(get_by_name("kill-line"))
     handle("c-u", filter=insert_mode)(get_by_name("unix-line-discard"))
     handle("backspace", filter=insert_mode, save_before=if_no_repeat)(
+        get_by_name("backward-delete-char")
+    )
+    handle("c-backspace", filter=insert_mode, save_before=if_no_repeat)(
         get_by_name("backward-delete-char")
     )
     handle("delete", filter=insert_mode, save_before=if_no_repeat)(
