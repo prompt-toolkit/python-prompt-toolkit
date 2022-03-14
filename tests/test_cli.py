@@ -57,7 +57,7 @@ def _feed_cli_with_input(
             key_bindings=key_bindings,
         )
 
-        result = session.prompt()
+        _ = session.prompt()
         return session.default_buffer.document, session.app
 
 
