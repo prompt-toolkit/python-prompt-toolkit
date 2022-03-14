@@ -1,3 +1,7 @@
+import sys
+
+assert sys.platform == "win32"
+
 import os
 from ctypes import ArgumentError, byref, c_char, c_long, c_uint, c_ulong, pointer
 

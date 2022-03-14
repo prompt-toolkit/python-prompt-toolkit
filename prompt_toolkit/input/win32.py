@@ -7,6 +7,8 @@ from prompt_toolkit.eventloop import get_event_loop
 
 from ..utils import SPHINX_AUTODOC_RUNNING
 
+assert sys.platform == "win32"
+
 # Do not import win32-specific stuff when generating documentation.
 # Otherwise RTD would be unable to generate docs for this module.
 if not SPHINX_AUTODOC_RUNNING:

@@ -1,8 +1,6 @@
 import sys
 from typing import ContextManager, Optional, TextIO
 
-from prompt_toolkit.utils import is_windows
-
 from .base import DummyInput, Input, PipeInput
 
 __all__ = [
@@ -23,7 +21,7 @@ def create_input(
         `sys.stdin`. (We can open `stdout` or `stderr` for reading, this is how
         a `$PAGER` works.)
     """
-    if is_windows():
+    if sys.platform == "win32":
         from .win32 import Win32Input
 
         # If `stdin` was assigned `None` (which happens with pythonw.exe), use
@@ -61,7 +59,7 @@ def create_pipe_input() -> ContextManager[PipeInput]:
     Breaking change: In prompt_toolkit 3.0.28 and earlier, this was returning
     the `PipeInput` directly, rather than through a context manager.
     """
-    if is_windows():
+    if sys.platform == "win32":
         from .win32_pipe import Win32PipeInput
 
         return Win32PipeInput.create()

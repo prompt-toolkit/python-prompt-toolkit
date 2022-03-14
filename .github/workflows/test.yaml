@@ -32,7 +32,9 @@ jobs:
         # Check wheather the imports were sorted correctly.
         # When this fails, please run ./tools/sort-imports.sh
         run: |
-          mypy --strict prompt_toolkit
+          mypy --strict prompt_toolkit --platform win32
+          mypy --strict prompt_toolkit --platform linux
+          mypy --strict prompt_toolkit --platform darwin
           isort -c --profile black prompt_toolkit examples tests setup.py
           black --check prompt_toolkit examples tests setup.py
       - name: Validate README.md

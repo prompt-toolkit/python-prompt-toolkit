@@ -1,9 +1,12 @@
+import sys
+
+assert sys.platform == "win32"
+
 from ctypes import byref, windll
 from ctypes.wintypes import DWORD, HANDLE
 from typing import Any, Optional, TextIO
 
 from prompt_toolkit.data_structures import Size
-from prompt_toolkit.utils import is_windows
 from prompt_toolkit.win32_types import STD_OUTPUT_HANDLE
 
 from .base import Output
@@ -84,7 +87,7 @@ def is_win_vt100_enabled() -> bool:
     Returns True when we're running Windows and VT100 escape sequences are
     supported.
     """
-    if not is_windows():
+    if sys.platform != "win32":
         return False
 
     hconsole = HANDLE(windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE))

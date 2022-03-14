@@ -1,3 +1,4 @@
+import sys
 from typing import TYPE_CHECKING, FrozenSet
 
 from prompt_toolkit.data_structures import Point
@@ -9,7 +10,6 @@ from prompt_toolkit.mouse_events import (
     MouseEventType,
     MouseModifier,
 )
-from prompt_toolkit.utils import is_windows
 
 from ..key_bindings import KeyBindings
 
@@ -303,41 +303,42 @@ def load_mouse_bindings() -> KeyBindings:
         """
         Handling of mouse events for Windows.
         """
-        assert is_windows()  # This key binding should only exist for Windows.
+        # This key binding should only exist for Windows.
+        if sys.platform == "win32":
+            # Parse data.
+            pieces = event.data.split(";")
 
-        # Parse data.
-        pieces = event.data.split(";")
+            button = MouseButton(pieces[0])
+            event_type = MouseEventType(pieces[1])
+            x = int(pieces[2])
+            y = int(pieces[3])
 
-        button = MouseButton(pieces[0])
-        event_type = MouseEventType(pieces[1])
-        x = int(pieces[2])
-        y = int(pieces[3])
+            # Make coordinates absolute to the visible part of the terminal.
+            output = event.app.renderer.output
 
-        # Make coordinates absolute to the visible part of the terminal.
-        output = event.app.renderer.output
+            from prompt_toolkit.output.win32 import Win32Output
+            from prompt_toolkit.output.windows10 import Windows10_Output
 
-        from prompt_toolkit.output.win32 import Win32Output
-        from prompt_toolkit.output.windows10 import Windows10_Output
-
-        if isinstance(output, (Win32Output, Windows10_Output)):
-            screen_buffer_info = output.get_win32_screen_buffer_info()
-            rows_above_cursor = (
-                screen_buffer_info.dwCursorPosition.Y - event.app.renderer._cursor_pos.y
-            )
-            y -= rows_above_cursor
-
-            # Call the mouse event handler.
-            # (Can return `NotImplemented`.)
-            handler = event.app.renderer.mouse_handlers.mouse_handlers[y][x]
-
-            return handler(
-                MouseEvent(
-                    position=Point(x=x, y=y),
-                    event_type=event_type,
-                    button=button,
-                    modifiers=UNKNOWN_MODIFIER,
+            if isinstance(output, (Win32Output, Windows10_Output)):
+                screen_buffer_info = output.get_win32_screen_buffer_info()
+                rows_above_cursor = (
+                    screen_buffer_info.dwCursorPosition.Y
+                    - event.app.renderer._cursor_pos.y
                 )
-            )
+                y -= rows_above_cursor
+
+                # Call the mouse event handler.
+                # (Can return `NotImplemented`.)
+                handler = event.app.renderer.mouse_handlers.mouse_handlers[y][x]
+
+                return handler(
+                    MouseEvent(
+                        position=Point(x=x, y=y),
+                        event_type=event_type,
+                        button=button,
+                        modifiers=UNKNOWN_MODIFIER,
+                    )
+                )
 
         # No mouse handler found. Return `NotImplemented` so that we don't
         # invalidate the UI.
