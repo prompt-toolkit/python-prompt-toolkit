@@ -1,3 +1,7 @@
+import sys
+
+assert sys.platform == "win32"
+
 from ctypes import pointer
 
 from ..utils import SPHINX_AUTODOC_RUNNING

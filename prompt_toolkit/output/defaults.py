@@ -5,7 +5,6 @@ from prompt_toolkit.utils import (
     get_bell_environment_variable,
     get_term_environment_variable,
     is_conemu_ansi,
-    is_windows,
 )
 
 from .base import DummyOutput, Output
@@ -68,7 +67,7 @@ def create_output(
     while isinstance(stdout, StdoutProxy):
         stdout = stdout.original_stdout
 
-    if is_windows():
+    if sys.platform == "win32":
         from .conemu import ConEmuOutput
         from .win32 import Win32Output
         from .windows10 import Windows10_Output, is_win_vt100_enabled

@@ -1,3 +1,7 @@
+import sys
+
+assert sys.platform != "win32"
+
 import os
 from contextlib import contextmanager
 from typing import ContextManager, Iterator, TextIO, cast

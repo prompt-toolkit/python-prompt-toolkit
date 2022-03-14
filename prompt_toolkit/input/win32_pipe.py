@@ -1,3 +1,7 @@
+import sys
+
+assert sys.platform == "win32"
+
 from contextlib import contextmanager
 from ctypes import windll
 from ctypes.wintypes import HANDLE

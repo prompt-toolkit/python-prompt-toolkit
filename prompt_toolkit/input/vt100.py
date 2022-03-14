@@ -1,6 +1,9 @@
+import sys
+
+assert sys.platform != "win32"
+
 import contextlib
 import io
-import sys
 import termios
 import tty
 from asyncio import AbstractEventLoop
