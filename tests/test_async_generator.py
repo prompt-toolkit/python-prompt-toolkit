@@ -1,12 +1,14 @@
+from typing import Iterator
+
 from prompt_toolkit.eventloop import generator_to_async_generator, get_event_loop
 
 
-def _sync_generator():
+def _sync_generator() -> Iterator[int]:
     yield 1
     yield 10
 
 
-def test_generator_to_async_generator():
+def test_generator_to_async_generator() -> None:
     """
     Test conversion of sync to asycn generator.
     This should run the synchronous parts in a background thread.
@@ -15,7 +17,7 @@ def test_generator_to_async_generator():
 
     items = []
 
-    async def consume_async_generator():
+    async def consume_async_generator() -> None:
         async for item in async_gen:
             items.append(item)
 

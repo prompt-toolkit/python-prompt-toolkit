@@ -1,14 +1,23 @@
+from typing import List
+
+import py
+
 from prompt_toolkit.eventloop import get_event_loop
-from prompt_toolkit.history import FileHistory, InMemoryHistory, ThreadedHistory
+from prompt_toolkit.history import (
+    FileHistory,
+    History,
+    InMemoryHistory,
+    ThreadedHistory,
+)
 
 
-def _call_history_load(history):
+def _call_history_load(history: History) -> List[str]:
     """
     Helper: Call the history "load" method and return the result as a list of strings.
     """
-    result = []
+    result: List[str] = []
 
-    async def call_load():
+    async def call_load() -> None:
         async for item in history.load():
             result.append(item)
 
@@ -16,7 +25,7 @@ def _call_history_load(history):
     return result
 
 
-def test_in_memory_history():
+def test_in_memory_history() -> None:
     history = InMemoryHistory()
     history.append_string("hello")
     history.append_string("world")
@@ -35,10 +44,10 @@ def test_in_memory_history():
     assert _call_history_load(history2) == ["def", "abc"]
 
 
-def test_file_history(tmpdir):
+def test_file_history(tmpdir: py.path.local) -> None:
     histfile = tmpdir.join("history")
 
-    history = FileHistory(histfile)
+    history = FileHistory(str(histfile))
 
     history.append_string("hello")
     history.append_string("world")
@@ -53,14 +62,14 @@ def test_file_history(tmpdir):
     assert _call_history_load(history) == ["test3", "world", "hello"]
 
     # Create another history instance pointing to the same file.
-    history2 = FileHistory(histfile)
+    history2 = FileHistory(str(histfile))
     assert _call_history_load(history2) == ["test3", "world", "hello"]
 
 
-def test_threaded_file_history(tmpdir):
+def test_threaded_file_history(tmpdir: py.path.local) -> None:
     histfile = tmpdir.join("history")
 
-    history = ThreadedHistory(FileHistory(histfile))
+    history = ThreadedHistory(FileHistory(str(histfile)))
 
     history.append_string("hello")
     history.append_string("world")
@@ -75,11 +84,11 @@ def test_threaded_file_history(tmpdir):
     assert _call_history_load(history) == ["test3", "world", "hello"]
 
     # Create another history instance pointing to the same file.
-    history2 = ThreadedHistory(FileHistory(histfile))
+    history2 = ThreadedHistory(FileHistory(str(histfile)))
     assert _call_history_load(history2) == ["test3", "world", "hello"]
 
 
-def test_threaded_in_memory_history():
+def test_threaded_in_memory_history() -> None:
     # Threaded in memory history is not useful. But testing it anyway, just to
     # see whether everything plays nicely together.
     history = ThreadedHistory(InMemoryHistory())

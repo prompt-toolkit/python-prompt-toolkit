@@ -3,15 +3,15 @@ import pytest
 from prompt_toolkit.filters import Always, Condition, Filter, Never, to_filter
 
 
-def test_never():
+def test_never() -> None:
     assert not Never()()
 
 
-def test_always():
+def test_always() -> None:
     assert Always()()
 
 
-def test_invert():
+def test_invert() -> None:
     assert not (~Always())()
     assert ~Never()()
 
@@ -19,7 +19,7 @@ def test_invert():
     assert c()
 
 
-def test_or():
+def test_or() -> None:
     for a in (True, False):
         for b in (True, False):
             c1 = Condition(lambda: a)
@@ -30,7 +30,7 @@ def test_or():
             assert c3() == a or b
 
 
-def test_and():
+def test_and() -> None:
     for a in (True, False):
         for b in (True, False):
             c1 = Condition(lambda: a)
@@ -41,7 +41,7 @@ def test_and():
             assert c3() == (a and b)
 
 
-def test_to_filter():
+def test_to_filter() -> None:
     f1 = to_filter(True)
     f2 = to_filter(False)
     f3 = to_filter(Condition(lambda: True))
@@ -57,4 +57,4 @@ def test_to_filter():
     assert not f4()
 
     with pytest.raises(TypeError):
-        to_filter(4)
+        to_filter(4)  # type: ignore

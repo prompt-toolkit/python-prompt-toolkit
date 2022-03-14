@@ -1,12 +1,13 @@
 import itertools
+from typing import Iterator, List
 
 import pytest
 
 from prompt_toolkit.utils import take_using_weights
 
 
-def test_using_weights():
-    def take(generator, count):
+def test_using_weights() -> None:
+    def take(generator: Iterator[str], count: int) -> List[str]:
         return list(itertools.islice(generator, 0, count))
 
     # Check distribution.

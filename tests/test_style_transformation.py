@@ -4,7 +4,7 @@ from prompt_toolkit.styles import AdjustBrightnessStyleTransformation, Attrs
 
 
 @pytest.fixture
-def default_attrs():
+def default_attrs() -> Attrs:
     return Attrs(
         color="",
         bgcolor="",
@@ -18,7 +18,7 @@ def default_attrs():
     )
 
 
-def test_adjust_brightness_style_transformation(default_attrs):
+def test_adjust_brightness_style_transformation(default_attrs: Attrs) -> None:
     tr = AdjustBrightnessStyleTransformation(0.5, 1.0)
 
     attrs = tr.transform_attrs(default_attrs._replace(color="ff0000"))

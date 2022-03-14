@@ -2,14 +2,16 @@
 These are almost end-to-end tests. They create a Prompt, feed it with some
 input and check the result.
 """
-from functools import partial
+from typing import Optional, Tuple
 
 import pytest
 
-from prompt_toolkit.clipboard import ClipboardData, InMemoryClipboard
+from prompt_toolkit.application import Application
+from prompt_toolkit.clipboard import Clipboard, ClipboardData, InMemoryClipboard
+from prompt_toolkit.document import Document
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.filters import ViInsertMode
-from prompt_toolkit.history import InMemoryHistory
+from prompt_toolkit.history import History, InMemoryHistory
 from prompt_toolkit.input.defaults import create_pipe_input
 from prompt_toolkit.input.vt100_parser import ANSI_SEQUENCES
 from prompt_toolkit.key_binding.bindings.named_commands import prefix_meta
@@ -18,7 +20,7 @@ from prompt_toolkit.output import DummyOutput
 from prompt_toolkit.shortcuts import PromptSession
 
 
-def _history():
+def _history() -> InMemoryHistory:
     h = InMemoryHistory()
     h.append_string("line1 first input")
     h.append_string("line2 second input")
@@ -27,14 +29,14 @@ def _history():
 
 
 def _feed_cli_with_input(
-    text,
-    editing_mode=EditingMode.EMACS,
-    clipboard=None,
-    history=None,
-    multiline=False,
-    check_line_ending=True,
-    key_bindings=None,
-):
+    text: str,
+    editing_mode: EditingMode = EditingMode.EMACS,
+    clipboard: Optional[Clipboard] = None,
+    history: Optional[History] = None,
+    multiline: bool = False,
+    check_line_ending: bool = True,
+    key_bindings: Optional[KeyBindings] = None,
+) -> Tuple[Document, Application]:
     """
     Create a Prompt, feed it with the given user input and return the CLI
     object.
@@ -47,7 +49,7 @@ def _feed_cli_with_input(
 
     with create_pipe_input() as inp:
         inp.send_text(text)
-        session = PromptSession(
+        session: PromptSession[str] = PromptSession(
             input=inp,
             output=DummyOutput(),
             editing_mode=editing_mode,
@@ -61,14 +63,14 @@ def _feed_cli_with_input(
         return session.default_buffer.document, session.app
 
 
-def test_simple_text_input():
+def test_simple_text_input() -> None:
     # Simple text input, followed by enter.
     result, cli = _feed_cli_with_input("hello\r")
     assert result.text == "hello"
     assert cli.current_buffer.text == "hello"
 
 
-def test_emacs_cursor_movements():
+def test_emacs_cursor_movements() -> None:
     """
     Test cursor movements with Emacs key bindings.
     """
@@ -185,7 +187,7 @@ def test_emacs_cursor_movements():
     assert result.cursor_position == len("hello")
 
 
-def test_emacs_kill_multiple_words_and_paste():
+def test_emacs_kill_multiple_words_and_paste() -> None:
     # Using control-w twice should place both words on the clipboard.
     result, cli = _feed_cli_with_input(
         "hello world test" "\x17\x17" "--\x19\x19\r"  # Twice c-w.  # Twice c-y.
@@ -206,7 +208,7 @@ def test_emacs_kill_multiple_words_and_paste():
     assert cli.clipboard.get_data().text == "world test"
 
 
-def test_interrupts():
+def test_interrupts() -> None:
     # ControlC: raise KeyboardInterrupt.
     with pytest.raises(KeyboardInterrupt):
         result, cli = _feed_cli_with_input("hello\x03\r")
@@ -219,7 +221,7 @@ def test_interrupts():
         result, cli = _feed_cli_with_input("\x04\r")
 
 
-def test_emacs_yank():
+def test_emacs_yank() -> None:
     # ControlY (yank)
     c = InMemoryClipboard(ClipboardData("XYZ"))
     result, cli = _feed_cli_with_input("hello\x02\x19\r", clipboard=c)
@@ -227,13 +229,13 @@ def test_emacs_yank():
     assert result.cursor_position == len("hellXYZ")
 
 
-def test_quoted_insert():
+def test_quoted_insert() -> None:
     # ControlQ - ControlB (quoted-insert)
     result, cli = _feed_cli_with_input("hello\x11\x02\r")
     assert result.text == "hello\x02"
 
 
-def test_transformations():
+def test_transformations() -> None:
     # Meta-c (capitalize-word)
     result, cli = _feed_cli_with_input("hello world\01\x1bc\r")
     assert result.text == "Hello world"
@@ -260,7 +262,7 @@ def test_transformations():
     assert result.cursor_position == len("abcd")
 
 
-def test_emacs_other_bindings():
+def test_emacs_other_bindings() -> None:
     # Transpose characters.
     result, cli = _feed_cli_with_input("abcde\x14X\r")  # Ctrl-T
     assert result.text == "abcedX"
@@ -300,7 +302,7 @@ def test_emacs_other_bindings():
     assert result.text == "hello world /some/very/X"
 
 
-def test_controlx_controlx():
+def test_controlx_controlx() -> None:
     # At the end: go to the start of the line.
     result, cli = _feed_cli_with_input("hello world\x18\x18X\r")
     assert result.text == "Xhello world"
@@ -315,7 +317,7 @@ def test_controlx_controlx():
     assert result.text == "hello worldX"
 
 
-def test_emacs_history_bindings():
+def test_emacs_history_bindings() -> None:
     # Adding a new item to the history.
     history = _history()
     result, cli = _feed_cli_with_input("new input\r", history=history)
@@ -345,7 +347,7 @@ def test_emacs_history_bindings():
     assert result.text == "line2 second input"
 
 
-def test_emacs_reverse_search():
+def test_emacs_reverse_search() -> None:
     history = _history()
 
     # ControlR  (reverse-search-history)
@@ -357,7 +359,7 @@ def test_emacs_reverse_search():
     assert result.text == "line2 second input"
 
 
-def test_emacs_arguments():
+def test_emacs_arguments() -> None:
     """
     Test various combinations of arguments in Emacs mode.
     """
@@ -386,7 +388,7 @@ def test_emacs_arguments():
     assert result.text == "abbbbaaa"
 
 
-def test_emacs_arguments_for_all_commands():
+def test_emacs_arguments_for_all_commands() -> None:
     """
     Test all Emacs commands with Meta-[0-9] arguments (both positive and
     negative). No one should crash.
@@ -407,7 +409,7 @@ def test_emacs_arguments_for_all_commands():
                 assert key == "\x03"
 
 
-def test_emacs_kill_ring():
+def test_emacs_kill_ring() -> None:
     operations = (
         # abc ControlA ControlK
         "abc\x01\x0b"
@@ -432,7 +434,7 @@ def test_emacs_kill_ring():
     assert result.text == "ghi"
 
 
-def test_emacs_selection():
+def test_emacs_selection() -> None:
     # Copy/paste empty selection should not do anything.
     operations = (
         "hello"
@@ -470,7 +472,7 @@ def test_emacs_selection():
     assert result.text == "lhelo"
 
 
-def test_emacs_insert_comment():
+def test_emacs_insert_comment() -> None:
     # Test insert-comment (M-#) binding.
     result, cli = _feed_cli_with_input("hello\x1b#", check_line_ending=False)
     assert result.text == "#hello"
@@ -481,7 +483,7 @@ def test_emacs_insert_comment():
     assert result.text == "#hello\n#world"
 
 
-def test_emacs_record_macro():
+def test_emacs_record_macro() -> None:
     operations = (
         "  "
         "\x18("  # Start recording macro. C-X(
@@ -497,7 +499,7 @@ def test_emacs_record_macro():
     assert result.text == "  hello  hellohello"
 
 
-def test_emacs_nested_macro():
+def test_emacs_nested_macro() -> None:
     "Test calling the macro within a macro."
     # Calling a macro within a macro should take the previous recording (if one
     # exists), not the one that is in progress.
@@ -530,7 +532,7 @@ def test_emacs_nested_macro():
     assert result.text == "helloworld"
 
 
-def test_prefix_meta():
+def test_prefix_meta() -> None:
     # Test the prefix-meta command.
     b = KeyBindings()
     b.add("j", "j", filter=ViInsertMode())(prefix_meta)
@@ -541,7 +543,7 @@ def test_prefix_meta():
     assert result.text == "Xhello"
 
 
-def test_bracketed_paste():
+def test_bracketed_paste() -> None:
     result, cli = _feed_cli_with_input("\x1b[200~hello world\x1b[201~\r")
     assert result.text == "hello world"
 
@@ -557,11 +559,13 @@ def test_bracketed_paste():
     assert result.text == "hello\nworld"
 
 
-def test_vi_cursor_movements():
+def test_vi_cursor_movements() -> None:
     """
     Test cursor movements with Vi key bindings.
     """
-    feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI)
+
+    def feed(text: str) -> Tuple[Document, Application]:
+        return _feed_cli_with_input(text, editing_mode=EditingMode.VI)
 
     result, cli = feed("\x1b\r")
     assert result.text == ""
@@ -604,8 +608,9 @@ def test_vi_cursor_movements():
     assert result.text == "heXlo"
 
 
-def test_vi_operators():
-    feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI)
+def test_vi_operators() -> None:
+    def feed(text: str) -> Tuple[Document, Application]:
+        return _feed_cli_with_input(text, editing_mode=EditingMode.VI)
 
     # Esc g~0
     result, cli = feed("hello\x1bg~0\r")
@@ -620,8 +625,9 @@ def test_vi_operators():
     assert result.text == "o"
 
 
-def test_vi_text_objects():
-    feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI)
+def test_vi_text_objects() -> None:
+    def feed(text: str) -> Tuple[Document, Application]:
+        return _feed_cli_with_input(text, editing_mode=EditingMode.VI)
 
     # Esc gUgg
     result, cli = feed("hello\x1bgUgg\r")
@@ -644,8 +650,9 @@ def test_vi_text_objects():
     assert result.text == "beforeafter"
 
 
-def test_vi_digraphs():
-    feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI)
+def test_vi_digraphs() -> None:
+    def feed(text: str) -> Tuple[Document, Application]:
+        return _feed_cli_with_input(text, editing_mode=EditingMode.VI)
 
     # C-K o/
     result, cli = feed("hello\x0bo/\r")
@@ -664,9 +671,11 @@ def test_vi_digraphs():
     assert result.text == "helloy"
 
 
-def test_vi_block_editing():
+def test_vi_block_editing() -> None:
     "Test Vi Control-V style block insertion."
-    feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI, multiline=True)
+
+    def feed(text: str) -> Tuple[Document, Application]:
+        return _feed_cli_with_input(text, editing_mode=EditingMode.VI, multiline=True)
 
     operations = (
         # Six lines of text.
@@ -698,9 +707,11 @@ def test_vi_block_editing():
     assert result.text == "-line1\n-line***2\n-line***3\n-line***4\n-line5\n-line6"
 
 
-def test_vi_block_editing_empty_lines():
+def test_vi_block_editing_empty_lines() -> None:
     "Test block editing on empty lines."
-    feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI, multiline=True)
+
+    def feed(text: str) -> Tuple[Document, Application]:
+        return _feed_cli_with_input(text, editing_mode=EditingMode.VI, multiline=True)
 
     operations = (
         # Six empty lines.
@@ -732,8 +743,9 @@ def test_vi_block_editing_empty_lines():
     assert result.text == "***\n***\n***\n\n\n"
 
 
-def test_vi_visual_line_copy():
-    feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI, multiline=True)
+def test_vi_visual_line_copy() -> None:
+    def feed(text: str) -> Tuple[Document, Application]:
+        return _feed_cli_with_input(text, editing_mode=EditingMode.VI, multiline=True)
 
     operations = (
         # Three lines of text.
@@ -764,11 +776,13 @@ def test_vi_visual_line_copy():
     )
 
 
-def test_vi_visual_empty_line():
+def test_vi_visual_empty_line() -> None:
     """
     Test edge case with an empty line in Visual-line mode.
     """
-    feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI, multiline=True)
+
+    def feed(text: str) -> Tuple[Document, Application]:
+        return _feed_cli_with_input(text, editing_mode=EditingMode.VI, multiline=True)
 
     # 1. Delete first two lines.
     operations = (
@@ -798,9 +812,11 @@ def test_vi_visual_empty_line():
     assert result.text == "hello\nworld"
 
 
-def test_vi_character_delete_after_cursor():
+def test_vi_character_delete_after_cursor() -> None:
     "Test 'x' keypress."
-    feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI, multiline=True)
+
+    def feed(text: str) -> Tuple[Document, Application]:
+        return _feed_cli_with_input(text, editing_mode=EditingMode.VI, multiline=True)
 
     # Delete one character.
     result, cli = feed("abcd\x1bHx\r")
@@ -823,9 +839,11 @@ def test_vi_character_delete_after_cursor():
     assert result.text == "lo\n\n"
 
 
-def test_vi_character_delete_before_cursor():
+def test_vi_character_delete_before_cursor() -> None:
     "Test 'X' keypress."
-    feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI, multiline=True)
+
+    def feed(text: str) -> Tuple[Document, Application]:
+        return _feed_cli_with_input(text, editing_mode=EditingMode.VI, multiline=True)
 
     # Delete one character.
     result, cli = feed("abcd\x1bX\r")
@@ -847,8 +865,9 @@ def test_vi_character_delete_before_cursor():
     assert result.text == "\n\n"
 
 
-def test_vi_character_paste():
-    feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI)
+def test_vi_character_paste() -> None:
+    def feed(text: str) -> Tuple[Document, Application]:
+        return _feed_cli_with_input(text, editing_mode=EditingMode.VI, multiline=True)
 
     # Test 'p' character paste.
     result, cli = feed("abcde\x1bhhxp\r")
@@ -861,11 +880,13 @@ def test_vi_character_paste():
     assert result.cursor_position == 2
 
 
-def test_vi_temp_navigation_mode():
+def test_vi_temp_navigation_mode() -> None:
     """
     Test c-o binding: go for one action into navigation mode.
     """
-    feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI)
+
+    def feed(text: str) -> Tuple[Document, Application]:
+        return _feed_cli_with_input(text, editing_mode=EditingMode.VI, multiline=True)
 
     result, cli = feed("abcde" "\x0f" "3h" "x\r")  # c-o  # 3 times to the left.
     assert result.text == "axbcde"
@@ -890,8 +911,9 @@ def test_vi_temp_navigation_mode():
     assert result.cursor_position == 5
 
 
-def test_vi_macros():
-    feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI)
+def test_vi_macros() -> None:
+    def feed(text: str) -> Tuple[Document, Application]:
+        return _feed_cli_with_input(text, editing_mode=EditingMode.VI, multiline=True)
 
     # Record and execute macro.
     result, cli = feed("\x1bqcahello\x1bq@c\r")
@@ -924,12 +946,12 @@ def test_vi_macros():
     assert result.text == "helloworld"
 
 
-def test_accept_default():
+def test_accept_default() -> None:
     """
     Test `prompt(accept_default=True)`.
     """
     with create_pipe_input() as inp:
-        session = PromptSession(input=inp, output=DummyOutput())
+        session: PromptSession[str] = PromptSession(input=inp, output=DummyOutput())
         result = session.prompt(default="hello", accept_default=True)
         assert result == "hello"
 

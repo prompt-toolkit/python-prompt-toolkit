@@ -1,28 +1,31 @@
+from typing import List
+
 import pytest
 
 from prompt_toolkit.input.vt100_parser import Vt100Parser
+from prompt_toolkit.key_binding.key_processor import KeyPress
 from prompt_toolkit.keys import Keys
 
 
 class _ProcessorMock:
-    def __init__(self):
-        self.keys = []
+    def __init__(self) -> None:
+        self.keys: List[KeyPress] = []
 
-    def feed_key(self, key_press):
+    def feed_key(self, key_press: KeyPress) -> None:
         self.keys.append(key_press)
 
 
 @pytest.fixture
-def processor():
+def processor() -> _ProcessorMock:
     return _ProcessorMock()
 
 
 @pytest.fixture
-def stream(processor):
+def stream(processor: _ProcessorMock) -> Vt100Parser:
     return Vt100Parser(processor.feed_key)
 
 
-def test_control_keys(processor, stream):
+def test_control_keys(processor: _ProcessorMock, stream: Vt100Parser) -> None:
     stream.feed("\x01\x02\x10")
 
     assert len(processor.keys) == 3
@@ -34,7 +37,7 @@ def test_control_keys(processor, stream):
     assert processor.keys[2].data == "\x10"
 
 
-def test_arrows(processor, stream):
+def test_arrows(processor: _ProcessorMock, stream: Vt100Parser) -> None:
     stream.feed("\x1b[A\x1b[B\x1b[C\x1b[D")
 
     assert len(processor.keys) == 4
@@ -48,7 +51,7 @@ def test_arrows(processor, stream):
     assert processor.keys[3].data == "\x1b[D"
 
 
-def test_escape(processor, stream):
+def test_escape(processor: _ProcessorMock, stream: Vt100Parser) -> None:
     stream.feed("\x1bhello")
 
     assert len(processor.keys) == 1 + len("hello")
@@ -58,7 +61,7 @@ def test_escape(processor, stream):
     assert processor.keys[1].data == "h"
 
 
-def test_special_double_keys(processor, stream):
+def test_special_double_keys(processor: _ProcessorMock, stream: Vt100Parser) -> None:
     stream.feed("\x1b[1;3D")  # Should both send escape and left.
 
     assert len(processor.keys) == 2
@@ -68,7 +71,7 @@ def test_special_double_keys(processor, stream):
     assert processor.keys[1].data == ""
 
 
-def test_flush_1(processor, stream):
+def test_flush_1(processor: _ProcessorMock, stream: Vt100Parser) -> None:
     # Send left key in two parts without flush.
     stream.feed("\x1b")
     stream.feed("[D")
@@ -78,7 +81,7 @@ def test_flush_1(processor, stream):
     assert processor.keys[0].data == "\x1b[D"
 
 
-def test_flush_2(processor, stream):
+def test_flush_2(processor: _ProcessorMock, stream: Vt100Parser) -> None:
     # Send left key with a 'Flush' in between.
     # The flush should make sure that we process everything before as-is,
     # with makes the first part just an escape character instead.
@@ -96,7 +99,7 @@ def test_flush_2(processor, stream):
     assert processor.keys[2].data == "D"
 
 
-def test_meta_arrows(processor, stream):
+def test_meta_arrows(processor: _ProcessorMock, stream: Vt100Parser) -> None:
     stream.feed("\x1b\x1b[D")
 
     assert len(processor.keys) == 2
@@ -104,7 +107,7 @@ def test_meta_arrows(processor, stream):
     assert processor.keys[1].key == Keys.Left
 
 
-def test_control_square_close(processor, stream):
+def test_control_square_close(processor: _ProcessorMock, stream: Vt100Parser) -> None:
     stream.feed("\x1dC")
 
     assert len(processor.keys) == 2
@@ -112,7 +115,7 @@ def test_control_square_close(processor, stream):
     assert processor.keys[1].key == "C"
 
 
-def test_invalid(processor, stream):
+def test_invalid(processor: _ProcessorMock, stream: Vt100Parser) -> None:
     # Invalid sequence that has at two characters in common with other
     # sequences.
     stream.feed("\x1b[*")
@@ -123,7 +126,7 @@ def test_invalid(processor, stream):
     assert processor.keys[2].key == "*"
 
 
-def test_cpr_response(processor, stream):
+def test_cpr_response(processor: _ProcessorMock, stream: Vt100Parser) -> None:
     stream.feed("a\x1b[40;10Rb")
     assert len(processor.keys) == 3
     assert processor.keys[0].key == "a"
@@ -131,7 +134,7 @@ def test_cpr_response(processor, stream):
     assert processor.keys[2].key == "b"
 
 
-def test_cpr_response_2(processor, stream):
+def test_cpr_response_2(processor: _ProcessorMock, stream: Vt100Parser) -> None:
     # Make sure that the newline is not included in the CPR response.
     stream.feed("\x1b[40;1R\n")
     assert len(processor.keys) == 2

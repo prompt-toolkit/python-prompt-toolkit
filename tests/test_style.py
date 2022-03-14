@@ -1,7 +1,7 @@
 from prompt_toolkit.styles import Attrs, Style, SwapLightAndDarkStyleTransformation
 
 
-def test_style_from_dict():
+def test_style_from_dict() -> None:
     style = Style.from_dict(
         {
             "a": "#ff0000 bold underline strike italic",
@@ -79,7 +79,7 @@ def test_style_from_dict():
     assert style.get_attrs_for_style_str("#00ff00 class:a") == expected
 
 
-def test_class_combinations_1():
+def test_class_combinations_1() -> None:
     # In this case, our style has both class 'a' and 'b'.
     # Given that the style for 'a b' is defined at the end, that one is used.
     style = Style(
@@ -109,7 +109,7 @@ def test_class_combinations_1():
     assert style.get_attrs_for_style_str("class:b,a") == expected
 
 
-def test_class_combinations_2():
+def test_class_combinations_2() -> None:
     # In this case, our style has both class 'a' and 'b'.
     # The style that is defined the latest get priority.
     style = Style(
@@ -150,7 +150,7 @@ def test_class_combinations_2():
     assert style.get_attrs_for_style_str("class:b,a") == expected
 
 
-def test_substyles():
+def test_substyles() -> None:
     style = Style(
         [
             ("a.b", "#ff0000 bold"),
@@ -218,7 +218,7 @@ def test_substyles():
     assert style.get_attrs_for_style_str("class:b.c.d") == expected
 
 
-def test_swap_light_and_dark_style_transformation():
+def test_swap_light_and_dark_style_transformation() -> None:
     transformation = SwapLightAndDarkStyleTransformation()
 
     # Test with 6 digit hex colors.

@@ -1,7 +1,7 @@
 from prompt_toolkit.output.vt100 import _get_closest_ansi_color
 
 
-def test_get_closest_ansi_color():
+def test_get_closest_ansi_color() -> None:
     # White
     assert _get_closest_ansi_color(255, 255, 255) == "ansiwhite"
     assert _get_closest_ansi_color(250, 250, 250) == "ansiwhite"
