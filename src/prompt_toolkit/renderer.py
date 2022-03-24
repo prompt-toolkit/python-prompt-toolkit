@@ -799,12 +799,16 @@ def print_formatted_text(
                 output.reset_attributes()
         last_attrs = attrs
 
-        # Eliminate carriage returns
-        text = text.replace("\r", "")
-
-        # Assume that the output is raw, and insert a carriage return before
-        # every newline. (Also important when the front-end is a telnet client.)
-        output.write(text.replace("\n", "\r\n"))
+        # Print escape sequences as raw output
+        if "[ZeroWidthEscape]" in style_str:
+            output.write_raw(text)
+        else:
+            # Eliminate carriage returns
+            text = text.replace("\r", "")
+            # Insert a carriage return before every newline (important when the
+            # front-end is a telnet client).
+            text = text.replace("\n", "\r\n")
+            output.write(text)
 
     # Reset again.
     output.reset_attributes()
