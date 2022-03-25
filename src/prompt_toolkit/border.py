@@ -1,7 +1,25 @@
 """Defines borders."""
 
+from abc import ABCMeta
 
-class SquareBorder:
+
+class Border(metaclass=ABCMeta):
+    """Base border type."""
+
+    TOP_LEFT: str
+    TOP_SPLIT: str
+    TOP_RIGHT: str
+    HORIZONTAL: str
+    VERTICAL: str
+    LEFT_SPLIT: str
+    RIGHT_SPLIT: str
+    CROSS: str
+    BOTTOM_LEFT: str
+    BOTTOM_SPLIT: str
+    BOTTOM_RIGHT: str
+
+
+class SquareBorder(Border):
     """Square thin border."""
 
     TOP_LEFT = "┌"
@@ -17,7 +35,7 @@ class SquareBorder:
     BOTTOM_RIGHT = "┘"
 
 
-class DoubleBorder:
+class DoubleBorder(Border):
     """Box drawing characters with double lines."""
 
     TOP_LEFT = "╔"

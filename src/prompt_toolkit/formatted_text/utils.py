@@ -5,11 +5,12 @@ When ``to_formatted_text`` has been called, we get a list of ``(style, text)``
 tuples. This file contains functions for manipulating such a list.
 """
 from enum import Enum
-from typing import Iterable, Optional, cast
+from typing import Iterable, Optional, Type, cast
 
-from pygments.lexers import get_lexer_by_name  # type: ignore
-from pygments.util import ClassNotFound  # type: ignore
+from pygments.lexers import get_lexer_by_name
+from pygments.util import ClassNotFound
 
+from prompt_toolkit.border import Border, SquareBorder
 from prompt_toolkit.utils import get_cwidth
 
 from .base import (
@@ -110,9 +111,9 @@ def split_lines(fragments: StyleAndTextTuples) -> Iterable[StyleAndTextTuples]:
     yield line
 
 
-def last_line_length(ft: "StyleAndTextTuples") -> "int":
+def last_line_length(ft: StyleAndTextTuples) -> int:
     """Calculate the length of the last line in formatted text."""
-    line: "StyleAndTextTuples" = []
+    line: StyleAndTextTuples = []
     for style, text, *_ in ft[::-1]:
         index = text.find("\n")
         line.append((style, text[index + 1 :]))
@@ -121,13 +122,13 @@ def last_line_length(ft: "StyleAndTextTuples") -> "int":
     return fragment_list_width(line)
 
 
-def max_line_width(ft: "StyleAndTextTuples") -> "int":
+def max_line_width(ft: StyleAndTextTuples) -> int:
     """Calculate the length of the longest line in formatted text."""
     return max(fragment_list_width(line) for line in split_lines(ft))
 
 
 def fragment_list_to_words(
-    fragments: "StyleAndTextTuples",
+    fragments: StyleAndTextTuples,
 ) -> "Iterable[OneStyleAndTextTuple]":
     """Split formatted text into word fragments."""
     for style, string, *mouse_handler in fragments:
@@ -138,7 +139,7 @@ def fragment_list_to_words(
         yield cast("OneStyleAndTextTuple", (style, parts[-1], *mouse_handler))
 
 
-def apply_style(ft: "StyleAndTextTuples", style: "str") -> "StyleAndTextTuples":
+def apply_style(ft: StyleAndTextTuples, style: str) -> StyleAndTextTuples:
     """Apply a style to formatted text."""
     return [
         (
@@ -152,11 +153,11 @@ def apply_style(ft: "StyleAndTextTuples", style: "str") -> "StyleAndTextTuples":
 
 
 def strip(
-    ft: "StyleAndTextTuples",
-    left: "bool" = True,
-    right: "bool" = True,
-    char: "Optional[str]" = None,
-) -> "StyleAndTextTuples":
+    ft: StyleAndTextTuples,
+    left: bool = True,
+    right: bool = True,
+    char: Optional[str] = None,
+) -> StyleAndTextTuples:
     """Strip whitespace (or a given character) from the ends of formatted text.
 
     Args:
@@ -180,11 +181,11 @@ def strip(
 
 
 def truncate(
-    ft: "StyleAndTextTuples",
-    width: "int",
-    style: "str" = "",
-    placeholder: "str" = "…",
-) -> "StyleAndTextTuples":
+    ft: StyleAndTextTuples,
+    width: int,
+    style: str = "",
+    placeholder: str = "…",
+) -> StyleAndTextTuples:
     """Truncates all lines at a given length.
 
     Args:
@@ -198,7 +199,7 @@ def truncate(
         The truncated formatted text
 
     """
-    result: "StyleAndTextTuples" = []
+    result: StyleAndTextTuples = []
     phw = sum(get_cwidth(c) for c in placeholder)
     for line in split_lines(ft):
         used_width = 0
@@ -220,11 +221,11 @@ def truncate(
 
 
 def wrap(
-    ft: "StyleAndTextTuples",
-    width: "int",
-    style: "str" = "",
-    placeholder: "str" = "…",
-) -> "StyleAndTextTuples":
+    ft: StyleAndTextTuples,
+    width: int,
+    style: str = "",
+    placeholder: str = "…",
+) -> StyleAndTextTuples:
     """Wraps formatted text at a given width.
 
     If words are longer than the given line they will be truncated
@@ -238,7 +239,7 @@ def wrap(
     Returns:
         The wrapped formatted text
     """
-    result: "StyleAndTextTuples" = []
+    result: StyleAndTextTuples = []
     lines = list(split_lines(ft))
     for i, line in enumerate(lines):
         if fragment_list_width(line) <= width:
@@ -273,12 +274,12 @@ def wrap(
 
 
 def align(
-    how: "FormattedTextAlign",
-    ft: "StyleAndTextTuples",
-    width: "Optional[int]" = None,
-    style: "str" = "",
-    placeholder: "str" = "…",
-) -> "StyleAndTextTuples":
+    how: FormattedTextAlign,
+    ft: StyleAndTextTuples,
+    width: Optional[int] = None,
+    style: str = "",
+    placeholder: str = "…",
+) -> StyleAndTextTuples:
     """Align formatted text at a given width.
 
     Args:
@@ -297,7 +298,7 @@ def align(
     if width is None:
         lines = [strip(line) for line in split_lines(ft)]
         width = max(fragment_list_width(line) for line in lines)
-    result: "StyleAndTextTuples" = []
+    result: StyleAndTextTuples = []
     for line in lines:
         line_width = fragment_list_width(line)
         # Truncate the line if it is too long
@@ -323,11 +324,11 @@ def align(
 
 
 def indent(
-    ft: "StyleAndTextTuples",
-    margin: "str" = " ",
-    style: "str" = "",
-    skip_first: "bool" = False,
-) -> "StyleAndTextTuples":
+    ft: StyleAndTextTuples,
+    margin: str = " ",
+    style: str = "",
+    skip_first: bool = False,
+) -> StyleAndTextTuples:
     """Indents formatted text with a given margin.
 
     Args:
@@ -340,7 +341,7 @@ def indent(
         The indented formatted text
 
     """
-    result: "StyleAndTextTuples" = []
+    result: StyleAndTextTuples = []
     for i, line in enumerate(split_lines(ft)):
         if not (i == 0 and skip_first):
             result.append((style, margin))
@@ -351,11 +352,11 @@ def indent(
 
 
 def add_border(
-    ft: "StyleAndTextTuples",
+    ft: StyleAndTextTuples,
     width: "Optional[int]" = None,
-    style: "str" = "",
-    border: "Optional[Type[B]]" = None,
-) -> "StyleAndTextTuples":
+    style: str = "",
+    border: "Type[Border]" = SquareBorder,
+) -> StyleAndTextTuples:
     """Adds a border around formatted text.
 
     Args:
@@ -368,14 +369,14 @@ def add_border(
         The indented formatted text
 
     """
-    if border is None:
-        # See mypy issue #4236
-        border = cast("Type[B]", Border)
+    # if border is None:
+    # See mypy issue #4236
+    # border = cast("Type[Border]", Border)
     if width is None:
         width = max_line_width(ft) + 4
 
     # ft = align(FormattedTextAlign.LEFT, ft, width - 4)
-    result: "StyleAndTextTuples" = []
+    result: StyleAndTextTuples = []
 
     result.append(
         (
@@ -400,7 +401,7 @@ def add_border(
     return result
 
 
-def lex(ft: "StyleAndTextTuples", lexer_name: "str") -> "StyleAndTextTuples":
+def lex(ft: StyleAndTextTuples, lexer_name: str) -> StyleAndTextTuples:
     """Format formatted text using a named :py:mod:`pygments` lexer."""
     from prompt_toolkit.lexers.pygments import _token_cache
 
