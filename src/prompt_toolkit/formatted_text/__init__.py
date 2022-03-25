@@ -21,6 +21,8 @@ from .base import (
     to_formatted_text,
 )
 from .html import HTML
+
+from .markdown import Markdown
 from .pygments import PygmentsTokens
 from .utils import (
     fragment_list_len,
@@ -45,6 +47,8 @@ __all__ = [
     "ANSI",
     # Pygments.
     "PygmentsTokens",
+    # Markdown
+    "Markdown",
     # Utils.
     "fragment_list_len",
     "fragment_list_width",

@@ -17,6 +17,7 @@ from typing import Callable, Generic, List, Optional, Sequence, Tuple, TypeVar, 
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.auto_suggest import AutoSuggest, DynamicAutoSuggest
+from prompt_toolkit.border import SquareBorder as Border
 from prompt_toolkit.buffer import Buffer, BufferAcceptHandler
 from prompt_toolkit.completion import Completer, DynamicCompleter
 from prompt_toolkit.document import Document
@@ -94,16 +95,6 @@ __all__ = [
 ]
 
 E = KeyPressEvent
-
-
-class Border:
-    "Box drawing characters. (Thin)"
-    HORIZONTAL = "\u2500"
-    VERTICAL = "\u2502"
-    TOP_LEFT = "\u250c"
-    TOP_RIGHT = "\u2510"
-    BOTTOM_LEFT = "\u2514"
-    BOTTOM_RIGHT = "\u2518"
 
 
 class TextArea:
