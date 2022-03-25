@@ -164,8 +164,8 @@ class TelnetConnection:
         def size_received(rows: int, columns: int) -> None:
             """TelnetProtocolParser 'size_received' callback"""
             self.size = Size(rows=rows, columns=columns)
-            if self.vt100_output is not None:
-                get_app()._on_resize()
+            if self.vt100_output is not None and self.context:
+                self.context.run(lambda: get_app()._on_resize())
 
         def ttype_received(ttype: str) -> None:
             """TelnetProtocolParser 'ttype_received' callback"""
