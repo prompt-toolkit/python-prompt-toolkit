@@ -23,6 +23,7 @@ from prompt_toolkit.formatted_text.utils import (
     to_plain_text,
 )
 
+from .base import StyleAndTextTuples
 from .utils import (
     FormattedTextAlign,
     add_border,
@@ -39,7 +40,6 @@ if TYPE_CHECKING:
 
     from markdown_it.token import Token
 
-    from prompt_toolkit.formatted_text.base import StyleAndTextTuples
 
 # Check for markdown-it-py
 markdown_parser: Optional["MarkdownIt"] = None

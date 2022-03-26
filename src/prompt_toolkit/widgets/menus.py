@@ -1,6 +1,7 @@
 from typing import Callable, Iterable, List, Optional, Sequence, Union
 
 from prompt_toolkit.application.current import get_app
+from prompt_toolkit.border import SquareBorder as Border
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.formatted_text.base import OneStyleAndTextTuple, StyleAndTextTuples
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, KeyBindingsBase
@@ -19,7 +20,6 @@ from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.mouse_events import MouseEvent, MouseEventType
 from prompt_toolkit.utils import get_cwidth
 from prompt_toolkit.widgets import Shadow
-from prompt_toolkit.border import SquareBorder as Border
 
 __all__ = [
     "MenuContainer",
