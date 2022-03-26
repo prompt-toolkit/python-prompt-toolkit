@@ -173,8 +173,10 @@ def strip(
     result = ft[:]
     for toggle, index, strip_func in [(left, 0, str.lstrip), (right, -1, str.rstrip)]:
         if toggle:
-            while result and not (text := strip_func(result[index][1], char)):
+            text = strip_func(result[index][1], char)
+            while result and not text:
                 del result[index]
+                text = strip_func(result[index][1], char)
             if result and "[ZeroWidthEscape]" not in result[index][0]:
                 result[index] = (result[index][0], text)
     return result

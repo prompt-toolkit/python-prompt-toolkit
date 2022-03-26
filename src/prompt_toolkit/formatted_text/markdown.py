@@ -462,7 +462,8 @@ class Markdown:
         token = tokens[0]
 
         # Restrict width if necessary
-        if inset := TAG_INSETS.get(token.tag):
+        inset = TAG_INSETS.get(token.tag)
+        if inset:
             width -= inset
 
         style = "class:md"
@@ -477,7 +478,8 @@ class Markdown:
             ft.append((style, token.content))
 
         # Apply tag rule
-        if rule := TAG_RULES.get(token.tag):
+        rule = TAG_RULES.get(token.tag)
+        if rule:
             ft = rule(
                 ft,
                 width,
