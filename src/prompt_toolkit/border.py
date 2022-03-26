@@ -35,17 +35,42 @@ class SquareBorder(Border):
     BOTTOM_RIGHT = "┘"
 
 
+class RoundBorder(SquareBorder):
+    """Thin border with round corners."""
+
+    TOP_LEFT = "╭"
+    TOP_RIGHT = "╮"
+    BOTTOM_LEFT = "╰"
+    BOTTOM_RIGHT = "╯"
+
+
 class DoubleBorder(Border):
-    """Box drawing characters with double lines."""
+    """Square border with double lines."""
 
     TOP_LEFT = "╔"
+    TOP_SPLIT = "╦"
     TOP_RIGHT = "╗"
-    VERTICAL = "║"
-    INNER_VERTICAL = "║"
     HORIZONTAL = "═"
-    INNER_HORIZONTAL = "═"
-    BOTTOM_LEFT = "╚"
-    BOTTOM_RIGHT = "╝"
-    SPLIT_LEFT = "╠"
-    SPLIT_RIGHT = "╣"
+    VERTICAL = "║"
+    LEFT_SPLIT = "╠"
+    RIGHT_SPLIT = "╣"
     CROSS = "╬"
+    BOTTOM_LEFT = "╚"
+    BOTTOM_SPLIT = "╩"
+    BOTTOM_RIGHT = "╝"
+
+
+class ThickBorder(Border):
+    """Square border with thick lines."""
+
+    TOP_LEFT = "┏"
+    TOP_SPLIT = "┳"
+    TOP_RIGHT = "┓"
+    HORIZONTAL = "━"
+    VERTICAL = "┃"
+    LEFT_SPLIT = "┣"
+    RIGHT_SPLIT = "┫"
+    CROSS = "╋"
+    BOTTOM_LEFT = "┗"
+    BOTTOM_SPLIT = "┻"
+    BOTTOM_RIGHT = "┛"
