@@ -19,6 +19,23 @@ class Border(metaclass=ABCMeta):
     BOTTOM_RIGHT: str
 
 
+class NoBorder(Border):
+    """Invisible border."""
+
+    TOP_LEFT = " "
+    TOP_SPLIT = " "
+    TOP_RIGHT = " "
+    HORIZONTAL = " "
+    INNER_VERTICAL = " "
+    VERTICAL = " "
+    LEFT_SPLIT = " "
+    RIGHT_SPLIT = " "
+    CROSS = " "
+    BOTTOM_LEFT = " "
+    BOTTOM_SPLIT = " "
+    BOTTOM_RIGHT = " "
+
+
 class SquareBorder(Border):
     """Square thin border."""
 
