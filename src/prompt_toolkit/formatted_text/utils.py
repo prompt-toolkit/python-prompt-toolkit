@@ -21,11 +21,23 @@ from .base import (
 )
 
 __all__ = [
+    "FormattedTextAlign",
     "to_plain_text",
     "fragment_list_len",
     "fragment_list_width",
     "fragment_list_to_text",
     "split_lines",
+    "last_line_length",
+    "max_line_width",
+    "fragment_list_to_words",
+    "apply_style",
+    "strip",
+    "truncate",
+    "wrap",
+    "align",
+    "indent",
+    "add_border",
+    "lex",
 ]
 
 
@@ -172,10 +184,12 @@ def strip(
     """
     result = ft[:]
     for toggle, index, strip_func in [(left, 0, str.lstrip), (right, -1, str.rstrip)]:
-        if toggle:
+        if result and toggle:
             text = strip_func(result[index][1], char)
             while result and not text:
                 del result[index]
+                if not result:
+                    break
                 text = strip_func(result[index][1], char)
             if result and "[ZeroWidthEscape]" not in result[index][0]:
                 result[index] = (result[index][0], text)
