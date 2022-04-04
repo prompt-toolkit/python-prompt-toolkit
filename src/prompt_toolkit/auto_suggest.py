@@ -46,6 +46,9 @@ class Suggestion:
     def __repr__(self) -> str:
         return "Suggestion(%s)" % self.text
 
+    def __bool__(self) -> bool:
+        return bool(self.text)
+
 
 class AutoSuggest(metaclass=ABCMeta):
     """
