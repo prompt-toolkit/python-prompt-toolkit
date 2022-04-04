@@ -1,4 +1,7 @@
+from prompt_toolkit.shortcuts import print_container
 from prompt_toolkit.shortcuts.prompt import _split_multiline_prompt
+from prompt_toolkit.shortcuts.utils import print_container
+from prompt_toolkit.widgets import Frame, TextArea
 
 
 def test_split_multiline_prompt():
@@ -49,3 +52,16 @@ def test_split_multiline_prompt():
     assert has_before_tokens() is True
     assert before() == [("class:testclass", "\n")]
     assert first_input_line() == [("class:testclass", "a"), ("class:testclass", "b")]
+
+
+def test_print_container(tmpdir):
+    # Call `print_container`, render to a dummy file.
+    f = tmpdir.join("output")
+    with open(f, "w") as fd:
+        print_container(Frame(TextArea(text="Hello world!\n"), title="Title"), file=fd)
+
+    # Verify rendered output.
+    with open(f, "r") as fd:
+        text = fd.read()
+        assert "Hello world" in text
+        assert "Title" in text
