@@ -1,6 +1,23 @@
 CHANGELOG
 =========
 
+3.0.29: 2022-04-04
+------------------
+
+New features:
+- Accept 'handle_sigint' parameter in PromptSession.
+
+Fixes
+- Fix 'variable referenced before assignment' error in vt100 mouse bindings.
+- Pass `handle_sigint` from `Application.run` to `Application.run_async`.
+- Fix detection of telnet client side changes.
+- Fix `print_container` utility (handle `EOFError`).
+
+Breaking changes:
+- The following are now context managers:
+  `create_pipe_input`, `PosixPipeInput` and `Win32PipeInput`.
+
+
 3.0.28: 2022-02-11
 ------------------
 
