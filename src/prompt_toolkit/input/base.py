@@ -105,6 +105,9 @@ class PipeInput(Input):
 class DummyInput(Input):
     """
     Input for use in a `DummyApplication`
+
+    If used in an actual application, it will make the application render
+    itself once and exit immediately, due to an `EOFError`.
     """
 
     def fileno(self) -> int:
@@ -118,6 +121,8 @@ class DummyInput(Input):
 
     @property
     def closed(self) -> bool:
+        # This needs to be true, so that the dummy input will trigger an
+        # `EOFError` immediately in the application.
         return True
 
     def raw_mode(self) -> ContextManager[None]:
