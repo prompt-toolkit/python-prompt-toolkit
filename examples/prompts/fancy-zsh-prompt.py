@@ -2,7 +2,7 @@
 """
 Example of the fancy ZSH prompt that @anki-code was using.
 
-The theme is coming from the xonsh plugin from the xhh project:
+The theme is coming from the xonsh plugin from the xxh project:
 https://github.com/xxh/xxh-plugin-xonsh-theme-bar
 
 See:
