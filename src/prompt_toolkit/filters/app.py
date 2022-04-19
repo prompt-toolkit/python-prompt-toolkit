@@ -20,6 +20,7 @@ __all__ = [
     "has_focus",
     "buffer_has_focus",
     "has_selection",
+    "has_suggestion",
     "has_validation_error",
     "is_done",
     "is_read_only",
@@ -112,6 +113,15 @@ def has_selection() -> bool:
     Enable when the current buffer has a selection.
     """
     return bool(get_app().current_buffer.selection_state)
+
+
+@Condition
+def has_suggestion() -> bool:
+    """
+    Enable when the current buffer has a suggestion.
+    """
+    buffer = get_app().current_buffer
+    return buffer.suggestion is not None and buffer.suggestion.text != ""
 
 
 @Condition
