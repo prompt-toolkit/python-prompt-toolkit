@@ -61,6 +61,7 @@ class Char:
         "\x1b": "^[",  # Escape
         "\x1c": "^\\",
         "\x1d": "^]",
+        "\x1e": "^^",
         "\x1f": "^_",
         "\x7f": "^?",  # ASCII Delete (backspace).
         # Special characters. All visualized like Vim does.
