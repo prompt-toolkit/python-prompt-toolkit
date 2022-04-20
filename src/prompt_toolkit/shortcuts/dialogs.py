@@ -109,6 +109,7 @@ def input_dialog(
     validator: Optional[Validator] = None,
     password: FilterOrBool = False,
     style: Optional[BaseStyle] = None,
+    default: str = "",
 ) -> Application[str]:
     """
     Display a text input box.
@@ -126,6 +127,7 @@ def input_dialog(
     cancel_button = Button(text=cancel_text, handler=_return_none)
 
     textfield = TextArea(
+        text=default,
         multiline=False,
         password=password,
         completer=completer,
