@@ -263,18 +263,11 @@ def progress_dialog(
     """
     loop = get_event_loop()
     progressbar = ProgressBar()
-    text_area = TextArea(
-        focusable=False,
-        # Prefer this text area as big as possible, to avoid having a window
-        # that keeps resizing when we add text to it.
-        height=D(preferred=10**10),
-    )
 
     dialog = Dialog(
         body=HSplit(
             [
                 Box(Label(text=text)),
-                Box(text_area, padding=D.exact(1)),
                 progressbar,
             ]
         ),
