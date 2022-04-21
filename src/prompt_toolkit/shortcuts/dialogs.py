@@ -263,6 +263,10 @@ def progress_dialog(
     """
     loop = get_event_loop()
     progressbar = ProgressBar()
+    text_area = TextArea(
+        focusable=False,
+        height=0
+    )
 
     dialog = Dialog(
         body=HSplit(
