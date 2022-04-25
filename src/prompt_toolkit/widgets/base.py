@@ -344,6 +344,9 @@ class Label:
         dont_extend_height: bool = True,
         dont_extend_width: bool = False,
         align: Union[WindowAlign, Callable[[], WindowAlign]] = WindowAlign.LEFT,
+        # There is no cursor navigation in a label, so it makes sense to always
+        # wrap lines by default.
+        wrap_lines: FilterOrBool = True,
     ) -> None:
 
         self.text = text
@@ -370,6 +373,7 @@ class Label:
             dont_extend_height=dont_extend_height,
             dont_extend_width=dont_extend_width,
             align=align,
+            wrap_lines=wrap_lines,
         )
 
     def __pt_container__(self) -> Container:
