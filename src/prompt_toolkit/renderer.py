@@ -204,26 +204,35 @@ def _output_screen_diff(
         while c <= new_max_line_len:
             new_char = new_row[c]
             old_char = previous_row[c]
+            new_zwe = zero_width_escapes_row[c]
             char_width = new_char.width or 1
 
             # When the old and new character at this position are different,
+            # or the zero-width escape sequences at this position differ,
             # draw the output. (Because of the performance, we don't call
             # `Char.__ne__`, but inline the same expression.)
-            if new_char.char != old_char.char or new_char.style != old_char.style:
-                current_pos = move_cursor(Point(x=c, y=y))
+            diff_char = new_char.char != old_char.char or new_char.style != old_char.style
+            diff_zwe = new_zwe != previous_screen.zero_width_escapes[y][c]
+            if diff_char or diff_zwe:
+                # Don't move the cursor if it is already in the correct position
+                if c != current_pos.x or y != current_pos.y:
+                    current_pos = move_cursor(Point(x=c, y=y))
 
-                # Send injected escape sequences to output.
-                if c in zero_width_escapes_row:
-                    write_raw(zero_width_escapes_row[c])
+                if diff_zwe:
+                    # Send injected escape sequences to output.
+                    write_raw(new_zwe)
 
-                output_char(new_char)
-                current_pos = Point(x=current_pos.x + char_width, y=current_pos.y)
+                if diff_char:
+                    output_char(new_char)
+                    current_pos = Point(x=current_pos.x + char_width, y=current_pos.y)
 
             c += char_width
 
         # If the new line is shorter, trim it.
         if previous_screen and new_max_line_len < previous_max_line_len:
-            current_pos = move_cursor(Point(x=new_max_line_len + 1, y=y))
+            # Don't move the cursor if it is already in the correct position
+            if current_pos.x != new_max_line_len or current_pos.y != current_pos.y:
+                current_pos = move_cursor(Point(x=new_max_line_len + 1, y=y))
             reset_attributes()
             output.erase_end_of_line()
 
