@@ -383,6 +383,18 @@ Output
     :members:
 
 
+Data structures
+---------------
+
+.. autoclass:: prompt_toolkit.layout.WindowRenderInfo
+    :members:
+
+.. autoclass:: prompt_toolkit.data_structures.Point
+    :members:
+
+.. autoclass:: prompt_toolkit.data_structures.Size
+    :members:
+
 Patch stdout
 ------------
 
