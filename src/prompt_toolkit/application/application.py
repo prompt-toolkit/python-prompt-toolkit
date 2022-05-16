@@ -15,7 +15,7 @@ from asyncio import (
     set_event_loop,
     sleep,
 )
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from subprocess import Popen
 from traceback import format_tb
 from typing import (
@@ -29,6 +29,7 @@ from typing import (
     Generic,
     Hashable,
     Iterable,
+    Iterator,
     List,
     Optional,
     Tuple,
@@ -670,12 +671,7 @@ class Application(Generic[_AppResult]):
             # See: https://github.com/prompt-toolkit/python-prompt-toolkit/issues/1553
             handle_sigint = False
 
-        async def _run_async() -> _AppResult:
-            "Coroutine."
-            loop = get_event_loop()
-            f = loop.create_future()
-            self.future = f  # XXX: make sure to set this before calling '_redraw'.
-            self.loop = loop
+        async def _run_async(f: "asyncio.Future[_AppResult]") -> _AppResult:
             self.context = contextvars.copy_context()
 
             # Counter for cancelling 'flush' timeouts. Every time when a key is
@@ -790,70 +786,115 @@ class Application(Generic[_AppResult]):
                         # Store unprocessed input as typeahead for next time.
                         store_typeahead(self.input, self.key_processor.empty_queue())
 
-                return cast(_AppResult, result)
+                return result
 
-        async def _run_async2() -> _AppResult:
+        @contextmanager
+        def get_loop() -> Iterator[AbstractEventLoop]:
+            loop = get_event_loop()
+            self.loop = loop
+
+            try:
+                yield loop
+            finally:
+                self.loop = None
+
+        @contextmanager
+        def set_is_running() -> Iterator[None]:
             self._is_running = True
             try:
-                # Make sure to set `_invalidated` to `False` to begin with,
-                # otherwise we're not going to paint anything. This can happen if
-                # this application had run before on a different event loop, and a
-                # paint was scheduled using `call_soon_threadsafe` with
-                # `max_postpone_time`.
-                self._invalidated = False
-
-                loop = get_event_loop()
-
-                if handle_sigint:
-                    loop.add_signal_handler(
-                        signal.SIGINT,
-                        lambda *_: loop.call_soon_threadsafe(
-                            self.key_processor.send_sigint
-                        ),
-                    )
-
-                if set_exception_handler:
-                    previous_exc_handler = loop.get_exception_handler()
-                    loop.set_exception_handler(self._handle_exception)
-
-                # Set slow_callback_duration.
-                original_slow_callback_duration = loop.slow_callback_duration
-                loop.slow_callback_duration = slow_callback_duration
-
-                try:
-                    with set_app(self), self._enable_breakpointhook():
-                        try:
-                            result = await _run_async()
-                        finally:
-                            # Wait for the background tasks to be done. This needs to
-                            # go in the finally! If `_run_async` raises
-                            # `KeyboardInterrupt`, we still want to wait for the
-                            # background tasks.
-                            await self.cancel_and_wait_for_background_tasks()
-
-                            # Also remove the Future again. (This brings the
-                            # application back to its initial state, where it also
-                            # doesn't have a Future.)
-                            self.future = None
-
-                        return result
-                finally:
-                    if set_exception_handler:
-                        loop.set_exception_handler(previous_exc_handler)
-
-                    if handle_sigint:
-                        loop.remove_signal_handler(signal.SIGINT)
-
-                    # Reset slow_callback_duration.
-                    loop.slow_callback_duration = original_slow_callback_duration
-
+                yield
             finally:
-                # Set the `_is_running` flag to `False`. Normally this happened
-                # already in the finally block in `run_async` above, but in
-                # case of exceptions, that's not always the case.
                 self._is_running = False
 
-        return await _run_async2()
+        @contextmanager
+        def set_handle_sigint(loop: AbstractEventLoop) -> Iterator[None]:
+            if handle_sigint:
+                loop.add_signal_handler(
+                    signal.SIGINT,
+                    lambda *_: loop.call_soon_threadsafe(
+                        self.key_processor.send_sigint
+                    ),
+                )
+                try:
+                    yield
+                finally:
+                    loop.remove_signal_handler(signal.SIGINT)
+            else:
+                yield
+
+        @contextmanager
+        def set_exception_handler_ctx(loop: AbstractEventLoop) -> Iterator[None]:
+            if set_exception_handler:
+                previous_exc_handler = loop.get_exception_handler()
+                loop.set_exception_handler(self._handle_exception)
+                try:
+                    yield
+                finally:
+                    loop.set_exception_handler(previous_exc_handler)
+
+            else:
+                yield
+
+        @contextmanager
+        def set_callback_duration(loop: AbstractEventLoop) -> Iterator[None]:
+            # Set slow_callback_duration.
+            original_slow_callback_duration = loop.slow_callback_duration
+            loop.slow_callback_duration = slow_callback_duration
+            try:
+                yield
+            finally:
+                # Reset slow_callback_duration.
+                loop.slow_callback_duration = original_slow_callback_duration
+
+        @contextmanager
+        def create_future(
+            loop: AbstractEventLoop,
+        ) -> "Iterator[asyncio.Future[_AppResult]]":
+            f = loop.create_future()
+            self.future = f  # XXX: make sure to set this before calling '_redraw'.
+
+            try:
+                yield f
+            finally:
+                # Also remove the Future again. (This brings the
+                # application back to its initial state, where it also
+                # doesn't have a Future.)
+                self.future = None
+
+        with ExitStack() as stack:
+            stack.enter_context(set_is_running())
+
+            # Make sure to set `_invalidated` to `False` to begin with,
+            # otherwise we're not going to paint anything. This can happen if
+            # this application had run before on a different event loop, and a
+            # paint was scheduled using `call_soon_threadsafe` with
+            # `max_postpone_time`.
+            self._invalidated = False
+
+            loop = stack.enter_context(get_loop())
+
+            stack.enter_context(set_handle_sigint(loop))
+            stack.enter_context(set_exception_handler_ctx(loop))
+            stack.enter_context(set_callback_duration(loop))
+            stack.enter_context(set_app(self))
+            stack.enter_context(self._enable_breakpointhook())
+
+            f = stack.enter_context(create_future(loop))
+
+            try:
+                return await _run_async(f)
+            finally:
+                # Wait for the background tasks to be done. This needs to
+                # go in the finally! If `_run_async` raises
+                # `KeyboardInterrupt`, we still want to wait for the
+                # background tasks.
+                await self.cancel_and_wait_for_background_tasks()
+
+        # The `ExitStack` above is defined in typeshed in a way that it can
+        # swallow exceptions. Without next line, mypy would think that there's
+        # a possibility we don't return here. See:
+        # https://github.com/python/mypy/issues/7726
+        assert False, "unreachable"
 
     def run(
         self,
