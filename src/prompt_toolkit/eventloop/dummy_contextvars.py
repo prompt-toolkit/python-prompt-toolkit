@@ -4,18 +4,25 @@ Dummy contextvars implementation, to make prompt_toolkit work on Python 3.6.
 As long as there is only one application running at a time, we don't need the
 real contextvars. So, stuff like the telnet-server and so on requires 3.7.
 """
-from typing import Any, Callable, Generic, Optional, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, TypeVar
+
+if TYPE_CHECKING:
+    from typing_extensions import ParamSpec
 
 
 def copy_context() -> "Context":
     return Context()
 
 
+if TYPE_CHECKING:
+    _P = ParamSpec("_P")
 _T = TypeVar("_T")
 
 
 class Context:
-    def run(self, callable: Callable[..., _T], *args: Any, **kwargs: Any) -> _T:
+    def run(
+        self, callable: "Callable[_P, _T]", *args: "_P.args", **kwargs: "_P.kwargs"
+    ) -> _T:
         return callable(*args, **kwargs)
 
     def copy(self) -> "Context":

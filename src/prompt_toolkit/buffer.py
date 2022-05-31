@@ -17,6 +17,7 @@ from typing import (
     Any,
     Awaitable,
     Callable,
+    Coroutine,
     Deque,
     Iterable,
     List,
@@ -1692,7 +1693,7 @@ class Buffer:
             )
         )
 
-    def _create_completer_coroutine(self) -> Callable[..., Awaitable[None]]:
+    def _create_completer_coroutine(self) -> Callable[..., Coroutine[Any, Any, None]]:
         """
         Create function for asynchronous autocompletion.
 
@@ -1822,7 +1823,7 @@ class Buffer:
 
         return async_completer
 
-    def _create_auto_suggest_coroutine(self) -> Callable[[], Awaitable[None]]:
+    def _create_auto_suggest_coroutine(self) -> Callable[[], Coroutine[Any, Any, None]]:
         """
         Create function for asynchronous auto suggestion.
         (This can be in another thread.)
@@ -1849,7 +1850,9 @@ class Buffer:
 
         return async_suggestor
 
-    def _create_auto_validate_coroutine(self) -> Callable[[], Awaitable[None]]:
+    def _create_auto_validate_coroutine(
+        self,
+    ) -> Callable[[], Coroutine[Any, Any, None]]:
         """
         Create a function for asynchronous validation while typing.
         (This can be in another thread.)

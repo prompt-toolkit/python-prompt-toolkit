@@ -245,7 +245,7 @@ class TelnetConnection:
         # Make sure that when an application was active for this connection,
         # that we print the text above the application.
         if self.context:
-            self.context.run(run_in_terminal, func)
+            self.context.run(run_in_terminal, func)  # type: ignore
         else:
             raise RuntimeError("Called _run_in_terminal outside `run_application`.")
 
