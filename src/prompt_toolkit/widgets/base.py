@@ -892,7 +892,7 @@ class Checkbox(CheckboxList[str]):
 
     def __init__(self, text: AnyFormattedText = "", checked: bool = False) -> None:
         values = [("value", text)]
-        CheckboxList.__init__(self, values=values)
+        super().__init__(values=values)
         self.checked = checked
 
     @property

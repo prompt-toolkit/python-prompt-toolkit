@@ -22,6 +22,7 @@ from typing import (
     Any,
     Awaitable,
     Callable,
+    Coroutine,
     Dict,
     FrozenSet,
     Generator,
@@ -1017,7 +1018,7 @@ class Application(Generic[_AppResult]):
         CustomPdb(stdout=sys.__stdout__).set_trace(frame)
 
     def create_background_task(
-        self, coroutine: Awaitable[None]
+        self, coroutine: Coroutine[Any, Any, None]
     ) -> "asyncio.Task[None]":
         """
         Start a background task (coroutine) for the running application. When
@@ -1029,7 +1030,7 @@ class Application(Generic[_AppResult]):
 
         Not threadsafe.
         """
-        task = get_event_loop().create_task(coroutine)
+        task: asyncio.Task[None] = get_event_loop().create_task(coroutine)
         self.background_tasks.append(task)
         return task
 

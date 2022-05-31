@@ -7,6 +7,7 @@ from typing import (
     Iterable,
     List,
     Optional,
+    Sequence,
     Tuple,
     TypeVar,
     Union,
@@ -406,7 +407,7 @@ class MultiColumnCompletionMenuControl(UIControl):
 
         def grouper(
             n: int, iterable: Iterable[_T], fillvalue: Optional[_T] = None
-        ) -> Iterable[List[_T]]:
+        ) -> Iterable[Sequence[Optional[_T]]]:
             "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
             args = [iter(iterable)] * n
             return zip_longest(fillvalue=fillvalue, *args)
