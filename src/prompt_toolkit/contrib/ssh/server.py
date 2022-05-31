@@ -85,9 +85,8 @@ class PromptToolkitSSHSession(asyncssh.SSHServerSession):  # type: ignore
 
         term = self._chan.get_terminal_type()
 
-        self._output = Vt100_Output(
-            self.stdout, self._get_size, term=term, write_binary=False
-        )
+        self._output = Vt100_Output(self.stdout, self._get_size, term=term)
+
         with create_pipe_input() as self._input:
             with create_app_session(input=self._input, output=self._output) as session:
                 self.app_session = session

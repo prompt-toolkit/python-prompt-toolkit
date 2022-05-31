@@ -23,14 +23,10 @@ class PlainTextOutput(Output):
     formatting.)
     """
 
-    def __init__(self, stdout: TextIO, write_binary: bool = True) -> None:
+    def __init__(self, stdout: TextIO) -> None:
         assert all(hasattr(stdout, a) for a in ("write", "flush"))
 
-        if write_binary:
-            assert hasattr(stdout, "encoding")
-
         self.stdout: TextIO = stdout
-        self.write_binary = write_binary
         self._buffer: List[str] = []
 
     def fileno(self) -> int:
@@ -58,7 +54,7 @@ class PlainTextOutput(Output):
 
         data = "".join(self._buffer)
         self._buffer = []
-        flush_stdout(self.stdout, data, write_binary=self.write_binary)
+        flush_stdout(self.stdout, data)
 
     def erase_screen(self) -> None:
         pass

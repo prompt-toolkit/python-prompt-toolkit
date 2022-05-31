@@ -7,7 +7,15 @@ from typing import IO, Iterator, TextIO, cast
 __all__ = ["flush_stdout"]
 
 
-def flush_stdout(stdout: TextIO, data: str, write_binary: bool) -> None:
+def flush_stdout(stdout: TextIO, data: str) -> None:
+    # If the IO object has an `encoding` and `buffer` attribute, it means that
+    # we can access the underlying BinaryIO object and write into it in binary
+    # mode. This is preferred if possible.
+    # NOTE: When used in a Jupyter notebook, don't write binary.
+    #       `ipykernel.iostream.OutStream` has an `encoding` attribute, but not
+    #       a `buffer` attribute, so we can't write binary in it.
+    has_binary_io = hasattr(stdout, "encoding") and hasattr(stdout, "buffer")
+
     try:
         # Ensure that `stdout` is made blocking when writing into it.
         # Otherwise, when uvloop is activated (which makes stdout
@@ -20,14 +28,8 @@ def flush_stdout(stdout: TextIO, data: str, write_binary: bool) -> None:
             # My Arch Linux installation of july 2015 reported 'ANSI_X3.4-1968'
             # for sys.stdout.encoding in xterm.
             out: IO[bytes]
-            if write_binary:
-                if hasattr(stdout, "buffer"):
-                    out = stdout.buffer
-                else:
-                    # IO[bytes] was given to begin with.
-                    # (Used in the unit tests, for instance.)
-                    out = cast(IO[bytes], stdout)
-                out.write(data.encode(stdout.encoding or "utf-8", "replace"))
+            if has_binary_io:
+                stdout.buffer.write(data.encode(stdout.encoding or "utf-8", "replace"))
             else:
                 stdout.write(data)
 

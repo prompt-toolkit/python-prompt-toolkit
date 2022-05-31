@@ -400,8 +400,6 @@ class Vt100_Output(Output):
     :param get_size: A callable which returns the `Size` of the output terminal.
     :param stdout: Any object with has a `write` and `flush` method + an 'encoding' property.
     :param term: The terminal environment variable. (xterm, xterm-256color, linux, ...)
-    :param write_binary: Encode the output before writing it. If `True` (the
-        default), the `stdout` object is supposed to expose an `encoding` attribute.
     """
 
     # For the error messages. Only display "Output is not a terminal" once per
@@ -413,19 +411,14 @@ class Vt100_Output(Output):
         stdout: TextIO,
         get_size: Callable[[], Size],
         term: Optional[str] = None,
-        write_binary: bool = True,
         default_color_depth: Optional[ColorDepth] = None,
         enable_bell: bool = True,
     ) -> None:
 
         assert all(hasattr(stdout, a) for a in ("write", "flush"))
 
-        if write_binary:
-            assert hasattr(stdout, "encoding")
-
         self._buffer: List[str] = []
         self.stdout: TextIO = stdout
-        self.write_binary = write_binary
         self.default_color_depth = default_color_depth
         self._get_size = get_size
         self.term = term
@@ -699,7 +692,7 @@ class Vt100_Output(Output):
         data = "".join(self._buffer)
         self._buffer = []
 
-        flush_stdout(self.stdout, data, write_binary=self.write_binary)
+        flush_stdout(self.stdout, data)
 
     def ask_for_cpr(self) -> None:
         """
