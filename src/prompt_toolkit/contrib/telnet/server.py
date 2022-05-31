@@ -169,9 +169,7 @@ class TelnetConnection:
 
         def ttype_received(ttype: str) -> None:
             """TelnetProtocolParser 'ttype_received' callback"""
-            self.vt100_output = Vt100_Output(
-                self.stdout, get_size, term=ttype, write_binary=False
-            )
+            self.vt100_output = Vt100_Output(self.stdout, get_size, term=ttype)
             self._ready.set()
 
         self.parser = TelnetProtocolParser(data_received, size_received, ttype_received)

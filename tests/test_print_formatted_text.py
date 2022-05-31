@@ -12,7 +12,6 @@ from prompt_toolkit.utils import is_windows
 
 class _Capture:
     "Emulate an stdout object."
-    encoding = "utf-8"
 
     def __init__(self):
         self._data = []
@@ -22,7 +21,7 @@ class _Capture:
 
     @property
     def data(self):
-        return b"".join(self._data)
+        return "".join(self._data)
 
     def flush(self):
         pass
@@ -40,15 +39,15 @@ class _Capture:
 def test_print_formatted_text():
     f = _Capture()
     pt_print([("", "hello"), ("", "world")], file=f)
-    assert b"hello" in f.data
-    assert b"world" in f.data
+    assert "hello" in f.data
+    assert "world" in f.data
 
 
 @pytest.mark.skipif(is_windows(), reason="Doesn't run on Windows yet.")
 def test_print_formatted_text_backslash_r():
     f = _Capture()
     pt_print("hello\r\n", file=f)
-    assert b"hello" in f.data
+    assert "hello" in f.data
 
 
 @pytest.mark.skipif(is_windows(), reason="Doesn't run on Windows yet.")
@@ -70,8 +69,8 @@ def test_formatted_text_with_style():
     # NOTE: We pass the default (8bit) color depth, so that the unit tests
     #       don't start failing when environment variables change.
     pt_print(tokens, style=style, file=f, color_depth=ColorDepth.DEFAULT)
-    assert b"\x1b[0;38;5;197mHello" in f.data
-    assert b"\x1b[0;38;5;83;3mworld" in f.data
+    assert "\x1b[0;38;5;197mHello" in f.data
+    assert "\x1b[0;38;5;83;3mworld" in f.data
 
 
 @pytest.mark.skipif(is_windows(), reason="Doesn't run on Windows yet.")
@@ -87,5 +86,5 @@ def test_html_with_style():
 
     assert (
         f.data
-        == b"\x1b[0m\x1b[?7h\x1b[0;32mhello\x1b[0m \x1b[0;1mworld\x1b[0m\r\n\x1b[0m"
+        == "\x1b[0m\x1b[?7h\x1b[0;32mhello\x1b[0m \x1b[0;1mworld\x1b[0m\r\n\x1b[0m"
     )
