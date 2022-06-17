@@ -50,6 +50,7 @@ Full screen applications:
 - `pydoro <https://github.com/JaDogg/pydoro>`_: Pomodoro timer.
 - `sanctuary-zero <https://github.com/t0xic0der/sanctuary-zero>`_: A secure chatroom with zero logging and total transience.
 - `Hummingbot <https://github.com/CoinAlpha/hummingbot>`_: A Cryptocurrency Algorithimic Trading Platform
+- `git-bbb <https://github.com/MrMino/git-bbb>`_: A `git blame` browser.
 
 Libraries:
 
