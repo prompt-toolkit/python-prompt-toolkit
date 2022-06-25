@@ -43,7 +43,7 @@ def flush_stdout(stdout: TextIO, data: str) -> None:
 
             width = _getwidth()
             if width is not None:
-                data = "\r\n".join(_cut(data, width))
+                data = "\n".join(_cut(data, width))
 
             if has_binary_io:
                 stdout.buffer.write(data.encode(stdout.encoding or "utf-8", "replace"))
