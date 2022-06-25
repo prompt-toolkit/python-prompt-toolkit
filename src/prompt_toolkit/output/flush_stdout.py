@@ -6,6 +6,18 @@ from typing import IO, Iterator, TextIO, cast
 
 __all__ = ["flush_stdout"]
 
+def _cut(text: str, width: int):
+    yield text[:width]
+    while True:
+        text = text[width:]
+        if not text:
+            break
+        yield text
+
+def _getwidth():
+    from prompt_toolkit.application import get_app_session
+    return get_app_session().output.get_size().columns or None
+
 
 def flush_stdout(stdout: TextIO, data: str) -> None:
     # If the IO object has an `encoding` and `buffer` attribute, it means that
@@ -28,6 +40,11 @@ def flush_stdout(stdout: TextIO, data: str) -> None:
             # My Arch Linux installation of july 2015 reported 'ANSI_X3.4-1968'
             # for sys.stdout.encoding in xterm.
             out: IO[bytes]
+
+            width = _getwidth()
+            if width is not None:
+                data = "\r\n".join(_cut(data, width))
+
             if has_binary_io:
                 stdout.buffer.write(data.encode(stdout.encoding or "utf-8", "replace"))
             else:
@@ -40,15 +57,7 @@ def flush_stdout(stdout: TextIO, data: str) -> None:
             # resize signal. (Just ignore. The resize handler will render
             # again anyway.)
             pass
-        elif e.args and e.args[0] == 0:
-            # This can happen when there is a lot of output and the user
-            # sends a KeyboardInterrupt by pressing Control-C. E.g. in
-            # a Python REPL when we execute "while True: print('test')".
-            # (The `ptpython` REPL uses this `Output` class instead of
-            # `stdout` directly -- in order to be network transparent.)
-            # So, just ignore.
-            pass
-        else:
+        elif not e.args or e.args[0] != 0:
             raise
 
 
