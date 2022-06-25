@@ -6,6 +6,7 @@ from typing import IO, Iterator, TextIO, cast
 
 __all__ = ["flush_stdout"]
 
+
 def _cut(text: str, width: int):
     yield text[:width]
     while True:
@@ -13,6 +14,7 @@ def _cut(text: str, width: int):
         if not text:
             break
         yield text
+
 
 def _getwidth():
     from prompt_toolkit.application import get_app_session
