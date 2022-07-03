@@ -1861,7 +1861,7 @@ def load_vi_bindings() -> KeyBindingsBase:
         )
         def _arg(event: E) -> None:
             """
-            Always handle numberics in navigation mode as arg.
+            Always handle numerics in navigation mode as arg.
             """
             event.append_to_arg_count(event.data)
 
