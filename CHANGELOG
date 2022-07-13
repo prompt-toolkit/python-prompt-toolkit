@@ -1,6 +1,22 @@
 CHANGELOG
 =========
 
+3.0.30: 2022-06-27
+------------------
+
+New features:
+- Allow zero-width-escape sequences in `print_formatted_text`.
+- Add default value option for input dialog.
+- Added `has_suggestion` filter.
+
+Fixes:
+- Fix rendering of control-shift-6 (or control-^). Render as '^^'
+- Always wrap lines in the Label widget by default.
+- Fix enter key binding in system toolbar in Vi mode.
+- Improved handling of stdout objects that don't have a 'buffer' attribute. For
+  instance, when using `renderer_print_formatted_text` in a Jupyter Notebook.
+
+
 3.0.29: 2022-04-04
 ------------------
 
