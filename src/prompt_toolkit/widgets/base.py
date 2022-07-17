@@ -227,7 +227,7 @@ class TextArea:
             auto_suggest=DynamicAutoSuggest(lambda: self.auto_suggest),
             accept_handler=accept_handler,
             history=history,
-            name=name
+            name=name,
         )
 
         self.control = BufferControl(
