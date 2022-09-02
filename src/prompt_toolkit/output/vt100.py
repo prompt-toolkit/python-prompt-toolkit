@@ -400,6 +400,13 @@ class Vt100_Output(Output):
     :param get_size: A callable which returns the `Size` of the output terminal.
     :param stdout: Any object with has a `write` and `flush` method + an 'encoding' property.
     :param term: The terminal environment variable. (xterm, xterm-256color, linux, ...)
+    :param enable_cpr: When `True` (the default), send "cursor position
+        request" escape sequences to the output in order to detect the cursor
+        position. That way, we can properly determine how much space there is
+        available for the UI (especially for drop down menus) to render. The
+        `Renderer` will still try to figure out whether the current terminal
+        does respond to CPR escapes. When `False`, never attempt to send CPR
+        requests.
     """
 
     # For the error messages. Only display "Output is not a terminal" once per
@@ -413,6 +420,7 @@ class Vt100_Output(Output):
         term: Optional[str] = None,
         default_color_depth: Optional[ColorDepth] = None,
         enable_bell: bool = True,
+        enable_cpr: bool = False,
     ) -> None:
 
         assert all(hasattr(stdout, a) for a in ("write", "flush"))
@@ -423,6 +431,7 @@ class Vt100_Output(Output):
         self._get_size = get_size
         self.term = term
         self.enable_bell = enable_bell
+        self.enable_cpr = enable_cpr
 
         # Cache for escape codes.
         self._escape_code_caches: Dict[ColorDepth, _EscapeCodeCache] = {
@@ -703,6 +712,9 @@ class Vt100_Output(Output):
 
     @property
     def responds_to_cpr(self) -> bool:
+        if not self.enable_cpr:
+            return False
+
         # When the input is a tty, we assume that CPR is supported.
         # It's not when the input is piped from Pexpect.
         if os.environ.get("PROMPT_TOOLKIT_NO_CPR", "") == "1":

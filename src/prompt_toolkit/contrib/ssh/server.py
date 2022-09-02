@@ -18,9 +18,13 @@ __all__ = ["PromptToolkitSSHSession", "PromptToolkitSSHServer"]
 
 class PromptToolkitSSHSession(asyncssh.SSHServerSession):  # type: ignore
     def __init__(
-        self, interact: Callable[["PromptToolkitSSHSession"], Awaitable[None]]
+        self,
+        interact: Callable[["PromptToolkitSSHSession"], Awaitable[None]],
+        *,
+        enable_cpr: bool,
     ) -> None:
         self.interact = interact
+        self.enable_cpr = enable_cpr
         self.interact_task: Optional[asyncio.Task[None]] = None
         self._chan: Optional[Any] = None
         self.app_session: Optional[AppSession] = None
@@ -85,7 +89,9 @@ class PromptToolkitSSHSession(asyncssh.SSHServerSession):  # type: ignore
 
         term = self._chan.get_terminal_type()
 
-        self._output = Vt100_Output(self.stdout, self._get_size, term=term)
+        self._output = Vt100_Output(
+            self.stdout, self._get_size, term=term, enable_cpr=self.enable_cpr
+        )
 
         with create_pipe_input() as self._input:
             with create_app_session(input=self._input, output=self._output) as session:
@@ -145,16 +151,25 @@ class PromptToolkitSSHServer(asyncssh.SSHServer):  # type: ignore
             )
         )
         loop.run_forever()
+
+    :param enable_cpr: When `True`, the default, try to detect whether the SSH
+        client runs in a terminal that responds to "cursor position requests".
+        That way, we can properly determine how much space there is available
+        for the UI (especially for drop down menus) to render.
     """
 
     def __init__(
-        self, interact: Callable[[PromptToolkitSSHSession], Awaitable[None]]
+        self,
+        interact: Callable[[PromptToolkitSSHSession], Awaitable[None]],
+        *,
+        enable_cpr: bool = True,
     ) -> None:
         self.interact = interact
+        self.enable_cpr = enable_cpr
 
     def begin_auth(self, username: str) -> bool:
         # No authentication.
         return False
 
     def session_requested(self) -> PromptToolkitSSHSession:
-        return PromptToolkitSSHSession(self.interact)
+        return PromptToolkitSSHSession(self.interact, enable_cpr=self.enable_cpr)

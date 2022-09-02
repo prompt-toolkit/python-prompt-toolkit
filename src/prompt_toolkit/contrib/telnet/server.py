@@ -132,6 +132,7 @@ class TelnetConnection:
         encoding: str,
         style: Optional[BaseStyle],
         vt100_input: PipeInput,
+        enable_cpr: bool = True,
     ) -> None:
 
         self.conn = conn
@@ -143,7 +144,8 @@ class TelnetConnection:
         self._closed = False
         self._ready = asyncio.Event()
         self.vt100_input = vt100_input
-        self.vt100_output = None
+        self.enable_cpr = enable_cpr
+        self.vt100_output: Optional[Vt100_Output] = None
 
         # Create "Output" object.
         self.size = Size(rows=40, columns=79)
@@ -169,7 +171,9 @@ class TelnetConnection:
 
         def ttype_received(ttype: str) -> None:
             """TelnetProtocolParser 'ttype_received' callback"""
-            self.vt100_output = Vt100_Output(self.stdout, get_size, term=ttype)
+            self.vt100_output = Vt100_Output(
+                self.stdout, get_size, term=ttype, enable_cpr=enable_cpr
+            )
             self._ready.set()
 
         self.parser = TelnetProtocolParser(data_received, size_received, ttype_received)
@@ -274,6 +278,7 @@ class TelnetServer:
         interact: Callable[[TelnetConnection], Awaitable[None]] = _dummy_interact,
         encoding: str = "utf-8",
         style: Optional[BaseStyle] = None,
+        enable_cpr: bool = True,
     ) -> None:
 
         self.host = host
@@ -281,6 +286,7 @@ class TelnetServer:
         self.interact = interact
         self.encoding = encoding
         self.style = style
+        self.enable_cpr = enable_cpr
         self._application_tasks: List[asyncio.Task[None]] = []
 
         self.connections: Set[TelnetConnection] = set()
@@ -345,6 +351,7 @@ class TelnetServer:
                         encoding=self.encoding,
                         style=self.style,
                         vt100_input=vt100_input,
+                        enable_cpr=self.enable_cpr,
                     )
                     self.connections.add(connection)
 
