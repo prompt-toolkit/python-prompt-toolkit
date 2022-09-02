@@ -1,6 +1,16 @@
 CHANGELOG
 =========
 
+3.0.31: 2022-09-02
+------------------
+
+New features:
+- Pass through `name` property in `TextArea` widget to `Buffer`.
+- Added a `enable_cpr` parameter to `Vt100_Output`, `TelnetServer` and
+  `PromptToolkitSSHServer`, to completely disable CPR support instead of
+  automatically detecting it.
+
+
 3.0.30: 2022-06-27
 ------------------
 
