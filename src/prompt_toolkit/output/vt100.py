@@ -420,7 +420,7 @@ class Vt100_Output(Output):
         term: Optional[str] = None,
         default_color_depth: Optional[ColorDepth] = None,
         enable_bell: bool = True,
-        enable_cpr: bool = False,
+        enable_cpr: bool = True,
     ) -> None:
 
         assert all(hasattr(stdout, a) for a in ("write", "flush"))
