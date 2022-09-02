@@ -195,6 +195,7 @@ class TextArea:
         preview_search: FilterOrBool = True,
         prompt: AnyFormattedText = "",
         input_processors: Optional[List[Processor]] = None,
+        name: str = "",
     ) -> None:
 
         if search_field is None:
@@ -226,6 +227,7 @@ class TextArea:
             auto_suggest=DynamicAutoSuggest(lambda: self.auto_suggest),
             accept_handler=accept_handler,
             history=history,
+            name=name,
         )
 
         self.control = BufferControl(
