@@ -120,7 +120,7 @@ class PromptToolkitSSHSession(asyncssh.SSHServerSession):  # type: ignore
         self._input.send_text(data)
 
 
-class PromptToolkitSSHServer(asyncssh.SSHServer):  # type: ignore
+class PromptToolkitSSHServer(asyncssh.SSHServer):
     """
     Run a prompt_toolkit application over an asyncssh server.
 
