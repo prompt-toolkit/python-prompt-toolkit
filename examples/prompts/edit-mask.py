@@ -15,7 +15,7 @@ from prompt_toolkit.widgets import TextArea
 
 
 class EditMask:
-    def __init__(self, animals:Any, colors:Any, cities:Any, names:Any) -> None:
+    def __init__(self, animals: Any, colors: Any, cities: Any, names: Any) -> None:
         self.animal_completer = FuzzyWordCompleter(animals)
         self.color_completer = FuzzyWordCompleter(colors)
         self.city_completer = FuzzyWordCompleter(cities)
@@ -115,7 +115,9 @@ class EditMask:
         buf.complete_state = None
         return True
 
-    def factory_area(self, prefix:str, prefix_min_width:int=0, completer:Any=None) -> TextArea:
+    def factory_area(
+        self, prefix: str, prefix_min_width: int = 0, completer: Any = None
+    ) -> TextArea:
         """Generate a text area component."""
         ta = TextArea(
             multiline=False,
