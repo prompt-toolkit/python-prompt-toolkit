@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 from prompt_toolkit.application import Application
-from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout.containers import Float, FloatContainer, HSplit, Window
-from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
-from prompt_toolkit.layout.layout import Layout
-from prompt_toolkit.layout.menus import CompletionsMenu, CompletionsMenuControl
-
-from prompt_toolkit.filters import Condition
-from prompt_toolkit.completion import FuzzyWordCompleter
-from prompt_toolkit.widgets import TextArea
-from prompt_toolkit.layout.dimension import D
 from prompt_toolkit.application.current import get_app
+from prompt_toolkit.completion import FuzzyWordCompleter
+from prompt_toolkit.filters import Condition
+from prompt_toolkit.layout.controls import FormattedTextControl
+from prompt_toolkit.layout.menus import CompletionsMenu, CompletionsMenuControl
+from prompt_toolkit.layout.containers import Float, FloatContainer, HSplit, Window
+from prompt_toolkit.layout.dimension import D
+from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.layout.layout import Layout
+from prompt_toolkit.widgets import TextArea
 
 
 class EditMask:
@@ -55,12 +54,34 @@ class EditMask:
             event.app.exit()
 
         self.text_area = {
-            'Animal': self.factory_area('Animal', prefix_min_width=15, completer=self.animal_completer),
-            'Color': self.factory_area('Color', prefix_min_width=15, completer=self.color_completer),
-            'City': self.factory_area('City', prefix_min_width=15, completer=self.city_completer),
-            'Name': self.factory_area('Name', prefix_min_width=15, completer=self.name_completer),
-            'Other info 1': self.factory_area('Other info 1', prefix_min_width=15),
-            'Other info 2': self.factory_area('Other info 2', prefix_min_width=15),
+            'Animal': self.factory_area(
+                'Animal',
+                prefix_min_width=15,
+                completer=self.animal_completer
+            ),
+            'Color': self.factory_area(
+                'Color',
+                prefix_min_width=15,
+                completer=self.color_completer
+            ),
+            'City': self.factory_area(
+                'City',
+                prefix_min_width=15,
+                completer=self.city_completer
+            ),
+            'Name': self.factory_area(
+                'Name',
+                prefix_min_width=15,
+                completer=self.name_completer
+            ),
+            'Other info 1': self.factory_area(
+                'Other info 1',
+                prefix_min_width=15
+            ),
+            'Other info 2': self.factory_area(
+                'Other info 2',
+                prefix_min_width=15
+            ),
         }
 
         self.completion_menu = CompletionsMenu(max_height=16, scroll_offset=1)
@@ -75,7 +96,9 @@ class EditMask:
             content=HSplit(
                 [
                     Window(
-                        FormattedTextControl('Ctrl-S - Save and quit | Ctrl-C - Quit without save '), height=1, style="reverse"
+                        FormattedTextControl('Ctrl-S - Save and quit | Ctrl-C - Quit without save'),
+                        height=1,
+                        style="reverse"
                     ),
                     self.text_area['Animal'],
                     self.text_area['Color'],
@@ -90,7 +113,11 @@ class EditMask:
             ],
         )
 
-        # self.application = Application(layout=Layout(self.body), key_bindings=kb, full_screen=True)
+        # self.application = Application(
+        #     layout=Layout(self.body),
+        #     key_bindings=kb,
+        #     full_screen=True
+        # )
         self.application = Application(layout=Layout(self.body), key_bindings=kb)
 
     def accept_text(self, buf):
@@ -105,7 +132,8 @@ class EditMask:
             completer=completer,
             width=D(preferred=40),
             accept_handler=self.accept_text,
-            get_line_prefix=lambda lineno, wrap_count : prefix + (' ' * (prefix_min_width - len(prefix) - 2)) + ': ',
+            get_line_prefix=lambda lineno,
+                wrap_count : prefix + (' ' * (prefix_min_width - len(prefix) - 2)) + ': ',
         )
         ta.control.buffer.name = prefix
         return ta
@@ -115,8 +143,8 @@ class EditMask:
         if self.finish_event == 'quit':
             print('Quitting without saving')
         elif self.finish_event == 'save':
-            for key in self.text_area:
-                print(key, ':', self.text_area[key].text)
+            for key, item in self.text_area.items():
+                print(key, ':', item.text)
 
 
 def main():
