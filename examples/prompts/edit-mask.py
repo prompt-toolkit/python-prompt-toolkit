@@ -3,12 +3,16 @@ from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.completion import FuzzyWordCompleter
 from prompt_toolkit.filters import Condition
-from prompt_toolkit.layout.controls import FormattedTextControl
-from prompt_toolkit.layout.menus import CompletionsMenu, CompletionsMenuControl
-from prompt_toolkit.layout.containers import Float, FloatContainer, HSplit, Window
-from prompt_toolkit.layout.dimension import D
 from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.layout.containers import Float
+from prompt_toolkit.layout.containers import FloatContainer
+from prompt_toolkit.layout.containers import HSplit
+from prompt_toolkit.layout.containers import Window
+from prompt_toolkit.layout.controls import FormattedTextControl
+from prompt_toolkit.layout.dimension import D
 from prompt_toolkit.layout.layout import Layout
+from prompt_toolkit.layout.menus import CompletionsMenu
+from prompt_toolkit.layout.menus import CompletionsMenuControl
 from prompt_toolkit.widgets import TextArea
 
 
