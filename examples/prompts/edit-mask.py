@@ -90,7 +90,7 @@ class EditMask:
             ],
         )
 
-        #self.application = Application(layout=Layout(self.body), key_bindings=kb, full_screen=True)
+        # self.application = Application(layout=Layout(self.body), key_bindings=kb, full_screen=True)
         self.application = Application(layout=Layout(self.body), key_bindings=kb)
 
     def accept_text(self, buf):
