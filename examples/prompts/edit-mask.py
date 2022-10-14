@@ -19,7 +19,7 @@ class EditMask:
         self.city_completer = FuzzyWordCompleter(cities)
         self.name_completer = FuzzyWordCompleter(names)
 
-        self.finish_event = ''
+        self.finish_event = ""
 
         kb = KeyBindings()
 
@@ -44,44 +44,30 @@ class EditMask:
         @kb.add("c-c")
         def _(event):
             "Quit application without saving."
-            self.finish_event = 'quit'
+            self.finish_event = "quit"
             event.app.exit()
 
         @kb.add("c-s")
         def _(event):
             "Save and quit application."
-            self.finish_event = 'save'
+            self.finish_event = "save"
             event.app.exit()
 
         self.text_area = {
-            'Animal': self.factory_area(
-                'Animal',
-                prefix_min_width=15,
-                completer=self.animal_completer
+            "Animal": self.factory_area(
+                "Animal", prefix_min_width=15, completer=self.animal_completer
             ),
-            'Color': self.factory_area(
-                'Color',
-                prefix_min_width=15,
-                completer=self.color_completer
+            "Color": self.factory_area(
+                "Color", prefix_min_width=15, completer=self.color_completer
             ),
-            'City': self.factory_area(
-                'City',
-                prefix_min_width=15,
-                completer=self.city_completer
+            "City": self.factory_area(
+                "City", prefix_min_width=15, completer=self.city_completer
             ),
-            'Name': self.factory_area(
-                'Name',
-                prefix_min_width=15,
-                completer=self.name_completer
+            "Name": self.factory_area(
+                "Name", prefix_min_width=15, completer=self.name_completer
             ),
-            'Other info 1': self.factory_area(
-                'Other info 1',
-                prefix_min_width=15
-            ),
-            'Other info 2': self.factory_area(
-                'Other info 2',
-                prefix_min_width=15
-            ),
+            "Other info 1": self.factory_area("Other info 1", prefix_min_width=15),
+            "Other info 2": self.factory_area("Other info 2", prefix_min_width=15),
         }
 
         self.completion_menu = CompletionsMenu(max_height=16, scroll_offset=1)
@@ -96,16 +82,18 @@ class EditMask:
             content=HSplit(
                 [
                     Window(
-                        FormattedTextControl('Ctrl-S - Save and quit | Ctrl-C - Quit without save'),
+                        FormattedTextControl(
+                            "Ctrl-S - Save and quit | Ctrl-C - Quit without save"
+                        ),
                         height=1,
-                        style="reverse"
+                        style="reverse",
                     ),
-                    self.text_area['Animal'],
-                    self.text_area['Color'],
-                    self.text_area['City'],
-                    self.text_area['Name'],
-                    self.text_area['Other info 1'],
-                    self.text_area['Other info 2'],
+                    self.text_area["Animal"],
+                    self.text_area["Color"],
+                    self.text_area["City"],
+                    self.text_area["Name"],
+                    self.text_area["Other info 1"],
+                    self.text_area["Other info 2"],
                 ]
             ),
             floats=[
@@ -132,19 +120,20 @@ class EditMask:
             completer=completer,
             width=D(preferred=40),
             accept_handler=self.accept_text,
-            get_line_prefix=lambda lineno,
-                wrap_count : prefix + (' ' * (prefix_min_width - len(prefix) - 2)) + ': ',
+            get_line_prefix=lambda lineno, wrap_count: prefix
+            + (" " * (prefix_min_width - len(prefix) - 2))
+            + ": ",
         )
         ta.control.buffer.name = prefix
         return ta
 
     def run(self):
         self.application.run()
-        if self.finish_event == 'quit':
-            print('Quitting without saving')
-        elif self.finish_event == 'save':
+        if self.finish_event == "quit":
+            print("Quitting without saving")
+        elif self.finish_event == "save":
             for key, item in self.text_area.items():
-                print(key, ':', item.text)
+                print(key, ":", item.text)
 
 
 def main():
