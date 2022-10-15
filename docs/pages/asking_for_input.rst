@@ -160,6 +160,20 @@ All Pygments style classes can be used as well, when they are wrapped through
 Suppose we'd like to use a Pygments style, for instance
 ``pygments.styles.tango.TangoStyle``, that is possible like this:
 
+.. code:: python
+
+    from prompt_toolkit.shortcuts import prompt
+    from prompt_toolkit.styles import style_from_pygments_cls
+    from prompt_toolkit.lexers import PygmentsLexer
+    from pygments.styles.tango import TangoStyle
+    from pygments.lexers.html import HtmlLexer
+    
+    tango_style = style_from_pygments_cls (TangoStyle)
+    
+    text = prompt ('Enter HTML: ', 
+      lexer=PygmentsLexer(HtmlLexer),
+      style=tango_style)
+
 Creating a custom style could be done like this:
 
 .. code:: python
