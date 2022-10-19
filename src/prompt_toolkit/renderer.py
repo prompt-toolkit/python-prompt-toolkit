@@ -152,13 +152,12 @@ def _output_screen_diff(
         - The `Window` adds a style class to the current line for highlighting
           (cursor-line).
         """
-        numbers = [
+        numbers = (
             index
             for index, cell in row.items()
             if cell.char != " " or style_string_has_style[cell.style]
-        ]
-        numbers.append(0)
-        return max(numbers)
+        )
+        return max(numbers, default=0)
 
     # Render for the first time: reset styling.
     if not previous_screen:
