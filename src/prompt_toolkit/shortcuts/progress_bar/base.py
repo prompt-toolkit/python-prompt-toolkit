@@ -69,7 +69,7 @@ E = KeyPressEvent
 _SIGWINCH = getattr(signal, "SIGWINCH", None)
 
 
-def create_key_bindings() -> KeyBindings:
+def create_key_bindings(created_from_main_thread: bool) -> KeyBindings:
     """
     Key bindings handled by the progress bar.
     (The main thread is not supposed to handle any key bindings.)
@@ -82,8 +82,10 @@ def create_key_bindings() -> KeyBindings:
 
     @kb.add("c-c")
     def _interrupt(event: E) -> None:
+        "Kill the 'body' of the progress bar, but only if we run from the main thread."
         # Send KeyboardInterrupt to the main thread.
-        os.kill(os.getpid(), signal.SIGINT)
+        if created_from_main_thread:
+            os.kill(os.getpid(), signal.SIGINT)
 
     return kb
 
@@ -141,9 +143,11 @@ class ProgressBar:
         self.output = output or get_app_session().output
         self.input = input or get_app_session().input
 
+        self._created_from_main_thread = (
+            threading.currentThread() == threading.main_thread()
+        )
         self._thread: Optional[threading.Thread] = None
 
-        self._loop = get_event_loop()
         self._app_loop = new_event_loop()
         self._has_sigwinch = False
         self._app_started = threading.Event()
@@ -179,7 +183,7 @@ class ProgressBar:
 
         progress_controls = [
             Window(
-                content=_ProgressControl(self, f),
+                content=_ProgressControl(self, f, self._created_from_main_thread),
                 width=functools.partial(width_for_formatter, f),
             )
             for f in self.formatters
@@ -271,10 +275,15 @@ class _ProgressControl(UIControl):
     User control for the progress bar.
     """
 
-    def __init__(self, progress_bar: ProgressBar, formatter: Formatter) -> None:
+    def __init__(
+        self,
+        progress_bar: ProgressBar,
+        formatter: Formatter,
+        created_from_main_thread: bool,
+    ) -> None:
         self.progress_bar = progress_bar
         self.formatter = formatter
-        self._key_bindings = create_key_bindings()
+        self._key_bindings = create_key_bindings(created_from_main_thread)
 
     def create_content(self, width: int, height: int) -> UIContent:
         items: List[StyleAndTextTuples] = []
