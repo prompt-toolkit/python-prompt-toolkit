@@ -1,6 +1,23 @@
 CHANGELOG
 =========
 
+3.0.32: 2022-11-03
+------------------
+
+Bug fixes:
+- Use `DummyInput` by default in `create_input()` if `sys.stdin` does not have
+  a valid file descriptor. This fixes errors when `sys.stdin` is patched in
+  certain situations.
+- Fix control-c key binding for `ProgressBar` when the progress bar was not
+  created from the main thread. The current code would try to kill the main
+  thread when control-c was pressed.
+
+New features:
+- Accept a `cancel_callback` in `ProgressBar` to specify the cancellation
+  behavior for when `control-c` is pressed.
+- Small performance improvement in the renderer.
+
+
 3.0.31: 2022-09-02
 ------------------
 
