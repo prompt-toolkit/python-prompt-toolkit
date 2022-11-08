@@ -1326,6 +1326,7 @@ class _CombinedRegistry(KeyBindingsBase):
         KeyBindings object."""
         raise NotImplementedError
 
+    @property
     def bindings(self) -> List[Binding]:
         """Not needed - this object is not going to be wrapped in another
         KeyBindings object."""
