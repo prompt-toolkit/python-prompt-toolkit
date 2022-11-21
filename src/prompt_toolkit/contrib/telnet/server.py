@@ -323,11 +323,14 @@ class TelnetServer:
         for t in self._application_tasks:
             t.cancel()
 
-        for t in self._application_tasks:
-            try:
-                await t
-            except asyncio.CancelledError:
-                logger.debug("Task %s cancelled", str(t))
+        # (This is similar to
+        # `Application.cancel_and_wait_for_background_tasks`. We wait for the
+        # background tasks to complete, but don't propagate exceptions, because
+        # we can't use `ExceptionGroup` yet.)
+        if len(self._application_tasks) > 0:
+            await asyncio.wait(
+                self._application_tasks, timeout=None, return_when=asyncio.ALL_COMPLETED
+            )
 
     def _accept(self) -> None:
         """
