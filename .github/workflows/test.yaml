@@ -32,13 +32,14 @@ jobs:
         # Check wheather the imports were sorted correctly.
         # When this fails, please run ./tools/sort-imports.sh
         run: |
-          # We use --no-warn-usused-ignores, because on Python 3.6 there is one
-          # type:ignore that we don't need.
-          mypy --strict --no-warn-unused-ignores src/prompt_toolkit --platform win32
-          mypy --strict --no-warn-unused-ignores src/prompt_toolkit --platform linux
-          mypy --strict --no-warn-unused-ignores src/prompt_toolkit --platform darwin
+          mypy --strict src/prompt_toolkit --platform win32
+          mypy --strict src/prompt_toolkit --platform linux
+          mypy --strict src/prompt_toolkit --platform darwin
           isort -c --profile black src examples tests setup.py
           black --check src examples tests setup.py
+        # Don't typecheck on 3.6. (That would require
+        # `--no-warn-usused-ignores` + several other workarounds.)
+        if: matrix.python-version != '3.6'
       - name: Validate README.md
         # Ensure that the README renders correctly (required for uploading to PyPI).
         run: |
