@@ -47,7 +47,11 @@ __all__ = [
 ]
 
 
-@memoized()
+# NOTE: `has_focus` below should *not* be `memoized`. It can reference any user
+#       control. For instance, if we would contiously create new
+#       `PromptSession` instances, then previous instances won't be released,
+#       because this memoize (which caches results in the global scope) will
+#       still refer to each instance.
 def has_focus(value: "FocusableElement") -> Condition:
     """
     Enable when this buffer has the focus.
