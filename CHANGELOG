@@ -1,6 +1,17 @@
 CHANGELOG
 =========
 
+3.0.33: 2022-11-21
+------------------
+
+Fixes:
+- Improve termination of `Application`. Don't suppress `CancelledError`. This
+  fixes a race condition when an `Application` gets cancelled while we're
+  waiting for the background tasks to complete.
+- Fixed typehint for `OneStyleAndTextTuple`.
+- Small bugfix in `CombinedRegistry`. Fixed missing `@property`.
+
+
 3.0.32: 2022-11-03
 ------------------
 
