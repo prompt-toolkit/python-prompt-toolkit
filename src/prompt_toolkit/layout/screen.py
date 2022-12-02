@@ -272,7 +272,7 @@ class Screen:
 
         for y, row in b.items():
             for x, char in row.items():
-                b[y][x] = char_cache[char.char, char.style + append_style]
+                row[x] = char_cache[char.char, char.style + append_style]
 
     def fill_area(
         self, write_position: "WritePosition", style: str = "", after: bool = False
