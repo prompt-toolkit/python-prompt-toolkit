@@ -146,6 +146,7 @@ class ScrollablePane(Container):
         # First, write the content to a virtual screen, then copy over the
         # visible part to the real screen.
         temp_screen = Screen(default_char=Char(char=" ", style=parent_style))
+        temp_screen.show_cursor = screen.show_cursor
         temp_write_position = WritePosition(
             xpos=0, ypos=0, width=virtual_width, height=virtual_height
         )
