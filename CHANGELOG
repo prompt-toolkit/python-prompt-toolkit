@@ -1,6 +1,18 @@
 CHANGELOG
 =========
 
+3.0.34: 2022-12-06
+------------------
+
+Fixes:
+- Improve completion performance in various places.
+- Improve renderer performance.
+- Handle `KeyboardInterrupt` when the stacktrace of an unhandled error is
+  displayed.
+- Use correct event loop in `Application.create_background_task()`.
+- Fix `show_cursor` attribute in `ScrollablePane`.
+
+
 3.0.33: 2022-11-21
 ------------------
 
