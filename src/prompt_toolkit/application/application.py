@@ -1470,7 +1470,10 @@ async def _do_wait_for_enter(wait_text: AnyFormattedText) -> None:
     session: PromptSession[None] = PromptSession(
         message=wait_text, key_bindings=key_bindings
     )
-    await session.app.run_async()
+    try:
+        await session.app.run_async()
+    except KeyboardInterrupt:
+        pass  # Control-c pressed. Don't propagate this error.
 
 
 @contextmanager
