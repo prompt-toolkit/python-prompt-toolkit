@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9, "3.10"]
+        python-version: [3.7, 3.8, 3.9, "3.10"]
 
     steps:
       - uses: actions/checkout@v2
@@ -37,9 +37,6 @@ jobs:
           mypy --strict src/prompt_toolkit --platform darwin
           isort -c --profile black src examples tests setup.py
           black --check src examples tests setup.py
-        # Don't typecheck on 3.6. (That would require
-        # `--no-warn-usused-ignores` + several other workarounds.)
-        if: matrix.python-version != '3.6'
       - name: Validate README.md
         # Ensure that the README renders correctly (required for uploading to PyPI).
         run: |
