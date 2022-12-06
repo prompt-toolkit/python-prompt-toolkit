@@ -13,6 +13,7 @@ from typing import (
     Union,
     cast,
 )
+from weakref import WeakKeyDictionary, WeakValueDictionary
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import CompletionState
@@ -333,6 +334,16 @@ class MultiColumnCompletionMenuControl(UIControl):
         self.suggested_max_column_width = suggested_max_column_width
         self.scroll = 0
 
+        # Cache for column width computations. This computation is not cheap,
+        # so we don't want to do it over and over again while the user
+        # navigates through the completions.
+        # (map `completion_state` to `(completion_count, width)`. We remember
+        # the count, because a completer can add new completions to the
+        # `CompletionState` while loading.)
+        self._column_width_for_completion_state: "WeakKeyDictionary[CompletionState, Tuple[int, int]]" = (
+            WeakKeyDictionary()
+        )
+
         # Info of last rendering.
         self._rendered_rows = 0
         self._rendered_columns = 0
@@ -509,11 +520,26 @@ class MultiColumnCompletionMenuControl(UIControl):
 
         return UIContent(get_line=get_line, line_count=len(rows_))
 
-    def _get_column_width(self, complete_state: CompletionState) -> int:
+    def _get_column_width(self, completion_state: CompletionState) -> int:
         """
         Return the width of each column.
         """
-        return max(get_cwidth(c.display_text) for c in complete_state.completions) + 1
+        try:
+            count, width = self._column_width_for_completion_state[completion_state]
+            if count != len(completion_state.completions):
+                # Number of completions changed, recompute.
+                raise KeyError
+            return width
+        except KeyError:
+            result = (
+                max(get_cwidth(c.display_text) for c in completion_state.completions)
+                + 1
+            )
+            self._column_width_for_completion_state[completion_state] = (
+                len(completion_state.completions),
+                result,
+            )
+            return result
 
     def mouse_handler(self, mouse_event: MouseEvent) -> "NotImplementedOrNone":
         """
