@@ -1,7 +1,6 @@
 """
 Implementation for async generators.
 """
-from contextlib import asynccontextmanager
 from queue import Empty, Full, Queue
 from threading import Event
 from typing import (
@@ -14,6 +13,7 @@ from typing import (
     Union,
 )
 
+from .async_context_manager import asynccontextmanager
 from .utils import get_event_loop, run_in_executor_with_context
 
 __all__ = [
