@@ -42,6 +42,7 @@ from .completion import (
     get_common_complete_suffix,
 )
 from .document import Document
+from .eventloop import aclosing
 from .filters import FilterOrBool, to_filter
 from .history import History, InMemoryHistory
 from .search import SearchDirection, SearchState
@@ -1736,15 +1737,41 @@ class Buffer:
                 while generating completions."""
                 return self.complete_state == complete_state
 
-            async for completion in self.completer.get_completions_async(
-                document, complete_event
-            ):
-                complete_state.completions.append(completion)
-                self.on_completions_changed.fire()
+            refresh_needed = asyncio.Event()
 
-                # If the input text changes, abort.
-                if not proceed():
-                    break
+            async def refresh_while_loading() -> None:
+                """Background loop to refresh the UI at most 3 times a second
+                while the completion are loading. Calling
+                `on_completions_changed.fire()` for every completion that we
+                receive is too expensive when there are many completions. (We
+                could tune `Application.max_render_postpone_time` and
+                `Application.min_redraw_interval`, but having this here is a
+                better approach.)
+                """
+                while True:
+                    self.on_completions_changed.fire()
+                    refresh_needed.clear()
+                    await asyncio.sleep(0.3)
+                    await refresh_needed.wait()
+
+            refresh_task = asyncio.create_task(refresh_while_loading())
+            try:
+                # Load.
+                async with aclosing(
+                    self.completer.get_completions_async(document, complete_event)
+                ) as async_generator:
+                    async for completion in async_generator:
+                        complete_state.completions.append(completion)
+                        refresh_needed.set()
+
+                        # If the input text changes, abort.
+                        if not proceed():
+                            break
+            finally:
+                refresh_task.cancel()
+
+                # Refresh one final time after we got everything.
+                self.on_completions_changed.fire()
 
             completions = complete_state.completions
 
