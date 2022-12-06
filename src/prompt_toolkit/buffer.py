@@ -1754,7 +1754,7 @@ class Buffer:
                     await asyncio.sleep(0.3)
                     await refresh_needed.wait()
 
-            refresh_task = asyncio.create_task(refresh_while_loading())
+            refresh_task = asyncio.ensure_future(refresh_while_loading())
             try:
                 # Load.
                 async with aclosing(
