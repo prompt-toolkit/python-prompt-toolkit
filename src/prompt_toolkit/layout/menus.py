@@ -164,9 +164,13 @@ class CompletionsMenuControl(UIControl):
             return get_cwidth(completion.display_meta_text)
 
         if self._show_meta(complete_state):
-            return min(
-                max_width, max(meta_width(c) for c in complete_state.completions) + 2
-            )
+            # If the amount of completions is over 200, compute the width based
+            # on the first 200 completions, otherwise this can be very slow.
+            completions = complete_state.completions
+            if len(completions) > 200:
+                completions = completions[:200]
+
+            return min(max_width, max(meta_width(c) for c in completions) + 2)
         else:
             return 0
 
