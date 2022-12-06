@@ -27,7 +27,6 @@ def flush_stdout(stdout: TextIO, data: str) -> None:
             # UnicodeEncodeError crashes. E.g. u'\xb7' does not appear in 'ascii'.)
             # My Arch Linux installation of july 2015 reported 'ANSI_X3.4-1968'
             # for sys.stdout.encoding in xterm.
-            out: IO[bytes]
             if has_binary_io:
                 stdout.buffer.write(data.encode(stdout.encoding or "utf-8", "replace"))
             else:
