@@ -709,7 +709,19 @@ class _SelectedCompletionMetaControl(UIControl):
         app = get_app()
         if app.current_buffer.complete_state:
             state = app.current_buffer.complete_state
-            return 2 + max(get_cwidth(c.display_meta_text) for c in state.completions)
+
+            if len(state.completions) >= 30:
+                # When there are many completions, calling `get_cwidth` for
+                # every `display_meta_text` is too expensive. In this case,
+                # just return the max available width. There will be enough
+                # columns anyway so that the whole screen is filled with
+                # completions and `create_content` will then take up as much
+                # space as needed.
+                return max_available_width
+
+            return 2 + max(
+                get_cwidth(c.display_meta_text) for c in state.completions[:100]
+            )
         else:
             return 0
 
