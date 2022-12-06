@@ -1,4 +1,4 @@
-from .async_generator import generator_to_async_generator
+from .async_generator import aclosing, generator_to_async_generator
 from .inputhook import (
     InputHookContext,
     InputHookSelector,
@@ -15,6 +15,7 @@ from .utils import (
 __all__ = [
     # Async generator
     "generator_to_async_generator",
+    "aclosing",
     # Utils.
     "run_in_executor_with_context",
     "call_soon_threadsafe",
