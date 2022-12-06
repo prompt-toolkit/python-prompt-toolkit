@@ -49,7 +49,7 @@ class FuzzyCompleter(Completer):
         WORD: bool = False,
         pattern: Optional[str] = None,
         enable_fuzzy: FilterOrBool = True,
-    ):
+    ) -> None:
 
         assert pattern is None or pattern.startswith("^")
 
@@ -77,7 +77,6 @@ class FuzzyCompleter(Completer):
     def _get_fuzzy_completions(
         self, document: Document, complete_event: CompleteEvent
     ) -> Iterable[Completion]:
-
         word_before_cursor = document.get_word_before_cursor(
             pattern=re.compile(self._get_pattern())
         )
@@ -88,27 +87,35 @@ class FuzzyCompleter(Completer):
             cursor_position=document.cursor_position - len(word_before_cursor),
         )
 
-        completions = list(self.completer.get_completions(document2, complete_event))
+        inner_completions = list(
+            self.completer.get_completions(document2, complete_event)
+        )
 
         fuzzy_matches: List[_FuzzyMatch] = []
 
-        pat = ".*?".join(map(re.escape, word_before_cursor))
-        pat = f"(?=({pat}))"  # lookahead regex to manage overlapping matches
-        regex = re.compile(pat, re.IGNORECASE)
-        for compl in completions:
-            matches = list(regex.finditer(compl.text))
-            if matches:
-                # Prefer the match, closest to the left, then shortest.
-                best = min(matches, key=lambda m: (m.start(), len(m.group(1))))
-                fuzzy_matches.append(
-                    _FuzzyMatch(len(best.group(1)), best.start(), compl)
-                )
+        if word_before_cursor == "":
+            # If word before the cursor is an empty string, consider all
+            # completions, without filtering everything with an empty regex
+            # pattern.
+            fuzzy_matches = [_FuzzyMatch(0, 0, compl) for compl in inner_completions]
+        else:
+            pat = ".*?".join(map(re.escape, word_before_cursor))
+            pat = f"(?=({pat}))"  # lookahead regex to manage overlapping matches
+            regex = re.compile(pat, re.IGNORECASE)
+            for compl in inner_completions:
+                matches = list(regex.finditer(compl.text))
+                if matches:
+                    # Prefer the match, closest to the left, then shortest.
+                    best = min(matches, key=lambda m: (m.start(), len(m.group(1))))
+                    fuzzy_matches.append(
+                        _FuzzyMatch(len(best.group(1)), best.start(), compl)
+                    )
 
-        def sort_key(fuzzy_match: "_FuzzyMatch") -> Tuple[int, int]:
-            "Sort by start position, then by the length of the match."
-            return fuzzy_match.start_pos, fuzzy_match.match_length
+            def sort_key(fuzzy_match: "_FuzzyMatch") -> Tuple[int, int]:
+                "Sort by start position, then by the length of the match."
+                return fuzzy_match.start_pos, fuzzy_match.match_length
 
-        fuzzy_matches = sorted(fuzzy_matches, key=sort_key)
+            fuzzy_matches = sorted(fuzzy_matches, key=sort_key)
 
         for match in fuzzy_matches:
             # Include these completions, but set the correct `display`
@@ -117,7 +124,8 @@ class FuzzyCompleter(Completer):
                 text=match.completion.text,
                 start_position=match.completion.start_position
                 - len(word_before_cursor),
-                display_meta=match.completion.display_meta,
+                # We access to private `_display_meta` attribute, because that one is lazy.
+                display_meta=match.completion._display_meta,
                 display=self._get_display(match, word_before_cursor),
                 style=match.completion.style,
             )
@@ -128,37 +136,41 @@ class FuzzyCompleter(Completer):
         """
         Generate formatted text for the display label.
         """
-        m = fuzzy_match
-        word = m.completion.text
 
-        if m.match_length == 0:
-            # No highlighting when we have zero length matches (no input text).
-            # In this case, use the original display text (which can include
-            # additional styling or characters).
-            return m.completion.display
+        def get_display() -> AnyFormattedText:
+            m = fuzzy_match
+            word = m.completion.text
 
-        result: StyleAndTextTuples = []
+            if m.match_length == 0:
+                # No highlighting when we have zero length matches (no input text).
+                # In this case, use the original display text (which can include
+                # additional styling or characters).
+                return m.completion.display
 
-        # Text before match.
-        result.append(("class:fuzzymatch.outside", word[: m.start_pos]))
+            result: StyleAndTextTuples = []
 
-        # The match itself.
-        characters = list(word_before_cursor)
+            # Text before match.
+            result.append(("class:fuzzymatch.outside", word[: m.start_pos]))
 
-        for c in word[m.start_pos : m.start_pos + m.match_length]:
-            classname = "class:fuzzymatch.inside"
-            if characters and c.lower() == characters[0].lower():
-                classname += ".character"
-                del characters[0]
+            # The match itself.
+            characters = list(word_before_cursor)
 
-            result.append((classname, c))
+            for c in word[m.start_pos : m.start_pos + m.match_length]:
+                classname = "class:fuzzymatch.inside"
+                if characters and c.lower() == characters[0].lower():
+                    classname += ".character"
+                    del characters[0]
 
-        # Text after match.
-        result.append(
-            ("class:fuzzymatch.outside", word[m.start_pos + m.match_length :])
-        )
+                result.append((classname, c))
 
-        return result
+            # Text after match.
+            result.append(
+                ("class:fuzzymatch.outside", word[m.start_pos + m.match_length :])
+            )
+
+            return result
+
+        return get_display()
 
 
 class FuzzyWordCompleter(Completer):
