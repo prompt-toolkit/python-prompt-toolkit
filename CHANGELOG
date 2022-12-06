@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+3.0.36: 2022-12-06
+------------------
+
+Fixes:
+- Another Python 3.6 fix for a bug that was introduced in 3.0.34.
+
+
 3.0.35: 2022-12-06
 ------------------
 
