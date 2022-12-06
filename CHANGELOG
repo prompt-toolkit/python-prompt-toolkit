@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+3.0.35: 2022-12-06
+------------------
+
+Fixes:
+- Fix bug introduced in 3.0.34 for Python 3.6. Use asynccontextmanager
+  implementation from prompt_toolkit itself.
+
+
 3.0.34: 2022-12-06
 ------------------
 
