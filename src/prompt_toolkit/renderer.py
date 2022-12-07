@@ -740,6 +740,7 @@ class Renderer:
         output.erase_down()
         output.reset_attributes()
         output.enable_autowrap()
+        output.show_cursor()
 
         output.flush()
 
