@@ -52,6 +52,7 @@ from prompt_toolkit.layout.controls import UIContent, UIControl
 from prompt_toolkit.layout.dimension import AnyDimension, D
 from prompt_toolkit.output import ColorDepth, Output
 from prompt_toolkit.styles import BaseStyle
+from prompt_toolkit.utils import in_main_thread
 
 from .formatters import Formatter, create_default_formatters
 
@@ -147,10 +148,7 @@ class ProgressBar:
         # If no `cancel_callback` was given, and we're creating the progress
         # bar from the main thread. Cancel by sending a `KeyboardInterrupt` to
         # the main thread.
-        if (
-            self.cancel_callback is None
-            and threading.currentThread() == threading.main_thread()
-        ):
+        if self.cancel_callback is None and in_main_thread():
 
             def keyboard_interrupt_to_main_thread() -> None:
                 os.kill(os.getpid(), signal.SIGINT)
