@@ -209,6 +209,31 @@ PYGMENTS_DEFAULT_STYLE = {
 }
 
 
+MARKDOWN_STYLE = [
+    ("md.h1", "bold underline"),
+    ("md.h1.border", "fg:ansiyellow nounderline"),
+    ("md.h2", "bold"),
+    ("md.h2.border", "fg:grey nobold"),
+    ("md.h3", "bold"),
+    ("md.h4", "bold italic"),
+    ("md.h5", "underline"),
+    ("md.h6", "italic"),
+    ("md.code.inline", "bg:#333"),
+    ("md.strong", "bold"),
+    ("md.em", "italic"),
+    ("md.hr", "fg:ansired"),
+    ("md.ul.margin", "fg:ansiyellow"),
+    ("md.ol.margin", "fg:ansicyan"),
+    ("md.blockquote", "fg:ansipurple"),
+    ("md.blockquote.margin", "fg:grey"),
+    ("md.th", "bold"),
+    ("md.a", "underline fg:ansibrightblue"),
+    ("md.s", "strike"),
+    ("md.img", "bg:cyan fg:black"),
+    ("md.img.border", "fg:cyan bg:default"),
+]
+
+
 @memoized()
 def default_ui_style() -> BaseStyle:
     """
@@ -219,6 +244,7 @@ def default_ui_style() -> BaseStyle:
             Style(PROMPT_TOOLKIT_STYLE),
             Style(COLORS_STYLE),
             Style(WIDGETS_STYLE),
+            Style(MARKDOWN_STYLE),
         ]
     )
 
