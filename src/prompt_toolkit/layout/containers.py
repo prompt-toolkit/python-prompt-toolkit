@@ -2553,33 +2553,33 @@ class Window(Container):
         key binding (no UI invalidate required in that case).
         """
         if mouse_event.event_type == MouseEventType.SCROLL_DOWN:
-            self._scroll_down()
-            return None
+            return self._scroll_down()
         elif mouse_event.event_type == MouseEventType.SCROLL_UP:
-            self._scroll_up()
-            return None
+            return self._scroll_up()
 
         return NotImplemented
 
-    def _scroll_down(self) -> None:
+    def _scroll_down(self) -> "NotImplementedOrNone":
         "Scroll window down."
         info = self.render_info
 
         if info is None:
-            return
+            return NotImplemented
 
         if self.vertical_scroll < info.content_height - info.window_height:
             if info.cursor_position.y <= info.configured_scroll_offsets.top:
                 self.content.move_cursor_down()
-
             self.vertical_scroll += 1
+            return None
 
-    def _scroll_up(self) -> None:
+        return NotImplemented
+
+    def _scroll_up(self) -> "NotImplementedOrNone":
         "Scroll window up."
         info = self.render_info
 
         if info is None:
-            return
+            return NotImplemented
 
         if info.vertical_scroll > 0:
             # TODO: not entirely correct yet in case of line wrapping and long lines.
@@ -2588,8 +2588,10 @@ class Window(Container):
                 >= info.window_height - 1 - info.configured_scroll_offsets.bottom
             ):
                 self.content.move_cursor_up()
-
             self.vertical_scroll -= 1
+            return None
+
+        return NotImplemented
 
     def get_key_bindings(self) -> KeyBindingsBase | None:
         return self.content.get_key_bindings()
