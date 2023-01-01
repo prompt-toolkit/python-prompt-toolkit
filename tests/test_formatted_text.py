@@ -10,7 +10,7 @@ from prompt_toolkit.formatted_text import (
 from prompt_toolkit.formatted_text.utils import split_lines
 
 
-def test_basic_html():
+def test_basic_html() -> None:
     html = HTML("<i>hello</i>")
     assert to_formatted_text(html) == [("class:i", "hello")]
 
@@ -31,7 +31,7 @@ def test_basic_html():
     assert isinstance(to_formatted_text(html), FormattedText)
 
 
-def test_html_with_fg_bg():
+def test_html_with_fg_bg() -> None:
     html = HTML('<style bg="ansired">hello</style>')
     assert to_formatted_text(html) == [
         ("bg:ansired", "hello"),
@@ -51,7 +51,7 @@ def test_html_with_fg_bg():
     ]
 
 
-def test_ansi_formatting():
+def test_ansi_formatting() -> None:
     value = ANSI("\x1b[32mHe\x1b[45mllo")
 
     assert to_formatted_text(value) == [
@@ -87,7 +87,7 @@ def test_ansi_formatting():
     assert isinstance(to_formatted_text(value), FormattedText)
 
 
-def test_ansi_256_color():
+def test_ansi_256_color() -> None:
     assert to_formatted_text(ANSI("\x1b[38;5;124mtest")) == [
         ("#af0000", "t"),
         ("#af0000", "e"),
@@ -96,7 +96,7 @@ def test_ansi_256_color():
     ]
 
 
-def test_ansi_true_color():
+def test_ansi_true_color() -> None:
     assert to_formatted_text(ANSI("\033[38;2;144;238;144m$\033[0;39;49m ")) == [
         ("#90ee90", "$"),
         ("ansidefault bg:ansidefault", " "),

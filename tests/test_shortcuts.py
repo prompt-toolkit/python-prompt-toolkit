@@ -1,12 +1,13 @@
+from prompt_toolkit.formatted_text import StyleAndTextTuples
 from prompt_toolkit.shortcuts import print_container
 from prompt_toolkit.shortcuts.prompt import _split_multiline_prompt
 from prompt_toolkit.shortcuts.utils import print_container
 from prompt_toolkit.widgets import Frame, TextArea
 
 
-def test_split_multiline_prompt():
+def test_split_multiline_prompt() -> None:
     # Test 1: no newlines:
-    tokens = [("class:testclass", "ab")]
+    tokens: StyleAndTextTuples = [("class:testclass", "ab")]
     has_before_tokens, before, first_input_line = _split_multiline_prompt(
         lambda: tokens
     )

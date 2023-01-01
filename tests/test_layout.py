@@ -5,7 +5,7 @@ from prompt_toolkit.layout.containers import HSplit, VSplit, Window
 from prompt_toolkit.layout.controls import BufferControl
 
 
-def test_layout_class():
+def test_layout_class() -> None:
     c1 = BufferControl()
     c2 = BufferControl()
     c3 = BufferControl()
@@ -46,6 +46,6 @@ def test_layout_class():
     assert layout.previous_control == c1
 
 
-def test_create_invalid_layout():
+def test_create_invalid_layout() -> None:
     with pytest.raises(InvalidLayoutError):
         Layout(HSplit([]))

@@ -1,18 +1,19 @@
 from prompt_toolkit.formatted_text import fragment_list_to_text
-from prompt_toolkit.layout import to_window
+from prompt_toolkit.layout import FormattedTextControl, to_window
 from prompt_toolkit.widgets import Button
 
 
 def _to_text(button: Button) -> str:
-    control = to_window(button).content
-    return fragment_list_to_text(control.text())
+    control = to_window(button)
+    assert isinstance(control, FormattedTextControl)
+    return fragment_list_to_text(control.content.text())
 
 
-def test_defaulf_button():
+def test_defaulf_button() -> None:
     button = Button("Exit")
     assert _to_text(button) == "<   Exit   >"
 
 
-def test_custom_button():
+def test_custom_button() -> None:
     button = Button("Exit", left_symbol="[", right_symbol="]")
     assert _to_text(button) == "[   Exit   ]"
