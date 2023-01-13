@@ -37,6 +37,8 @@ class PosixStdinReader:
         self, stdin_fd: int, errors: str = "surrogateescape", encoding: str = "utf-8"
     ) -> None:
         self.stdin_fd = stdin_fd
+        self._polling_object = select.poll()
+        self._polling_object.register(self.stdin_fd)
         self.errors = errors
 
         # Create incremental decoder for decoding stdin.
@@ -69,7 +71,7 @@ class PosixStdinReader:
         # function is only called when there is something to read, but for some
         # reason this happens in certain situations.)
         try:
-            if not select.select([self.stdin_fd], [], [], 0)[0]:
+            if not self._polling_object.poll(0):  # 0 = don't block
                 return ""
         except OSError:
             # Happens for instance when the file descriptor was closed.
