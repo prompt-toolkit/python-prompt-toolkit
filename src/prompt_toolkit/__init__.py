@@ -13,6 +13,13 @@ See the examples directory to learn about the usage.
 Probably, to get started, you might also want to have a look at
 `prompt_toolkit.shortcuts.prompt`.
 """
+import re
+
+# note: this is a bit more lax than the actual pep 440 to allow for a/b/rc/dev without a number
+pep440 = re.compile(
+    r"^([1-9]\d*!)?(0|[1-9]\d*)(\.(0|[1-9]\d*))*((a|b|rc)(0|[1-9]\d*)?)?(\.post(0|[1-9]\d*))?(\.dev(0|[1-9]\d*)?)?$",
+    re.UNICODE,
+)
 from .application import Application
 from .formatted_text import ANSI, HTML
 from .shortcuts import PromptSession, print_formatted_text, prompt
@@ -20,8 +27,10 @@ from .shortcuts import PromptSession, print_formatted_text, prompt
 # Don't forget to update in `docs/conf.py`!
 __version__ = "3.0.36"
 
+assert pep440.match(__version__)
+
 # Version tuple.
-VERSION = tuple(__version__.split("."))
+VERSION = tuple(int(v.rstrip("abrc")) for v in __version__.split(".")[:3])
 
 
 __all__ = [
