@@ -5,6 +5,7 @@ from queue import Empty, Full, Queue
 from threading import Event
 from typing import (
     TYPE_CHECKING,
+    Any,
     AsyncGenerator,
     Awaitable,
     Callable,
@@ -21,22 +22,13 @@ __all__ = [
     "generator_to_async_generator",
 ]
 
-
-if TYPE_CHECKING:
-    # Thanks: https://github.com/python/typeshed/blob/main/stdlib/contextlib.pyi
-    from typing_extensions import Protocol
-
-    class _SupportsAclose(Protocol):
-        def aclose(self) -> Awaitable[object]:
-            ...
-
-    _SupportsAcloseT = TypeVar("_SupportsAcloseT", bound=_SupportsAclose)
+_T_Generator = TypeVar("_T_Generator", bound=AsyncGenerator[Any, None])
 
 
 @asynccontextmanager
 async def aclosing(
-    thing: "_SupportsAcloseT",
-) -> AsyncGenerator["_SupportsAcloseT", None]:
+    thing: _T_Generator,
+) -> AsyncGenerator[_T_Generator, None]:
     "Similar to `contextlib.aclosing`, in Python 3.10."
     try:
         yield thing
