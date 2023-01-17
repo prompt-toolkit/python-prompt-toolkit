@@ -333,21 +333,13 @@ Eventloop
 ---------
 
 .. automodule:: prompt_toolkit.eventloop
-    :members: EventLoop, get_traceback_from_context, From, Return,
-        ensure_future, create_event_loop, create_asyncio_event_loop,
-        get_event_loop, set_event_loop, run_in_executor, call_from_executor,
-        run_until_complete, Future, InvalidStateError
+    :members: run_in_executor_with_context, call_soon_threadsafe,
+        get_traceback_from_context, get_event_loop
 
-.. automodule:: prompt_toolkit.eventloop.posix
+.. automodule:: prompt_toolkit.eventloop.inputhook
     :members:
 
-.. automodule:: prompt_toolkit.eventloop.win32
-    :members:
-
-.. automodule:: prompt_toolkit.eventloop.asyncio_win32
-    :members:
-
-.. automodule:: prompt_toolkit.eventloop.asyncio_posix
+.. automodule:: prompt_toolkit.eventloop.utils
     :members:
 
 
@@ -373,8 +365,7 @@ Output
 ------
 
 .. automodule:: prompt_toolkit.output
-    :members: Output, DummyOutput, ColorDepth, create_output,
-        get_default_output, set_default_output
+    :members: Output, DummyOutput, ColorDepth, create_output
 
 .. automodule:: prompt_toolkit.output.vt100
     :members:
