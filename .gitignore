@@ -44,3 +44,6 @@ docs/_build
 
 # pycharm metadata
 .idea
+
+# virtualenvs
+.venv*

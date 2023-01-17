@@ -92,6 +92,14 @@ pygments_style = "sphinx"
 # If true, keep warnings as "system message" paragraphs in the built documents.
 # keep_warnings = False
 
+# autodoc configuration
+# https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
+autodoc_inherit_docstrings = False
+autodoc_mock_imports = [
+    "prompt_toolkit.eventloop.win32",
+    "prompt_toolkit.input.win32",
+    "prompt_toolkit.output.win32",
+]
 
 # -- Options for HTML output ----------------------------------------------
 
