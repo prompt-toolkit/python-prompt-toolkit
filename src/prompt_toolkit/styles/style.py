@@ -3,7 +3,6 @@ Tool for creating styles from a dictionary.
 """
 import itertools
 import re
-import sys
 from enum import Enum
 from typing import Dict, Hashable, List, Set, Tuple, TypeVar
 

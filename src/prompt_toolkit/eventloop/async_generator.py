@@ -2,17 +2,7 @@
 Implementation for async generators.
 """
 from queue import Empty, Full, Queue
-from threading import Event
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    AsyncGenerator,
-    Awaitable,
-    Callable,
-    Iterable,
-    TypeVar,
-    Union,
-)
+from typing import Any, AsyncGenerator, Callable, Iterable, TypeVar, Union
 
 from .async_context_manager import asynccontextmanager
 from .utils import get_event_loop, run_in_executor_with_context

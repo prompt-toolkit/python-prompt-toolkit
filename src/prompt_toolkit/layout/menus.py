@@ -5,7 +5,6 @@ from typing import (
     Callable,
     Dict,
     Iterable,
-    List,
     Optional,
     Sequence,
     Tuple,
@@ -13,7 +12,7 @@ from typing import (
     Union,
     cast,
 )
-from weakref import WeakKeyDictionary, WeakValueDictionary
+from weakref import WeakKeyDictionary
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import CompletionState

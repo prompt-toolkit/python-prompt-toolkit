@@ -15,7 +15,6 @@ import gobject
 import gtk
 from pygments.lexers.python import PythonLexer
 
-from prompt_toolkit.eventloop.defaults import create_event_loop
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.patch_stdout import patch_stdout
 from prompt_toolkit.shortcuts import PromptSession

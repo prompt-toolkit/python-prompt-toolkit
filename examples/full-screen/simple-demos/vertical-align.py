@@ -13,7 +13,6 @@ from prompt_toolkit.layout.containers import (
     WindowAlign,
 )
 from prompt_toolkit.layout.controls import FormattedTextControl
-from prompt_toolkit.layout.dimension import D
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.widgets import Frame
 

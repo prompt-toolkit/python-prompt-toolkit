@@ -1,14 +1,10 @@
 """
 """
 from abc import ABCMeta, abstractmethod
-from typing import AsyncGenerator, Callable, Iterable, List, Optional, Sequence
+from typing import AsyncGenerator, Callable, Iterable, Optional, Sequence
 
 from prompt_toolkit.document import Document
-from prompt_toolkit.eventloop import (
-    aclosing,
-    generator_to_async_generator,
-    get_event_loop,
-)
+from prompt_toolkit.eventloop import aclosing, generator_to_async_generator
 from prompt_toolkit.filters import FilterOrBool, to_filter
 from prompt_toolkit.formatted_text import AnyFormattedText, StyleAndTextTuples
 

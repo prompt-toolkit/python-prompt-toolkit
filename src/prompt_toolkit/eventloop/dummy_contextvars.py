@@ -4,7 +4,7 @@ Dummy contextvars implementation, to make prompt_toolkit work on Python 3.6.
 As long as there is only one application running at a time, we don't need the
 real contextvars. So, stuff like the telnet-server and so on requires 3.7.
 """
-from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, TypeVar
+from typing import TYPE_CHECKING, Callable, Generic, Optional, TypeVar
 
 if TYPE_CHECKING:
     from typing_extensions import ParamSpec

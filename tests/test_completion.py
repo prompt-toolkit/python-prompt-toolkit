@@ -6,7 +6,6 @@ from contextlib import contextmanager
 
 from prompt_toolkit.completion import (
     CompleteEvent,
-    DeduplicateCompleter,
     FuzzyWordCompleter,
     NestedCompleter,
     PathCompleter,
