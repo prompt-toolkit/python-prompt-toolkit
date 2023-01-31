@@ -30,7 +30,6 @@ from typing import (
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app_session
-from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.filters import Condition, is_done, renderer_height_is_known
 from prompt_toolkit.formatted_text import (
     AnyFormattedText,

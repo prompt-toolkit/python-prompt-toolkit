@@ -1,6 +1,6 @@
 import xml.dom.minidom as minidom
 from string import Formatter
-from typing import Any, List, Tuple, Union
+from typing import Any, List
 
 from .base import FormattedText, StyleAndTextTuples
 

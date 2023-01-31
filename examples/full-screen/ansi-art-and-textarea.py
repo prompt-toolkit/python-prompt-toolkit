@@ -3,15 +3,7 @@
 from prompt_toolkit.application import Application
 from prompt_toolkit.formatted_text import ANSI, HTML
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout import (
-    FormattedTextControl,
-    HSplit,
-    Layout,
-    VSplit,
-    Window,
-    WindowAlign,
-)
-from prompt_toolkit.layout.dimension import D
+from prompt_toolkit.layout import HSplit, Layout, VSplit, WindowAlign
 from prompt_toolkit.widgets import Dialog, Label, TextArea
 
 

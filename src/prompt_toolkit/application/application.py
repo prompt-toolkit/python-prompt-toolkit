@@ -19,7 +19,6 @@ from subprocess import Popen
 from traceback import format_tb
 from typing import (
     Any,
-    Awaitable,
     Callable,
     Coroutine,
     Dict,
