@@ -1,6 +1,8 @@
 """
 Interface for an output.
 """
+from __future__ import annotations
+
 from abc import ABCMeta, abstractmethod
 from typing import Optional, TextIO
 
@@ -26,7 +28,7 @@ class Output(metaclass=ABCMeta):
     :class:`~prompt_toolkit.output.win32.Win32Output`.
     """
 
-    stdout: Optional[TextIO] = None
+    stdout: TextIO | None = None
 
     @abstractmethod
     def fileno(self) -> int:

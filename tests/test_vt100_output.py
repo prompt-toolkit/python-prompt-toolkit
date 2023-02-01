@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from prompt_toolkit.output.vt100 import _get_closest_ansi_color
 
 

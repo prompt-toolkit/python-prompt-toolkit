@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import xml.dom.minidom as minidom
 from string import Formatter
 from typing import Any, List
@@ -33,9 +35,9 @@ class HTML:
         document = minidom.parseString(f"<html-root>{value}</html-root>")
 
         result: StyleAndTextTuples = []
-        name_stack: List[str] = []
-        fg_stack: List[str] = []
-        bg_stack: List[str] = []
+        name_stack: list[str] = []
+        fg_stack: list[str] = []
+        bg_stack: list[str] = []
 
         def get_current_style() -> str:
             "Build style string for current node."
@@ -103,14 +105,14 @@ class HTML:
     def __pt_formatted_text__(self) -> StyleAndTextTuples:
         return self.formatted_text
 
-    def format(self, *args: object, **kwargs: object) -> "HTML":
+    def format(self, *args: object, **kwargs: object) -> HTML:
         """
         Like `str.format`, but make sure that the arguments are properly
         escaped.
         """
         return HTML(FORMATTER.vformat(self.value, args, kwargs))
 
-    def __mod__(self, value: object) -> "HTML":
+    def __mod__(self, value: object) -> HTML:
         """
         HTML('<b>%s</b>') % value
         """

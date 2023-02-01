@@ -31,6 +31,8 @@ To support type ahead, this module will store all the key strokes that were
 read too early, so that they can be feed into to the next `prompt()` call or to
 the next prompt_toolkit `Application`.
 """
+from __future__ import annotations
+
 from collections import defaultdict
 from typing import Dict, List
 
@@ -43,10 +45,10 @@ __all__ = [
     "clear_typeahead",
 ]
 
-_buffer: Dict[str, List[KeyPress]] = defaultdict(list)
+_buffer: dict[str, list[KeyPress]] = defaultdict(list)
 
 
-def store_typeahead(input_obj: Input, key_presses: List[KeyPress]) -> None:
+def store_typeahead(input_obj: Input, key_presses: list[KeyPress]) -> None:
     """
     Insert typeahead key presses for the given input.
     """
@@ -55,7 +57,7 @@ def store_typeahead(input_obj: Input, key_presses: List[KeyPress]) -> None:
     _buffer[key].extend(key_presses)
 
 
-def get_typeahead(input_obj: Input) -> List[KeyPress]:
+def get_typeahead(input_obj: Input) -> list[KeyPress]:
     """
     Retrieve typeahead and reset the buffer for this input.
     """

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from enum import Enum
 from typing import TYPE_CHECKING, Callable, Dict, Optional
 
@@ -38,26 +40,24 @@ class ViState:
     def __init__(self) -> None:
         #: None or CharacterFind instance. (This is used to repeat the last
         #: search in Vi mode, by pressing the 'n' or 'N' in navigation mode.)
-        self.last_character_find: Optional[CharacterFind] = None
+        self.last_character_find: CharacterFind | None = None
 
         # When an operator is given and we are waiting for text object,
         # -- e.g. in the case of 'dw', after the 'd' --, an operator callback
         # is set here.
-        self.operator_func: Optional[
-            Callable[["KeyPressEvent", "TextObject"], None]
-        ] = None
-        self.operator_arg: Optional[int] = None
+        self.operator_func: None | (Callable[[KeyPressEvent, TextObject], None]) = None
+        self.operator_arg: int | None = None
 
         #: Named registers. Maps register name (e.g. 'a') to
         #: :class:`ClipboardData` instances.
-        self.named_registers: Dict[str, ClipboardData] = {}
+        self.named_registers: dict[str, ClipboardData] = {}
 
         #: The Vi mode we're currently in to.
         self.__input_mode = InputMode.INSERT
 
         #: Waiting for digraph.
         self.waiting_for_digraph = False
-        self.digraph_symbol1: Optional[str] = None  # (None or a symbol.)
+        self.digraph_symbol1: str | None = None  # (None or a symbol.)
 
         #: When true, make ~ act as an operator.
         self.tilde_operator = False
@@ -67,7 +67,7 @@ class ViState:
         # Note that the recording is only stored in the register after the
         # recording is stopped. So we record in a separate `current_recording`
         # variable.
-        self.recording_register: Optional[str] = None
+        self.recording_register: str | None = None
         self.current_recording: str = ""
 
         # Temporary navigation (normal) mode.

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import signal
 import sys
@@ -65,10 +67,10 @@ class Event(Generic[_Sender]):
     """
 
     def __init__(
-        self, sender: _Sender, handler: Optional[Callable[[_Sender], None]] = None
+        self, sender: _Sender, handler: Callable[[_Sender], None] | None = None
     ) -> None:
         self.sender = sender
-        self._handlers: List[Callable[[_Sender], None]] = []
+        self._handlers: list[Callable[[_Sender], None]] = []
 
         if handler is not None:
             self += handler
@@ -98,14 +100,14 @@ class Event(Generic[_Sender]):
         if handler in self._handlers:
             self._handlers.remove(handler)
 
-    def __iadd__(self, handler: Callable[[_Sender], None]) -> "Event[_Sender]":
+    def __iadd__(self, handler: Callable[[_Sender], None]) -> Event[_Sender]:
         """
         `event += handler` notation for adding a handler.
         """
         self.add_handler(handler)
         return self
 
-    def __isub__(self, handler: Callable[[_Sender], None]) -> "Event[_Sender]":
+    def __isub__(self, handler: Callable[[_Sender], None]) -> Event[_Sender]:
         """
         `event -= handler` notation for removing a handler.
         """
@@ -235,7 +237,7 @@ _T = TypeVar("_T")
 
 
 def take_using_weights(
-    items: List[_T], weights: List[int]
+    items: list[_T], weights: list[int]
 ) -> Generator[_T, None, None]:
     """
     Generator that keeps yielding items from the items list, in proportion to
@@ -288,7 +290,7 @@ def take_using_weights(
         i += 1
 
 
-def to_str(value: Union[Callable[[], str], str]) -> str:
+def to_str(value: Callable[[], str] | str) -> str:
     "Turn callable or string into string."
     if callable(value):
         return to_str(value())
@@ -296,7 +298,7 @@ def to_str(value: Union[Callable[[], str], str]) -> str:
         return str(value)
 
 
-def to_int(value: Union[Callable[[], int], int]) -> int:
+def to_int(value: Callable[[], int] | int) -> int:
     "Turn callable or int into int."
     if callable(value):
         return to_int(value())
@@ -315,7 +317,7 @@ def to_float(value: AnyFloat) -> float:
         return float(value)
 
 
-def is_dumb_terminal(term: Optional[str] = None) -> bool:
+def is_dumb_terminal(term: str | None = None) -> bool:
     """
     True if this terminal type is considered "dumb".
 

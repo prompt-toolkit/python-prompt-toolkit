@@ -1,6 +1,8 @@
 """
 Abstraction of CLI Input.
 """
+from __future__ import annotations
+
 from abc import ABCMeta, abstractmethod, abstractproperty
 from contextlib import contextmanager
 from typing import Callable, ContextManager, Generator, List
@@ -36,12 +38,12 @@ class Input(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def read_keys(self) -> List[KeyPress]:
+    def read_keys(self) -> list[KeyPress]:
         """
         Return a list of Key objects which are read/parsed from the input.
         """
 
-    def flush_keys(self) -> List[KeyPress]:
+    def flush_keys(self) -> list[KeyPress]:
         """
         Flush the underlying parser. and return the pending keys.
         (Used for vt100 input.)
@@ -116,7 +118,7 @@ class DummyInput(Input):
     def typeahead_hash(self) -> str:
         return "dummy-%s" % id(self)
 
-    def read_keys(self) -> List[KeyPress]:
+    def read_keys(self) -> list[KeyPress]:
         return []
 
     @property

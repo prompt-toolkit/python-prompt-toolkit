@@ -14,6 +14,8 @@ Remarks:
 Limitations:
 - Lookahead is not supported.
 """
+from __future__ import annotations
+
 import re
 from typing import List, Optional
 
@@ -33,10 +35,10 @@ class Node:
     (You don't initialize this one.)
     """
 
-    def __add__(self, other_node: "Node") -> "NodeSequence":
+    def __add__(self, other_node: Node) -> NodeSequence:
         return NodeSequence([self, other_node])
 
-    def __or__(self, other_node: "Node") -> "AnyNode":
+    def __or__(self, other_node: Node) -> AnyNode:
         return AnyNode([self, other_node])
 
 
@@ -47,10 +49,10 @@ class AnyNode(Node):
     operation.
     """
 
-    def __init__(self, children: List[Node]) -> None:
+    def __init__(self, children: list[Node]) -> None:
         self.children = children
 
-    def __or__(self, other_node: Node) -> "AnyNode":
+    def __or__(self, other_node: Node) -> AnyNode:
         return AnyNode(self.children + [other_node])
 
     def __repr__(self) -> str:
@@ -63,10 +65,10 @@ class NodeSequence(Node):
     yourself, but it's a result of a "Grammar1 + Grammar2" operation.
     """
 
-    def __init__(self, children: List[Node]) -> None:
+    def __init__(self, children: list[Node]) -> None:
         self.children = children
 
-    def __add__(self, other_node: Node) -> "NodeSequence":
+    def __add__(self, other_node: Node) -> NodeSequence:
         return NodeSequence(self.children + [other_node])
 
     def __repr__(self) -> str:
@@ -126,7 +128,7 @@ class Repeat(Node):
         self,
         childnode: Node,
         min_repeat: int = 0,
-        max_repeat: Optional[int] = None,
+        max_repeat: int | None = None,
         greedy: bool = True,
     ) -> None:
         self.childnode = childnode
@@ -138,7 +140,7 @@ class Repeat(Node):
         return f"{self.__class__.__name__}(childnode={self.childnode!r})"
 
 
-def tokenize_regex(input: str) -> List[str]:
+def tokenize_regex(input: str) -> list[str]:
     """
     Takes a string, representing a regular expression as input, and tokenizes
     it.
@@ -191,14 +193,14 @@ def tokenize_regex(input: str) -> List[str]:
     return tokens
 
 
-def parse_regex(regex_tokens: List[str]) -> Node:
+def parse_regex(regex_tokens: list[str]) -> Node:
     """
     Takes a list of tokens from the tokenizer, and returns a parse tree.
     """
     # We add a closing brace because that represents the final pop of the stack.
-    tokens: List[str] = [")"] + regex_tokens[::-1]
+    tokens: list[str] = [")"] + regex_tokens[::-1]
 
-    def wrap(lst: List[Node]) -> Node:
+    def wrap(lst: list[Node]) -> Node:
         """Turn list into sequence when it contains several items."""
         if len(lst) == 1:
             return lst[0]
@@ -206,8 +208,8 @@ def parse_regex(regex_tokens: List[str]) -> Node:
             return NodeSequence(lst)
 
     def _parse() -> Node:
-        or_list: List[List[Node]] = []
-        result: List[Node] = []
+        or_list: list[list[Node]] = []
+        result: list[Node] = []
 
         def wrapped_result() -> Node:
             if or_list == []:

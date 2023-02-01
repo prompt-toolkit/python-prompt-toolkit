@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import List, TextIO
 
 from prompt_toolkit.cursor_shapes import CursorShape
@@ -27,7 +29,7 @@ class PlainTextOutput(Output):
         assert all(hasattr(stdout, a) for a in ("write", "flush"))
 
         self.stdout: TextIO = stdout
-        self._buffer: List[str] = []
+        self._buffer: list[str] = []
 
     def fileno(self) -> int:
         "There is no sensible default for fileno()."

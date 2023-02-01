@@ -1,6 +1,8 @@
 """
 Collection of reusable components for building full screen applications.
 """
+from __future__ import annotations
+
 from typing import Optional, Sequence, Union
 
 from prompt_toolkit.filters import has_completions, has_focus
@@ -40,7 +42,7 @@ class Dialog:
         self,
         body: AnyContainer,
         title: AnyFormattedText = "",
-        buttons: Optional[Sequence[Button]] = None,
+        buttons: Sequence[Button] | None = None,
         modal: bool = True,
         width: AnyDimension = None,
         with_background: bool = False,
@@ -95,7 +97,7 @@ class Dialog:
             )
         )
 
-        self.container: Union[Box, Shadow]
+        self.container: Box | Shadow
         if with_background:
             self.container = Box(body=frame, style="class:dialog", width=width)
         else:

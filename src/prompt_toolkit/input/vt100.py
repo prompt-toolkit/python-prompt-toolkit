@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 
 assert sys.platform != "win32"
@@ -40,7 +42,7 @@ class Vt100Input(Input):
 
     # For the error messages. Only display "Input is not a terminal" once per
     # file descriptor.
-    _fds_not_a_terminal: Set[int] = set()
+    _fds_not_a_terminal: set[int] = set()
 
     def __init__(self, stdin: TextIO) -> None:
         # Test whether the given input object has a file descriptor.
@@ -77,7 +79,7 @@ class Vt100Input(Input):
         # underlying file is closed, so that `typeahead_hash()` keeps working.
         self._fileno = stdin.fileno()
 
-        self._buffer: List[KeyPress] = []  # Buffer to collect the Key objects.
+        self._buffer: list[KeyPress] = []  # Buffer to collect the Key objects.
         self.stdin_reader = PosixStdinReader(self._fileno, encoding=stdin.encoding)
         self.vt100_parser = Vt100Parser(
             lambda key_press: self._buffer.append(key_press)
@@ -97,7 +99,7 @@ class Vt100Input(Input):
         """
         return _detached_input(self)
 
-    def read_keys(self) -> List[KeyPress]:
+    def read_keys(self) -> list[KeyPress]:
         "Read list of KeyPress."
         # Read text from stdin.
         data = self.stdin_reader.read()
@@ -110,7 +112,7 @@ class Vt100Input(Input):
         self._buffer = []
         return result
 
-    def flush_keys(self) -> List[KeyPress]:
+    def flush_keys(self) -> list[KeyPress]:
         """
         Flush pending keys and return them.
         (Used for flushing the 'escape' key.)
@@ -141,8 +143,8 @@ class Vt100Input(Input):
         return f"fd-{self._fileno}"
 
 
-_current_callbacks: Dict[
-    Tuple[AbstractEventLoop, int], Optional[Callable[[], None]]
+_current_callbacks: dict[
+    tuple[AbstractEventLoop, int], Callable[[], None] | None
 ] = {}  # (loop, fd) -> current callback
 
 
@@ -240,7 +242,7 @@ class raw_mode:
     #    See: https://github.com/jonathanslenders/python-prompt-toolkit/pull/165
     def __init__(self, fileno: int) -> None:
         self.fileno = fileno
-        self.attrs_before: Optional[List[Union[int, List[Union[bytes, int]]]]]
+        self.attrs_before: list[int | list[bytes | int]] | None
         try:
             self.attrs_before = termios.tcgetattr(fileno)
         except termios.error:

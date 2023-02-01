@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from asyncio.events import AbstractEventLoop
 from typing import TYPE_CHECKING, Any, Optional, TextIO
 
@@ -40,12 +42,12 @@ def print_formatted_text(
     *values: Any,
     sep: str = " ",
     end: str = "\n",
-    file: Optional[TextIO] = None,
+    file: TextIO | None = None,
     flush: bool = False,
-    style: Optional[BaseStyle] = None,
-    output: Optional[Output] = None,
-    color_depth: Optional[ColorDepth] = None,
-    style_transformation: Optional[StyleTransformation] = None,
+    style: BaseStyle | None = None,
+    output: Output | None = None,
+    color_depth: ColorDepth | None = None,
+    style_transformation: StyleTransformation | None = None,
     include_default_pygments_style: bool = True,
 ) -> None:
     """
@@ -150,7 +152,7 @@ def print_formatted_text(
 
     # If an application is running, print above the app. This does not require
     # `patch_stdout`.
-    loop: Optional[AbstractEventLoop] = None
+    loop: AbstractEventLoop | None = None
 
     app = get_app_or_none()
     if app is not None:
@@ -163,9 +165,9 @@ def print_formatted_text(
 
 
 def print_container(
-    container: "AnyContainer",
-    file: Optional[TextIO] = None,
-    style: Optional[BaseStyle] = None,
+    container: AnyContainer,
+    file: TextIO | None = None,
+    style: BaseStyle | None = None,
     include_default_pygments_style: bool = True,
 ) -> None:
     """
@@ -198,7 +200,7 @@ def print_container(
 
 
 def _create_merged_style(
-    style: Optional[BaseStyle], include_default_pygments_style: bool
+    style: BaseStyle | None, include_default_pygments_style: bool
 ) -> BaseStyle:
     """
     Merge user defined style with built-in style.

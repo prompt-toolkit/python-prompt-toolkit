@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from prompt_toolkit.formatted_text import fragment_list_to_text
 from prompt_toolkit.layout import to_window
 from prompt_toolkit.widgets import Button

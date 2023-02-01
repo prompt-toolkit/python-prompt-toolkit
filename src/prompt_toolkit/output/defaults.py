@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 from typing import Optional, TextIO, cast
 
@@ -17,7 +19,7 @@ __all__ = [
 
 
 def create_output(
-    stdout: Optional[TextIO] = None, always_prefer_tty: bool = False
+    stdout: TextIO | None = None, always_prefer_tty: bool = False
 ) -> Output:
     """
     Return an :class:`~prompt_toolkit.output.Output` instance for the command

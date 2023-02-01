@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 
 assert sys.platform == "win32"
@@ -23,9 +25,7 @@ WAIT_TIMEOUT = 0x00000102
 INFINITE = -1
 
 
-def wait_for_handles(
-    handles: List[HANDLE], timeout: int = INFINITE
-) -> Optional[HANDLE]:
+def wait_for_handles(handles: list[HANDLE], timeout: int = INFINITE) -> HANDLE | None:
     """
     Waits for multiple handles. (Similar to 'select') Returns the handle which is ready.
     Returns `None` on timeout.

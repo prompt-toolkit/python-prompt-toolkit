@@ -1,6 +1,8 @@
 """
 Parser for VT100 input stream.
 """
+from __future__ import annotations
+
 import re
 from typing import Callable, Dict, Generator, Tuple, Union
 
@@ -98,7 +100,7 @@ class Vt100Parser:
         self._input_parser = self._input_parser_generator()
         self._input_parser.send(None)  # type: ignore
 
-    def _get_match(self, prefix: str) -> Union[None, Keys, Tuple[Keys, ...]]:
+    def _get_match(self, prefix: str) -> None | Keys | tuple[Keys, ...]:
         """
         Return the key (or keys) that maps to this prefix.
         """
@@ -117,7 +119,7 @@ class Vt100Parser:
         except KeyError:
             return None
 
-    def _input_parser_generator(self) -> Generator[None, Union[str, _Flush], None]:
+    def _input_parser_generator(self) -> Generator[None, str | _Flush, None]:
         """
         Coroutine (state machine) for the input parser.
         """
@@ -168,7 +170,7 @@ class Vt100Parser:
                         prefix = prefix[1:]
 
     def _call_handler(
-        self, key: Union[str, Keys, Tuple[Keys, ...]], insert_text: str
+        self, key: str | Keys | tuple[Keys, ...], insert_text: str
     ) -> None:
         """
         Callback to handler.

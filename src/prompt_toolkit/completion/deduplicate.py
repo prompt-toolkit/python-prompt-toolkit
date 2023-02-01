@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Iterable, Set
 
 from prompt_toolkit.document import Document
@@ -23,7 +25,7 @@ class DeduplicateCompleter(Completer):
         self, document: Document, complete_event: CompleteEvent
     ) -> Iterable[Completion]:
         # Keep track of the document strings we'd get after applying any completion.
-        found_so_far: Set[str] = set()
+        found_so_far: set[str] = set()
 
         for completion in self.completer.get_completions(document, complete_event):
             text_if_applied = (

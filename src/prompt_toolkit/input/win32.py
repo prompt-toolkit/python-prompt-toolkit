@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import sys
 from abc import abstractmethod
@@ -79,7 +81,7 @@ class Win32Input(_Win32InputBase):
     `Input` class that reads from the Windows console.
     """
 
-    def __init__(self, stdin: Optional[TextIO] = None) -> None:
+    def __init__(self, stdin: TextIO | None = None) -> None:
         super().__init__()
         self.console_input_reader = ConsoleInputReader()
 
@@ -97,7 +99,7 @@ class Win32Input(_Win32InputBase):
         """
         return detach_win32_input(self)
 
-    def read_keys(self) -> List[KeyPress]:
+    def read_keys(self) -> list[KeyPress]:
         return list(self.console_input_reader.read())
 
     def flush(self) -> None:
@@ -266,7 +268,7 @@ class ConsoleInputReader:
 
         if self.recognize_paste and self._is_paste(all_keys):
             gen = iter(all_keys)
-            k: Optional[KeyPress]
+            k: KeyPress | None
 
             for k in gen:
                 # Pasting: if the current key consists of text or \n, turn it
@@ -304,7 +306,7 @@ class ConsoleInputReader:
         return KeyPress(key_press.key, data)
 
     def _get_keys(
-        self, read: DWORD, input_records: "Array[INPUT_RECORD]"
+        self, read: DWORD, input_records: Array[INPUT_RECORD]
     ) -> Iterator[KeyPress]:
         """
         Generator that yields `KeyPress` objects from the input records.
@@ -328,7 +330,7 @@ class ConsoleInputReader:
                     yield from self._handle_mouse(ev)
 
     @staticmethod
-    def _merge_paired_surrogates(key_presses: List[KeyPress]) -> Iterator[KeyPress]:
+    def _merge_paired_surrogates(key_presses: list[KeyPress]) -> Iterator[KeyPress]:
         """
         Combines consecutive KeyPresses with high and low surrogates into
         single characters
@@ -361,7 +363,7 @@ class ConsoleInputReader:
             yield buffered_high_surrogate
 
     @staticmethod
-    def _is_paste(keys: List[KeyPress]) -> bool:
+    def _is_paste(keys: list[KeyPress]) -> bool:
         """
         Return `True` when we should consider this list of keys as a paste
         event. Pasted text on windows will be turned into a
@@ -382,13 +384,13 @@ class ConsoleInputReader:
 
         return newline_count >= 1 and text_count >= 1
 
-    def _event_to_key_presses(self, ev: KEY_EVENT_RECORD) -> List[KeyPress]:
+    def _event_to_key_presses(self, ev: KEY_EVENT_RECORD) -> list[KeyPress]:
         """
         For this `KEY_EVENT_RECORD`, return a list of `KeyPress` instances.
         """
         assert type(ev) == KEY_EVENT_RECORD and ev.KeyDown
 
-        result: Optional[KeyPress] = None
+        result: KeyPress | None = None
 
         control_key_state = ev.ControlKeyState
         u_char = ev.uChar.UnicodeChar
@@ -422,7 +424,7 @@ class ConsoleInputReader:
             and control_key_state & self.SHIFT_PRESSED
             and result
         ):
-            mapping: Dict[str, str] = {
+            mapping: dict[str, str] = {
                 Keys.Left: Keys.ControlShiftLeft,
                 Keys.Right: Keys.ControlShiftRight,
                 Keys.Up: Keys.ControlShiftUp,
@@ -514,14 +516,14 @@ class ConsoleInputReader:
         else:
             return []
 
-    def _handle_mouse(self, ev: MOUSE_EVENT_RECORD) -> List[KeyPress]:
+    def _handle_mouse(self, ev: MOUSE_EVENT_RECORD) -> list[KeyPress]:
         """
         Handle mouse events. Return a list of KeyPress instances.
         """
         event_flags = ev.EventFlags
         button_state = ev.ButtonState
 
-        event_type: Optional[MouseEventType] = None
+        event_type: MouseEventType | None = None
         button: MouseButton = MouseButton.NONE
 
         # Scroll events.
@@ -579,11 +581,11 @@ class _Win32Handles:
     """
 
     def __init__(self) -> None:
-        self._handle_callbacks: Dict[int, Callable[[], None]] = {}
+        self._handle_callbacks: dict[int, Callable[[], None]] = {}
 
         # Windows Events that are triggered when we have to stop watching this
         # handle.
-        self._remove_events: Dict[int, HANDLE] = {}
+        self._remove_events: dict[int, HANDLE] = {}
 
     def add_win32_handle(self, handle: HANDLE, callback: Callable[[], None]) -> None:
         """
@@ -628,7 +630,7 @@ class _Win32Handles:
 
         run_in_executor_with_context(wait, loop=loop)
 
-    def remove_win32_handle(self, handle: HANDLE) -> Optional[Callable[[], None]]:
+    def remove_win32_handle(self, handle: HANDLE) -> Callable[[], None] | None:
         """
         Remove a Win32 handle from the event loop.
         Return either the registered handler or `None`.
@@ -707,7 +709,7 @@ class raw_mode:
     `raw_input` method of `.vt100_input`.
     """
 
-    def __init__(self, fileno: Optional[int] = None) -> None:
+    def __init__(self, fileno: int | None = None) -> None:
         self.handle = HANDLE(windll.kernel32.GetStdHandle(STD_INPUT_HANDLE))
 
     def __enter__(self) -> None:

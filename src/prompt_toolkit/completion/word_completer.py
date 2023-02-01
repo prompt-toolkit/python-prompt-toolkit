@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Callable, Iterable, List, Mapping, Optional, Pattern, Union
 
 from prompt_toolkit.completion import CompleteEvent, Completer, Completion
@@ -31,14 +33,14 @@ class WordCompleter(Completer):
 
     def __init__(
         self,
-        words: Union[List[str], Callable[[], List[str]]],
+        words: list[str] | Callable[[], list[str]],
         ignore_case: bool = False,
-        display_dict: Optional[Mapping[str, AnyFormattedText]] = None,
-        meta_dict: Optional[Mapping[str, AnyFormattedText]] = None,
+        display_dict: Mapping[str, AnyFormattedText] | None = None,
+        meta_dict: Mapping[str, AnyFormattedText] | None = None,
         WORD: bool = False,
         sentence: bool = False,
         match_middle: bool = False,
-        pattern: Optional[Pattern[str]] = None,
+        pattern: Pattern[str] | None = None,
     ) -> None:
         assert not (WORD and sentence)
 

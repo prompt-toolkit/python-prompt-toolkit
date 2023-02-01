@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import defaultdict
 from typing import TYPE_CHECKING, Callable, DefaultDict, Dict, List, Optional, Tuple
 
@@ -30,7 +32,7 @@ class Char:
     # If we end up having one of these special control sequences in the input string,
     # we should display them as follows:
     # Usually this happens after a "quoted insert".
-    display_mappings: Dict[str, str] = {
+    display_mappings: dict[str, str] = {
         "\x00": "^@",  # Control space
         "\x01": "^A",
         "\x02": "^B",
@@ -123,10 +125,10 @@ class Char:
     # In theory, `other` can be any type of object, but because of performance
     # we don't want to do an `isinstance` check every time. We assume "other"
     # is always a "Char".
-    def _equal(self, other: "Char") -> bool:
+    def _equal(self, other: Char) -> bool:
         return self.char == other.char and self.style == other.style
 
-    def _not_equal(self, other: "Char") -> bool:
+    def _not_equal(self, other: Char) -> bool:
         # Not equal: We don't do `not char.__eq__` here, because of the
         # performance of calling yet another function.
         return self.char != other.char or self.style != other.style
@@ -139,7 +141,7 @@ class Char:
         return f"{self.__class__.__name__}({self.char!r}, {self.style!r})"
 
 
-_CHAR_CACHE: FastDictCache[Tuple[str, str], Char] = FastDictCache(
+_CHAR_CACHE: FastDictCache[tuple[str, str], Char] = FastDictCache(
     Char, size=1000 * 1000
 )
 Transparent = "[transparent]"
@@ -152,7 +154,7 @@ class Screen:
 
     def __init__(
         self,
-        default_char: Optional[Char] = None,
+        default_char: Char | None = None,
         initial_width: int = 0,
         initial_height: int = 0,
     ) -> None:
@@ -171,8 +173,8 @@ class Screen:
         )
 
         #: Position of the cursor.
-        self.cursor_positions: Dict[
-            "Window", Point
+        self.cursor_positions: dict[
+            Window, Point
         ] = {}  # Map `Window` objects to `Point` objects.
 
         #: Visibility of the cursor.
@@ -182,8 +184,8 @@ class Screen:
         #: (We can't use the cursor position, because we don't want the
         #: completion menu to change its position when we browse through all the
         #: completions.)
-        self.menu_positions: Dict[
-            "Window", Point
+        self.menu_positions: dict[
+            Window, Point
         ] = {}  # Map `Window` objects to `Point` objects.
 
         #: Currently used width/height of the screen. This will increase when
@@ -193,28 +195,28 @@ class Screen:
 
         # Windows that have been drawn. (Each `Window` class will add itself to
         # this list.)
-        self.visible_windows_to_write_positions: Dict["Window", "WritePosition"] = {}
+        self.visible_windows_to_write_positions: dict[Window, WritePosition] = {}
 
         # List of (z_index, draw_func)
-        self._draw_float_functions: List[Tuple[int, Callable[[], None]]] = []
+        self._draw_float_functions: list[tuple[int, Callable[[], None]]] = []
 
     @property
-    def visible_windows(self) -> List["Window"]:
+    def visible_windows(self) -> list[Window]:
         return list(self.visible_windows_to_write_positions.keys())
 
-    def set_cursor_position(self, window: "Window", position: Point) -> None:
+    def set_cursor_position(self, window: Window, position: Point) -> None:
         """
         Set the cursor position for a given window.
         """
         self.cursor_positions[window] = position
 
-    def set_menu_position(self, window: "Window", position: Point) -> None:
+    def set_menu_position(self, window: Window, position: Point) -> None:
         """
         Set the cursor position for a given window.
         """
         self.menu_positions[window] = position
 
-    def get_cursor_position(self, window: "Window") -> Point:
+    def get_cursor_position(self, window: Window) -> Point:
         """
         Get the cursor position for a given window.
         Returns a `Point`.
@@ -224,7 +226,7 @@ class Screen:
         except KeyError:
             return Point(x=0, y=0)
 
-    def get_menu_position(self, window: "Window") -> Point:
+    def get_menu_position(self, window: Window) -> Point:
         """
         Get the menu position for a given window.
         (This falls back to the cursor position if no menu position was set.)
@@ -274,7 +276,7 @@ class Screen:
                 row[x] = char_cache[char.char, char.style + append_style]
 
     def fill_area(
-        self, write_position: "WritePosition", style: str = "", after: bool = False
+        self, write_position: WritePosition, style: str = "", after: bool = False
     ) -> None:
         """
         Fill the content of this area, using the given `style`.

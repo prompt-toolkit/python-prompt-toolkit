@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, List, Tuple
 
 from prompt_toolkit.styles.pygments import pygments_token_to_classname
@@ -18,7 +20,7 @@ class PygmentsTokens:
     (``(style_str, text)`` tuples).
     """
 
-    def __init__(self, token_list: List[Tuple["Token", str]]) -> None:
+    def __init__(self, token_list: list[tuple[Token, str]]) -> None:
         self.token_list = token_list
 
     def __pt_formatted_text__(self) -> StyleAndTextTuples:

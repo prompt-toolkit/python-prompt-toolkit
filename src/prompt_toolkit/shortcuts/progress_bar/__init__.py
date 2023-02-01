@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .base import ProgressBar, ProgressBarCounter
 from .formatters import (
     Bar,

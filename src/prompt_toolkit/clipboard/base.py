@@ -1,6 +1,8 @@
 """
 Clipboard for command line interface.
 """
+from __future__ import annotations
+
 from abc import ABCMeta, abstractmethod
 from typing import Callable, Optional
 
@@ -87,7 +89,7 @@ class DynamicClipboard(Clipboard):
     :param get_clipboard: Callable that returns a :class:`.Clipboard` instance.
     """
 
-    def __init__(self, get_clipboard: Callable[[], Optional[Clipboard]]) -> None:
+    def __init__(self, get_clipboard: Callable[[], Clipboard | None]) -> None:
         self.get_clipboard = get_clipboard
 
     def _clipboard(self) -> Clipboard:

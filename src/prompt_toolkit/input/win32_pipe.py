@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 
 assert sys.platform == "win32"
@@ -48,7 +50,7 @@ class Win32PipeInput(_Win32InputBase, PipeInput):
         self._closed = False
 
         # Parser for incoming keys.
-        self._buffer: List[KeyPress] = []  # Buffer to collect the Key objects.
+        self._buffer: list[KeyPress] = []  # Buffer to collect the Key objects.
         self.vt100_parser = Vt100Parser(lambda key: self._buffer.append(key))
 
         # Identifier for every PipeInput for the hash.
@@ -57,7 +59,7 @@ class Win32PipeInput(_Win32InputBase, PipeInput):
 
     @classmethod
     @contextmanager
-    def create(cls) -> Iterator["Win32PipeInput"]:
+    def create(cls) -> Iterator[Win32PipeInput]:
         event = create_win32_event()
         try:
             yield Win32PipeInput(_event=event)
@@ -93,7 +95,7 @@ class Win32PipeInput(_Win32InputBase, PipeInput):
         """
         return detach_win32_input(self)
 
-    def read_keys(self) -> List[KeyPress]:
+    def read_keys(self) -> list[KeyPress]:
         "Read list of KeyPress."
 
         # Return result.
@@ -107,7 +109,7 @@ class Win32PipeInput(_Win32InputBase, PipeInput):
 
         return result
 
-    def flush_keys(self) -> List[KeyPress]:
+    def flush_keys(self) -> list[KeyPress]:
         """
         Flush pending keys and return them.
         (Used for flushing the 'escape' key.)

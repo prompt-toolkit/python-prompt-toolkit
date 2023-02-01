@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any, Callable, Iterable, List, Tuple, Union, cast
 
 from prompt_toolkit.mouse_events import MouseEvent
@@ -52,7 +54,7 @@ AnyFormattedText = Union[
 
 def to_formatted_text(
     value: AnyFormattedText, style: str = "", auto_convert: bool = False
-) -> "FormattedText":
+) -> FormattedText:
     """
     Convert the given value (which can be formatted text) into a list of text
     fragments. (Which is the canonical form of formatted text.) The outcome is
@@ -67,7 +69,7 @@ def to_formatted_text(
     :param auto_convert: If `True`, also accept other types, and convert them
         to a string first.
     """
-    result: Union[FormattedText, StyleAndTextTuples]
+    result: FormattedText | StyleAndTextTuples
 
     if value is None:
         result = []
@@ -103,7 +105,7 @@ def to_formatted_text(
         return FormattedText(result)
 
 
-def is_formatted_text(value: object) -> "TypeGuard[AnyFormattedText]":
+def is_formatted_text(value: object) -> TypeGuard[AnyFormattedText]:
     """
     Check whether the input is valid formatted text (for use in assert
     statements).

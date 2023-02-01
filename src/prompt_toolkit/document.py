@@ -1,6 +1,8 @@
 """
 The `Document` that implements all the text operations/querying.
 """
+from __future__ import annotations
+
 import bisect
 import re
 import string
@@ -46,7 +48,7 @@ _FIND_CURRENT_BIG_WORD_INCLUDE_TRAILING_WHITESPACE_RE = re.compile(r"^([^\s]+\s*
 # (Document instances are considered immutable. That means that if another
 # `Document` is constructed with the same text, it should have the same
 # `_DocumentCache`.)
-_text_to_document_cache: Dict[str, "_DocumentCache"] = cast(
+_text_to_document_cache: dict[str, _DocumentCache] = cast(
     Dict[str, "_DocumentCache"],
     weakref.WeakValueDictionary(),  # Maps document.text to DocumentCache instance.
 )
@@ -75,10 +77,10 @@ class _ImmutableLineList(List[str]):
 class _DocumentCache:
     def __init__(self) -> None:
         #: List of lines for the Document text.
-        self.lines: Optional[_ImmutableLineList] = None
+        self.lines: _ImmutableLineList | None = None
 
         #: List of index positions, pointing to the start of all the lines.
-        self.line_indexes: Optional[List[int]] = None
+        self.line_indexes: list[int] | None = None
 
 
 class Document:
@@ -99,8 +101,8 @@ class Document:
     def __init__(
         self,
         text: str = "",
-        cursor_position: Optional[int] = None,
-        selection: Optional[SelectionState] = None,
+        cursor_position: int | None = None,
+        selection: SelectionState | None = None,
     ) -> None:
         # Check cursor position. It can also be right after the end. (Where we
         # insert text.)
@@ -159,7 +161,7 @@ class Document:
         return self._cursor_position
 
     @property
-    def selection(self) -> Optional[SelectionState]:
+    def selection(self) -> SelectionState | None:
         ":class:`.SelectionState` object."
         return self._selection
 
@@ -194,7 +196,7 @@ class Document:
         return text
 
     @property
-    def lines(self) -> List[str]:
+    def lines(self) -> list[str]:
         """
         Array of all the lines.
         """
@@ -205,7 +207,7 @@ class Document:
         return self._cache.lines
 
     @property
-    def _line_start_indexes(self) -> List[int]:
+    def _line_start_indexes(self) -> list[int]:
         """
         Array pointing to the start indexes of all the lines.
         """
@@ -233,7 +235,7 @@ class Document:
         return self._cache.line_indexes
 
     @property
-    def lines_from_current(self) -> List[str]:
+    def lines_from_current(self) -> list[str]:
         """
         Array of the lines starting from the current line, until the last line.
         """
@@ -300,7 +302,7 @@ class Document:
         _, line_start_index = self._find_line_start_index(self.cursor_position)
         return self.cursor_position - line_start_index
 
-    def _find_line_start_index(self, index: int) -> Tuple[int, int]:
+    def _find_line_start_index(self, index: int) -> tuple[int, int]:
         """
         For the index of a character at a certain line, calculate the index of
         the first character on that line.
@@ -312,7 +314,7 @@ class Document:
         pos = bisect.bisect_right(indexes, index) - 1
         return pos, indexes[pos]
 
-    def translate_index_to_position(self, index: int) -> Tuple[int, int]:
+    def translate_index_to_position(self, index: int) -> tuple[int, int]:
         """
         Given an index for the text, return the corresponding (row, col) tuple.
         (0-based. Returns (0, 0) for index=0.)
@@ -371,7 +373,7 @@ class Document:
         include_current_position: bool = False,
         ignore_case: bool = False,
         count: int = 1,
-    ) -> Optional[int]:
+    ) -> int | None:
         """
         Find `text` after the cursor, return position relative to the cursor
         position. Return `None` if nothing was found.
@@ -405,7 +407,7 @@ class Document:
             pass
         return None
 
-    def find_all(self, sub: str, ignore_case: bool = False) -> List[int]:
+    def find_all(self, sub: str, ignore_case: bool = False) -> list[int]:
         """
         Find all occurrences of the substring. Return a list of absolute
         positions in the document.
@@ -419,7 +421,7 @@ class Document:
         in_current_line: bool = False,
         ignore_case: bool = False,
         count: int = 1,
-    ) -> Optional[int]:
+    ) -> int | None:
         """
         Find `text` before the cursor, return position relative to the cursor
         position. Return `None` if nothing was found.
@@ -443,7 +445,7 @@ class Document:
         return None
 
     def get_word_before_cursor(
-        self, WORD: bool = False, pattern: Optional[Pattern[str]] = None
+        self, WORD: bool = False, pattern: Pattern[str] | None = None
     ) -> str:
         """
         Give the word before the cursor.
@@ -462,7 +464,7 @@ class Document:
         return text_before_cursor[len(text_before_cursor) + start :]
 
     def _is_word_before_cursor_complete(
-        self, WORD: bool = False, pattern: Optional[Pattern[str]] = None
+        self, WORD: bool = False, pattern: Pattern[str] | None = None
     ) -> bool:
         if pattern:
             return self.find_start_of_previous_word(WORD=WORD, pattern=pattern) is None
@@ -472,8 +474,8 @@ class Document:
             )
 
     def find_start_of_previous_word(
-        self, count: int = 1, WORD: bool = False, pattern: Optional[Pattern[str]] = None
-    ) -> Optional[int]:
+        self, count: int = 1, WORD: bool = False, pattern: Pattern[str] | None = None
+    ) -> int | None:
         """
         Return an index relative to the cursor position pointing to the start
         of the previous word. Return `None` if nothing was found.
@@ -509,7 +511,7 @@ class Document:
         WORD: bool = False,
         include_leading_whitespace: bool = False,
         include_trailing_whitespace: bool = False,
-    ) -> Tuple[int, int]:
+    ) -> tuple[int, int]:
         """
         Return the relative boundaries (startpos, endpos) of the current word under the
         cursor. (This is at the current line, because line boundaries obviously
@@ -557,7 +559,7 @@ class Document:
 
     def find_next_word_beginning(
         self, count: int = 1, WORD: bool = False
-    ) -> Optional[int]:
+    ) -> int | None:
         """
         Return an index relative to the cursor position pointing to the start
         of the next word. Return `None` if nothing was found.
@@ -582,7 +584,7 @@ class Document:
 
     def find_next_word_ending(
         self, include_current_position: bool = False, count: int = 1, WORD: bool = False
-    ) -> Optional[int]:
+    ) -> int | None:
         """
         Return an index relative to the cursor position pointing to the end
         of the next word. Return `None` if nothing was found.
@@ -614,7 +616,7 @@ class Document:
 
     def find_previous_word_beginning(
         self, count: int = 1, WORD: bool = False
-    ) -> Optional[int]:
+    ) -> int | None:
         """
         Return an index relative to the cursor position pointing to the start
         of the previous word. Return `None` if nothing was found.
@@ -635,7 +637,7 @@ class Document:
 
     def find_previous_word_ending(
         self, count: int = 1, WORD: bool = False
-    ) -> Optional[int]:
+    ) -> int | None:
         """
         Return an index relative to the cursor position pointing to the end
         of the previous word. Return `None` if nothing was found.
@@ -662,7 +664,7 @@ class Document:
 
     def find_next_matching_line(
         self, match_func: Callable[[str], bool], count: int = 1
-    ) -> Optional[int]:
+    ) -> int | None:
         """
         Look downwards for empty lines.
         Return the line index, relative to the current line.
@@ -681,7 +683,7 @@ class Document:
 
     def find_previous_matching_line(
         self, match_func: Callable[[str], bool], count: int = 1
-    ) -> Optional[int]:
+    ) -> int | None:
         """
         Look upwards for empty lines.
         Return the line index, relative to the current line.
@@ -717,7 +719,7 @@ class Document:
         return min(count, len(self.current_line_after_cursor))
 
     def get_cursor_up_position(
-        self, count: int = 1, preferred_column: Optional[int] = None
+        self, count: int = 1, preferred_column: int | None = None
     ) -> int:
         """
         Return the relative cursor position (character index) where we would be if the
@@ -739,7 +741,7 @@ class Document:
         )
 
     def get_cursor_down_position(
-        self, count: int = 1, preferred_column: Optional[int] = None
+        self, count: int = 1, preferred_column: int | None = None
     ) -> int:
         """
         Return the relative cursor position (character index) where we would be if the
@@ -759,8 +761,8 @@ class Document:
         )
 
     def find_enclosing_bracket_right(
-        self, left_ch: str, right_ch: str, end_pos: Optional[int] = None
-    ) -> Optional[int]:
+        self, left_ch: str, right_ch: str, end_pos: int | None = None
+    ) -> int | None:
         """
         Find the right bracket enclosing current position. Return the relative
         position to the cursor position.
@@ -792,8 +794,8 @@ class Document:
         return None
 
     def find_enclosing_bracket_left(
-        self, left_ch: str, right_ch: str, start_pos: Optional[int] = None
-    ) -> Optional[int]:
+        self, left_ch: str, right_ch: str, start_pos: int | None = None
+    ) -> int | None:
         """
         Find the left bracket enclosing current position. Return the relative
         position to the cursor position.
@@ -825,7 +827,7 @@ class Document:
         return None
 
     def find_matching_bracket_position(
-        self, start_pos: Optional[int] = None, end_pos: Optional[int] = None
+        self, start_pos: int | None = None, end_pos: int | None = None
     ) -> int:
         """
         Return relative cursor position of matching [, (, { or < bracket.
@@ -888,7 +890,7 @@ class Document:
 
     def selection_range(
         self,
-    ) -> Tuple[
+    ) -> tuple[
         int, int
     ]:  # XXX: shouldn't this return `None` if there is no selection???
         """
@@ -907,7 +909,7 @@ class Document:
 
         return from_, to
 
-    def selection_ranges(self) -> Iterable[Tuple[int, int]]:
+    def selection_ranges(self) -> Iterable[tuple[int, int]]:
         """
         Return a list of `(from, to)` tuples for the selection or none if
         nothing was selected. The upper boundary is not included.
@@ -957,7 +959,7 @@ class Document:
 
                 yield from_, to
 
-    def selection_range_at_line(self, row: int) -> Optional[Tuple[int, int]]:
+    def selection_range_at_line(self, row: int) -> tuple[int, int] | None:
         """
         If the selection spans a portion of the given line, return a (from, to) tuple.
 
@@ -1007,7 +1009,7 @@ class Document:
                 return from_column, to_column
         return None
 
-    def cut_selection(self) -> Tuple["Document", ClipboardData]:
+    def cut_selection(self) -> tuple[Document, ClipboardData]:
         """
         Return a (:class:`.Document`, :class:`.ClipboardData`) tuple, where the
         document represents the new document when the selection is cut, and the
@@ -1048,7 +1050,7 @@ class Document:
         data: ClipboardData,
         paste_mode: PasteMode = PasteMode.EMACS,
         count: int = 1,
-    ) -> "Document":
+    ) -> Document:
         """
         Return a new :class:`.Document` instance which contains the result if
         we would paste this data at the current cursor position.
@@ -1157,7 +1159,7 @@ class Document:
 
     # Modifiers.
 
-    def insert_after(self, text: str) -> "Document":
+    def insert_after(self, text: str) -> Document:
         """
         Create a new document, with this text inserted after the buffer.
         It keeps selection ranges and cursor position in sync.
@@ -1168,7 +1170,7 @@ class Document:
             selection=self.selection,
         )
 
-    def insert_before(self, text: str) -> "Document":
+    def insert_before(self, text: str) -> Document:
         """
         Create a new document, with this text inserted before the buffer.
         It keeps selection ranges and cursor position in sync.

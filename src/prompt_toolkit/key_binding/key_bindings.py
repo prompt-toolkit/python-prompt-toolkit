@@ -34,6 +34,8 @@ been assigned, through the `key_binding` decorator.::
     # Later, add it to the key bindings.
     kb.add(Keys.A, my_key_binding)
 """
+from __future__ import annotations
+
 from abc import ABCMeta, abstractmethod, abstractproperty
 from inspect import isawaitable
 from typing import (
@@ -104,12 +106,12 @@ class Binding:
 
     def __init__(
         self,
-        keys: Tuple[Union[Keys, str], ...],
+        keys: tuple[Keys | str, ...],
         handler: KeyHandlerCallable,
         filter: FilterOrBool = True,
         eager: FilterOrBool = False,
         is_global: FilterOrBool = False,
-        save_before: Callable[["KeyPressEvent"], bool] = (lambda e: True),
+        save_before: Callable[[KeyPressEvent], bool] = (lambda e: True),
         record_in_macro: FilterOrBool = True,
     ) -> None:
         self.keys = keys
@@ -120,7 +122,7 @@ class Binding:
         self.save_before = save_before
         self.record_in_macro = to_filter(record_in_macro)
 
-    def call(self, event: "KeyPressEvent") -> None:
+    def call(self, event: KeyPressEvent) -> None:
         result = self.handler(event)
 
         # If the handler is a coroutine, create an asyncio task.
@@ -163,7 +165,7 @@ class KeyBindingsBase(metaclass=ABCMeta):
         return 0
 
     @abstractmethod
-    def get_bindings_for_keys(self, keys: KeysTuple) -> List[Binding]:
+    def get_bindings_for_keys(self, keys: KeysTuple) -> list[Binding]:
         """
         Return a list of key bindings that can handle these keys.
         (This return also inactive bindings, so the `filter` still has to be
@@ -174,7 +176,7 @@ class KeyBindingsBase(metaclass=ABCMeta):
         return []
 
     @abstractmethod
-    def get_bindings_starting_with_keys(self, keys: KeysTuple) -> List[Binding]:
+    def get_bindings_starting_with_keys(self, keys: KeysTuple) -> list[Binding]:
         """
         Return a list of key bindings that handle a key sequence starting with
         `keys`. (It does only return bindings for which the sequences are
@@ -186,7 +188,7 @@ class KeyBindingsBase(metaclass=ABCMeta):
         return []
 
     @abstractproperty
-    def bindings(self) -> List[Binding]:
+    def bindings(self) -> list[Binding]:
         """
         List of `Binding` objects.
         (These need to be exposed, so that `KeyBindings` objects can be merged
@@ -223,12 +225,12 @@ class KeyBindings(KeyBindingsBase):
     """
 
     def __init__(self) -> None:
-        self._bindings: List[Binding] = []
+        self._bindings: list[Binding] = []
         self._get_bindings_for_keys_cache: SimpleCache[
-            KeysTuple, List[Binding]
+            KeysTuple, list[Binding]
         ] = SimpleCache(maxsize=10000)
         self._get_bindings_starting_with_keys_cache: SimpleCache[
-            KeysTuple, List[Binding]
+            KeysTuple, list[Binding]
         ] = SimpleCache(maxsize=1000)
         self.__version = 0  # For cache invalidation.
 
@@ -238,7 +240,7 @@ class KeyBindings(KeyBindingsBase):
         self._get_bindings_starting_with_keys_cache.clear()
 
     @property
-    def bindings(self) -> List[Binding]:
+    def bindings(self) -> list[Binding]:
         return self._bindings
 
     @property
@@ -247,11 +249,11 @@ class KeyBindings(KeyBindingsBase):
 
     def add(
         self,
-        *keys: Union[Keys, str],
+        *keys: Keys | str,
         filter: FilterOrBool = True,
         eager: FilterOrBool = False,
         is_global: FilterOrBool = False,
-        save_before: Callable[["KeyPressEvent"], bool] = (lambda e: True),
+        save_before: Callable[[KeyPressEvent], bool] = (lambda e: True),
         record_in_macro: FilterOrBool = True,
     ) -> Callable[[T], T]:
         """
@@ -317,7 +319,7 @@ class KeyBindings(KeyBindingsBase):
 
         return decorator
 
-    def remove(self, *args: Union[Keys, str, KeyHandlerCallable]) -> None:
+    def remove(self, *args: Keys | str | KeyHandlerCallable) -> None:
         """
         Remove a key binding.
 
@@ -365,7 +367,7 @@ class KeyBindings(KeyBindingsBase):
     add_binding = add
     remove_binding = remove
 
-    def get_bindings_for_keys(self, keys: KeysTuple) -> List[Binding]:
+    def get_bindings_for_keys(self, keys: KeysTuple) -> list[Binding]:
         """
         Return a list of key bindings that can handle this key.
         (This return also inactive bindings, so the `filter` still has to be
@@ -374,8 +376,8 @@ class KeyBindings(KeyBindingsBase):
         :param keys: tuple of keys.
         """
 
-        def get() -> List[Binding]:
-            result: List[Tuple[int, Binding]] = []
+        def get() -> list[Binding]:
+            result: list[tuple[int, Binding]] = []
 
             for b in self.bindings:
                 if len(keys) == len(b.keys):
@@ -400,7 +402,7 @@ class KeyBindings(KeyBindingsBase):
 
         return self._get_bindings_for_keys_cache.get(keys, get)
 
-    def get_bindings_starting_with_keys(self, keys: KeysTuple) -> List[Binding]:
+    def get_bindings_starting_with_keys(self, keys: KeysTuple) -> list[Binding]:
         """
         Return a list of key bindings that handle a key sequence starting with
         `keys`. (It does only return bindings for which the sequences are
@@ -410,7 +412,7 @@ class KeyBindings(KeyBindingsBase):
         :param keys: tuple of keys.
         """
 
-        def get() -> List[Binding]:
+        def get() -> list[Binding]:
             result = []
             for b in self.bindings:
                 if len(keys) < len(b.keys):
@@ -426,7 +428,7 @@ class KeyBindings(KeyBindingsBase):
         return self._get_bindings_starting_with_keys_cache.get(keys, get)
 
 
-def _parse_key(key: Union[Keys, str]) -> Union[str, Keys]:
+def _parse_key(key: Keys | str) -> str | Keys:
     """
     Replace key by alias and verify whether it's a valid one.
     """
@@ -458,7 +460,7 @@ def key_binding(
     filter: FilterOrBool = True,
     eager: FilterOrBool = False,
     is_global: FilterOrBool = False,
-    save_before: Callable[["KeyPressEvent"], bool] = (lambda event: True),
+    save_before: Callable[[KeyPressEvent], bool] = (lambda event: True),
     record_in_macro: FilterOrBool = True,
 ) -> Callable[[KeyHandlerCallable], Binding]:
     """
@@ -508,7 +510,7 @@ class _Proxy(KeyBindingsBase):
     # Proxy methods to self._bindings2.
 
     @property
-    def bindings(self) -> List[Binding]:
+    def bindings(self) -> list[Binding]:
         self._update_cache()
         return self._bindings2.bindings
 
@@ -517,11 +519,11 @@ class _Proxy(KeyBindingsBase):
         self._update_cache()
         return self._last_version
 
-    def get_bindings_for_keys(self, keys: KeysTuple) -> List[Binding]:
+    def get_bindings_for_keys(self, keys: KeysTuple) -> list[Binding]:
         self._update_cache()
         return self._bindings2.get_bindings_for_keys(keys)
 
-    def get_bindings_starting_with_keys(self, keys: KeysTuple) -> List[Binding]:
+    def get_bindings_starting_with_keys(self, keys: KeysTuple) -> list[Binding]:
         self._update_cache()
         return self._bindings2.get_bindings_starting_with_keys(keys)
 
@@ -626,9 +628,7 @@ class DynamicKeyBindings(_Proxy):
     :param get_key_bindings: Callable that returns a :class:`.KeyBindings` instance.
     """
 
-    def __init__(
-        self, get_key_bindings: Callable[[], Optional[KeyBindingsBase]]
-    ) -> None:
+    def __init__(self, get_key_bindings: Callable[[], KeyBindingsBase | None]) -> None:
         self.get_key_bindings = get_key_bindings
         self.__version = 0
         self._last_child_version = None

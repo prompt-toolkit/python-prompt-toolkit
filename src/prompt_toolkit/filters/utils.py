@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Dict
 
 from .base import Always, Filter, FilterOrBool, Never
@@ -12,7 +14,7 @@ _always = Always()
 _never = Never()
 
 
-_bool_to_filter: Dict[bool, Filter] = {
+_bool_to_filter: dict[bool, Filter] = {
     True: _always,
     False: _never,
 }

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import defaultdict
 from typing import TYPE_CHECKING, Callable, DefaultDict
 
@@ -21,7 +23,7 @@ class MouseHandlers:
     """
 
     def __init__(self) -> None:
-        def dummy_callback(mouse_event: MouseEvent) -> "NotImplementedOrNone":
+        def dummy_callback(mouse_event: MouseEvent) -> NotImplementedOrNone:
             """
             :param mouse_event: `MouseEvent` instance.
             """
@@ -42,7 +44,7 @@ class MouseHandlers:
         x_max: int,
         y_min: int,
         y_max: int,
-        handler: Callable[[MouseEvent], "NotImplementedOrNone"],
+        handler: Callable[[MouseEvent], NotImplementedOrNone],
     ) -> None:
         """
         Set mouse handler for a region.

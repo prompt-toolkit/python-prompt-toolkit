@@ -1,6 +1,8 @@
 """
 Key bindings for auto suggestion (for fish-style auto suggestion).
 """
+from __future__ import annotations
+
 import re
 
 from prompt_toolkit.application.current import get_app

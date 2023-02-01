@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .dialogs import (
     button_dialog,
     checkboxlist_dialog,

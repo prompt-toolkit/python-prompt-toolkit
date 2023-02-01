@@ -1,6 +1,8 @@
 """
 The default styling.
 """
+from __future__ import annotations
+
 from prompt_toolkit.cache import memoized
 
 from .base import ANSI_COLOR_NAMES, BaseStyle

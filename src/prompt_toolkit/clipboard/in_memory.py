@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import deque
 from typing import Deque, Optional
 
@@ -16,9 +18,7 @@ class InMemoryClipboard(Clipboard):
     This implements a kill-ring, for Emacs mode.
     """
 
-    def __init__(
-        self, data: Optional[ClipboardData] = None, max_size: int = 60
-    ) -> None:
+    def __init__(self, data: ClipboardData | None = None, max_size: int = 60) -> None:
         assert max_size >= 1
 
         self.max_size = max_size

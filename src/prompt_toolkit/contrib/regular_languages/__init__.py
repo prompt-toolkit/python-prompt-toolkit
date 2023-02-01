@@ -72,6 +72,8 @@ TODO: some examples of:
     - How to create an autocompleter from this grammar.
     - How to create a parser from this grammar.
 """
+from __future__ import annotations
+
 from .compiler import compile
 
 __all__ = ["compile"]

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Callable, Union
@@ -39,7 +41,7 @@ class CursorShape(Enum):
 
 class CursorShapeConfig(ABC):
     @abstractmethod
-    def get_cursor_shape(self, application: "Application[Any]") -> CursorShape:
+    def get_cursor_shape(self, application: Application[Any]) -> CursorShape:
         """
         Return the cursor shape to be used in the current state.
         """
@@ -56,7 +58,7 @@ class SimpleCursorShapeConfig(CursorShapeConfig):
     def __init__(self, cursor_shape: CursorShape = CursorShape._NEVER_CHANGE) -> None:
         self.cursor_shape = cursor_shape
 
-    def get_cursor_shape(self, application: "Application[Any]") -> CursorShape:
+    def get_cursor_shape(self, application: Application[Any]) -> CursorShape:
         return self.cursor_shape
 
 
@@ -65,7 +67,7 @@ class ModalCursorShapeConfig(CursorShapeConfig):
     Show cursor shape according to the current input mode.
     """
 
-    def get_cursor_shape(self, application: "Application[Any]") -> CursorShape:
+    def get_cursor_shape(self, application: Application[Any]) -> CursorShape:
         if application.editing_mode == EditingMode.VI:
             if application.vi_state.input_mode == InputMode.INSERT:
                 return CursorShape.BEAM
@@ -82,7 +84,7 @@ class DynamicCursorShapeConfig(CursorShapeConfig):
     ) -> None:
         self.get_cursor_shape_config = get_cursor_shape_config
 
-    def get_cursor_shape(self, application: "Application[Any]") -> CursorShape:
+    def get_cursor_shape(self, application: Application[Any]) -> CursorShape:
         return to_cursor_shape_config(self.get_cursor_shape_config()).get_cursor_shape(
             application
         )

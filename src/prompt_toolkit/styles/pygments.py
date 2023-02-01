@@ -6,6 +6,8 @@ Usage::
     from pygments.styles.tango import TangoStyle
     style = style_from_pygments_cls(pygments_style_cls=TangoStyle)
 """
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Dict, Type
 
 from .style import Style
@@ -22,7 +24,7 @@ __all__ = [
 ]
 
 
-def style_from_pygments_cls(pygments_style_cls: Type["PygmentsStyle"]) -> Style:
+def style_from_pygments_cls(pygments_style_cls: type[PygmentsStyle]) -> Style:
     """
     Shortcut to create a :class:`.Style` instance from a Pygments style class
     and a style dictionary.
@@ -43,7 +45,7 @@ def style_from_pygments_cls(pygments_style_cls: Type["PygmentsStyle"]) -> Style:
     return style_from_pygments_dict(pygments_style_cls.styles)
 
 
-def style_from_pygments_dict(pygments_dict: Dict["Token", str]) -> Style:
+def style_from_pygments_dict(pygments_dict: dict[Token, str]) -> Style:
     """
     Create a :class:`.Style` instance from a Pygments style dictionary.
     (One that maps Token objects to style strings.)
@@ -56,7 +58,7 @@ def style_from_pygments_dict(pygments_dict: Dict["Token", str]) -> Style:
     return Style(pygments_style)
 
 
-def pygments_token_to_classname(token: "Token") -> str:
+def pygments_token_to_classname(token: Token) -> str:
     """
     Turn e.g. `Token.Name.Exception` into `'pygments.name.exception'`.
 

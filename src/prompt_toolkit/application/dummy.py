@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Callable, Optional
 
 from prompt_toolkit.formatted_text import AnyFormattedText
@@ -22,7 +24,7 @@ class DummyApplication(Application[None]):
 
     def run(
         self,
-        pre_run: Optional[Callable[[], None]] = None,
+        pre_run: Callable[[], None] | None = None,
         set_exception_handler: bool = True,
         handle_sigint: bool = True,
         in_thread: bool = False,
@@ -31,7 +33,7 @@ class DummyApplication(Application[None]):
 
     async def run_async(
         self,
-        pre_run: Optional[Callable[[], None]] = None,
+        pre_run: Callable[[], None] | None = None,
         set_exception_handler: bool = True,
         handle_sigint: bool = True,
         slow_callback_duration: float = 0.5,

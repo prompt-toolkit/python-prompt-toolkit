@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Dict, List, Optional
 
 from prompt_toolkit.data_structures import Point
@@ -52,7 +54,7 @@ class ScrollablePane(Container):
     def __init__(
         self,
         content: Container,
-        scroll_offsets: Optional[ScrollOffsets] = None,
+        scroll_offsets: ScrollOffsets | None = None,
         keep_cursor_visible: FilterOrBool = True,
         keep_focused_window_visible: FilterOrBool = True,
         max_available_height: int = MAX_AVAILABLE_HEIGHT,
@@ -119,7 +121,7 @@ class ScrollablePane(Container):
         write_position: WritePosition,
         parent_style: str,
         erase_bg: bool,
-        z_index: Optional[int],
+        z_index: int | None,
     ) -> None:
         """
         Render scrollable pane content.
@@ -293,7 +295,7 @@ class ScrollablePane(Container):
 
         # Cache mouse handlers when wrapping them. Very often the same mouse
         # handler is registered for many positions.
-        mouse_handler_wrappers: Dict[MouseHandler, MouseHandler] = {}
+        mouse_handler_wrappers: dict[MouseHandler, MouseHandler] = {}
 
         def wrap_mouse_handler(handler: MouseHandler) -> MouseHandler:
             "Wrap mouse handler. Translate coordinates in `MouseEvent`."
@@ -348,10 +350,10 @@ class ScrollablePane(Container):
     def is_modal(self) -> bool:
         return self.content.is_modal()
 
-    def get_key_bindings(self) -> Optional[KeyBindingsBase]:
+    def get_key_bindings(self) -> KeyBindingsBase | None:
         return self.content.get_key_bindings()
 
-    def get_children(self) -> List["Container"]:
+    def get_children(self) -> list[Container]:
         return [self.content]
 
     def _make_window_visible(
@@ -359,7 +361,7 @@ class ScrollablePane(Container):
         visible_height: int,
         virtual_height: int,
         visible_win_write_pos: WritePosition,
-        cursor_position: Optional[Point],
+        cursor_position: Point | None,
     ) -> None:
         """
         Scroll the scrollable pane, so that this window becomes visible.

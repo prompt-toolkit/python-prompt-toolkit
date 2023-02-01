@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Callable, Iterable, List, Optional, Sequence, Union
 
 from prompt_toolkit.application.current import get_app
@@ -39,9 +41,9 @@ class MenuContainer:
     def __init__(
         self,
         body: AnyContainer,
-        menu_items: List["MenuItem"],
-        floats: Optional[List[Float]] = None,
-        key_bindings: Optional[KeyBindingsBase] = None,
+        menu_items: list[MenuItem],
+        floats: list[Float] | None = None,
+        key_bindings: KeyBindingsBase | None = None,
     ) -> None:
         self.body = body
         self.menu_items = menu_items
@@ -209,7 +211,7 @@ class MenuContainer:
             key_bindings=key_bindings,
         )
 
-    def _get_menu(self, level: int) -> "MenuItem":
+    def _get_menu(self, level: int) -> MenuItem:
         menu = self.menu_items[self.selected_menu[0]]
 
         for i, index in enumerate(self.selected_menu[1:]):
@@ -341,7 +343,7 @@ class MenuContainer:
         return Window(FormattedTextControl(get_text_fragments), style="class:menu")
 
     @property
-    def floats(self) -> Optional[List[Float]]:
+    def floats(self) -> list[Float] | None:
         return self.container.floats
 
     def __pt_container__(self) -> Container:
@@ -352,9 +354,9 @@ class MenuItem:
     def __init__(
         self,
         text: str = "",
-        handler: Optional[Callable[[], None]] = None,
-        children: Optional[List["MenuItem"]] = None,
-        shortcut: Optional[Sequence[Union[Keys, str]]] = None,
+        handler: Callable[[], None] | None = None,
+        children: list[MenuItem] | None = None,
+        shortcut: Sequence[Keys | str] | None = None,
         disabled: bool = False,
     ) -> None:
         self.text = text

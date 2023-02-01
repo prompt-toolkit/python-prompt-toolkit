@@ -2,6 +2,8 @@
 Container for the layout.
 (Containers can contain other containers or user interface controls.)
 """
+from __future__ import annotations
+
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from functools import partial
@@ -120,7 +122,7 @@ class Container(metaclass=ABCMeta):
         write_position: WritePosition,
         parent_style: str,
         erase_bg: bool,
-        z_index: Optional[int],
+        z_index: int | None,
     ) -> None:
         """
         Write the actual content to the screen.
@@ -141,7 +143,7 @@ class Container(metaclass=ABCMeta):
         """
         return False
 
-    def get_key_bindings(self) -> Optional[KeyBindingsBase]:
+    def get_key_bindings(self) -> KeyBindingsBase | None:
         """
         Returns a :class:`.KeyBindings` object. These bindings become active when any
         user control in this container has the focus, except if any containers
@@ -150,7 +152,7 @@ class Container(metaclass=ABCMeta):
         return None
 
     @abstractmethod
-    def get_children(self) -> List["Container"]:
+    def get_children(self) -> list[Container]:
         """
         Return the list of child :class:`.Container` objects.
         """
@@ -164,14 +166,14 @@ if TYPE_CHECKING:
         Any object that implements ``__pt_container__`` represents a container.
         """
 
-        def __pt_container__(self) -> "AnyContainer":
+        def __pt_container__(self) -> AnyContainer:
             ...
 
 
 AnyContainer = Union[Container, "MagicContainer"]
 
 
-def _window_too_small() -> "Window":
+def _window_too_small() -> Window:
     "Create a `Window` that displays the 'Window too small' text."
     return Window(
         FormattedTextControl(text=[("class:window-too-small", " Window too small... ")])
@@ -202,16 +204,16 @@ class _Split(Container):
     def __init__(
         self,
         children: Sequence[AnyContainer],
-        window_too_small: Optional[Container] = None,
+        window_too_small: Container | None = None,
         padding: AnyDimension = Dimension.exact(0),
-        padding_char: Optional[str] = None,
+        padding_char: str | None = None,
         padding_style: str = "",
         width: AnyDimension = None,
         height: AnyDimension = None,
-        z_index: Optional[int] = None,
+        z_index: int | None = None,
         modal: bool = False,
-        key_bindings: Optional[KeyBindingsBase] = None,
-        style: Union[str, Callable[[], str]] = "",
+        key_bindings: KeyBindingsBase | None = None,
+        style: str | Callable[[], str] = "",
     ) -> None:
         self.children = [to_container(c) for c in children]
         self.window_too_small = window_too_small or _window_too_small()
@@ -230,10 +232,10 @@ class _Split(Container):
     def is_modal(self) -> bool:
         return self.modal
 
-    def get_key_bindings(self) -> Optional[KeyBindingsBase]:
+    def get_key_bindings(self) -> KeyBindingsBase | None:
         return self.key_bindings
 
-    def get_children(self) -> List[Container]:
+    def get_children(self) -> list[Container]:
         return self.children
 
 
@@ -274,17 +276,17 @@ class HSplit(_Split):
     def __init__(
         self,
         children: Sequence[AnyContainer],
-        window_too_small: Optional[Container] = None,
+        window_too_small: Container | None = None,
         align: VerticalAlign = VerticalAlign.JUSTIFY,
         padding: AnyDimension = 0,
-        padding_char: Optional[str] = None,
+        padding_char: str | None = None,
         padding_style: str = "",
         width: AnyDimension = None,
         height: AnyDimension = None,
-        z_index: Optional[int] = None,
+        z_index: int | None = None,
         modal: bool = False,
-        key_bindings: Optional[KeyBindingsBase] = None,
-        style: Union[str, Callable[[], str]] = "",
+        key_bindings: KeyBindingsBase | None = None,
+        style: str | Callable[[], str] = "",
     ) -> None:
         super().__init__(
             children=children,
@@ -303,7 +305,7 @@ class HSplit(_Split):
         self.align = align
 
         self._children_cache: SimpleCache[
-            Tuple[Container, ...], List[Container]
+            tuple[Container, ...], list[Container]
         ] = SimpleCache(maxsize=1)
         self._remaining_space_window = Window()  # Dummy window.
 
@@ -331,13 +333,13 @@ class HSplit(_Split):
             c.reset()
 
     @property
-    def _all_children(self) -> List[Container]:
+    def _all_children(self) -> list[Container]:
         """
         List of child objects, including padding.
         """
 
-        def get() -> List[Container]:
-            result: List[Container] = []
+        def get() -> list[Container]:
+            result: list[Container] = []
 
             # Padding Top.
             if self.align in (VerticalAlign.CENTER, VerticalAlign.BOTTOM):
@@ -371,7 +373,7 @@ class HSplit(_Split):
         write_position: WritePosition,
         parent_style: str,
         erase_bg: bool,
-        z_index: Optional[int],
+        z_index: int | None,
     ) -> None:
         """
         Render the prompt to a `Screen` instance.
@@ -421,7 +423,7 @@ class HSplit(_Split):
                     z_index,
                 )
 
-    def _divide_heights(self, write_position: WritePosition) -> Optional[List[int]]:
+    def _divide_heights(self, write_position: WritePosition) -> list[int] | None:
         """
         Return the heights for all rows.
         Or None when there is not enough space.
@@ -511,17 +513,17 @@ class VSplit(_Split):
     def __init__(
         self,
         children: Sequence[AnyContainer],
-        window_too_small: Optional[Container] = None,
+        window_too_small: Container | None = None,
         align: HorizontalAlign = HorizontalAlign.JUSTIFY,
         padding: AnyDimension = 0,
-        padding_char: Optional[str] = None,
+        padding_char: str | None = None,
         padding_style: str = "",
         width: AnyDimension = None,
         height: AnyDimension = None,
-        z_index: Optional[int] = None,
+        z_index: int | None = None,
         modal: bool = False,
-        key_bindings: Optional[KeyBindingsBase] = None,
-        style: Union[str, Callable[[], str]] = "",
+        key_bindings: KeyBindingsBase | None = None,
+        style: str | Callable[[], str] = "",
     ) -> None:
         super().__init__(
             children=children,
@@ -540,7 +542,7 @@ class VSplit(_Split):
         self.align = align
 
         self._children_cache: SimpleCache[
-            Tuple[Container, ...], List[Container]
+            tuple[Container, ...], list[Container]
         ] = SimpleCache(maxsize=1)
         self._remaining_space_window = Window()  # Dummy window.
 
@@ -583,13 +585,13 @@ class VSplit(_Split):
             c.reset()
 
     @property
-    def _all_children(self) -> List[Container]:
+    def _all_children(self) -> list[Container]:
         """
         List of child objects, including padding.
         """
 
-        def get() -> List[Container]:
-            result: List[Container] = []
+        def get() -> list[Container]:
+            result: list[Container] = []
 
             # Padding left.
             if self.align in (HorizontalAlign.CENTER, HorizontalAlign.RIGHT):
@@ -616,7 +618,7 @@ class VSplit(_Split):
 
         return self._children_cache.get(tuple(self.children), get)
 
-    def _divide_widths(self, width: int) -> Optional[List[int]]:
+    def _divide_widths(self, width: int) -> list[int] | None:
         """
         Return the widths for all columns.
         Or None when there is not enough space.
@@ -674,7 +676,7 @@ class VSplit(_Split):
         write_position: WritePosition,
         parent_style: str,
         erase_bg: bool,
-        z_index: Optional[int],
+        z_index: int | None,
     ) -> None:
         """
         Render the prompt to a `Screen` instance.
@@ -760,11 +762,11 @@ class FloatContainer(Container):
     def __init__(
         self,
         content: AnyContainer,
-        floats: List["Float"],
+        floats: list[Float],
         modal: bool = False,
-        key_bindings: Optional[KeyBindingsBase] = None,
-        style: Union[str, Callable[[], str]] = "",
-        z_index: Optional[int] = None,
+        key_bindings: KeyBindingsBase | None = None,
+        style: str | Callable[[], str] = "",
+        z_index: int | None = None,
     ) -> None:
         self.content = to_container(content)
         self.floats = floats
@@ -798,7 +800,7 @@ class FloatContainer(Container):
         write_position: WritePosition,
         parent_style: str,
         erase_bg: bool,
-        z_index: Optional[int],
+        z_index: int | None,
     ) -> None:
         style = parent_style + " " + to_str(self.style)
         z_index = z_index if self.z_index is None else self.z_index
@@ -850,13 +852,13 @@ class FloatContainer(Container):
 
     def _draw_float(
         self,
-        fl: "Float",
+        fl: Float,
         screen: Screen,
         mouse_handlers: MouseHandlers,
         write_position: WritePosition,
         style: str,
         erase_bg: bool,
-        z_index: Optional[int],
+        z_index: int | None,
     ) -> None:
         "Draw a single Float."
         # When a menu_position was given, use this instead of the cursor
@@ -1013,10 +1015,10 @@ class FloatContainer(Container):
     def is_modal(self) -> bool:
         return self.modal
 
-    def get_key_bindings(self) -> Optional[KeyBindingsBase]:
+    def get_key_bindings(self) -> KeyBindingsBase | None:
         return self.key_bindings
 
-    def get_children(self) -> List[Container]:
+    def get_children(self) -> list[Container]:
         children = [self.content]
         children.extend(f.content for f in self.floats)
         return children
@@ -1051,15 +1053,15 @@ class Float:
     def __init__(
         self,
         content: AnyContainer,
-        top: Optional[int] = None,
-        right: Optional[int] = None,
-        bottom: Optional[int] = None,
-        left: Optional[int] = None,
-        width: Optional[Union[int, Callable[[], int]]] = None,
-        height: Optional[Union[int, Callable[[], int]]] = None,
+        top: int | None = None,
+        right: int | None = None,
+        bottom: int | None = None,
+        left: int | None = None,
+        width: int | Callable[[], int] | None = None,
+        height: int | Callable[[], int] | None = None,
         xcursor: bool = False,
         ycursor: bool = False,
-        attach_to_window: Optional[AnyContainer] = None,
+        attach_to_window: AnyContainer | None = None,
         hide_when_covering_content: bool = False,
         allow_cover_cursor: bool = False,
         z_index: int = 1,
@@ -1088,12 +1090,12 @@ class Float:
         self.z_index = z_index
         self.transparent = to_filter(transparent)
 
-    def get_width(self) -> Optional[int]:
+    def get_width(self) -> int | None:
         if callable(self.width):
             return self.width()
         return self.width
 
-    def get_height(self) -> Optional[int]:
+    def get_height(self) -> int | None:
         if callable(self.height):
             return self.height()
         return self.height
@@ -1131,15 +1133,15 @@ class WindowRenderInfo:
 
     def __init__(
         self,
-        window: "Window",
+        window: Window,
         ui_content: UIContent,
         horizontal_scroll: int,
         vertical_scroll: int,
         window_width: int,
         window_height: int,
-        configured_scroll_offsets: "ScrollOffsets",
-        visible_line_to_row_col: Dict[int, Tuple[int, int]],
-        rowcol_to_yx: Dict[Tuple[int, int], Tuple[int, int]],
+        configured_scroll_offsets: ScrollOffsets,
+        visible_line_to_row_col: dict[int, tuple[int, int]],
+        rowcol_to_yx: dict[tuple[int, int], tuple[int, int]],
         x_offset: int,
         y_offset: int,
         wrap_lines: bool,
@@ -1160,7 +1162,7 @@ class WindowRenderInfo:
         self._y_offset = y_offset
 
     @property
-    def visible_line_to_input_line(self) -> Dict[int, int]:
+    def visible_line_to_input_line(self) -> dict[int, int]:
         return {
             visible_line: rowcol[0]
             for visible_line, rowcol in self.visible_line_to_row_col.items()
@@ -1183,7 +1185,7 @@ class WindowRenderInfo:
             return Point(x=x - self._x_offset, y=y - self._y_offset)
 
     @property
-    def applied_scroll_offsets(self) -> "ScrollOffsets":
+    def applied_scroll_offsets(self) -> ScrollOffsets:
         """
         Return a :class:`.ScrollOffsets` instance that indicates the actual
         offset. This can be less than or equal to what's configured. E.g, when
@@ -1211,7 +1213,7 @@ class WindowRenderInfo:
         )
 
     @property
-    def displayed_lines(self) -> List[int]:
+    def displayed_lines(self) -> list[int]:
         """
         List of all the visible rows. (Line numbers of the input buffer.)
         The last line may not be entirely visible.
@@ -1219,13 +1221,13 @@ class WindowRenderInfo:
         return sorted(row for row, col in self.visible_line_to_row_col.values())
 
     @property
-    def input_line_to_visible_line(self) -> Dict[int, int]:
+    def input_line_to_visible_line(self) -> dict[int, int]:
         """
         Return the dictionary mapping the line numbers of the input buffer to
         the lines of the screen. When a line spans several rows at the screen,
         the first row appears in the dictionary.
         """
-        result: Dict[int, int] = {}
+        result: dict[int, int] = {}
         for k, v in self.visible_line_to_input_line.items():
             if v in result:
                 result[v] = min(result[v], k)
@@ -1331,10 +1333,10 @@ class ScrollOffsets:
 
     def __init__(
         self,
-        top: Union[int, Callable[[], int]] = 0,
-        bottom: Union[int, Callable[[], int]] = 0,
-        left: Union[int, Callable[[], int]] = 0,
-        right: Union[int, Callable[[], int]] = 0,
+        top: int | Callable[[], int] = 0,
+        bottom: int | Callable[[], int] = 0,
+        left: int | Callable[[], int] = 0,
+        right: int | Callable[[], int] = 0,
     ) -> None:
         self._top = top
         self._bottom = bottom
@@ -1457,31 +1459,31 @@ class Window(Container):
 
     def __init__(
         self,
-        content: Optional[UIControl] = None,
+        content: UIControl | None = None,
         width: AnyDimension = None,
         height: AnyDimension = None,
-        z_index: Optional[int] = None,
+        z_index: int | None = None,
         dont_extend_width: FilterOrBool = False,
         dont_extend_height: FilterOrBool = False,
         ignore_content_width: FilterOrBool = False,
         ignore_content_height: FilterOrBool = False,
-        left_margins: Optional[Sequence[Margin]] = None,
-        right_margins: Optional[Sequence[Margin]] = None,
-        scroll_offsets: Optional[ScrollOffsets] = None,
+        left_margins: Sequence[Margin] | None = None,
+        right_margins: Sequence[Margin] | None = None,
+        scroll_offsets: ScrollOffsets | None = None,
         allow_scroll_beyond_bottom: FilterOrBool = False,
         wrap_lines: FilterOrBool = False,
-        get_vertical_scroll: Optional[Callable[["Window"], int]] = None,
-        get_horizontal_scroll: Optional[Callable[["Window"], int]] = None,
+        get_vertical_scroll: Callable[[Window], int] | None = None,
+        get_horizontal_scroll: Callable[[Window], int] | None = None,
         always_hide_cursor: FilterOrBool = False,
         cursorline: FilterOrBool = False,
         cursorcolumn: FilterOrBool = False,
-        colorcolumns: Union[
-            None, List[ColorColumn], Callable[[], List[ColorColumn]]
-        ] = None,
-        align: Union[WindowAlign, Callable[[], WindowAlign]] = WindowAlign.LEFT,
-        style: Union[str, Callable[[], str]] = "",
-        char: Union[None, str, Callable[[], str]] = None,
-        get_line_prefix: Optional[GetLinePrefixCallable] = None,
+        colorcolumns: (
+            None | list[ColorColumn] | Callable[[], list[ColorColumn]]
+        ) = None,
+        align: WindowAlign | Callable[[], WindowAlign] = WindowAlign.LEFT,
+        style: str | Callable[[], str] = "",
+        char: None | str | Callable[[], str] = None,
+        get_line_prefix: GetLinePrefixCallable | None = None,
     ) -> None:
         self.allow_scroll_beyond_bottom = to_filter(allow_scroll_beyond_bottom)
         self.always_hide_cursor = to_filter(always_hide_cursor)
@@ -1511,9 +1513,9 @@ class Window(Container):
 
         # Cache for the screens generated by the margin.
         self._ui_content_cache: SimpleCache[
-            Tuple[int, int, int], UIContent
+            tuple[int, int, int], UIContent
         ] = SimpleCache(maxsize=8)
-        self._margin_width_cache: SimpleCache[Tuple[Margin, int], int] = SimpleCache(
+        self._margin_width_cache: SimpleCache[tuple[Margin, int], int] = SimpleCache(
             maxsize=1
         )
 
@@ -1536,7 +1538,7 @@ class Window(Container):
 
         #: Keep render information (mappings between buffer input and render
         #: output.)
-        self.render_info: Optional[WindowRenderInfo] = None
+        self.render_info: WindowRenderInfo | None = None
 
     def _get_margin_width(self, margin: Margin) -> int:
         """
@@ -1567,7 +1569,7 @@ class Window(Container):
         Calculate the preferred width for this window.
         """
 
-        def preferred_content_width() -> Optional[int]:
+        def preferred_content_width() -> int | None:
             """Content width: is only calculated if no exact width for the
             window was given."""
             if self.ignore_content_width():
@@ -1598,7 +1600,7 @@ class Window(Container):
         Calculate the preferred height for this window.
         """
 
-        def preferred_content_height() -> Optional[int]:
+        def preferred_content_height() -> int | None:
             """Content height: is only calculated if no exact height for the
             window was given."""
             if self.ignore_content_height():
@@ -1622,8 +1624,8 @@ class Window(Container):
 
     @staticmethod
     def _merge_dimensions(
-        dimension: Optional[Dimension],
-        get_preferred: Callable[[], Optional[int]],
+        dimension: Dimension | None,
+        get_preferred: Callable[[], int | None],
         dont_extend: bool = False,
     ) -> Dimension:
         """
@@ -1635,7 +1637,7 @@ class Window(Container):
 
         # When a preferred dimension was explicitly given to the Window,
         # ignore the UIControl.
-        preferred: Optional[int]
+        preferred: int | None
 
         if dimension.preferred_specified:
             preferred = dimension.preferred
@@ -1655,8 +1657,8 @@ class Window(Container):
 
         # When a `dont_extend` flag has been given, use the preferred dimension
         # also as the max dimension.
-        max_: Optional[int]
-        min_: Optional[int]
+        max_: int | None
+        min_: int | None
 
         if dont_extend and preferred is not None:
             max_ = min(dimension.max, preferred)
@@ -1680,7 +1682,7 @@ class Window(Container):
         key = (get_app().render_counter, width, height)
         return self._ui_content_cache.get(key, get_content)
 
-    def _get_digraph_char(self) -> Optional[str]:
+    def _get_digraph_char(self) -> str | None:
         "Return `False`, or the Digraph symbol to be used."
         app = get_app()
         if app.quoted_insert:
@@ -1698,7 +1700,7 @@ class Window(Container):
         write_position: WritePosition,
         parent_style: str,
         erase_bg: bool,
-        z_index: Optional[int],
+        z_index: int | None,
     ) -> None:
         """
         Write window to screen. This renders the user control, the margins and
@@ -1823,7 +1825,7 @@ class Window(Container):
         self.render_info = render_info
 
         # Set mouse handlers.
-        def mouse_handler(mouse_event: MouseEvent) -> "NotImplementedOrNone":
+        def mouse_handler(mouse_event: MouseEvent) -> NotImplementedOrNone:
             """
             Wrapper around the mouse_handler of the `UIControl` that turns
             screen coordinates into line coordinates.
@@ -1946,8 +1948,8 @@ class Window(Container):
         always_hide_cursor: bool = False,
         has_focus: bool = False,
         align: WindowAlign = WindowAlign.LEFT,
-        get_line_prefix: Optional[Callable[[int, int], AnyFormattedText]] = None,
-    ) -> Tuple[Dict[int, Tuple[int, int]], Dict[Tuple[int, int], Tuple[int, int]]]:
+        get_line_prefix: Callable[[int, int], AnyFormattedText] | None = None,
+    ) -> tuple[dict[int, tuple[int, int]], dict[tuple[int, int], tuple[int, int]]]:
         """
         Copy the UIContent into the output screen.
         Return (visible_line_to_row_col, rowcol_to_yx) tuple.
@@ -1963,10 +1965,10 @@ class Window(Container):
 
         # Map visible line number to (row, col) of input.
         # 'col' will always be zero if line wrapping is off.
-        visible_line_to_row_col: Dict[int, Tuple[int, int]] = {}
+        visible_line_to_row_col: dict[int, tuple[int, int]] = {}
 
         # Maps (row, col) from the input to (y, x) screen coordinates.
-        rowcol_to_yx: Dict[Tuple[int, int], Tuple[int, int]] = {}
+        rowcol_to_yx: dict[tuple[int, int], tuple[int, int]] = {}
 
         def copy_line(
             line: StyleAndTextTuples,
@@ -1974,7 +1976,7 @@ class Window(Container):
             x: int,
             y: int,
             is_input: bool = False,
-        ) -> Tuple[int, int]:
+        ) -> tuple[int, int]:
             """
             Copy over a single line to the output screen. This can wrap over
             multiple lines in the output. It will call the prefix (prompt)
@@ -2180,7 +2182,7 @@ class Window(Container):
         Erase/fill the background.
         (Useful for floats and when a `char` has been given.)
         """
-        char: Optional[str]
+        char: str | None
         if callable(self.char):
             char = self.char()
         else:
@@ -2550,7 +2552,7 @@ class Window(Container):
             ),
         )
 
-    def _mouse_handler(self, mouse_event: MouseEvent) -> "NotImplementedOrNone":
+    def _mouse_handler(self, mouse_event: MouseEvent) -> NotImplementedOrNone:
         """
         Mouse handler. Called when the UI control doesn't handle this
         particular event.
@@ -2597,10 +2599,10 @@ class Window(Container):
 
             self.vertical_scroll -= 1
 
-    def get_key_bindings(self) -> Optional[KeyBindingsBase]:
+    def get_key_bindings(self) -> KeyBindingsBase | None:
         return self.content.get_key_bindings()
 
-    def get_children(self) -> List[Container]:
+    def get_children(self) -> list[Container]:
         return []
 
 
@@ -2643,14 +2645,14 @@ class ConditionalContainer(Container):
         write_position: WritePosition,
         parent_style: str,
         erase_bg: bool,
-        z_index: Optional[int],
+        z_index: int | None,
     ) -> None:
         if self.filter():
             return self.content.write_to_screen(
                 screen, mouse_handlers, write_position, parent_style, erase_bg, z_index
             )
 
-    def get_children(self) -> List[Container]:
+    def get_children(self) -> list[Container]:
         return [self.content]
 
 
@@ -2691,7 +2693,7 @@ class DynamicContainer(Container):
         write_position: WritePosition,
         parent_style: str,
         erase_bg: bool,
-        z_index: Optional[int],
+        z_index: int | None,
     ) -> None:
         self._get_container().write_to_screen(
             screen, mouse_handlers, write_position, parent_style, erase_bg, z_index
@@ -2700,12 +2702,12 @@ class DynamicContainer(Container):
     def is_modal(self) -> bool:
         return False
 
-    def get_key_bindings(self) -> Optional[KeyBindingsBase]:
+    def get_key_bindings(self) -> KeyBindingsBase | None:
         # Key bindings will be collected when `layout.walk()` finds the child
         # container.
         return None
 
-    def get_children(self) -> List[Container]:
+    def get_children(self) -> list[Container]:
         # Here we have to return the current active container itself, not its
         # children. Otherwise, we run into issues where `layout.walk()` will
         # never see an object of type `Window` if this contains a window. We
@@ -2737,7 +2739,7 @@ def to_window(container: AnyContainer) -> Window:
         raise ValueError(f"Not a Window object: {container!r}.")
 
 
-def is_container(value: object) -> "TypeGuard[AnyContainer]":
+def is_container(value: object) -> TypeGuard[AnyContainer]:
     """
     Checks whether the given value is a container object
     (for use in assert statements).

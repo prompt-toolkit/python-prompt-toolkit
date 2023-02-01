@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from prompt_toolkit.styles import Attrs, Style, SwapLightAndDarkStyleTransformation
 
 

@@ -2,6 +2,8 @@
 All modern web browsers support these 140 color names.
 Taken from: https://www.w3schools.com/colors/colors_names.asp
 """
+from __future__ import annotations
+
 from typing import Dict
 
 __all__ = [
@@ -9,7 +11,7 @@ __all__ = [
 ]
 
 
-NAMED_COLORS: Dict[str, str] = {
+NAMED_COLORS: dict[str, str] = {
     "AliceBlue": "#f0f8ff",
     "AntiqueWhite": "#faebd7",
     "Aqua": "#00ffff",

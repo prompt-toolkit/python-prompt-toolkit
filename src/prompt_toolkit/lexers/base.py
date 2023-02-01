@@ -1,6 +1,8 @@
 """
 Base classes for prompt_toolkit lexers.
 """
+from __future__ import annotations
+
 from abc import ABCMeta, abstractmethod
 from typing import Callable, Hashable, Optional
 
@@ -69,7 +71,7 @@ class DynamicLexer(Lexer):
     :param get_lexer: Callable that returns a :class:`.Lexer` instance.
     """
 
-    def __init__(self, get_lexer: Callable[[], Optional[Lexer]]) -> None:
+    def __init__(self, get_lexer: Callable[[], Lexer | None]) -> None:
         self.get_lexer = get_lexer
         self._dummy = SimpleLexer()
 

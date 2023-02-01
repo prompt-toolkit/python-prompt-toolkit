@@ -1,6 +1,8 @@
 """
 Wrapper for the layout.
 """
+from __future__ import annotations
+
 from typing import Dict, Generator, Iterable, List, Optional, Union
 
 from prompt_toolkit.buffer import Buffer
@@ -37,10 +39,10 @@ class Layout:
     def __init__(
         self,
         container: AnyContainer,
-        focused_element: Optional[FocusableElement] = None,
+        focused_element: FocusableElement | None = None,
     ) -> None:
         self.container = to_container(container)
-        self._stack: List[Window] = []
+        self._stack: list[Window] = []
 
         # Map search BufferControl back to the original BufferControl.
         # This is used to keep track of when exactly we are searching, and for
@@ -48,12 +50,12 @@ class Layout:
         # When a link exists in this dictionary, that means the search is
         # currently active.
         # Map: search_buffer_control -> original buffer control.
-        self.search_links: Dict[SearchBufferControl, BufferControl] = {}
+        self.search_links: dict[SearchBufferControl, BufferControl] = {}
 
         # Mapping that maps the children in the layout to their parent.
         # This relationship is calculated dynamically, each time when the UI
         # is rendered.  (UI elements have only references to their children.)
-        self._child_to_parent: Dict[Container, Container] = {}
+        self._child_to_parent: dict[Container, Container] = {}
 
         if focused_element is None:
             try:
@@ -66,7 +68,7 @@ class Layout:
             self.focus(focused_element)
 
         # List of visible windows.
-        self.visible_windows: List[Window] = []  # List of `Window` objects.
+        self.visible_windows: list[Window] = []  # List of `Window` objects.
 
     def __repr__(self) -> str:
         return f"Layout({self.container!r}, current_window={self.current_window!r})"
@@ -222,7 +224,7 @@ class Layout:
         return self.current_control in self.search_links
 
     @property
-    def search_target_buffer_control(self) -> Optional[BufferControl]:
+    def search_target_buffer_control(self) -> BufferControl | None:
         """
         Return the :class:`.BufferControl` in which we are searching or `None`.
         """
@@ -244,7 +246,7 @@ class Layout:
             if isinstance(w, Window) and w.content.is_focusable():
                 yield w
 
-    def get_visible_focusable_windows(self) -> List[Window]:
+    def get_visible_focusable_windows(self) -> list[Window]:
         """
         Return a list of :class:`.Window` objects that are focusable.
         """
@@ -254,7 +256,7 @@ class Layout:
         return [w for w in self.get_focusable_windows() if w in visible_windows]
 
     @property
-    def current_buffer(self) -> Optional[Buffer]:
+    def current_buffer(self) -> Buffer | None:
         """
         The currently focused :class:`~.Buffer` or `None`.
         """
@@ -263,7 +265,7 @@ class Layout:
             return ui_control.buffer
         return None
 
-    def get_buffer_by_name(self, buffer_name: str) -> Optional[Buffer]:
+    def get_buffer_by_name(self, buffer_name: str) -> Buffer | None:
         """
         Look in the layout for a buffer with the given name.
         Return `None` when nothing was found.
@@ -376,7 +378,7 @@ class Layout:
 
         self.container.reset()
 
-    def get_parent(self, container: Container) -> Optional[Container]:
+    def get_parent(self, container: Container) -> Container | None:
         """
         Return the parent container for the given container, or ``None``, if it
         wasn't found.

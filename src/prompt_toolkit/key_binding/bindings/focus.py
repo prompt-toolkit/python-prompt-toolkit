@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 
 __all__ = [

@@ -2,6 +2,8 @@
 `GrammarLexer` is compatible with other lexers and can be used to highlight
 the input using a regular grammar with annotations.
 """
+from __future__ import annotations
+
 from typing import Callable, Dict, Optional
 
 from prompt_toolkit.document import Document
@@ -35,7 +37,7 @@ class GrammarLexer(Lexer):
         self,
         compiled_grammar: _CompiledGrammar,
         default_style: str = "",
-        lexers: Optional[Dict[str, Lexer]] = None,
+        lexers: dict[str, Lexer] | None = None,
     ) -> None:
         self.compiled_grammar = compiled_grammar
         self.default_style = default_style

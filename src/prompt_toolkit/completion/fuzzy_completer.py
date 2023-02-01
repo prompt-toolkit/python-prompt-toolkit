@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
 
@@ -47,7 +49,7 @@ class FuzzyCompleter(Completer):
         self,
         completer: Completer,
         WORD: bool = False,
-        pattern: Optional[str] = None,
+        pattern: str | None = None,
         enable_fuzzy: FilterOrBool = True,
     ) -> None:
         assert pattern is None or pattern.startswith("^")
@@ -90,7 +92,7 @@ class FuzzyCompleter(Completer):
             self.completer.get_completions(document2, complete_event)
         )
 
-        fuzzy_matches: List[_FuzzyMatch] = []
+        fuzzy_matches: list[_FuzzyMatch] = []
 
         if word_before_cursor == "":
             # If word before the cursor is an empty string, consider all
@@ -110,7 +112,7 @@ class FuzzyCompleter(Completer):
                         _FuzzyMatch(len(best.group(1)), best.start(), compl)
                     )
 
-            def sort_key(fuzzy_match: "_FuzzyMatch") -> Tuple[int, int]:
+            def sort_key(fuzzy_match: _FuzzyMatch) -> tuple[int, int]:
                 "Sort by start position, then by the length of the match."
                 return fuzzy_match.start_pos, fuzzy_match.match_length
 
@@ -130,7 +132,7 @@ class FuzzyCompleter(Completer):
             )
 
     def _get_display(
-        self, fuzzy_match: "_FuzzyMatch", word_before_cursor: str
+        self, fuzzy_match: _FuzzyMatch, word_before_cursor: str
     ) -> AnyFormattedText:
         """
         Generate formatted text for the display label.
@@ -185,8 +187,8 @@ class FuzzyWordCompleter(Completer):
 
     def __init__(
         self,
-        words: Union[List[str], Callable[[], List[str]]],
-        meta_dict: Optional[Dict[str, str]] = None,
+        words: list[str] | Callable[[], list[str]],
+        meta_dict: dict[str, str] | None = None,
         WORD: bool = False,
     ) -> None:
         self.words = words

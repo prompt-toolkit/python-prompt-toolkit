@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 
 from prompt_toolkit.layout import InvalidLayoutError, Layout

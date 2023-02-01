@@ -1,6 +1,8 @@
 """
 Completer for a regular grammar.
 """
+from __future__ import annotations
+
 from typing import Dict, Iterable, List
 
 from prompt_toolkit.completion import CompleteEvent, Completer, Completion
@@ -24,7 +26,7 @@ class GrammarCompleter(Completer):
     """
 
     def __init__(
-        self, compiled_grammar: _CompiledGrammar, completers: Dict[str, Completer]
+        self, compiled_grammar: _CompiledGrammar, completers: dict[str, Completer]
     ) -> None:
         self.compiled_grammar = compiled_grammar
         self.completers = completers
@@ -79,13 +81,13 @@ class GrammarCompleter(Completer):
                         display_meta=completion.display_meta,
                     )
 
-    def _remove_duplicates(self, items: Iterable[Completion]) -> List[Completion]:
+    def _remove_duplicates(self, items: Iterable[Completion]) -> list[Completion]:
         """
         Remove duplicates, while keeping the order.
         (Sometimes we have duplicates, because the there several matches of the
         same grammar, each yielding similar completions.)
         """
-        result: List[Completion] = []
+        result: list[Completion] = []
         for i in items:
             if i not in result:
                 result.append(i)

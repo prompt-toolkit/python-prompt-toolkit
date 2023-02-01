@@ -10,6 +10,8 @@ mostly Xterm compatible.
 Some useful docs:
 - Mintty: https://github.com/mintty/mintty/blob/master/wiki/Keycodes.md
 """
+from __future__ import annotations
+
 from typing import Dict, Tuple, Union
 
 from ..keys import Keys
@@ -20,7 +22,7 @@ __all__ = [
 ]
 
 # Mapping of vt100 escape codes to Keys.
-ANSI_SEQUENCES: Dict[str, Union[Keys, Tuple[Keys, ...]]] = {
+ANSI_SEQUENCES: dict[str, Keys | tuple[Keys, ...]] = {
     # Control keys.
     "\x00": Keys.ControlAt,  # Control-At (Also for Ctrl-Space)
     "\x01": Keys.ControlA,  # Control-A (home)
@@ -325,12 +327,12 @@ ANSI_SEQUENCES: Dict[str, Union[Keys, Tuple[Keys, ...]]] = {
 }
 
 
-def _get_reverse_ansi_sequences() -> Dict[Keys, str]:
+def _get_reverse_ansi_sequences() -> dict[Keys, str]:
     """
     Create a dictionary that maps prompt_toolkit keys back to the VT100 escape
     sequences.
     """
-    result: Dict[Keys, str] = {}
+    result: dict[Keys, str] = {}
 
     for sequence, key in ANSI_SEQUENCES.items():
         if not isinstance(key, tuple):

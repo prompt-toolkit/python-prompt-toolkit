@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from prompt_toolkit.shortcuts import print_container
 from prompt_toolkit.shortcuts.prompt import _split_multiline_prompt
 from prompt_toolkit.shortcuts.utils import print_container
@@ -61,7 +63,7 @@ def test_print_container(tmpdir):
         print_container(Frame(TextArea(text="Hello world!\n"), title="Title"), file=fd)
 
     # Verify rendered output.
-    with open(f, "r") as fd:
+    with open(f) as fd:
         text = fd.read()
         assert "Hello world" in text
         assert "Title" in text

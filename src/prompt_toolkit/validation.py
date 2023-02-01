@@ -2,6 +2,8 @@
 Input validation for a `Buffer`.
 (Validators will be called before accepting input.)
 """
+from __future__ import annotations
+
 from abc import ABCMeta, abstractmethod
 from typing import Callable, Optional
 
@@ -81,7 +83,7 @@ class Validator(metaclass=ABCMeta):
         validate_func: Callable[[str], bool],
         error_message: str = "Invalid input",
         move_cursor_to_end: bool = False,
-    ) -> "Validator":
+    ) -> Validator:
         """
         Create a validator from a simple validate callable. E.g.:
 
@@ -181,7 +183,7 @@ class DynamicValidator(Validator):
     :param get_validator: Callable that returns a :class:`.Validator` instance.
     """
 
-    def __init__(self, get_validator: Callable[[], Optional[Validator]]) -> None:
+    def __init__(self, get_validator: Callable[[], Validator | None]) -> None:
         self.get_validator = get_validator
 
     def validate(self, document: Document) -> None:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import weakref
 from abc import ABCMeta, abstractmethod
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
@@ -14,13 +16,13 @@ class Filter(metaclass=ABCMeta):
     """
 
     def __init__(self) -> None:
-        self._and_cache: "weakref.WeakValueDictionary[Filter, _AndList]" = (
-            weakref.WeakValueDictionary()
-        )
-        self._or_cache: "weakref.WeakValueDictionary[Filter, _OrList]" = (
-            weakref.WeakValueDictionary()
-        )
-        self._invert_result: Optional[Filter] = None
+        self._and_cache: weakref.WeakValueDictionary[
+            Filter, _AndList
+        ] = weakref.WeakValueDictionary()
+        self._or_cache: weakref.WeakValueDictionary[
+            Filter, _OrList
+        ] = weakref.WeakValueDictionary()
+        self._invert_result: Filter | None = None
 
     @abstractmethod
     def __call__(self) -> bool:
@@ -29,7 +31,7 @@ class Filter(metaclass=ABCMeta):
         """
         return True
 
-    def __and__(self, other: "Filter") -> "Filter":
+    def __and__(self, other: Filter) -> Filter:
         """
         Chaining of filters using the & operator.
         """
@@ -47,7 +49,7 @@ class Filter(metaclass=ABCMeta):
         self._and_cache[other] = result
         return result
 
-    def __or__(self, other: "Filter") -> "Filter":
+    def __or__(self, other: Filter) -> Filter:
         """
         Chaining of filters using the | operator.
         """
@@ -65,7 +67,7 @@ class Filter(metaclass=ABCMeta):
         self._or_cache[other] = result
         return result
 
-    def __invert__(self) -> "Filter":
+    def __invert__(self) -> Filter:
         """
         Inverting of filters using the ~ operator.
         """
@@ -96,7 +98,7 @@ class _AndList(Filter):
 
     def __init__(self, filters: Iterable[Filter]) -> None:
         super().__init__()
-        self.filters: List[Filter] = []
+        self.filters: list[Filter] = []
 
         for f in filters:
             if isinstance(f, _AndList):  # Turn nested _AndLists into one.
@@ -118,7 +120,7 @@ class _OrList(Filter):
 
     def __init__(self, filters: Iterable[Filter]) -> None:
         super().__init__()
-        self.filters: List[Filter] = []
+        self.filters: list[Filter] = []
 
         for f in filters:
             if isinstance(f, _OrList):  # Turn nested _OrLists into one.
@@ -157,10 +159,10 @@ class Always(Filter):
     def __call__(self) -> bool:
         return True
 
-    def __or__(self, other: "Filter") -> "Filter":
+    def __or__(self, other: Filter) -> Filter:
         return self
 
-    def __invert__(self) -> "Never":
+    def __invert__(self) -> Never:
         return Never()
 
 
@@ -172,7 +174,7 @@ class Never(Filter):
     def __call__(self) -> bool:
         return False
 
-    def __and__(self, other: "Filter") -> "Filter":
+    def __and__(self, other: Filter) -> Filter:
         return self
 
     def __invert__(self) -> Always:
