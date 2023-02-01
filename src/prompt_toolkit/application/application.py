@@ -1,4 +1,5 @@
 import asyncio
+import contextvars
 import os
 import re
 import signal
@@ -91,12 +92,6 @@ from prompt_toolkit.utils import Event, in_main_thread
 
 from .current import get_app_session, set_app
 from .run_in_terminal import in_terminal, run_in_terminal
-
-try:
-    import contextvars
-except ImportError:
-    import prompt_toolkit.eventloop.dummy_contextvars as contextvars  # type: ignore
-
 
 __all__ = [
     "Application",
