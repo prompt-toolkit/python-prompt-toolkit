@@ -50,7 +50,6 @@ class FuzzyCompleter(Completer):
         pattern: Optional[str] = None,
         enable_fuzzy: FilterOrBool = True,
     ) -> None:
-
         assert pattern is None or pattern.startswith("^")
 
         self.completer = completer
@@ -190,7 +189,6 @@ class FuzzyWordCompleter(Completer):
         meta_dict: Optional[Dict[str, str]] = None,
         WORD: bool = False,
     ) -> None:
-
         self.words = words
         self.meta_dict = meta_dict or {}
         self.WORD = WORD

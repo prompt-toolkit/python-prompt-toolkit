@@ -135,7 +135,6 @@ class ProgressBar:
         output: Optional[Output] = None,
         input: Optional[Input] = None,
     ) -> None:
-
         self.title = title
         self.formatters = formatters or create_default_formatters()
         self.bottom_toolbar = bottom_toolbar
@@ -339,7 +338,6 @@ class ProgressBarCounter(Generic[_CounterItem]):
         remove_when_done: bool = False,
         total: Optional[int] = None,
     ) -> None:
-
         self.start_time = datetime.datetime.now()
         self.stop_time: Optional[datetime.datetime] = None
         self.progress_bar = progress_bar

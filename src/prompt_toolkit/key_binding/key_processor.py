@@ -437,7 +437,6 @@ class KeyPressEvent:
         previous_key_sequence: List[KeyPress],
         is_repeat: bool,
     ) -> None:
-
         self._key_processor_ref = key_processor_ref
         self.key_sequence = key_sequence
         self.previous_key_sequence = previous_key_sequence

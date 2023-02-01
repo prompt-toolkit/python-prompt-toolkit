@@ -44,7 +44,6 @@ class AppSession:
     def __init__(
         self, input: Optional["Input"] = None, output: Optional["Output"] = None
     ) -> None:
-
         self._input = input
         self._output = output
 

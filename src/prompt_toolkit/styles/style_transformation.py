@@ -107,7 +107,6 @@ class SetDefaultColorStyleTransformation(StyleTransformation):
     def __init__(
         self, fg: Union[str, Callable[[], str]], bg: Union[str, Callable[[], str]]
     ) -> None:
-
         self.fg = fg
         self.bg = bg
 
@@ -155,7 +154,6 @@ class AdjustBrightnessStyleTransformation(StyleTransformation):
     def __init__(
         self, min_brightness: AnyFloat = 0.0, max_brightness: AnyFloat = 1.0
     ) -> None:
-
         self.min_brightness = min_brightness
         self.max_brightness = max_brightness
 
@@ -252,7 +250,6 @@ class DynamicStyleTransformation(StyleTransformation):
     def __init__(
         self, get_style_transformation: Callable[[], Optional[StyleTransformation]]
     ) -> None:
-
         self.get_style_transformation = get_style_transformation
 
     def transform_attrs(self, attrs: Attrs) -> Attrs:
@@ -276,7 +273,6 @@ class ConditionalStyleTransformation(StyleTransformation):
     def __init__(
         self, style_transformation: StyleTransformation, filter: FilterOrBool
     ) -> None:
-
         self.style_transformation = style_transformation
         self.filter = to_filter(filter)
 

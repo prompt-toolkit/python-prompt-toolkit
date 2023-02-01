@@ -574,6 +574,7 @@ def print_last_kbd_macro(event: E) -> None:
     """
     Print the last keyboard macro.
     """
+
     # TODO: Make the format suitable for the inputrc file.
     def print_macro() -> None:
         macro = event.app.emacs_state.macro

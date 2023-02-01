@@ -108,7 +108,6 @@ class _ValidatorFromCallable(Validator):
     def __init__(
         self, func: Callable[[str], bool], error_message: str, move_cursor_to_end: bool
     ) -> None:
-
         self.func = func
         self.error_message = error_message
         self.move_cursor_to_end = move_cursor_to_end

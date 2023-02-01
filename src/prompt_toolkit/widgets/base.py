@@ -197,7 +197,6 @@ class TextArea:
         input_processors: Optional[List[Processor]] = None,
         name: str = "",
     ) -> None:
-
         if search_field is None:
             search_control = None
         elif isinstance(search_field, SearchToolbar):
@@ -350,7 +349,6 @@ class Label:
         # wrap lines by default.
         wrap_lines: FilterOrBool = True,
     ) -> None:
-
         self.text = text
 
         def get_width() -> AnyDimension:
@@ -401,7 +399,6 @@ class Button:
         left_symbol: str = "<",
         right_symbol: str = ">",
     ) -> None:
-
         self.text = text
         self.left_symbol = left_symbol
         self.right_symbol = right_symbol
@@ -493,7 +490,6 @@ class Frame:
         key_bindings: Optional[KeyBindings] = None,
         modal: bool = False,
     ) -> None:
-
         self.title = title
         self.body = body
 
@@ -637,7 +633,6 @@ class Box:
         modal: bool = False,
         key_bindings: Optional[KeyBindings] = None,
     ) -> None:
-
         if padding is None:
             padding = D(preferred=0)
 

@@ -28,7 +28,6 @@ class NestedCompleter(Completer):
     def __init__(
         self, options: Dict[str, Optional[Completer]], ignore_case: bool = True
     ) -> None:
-
         self.options = options
         self.ignore_case = ignore_case
 

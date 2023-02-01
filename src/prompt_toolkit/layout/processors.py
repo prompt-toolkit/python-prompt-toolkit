@@ -105,7 +105,6 @@ class TransformationInput:
         width: int,
         height: int,
     ) -> None:
-
         self.buffer_control = buffer_control
         self.document = document
         self.lineno = lineno
@@ -151,7 +150,6 @@ class Transformation:
         source_to_display: Optional[SourceToDisplay] = None,
         display_to_source: Optional[DisplayToSource] = None,
     ) -> None:
-
         self.fragments = fragments
         self.source_to_display = source_to_display or (lambda i: i)
         self.display_to_source = display_to_source or (lambda i: i)
@@ -189,7 +187,6 @@ class HighlightSearchProcessor(Processor):
     def apply_transformation(
         self, transformation_input: TransformationInput
     ) -> Transformation:
-
         (
             buffer_control,
             document,
@@ -400,7 +397,6 @@ class HighlightMatchingBracketProcessor(Processor):
     def apply_transformation(
         self, transformation_input: TransformationInput
     ) -> Transformation:
-
         (
             buffer_control,
             document,
@@ -447,7 +443,6 @@ class DisplayMultipleCursors(Processor):
     def apply_transformation(
         self, transformation_input: TransformationInput
     ) -> Transformation:
-
         (
             buffer_control,
             document,
@@ -703,7 +698,6 @@ class TabsProcessor(Processor):
         char2: Union[str, Callable[[], str]] = "\u2508",
         style: str = "class:tab",
     ) -> None:
-
         self.char1 = char1
         self.char2 = char2
         self.tabstop = tabstop

@@ -151,7 +151,6 @@ class ConditionalAutoSuggest(AutoSuggest):
     """
 
     def __init__(self, auto_suggest: AutoSuggest, filter: Union[bool, Filter]) -> None:
-
         self.auto_suggest = auto_suggest
         self.filter = to_filter(filter)
 

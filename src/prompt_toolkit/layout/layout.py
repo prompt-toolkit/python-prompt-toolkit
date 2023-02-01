@@ -39,7 +39,6 @@ class Layout:
         container: AnyContainer,
         focused_element: Optional[FocusableElement] = None,
     ) -> None:
-
         self.container = to_container(container)
         self._stack: List[Window] = []
 

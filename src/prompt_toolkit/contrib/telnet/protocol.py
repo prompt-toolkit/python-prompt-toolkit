@@ -71,7 +71,6 @@ class TelnetProtocolParser:
         size_received_callback: Callable[[int, int], None],
         ttype_received_callback: Callable[[str], None],
     ) -> None:
-
         self.data_received_callback = data_received_callback
         self.size_received_callback = size_received_callback
         self.ttype_received_callback = ttype_received_callback

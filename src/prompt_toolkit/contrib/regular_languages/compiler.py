@@ -84,7 +84,6 @@ class _CompiledGrammar:
         escape_funcs: Optional[EscapeFuncDict] = None,
         unescape_funcs: Optional[EscapeFuncDict] = None,
     ) -> None:
-
         self.root_node = root_node
         self.escape_funcs = escape_funcs or {}
         self.unescape_funcs = unescape_funcs or {}

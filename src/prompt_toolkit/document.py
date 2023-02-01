@@ -102,7 +102,6 @@ class Document:
         cursor_position: Optional[int] = None,
         selection: Optional[SelectionState] = None,
     ) -> None:
-
         # Check cursor position. It can also be right after the end. (Where we
         # insert text.)
         assert cursor_position is None or cursor_position <= len(text), AssertionError(

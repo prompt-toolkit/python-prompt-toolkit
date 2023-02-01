@@ -52,7 +52,6 @@ class SearchState:
         direction: SearchDirection = SearchDirection.FORWARD,
         ignore_case: FilterOrBool = False,
     ) -> None:
-
         self.text = text
         self.direction = direction
         self.ignore_case = to_filter(ignore_case)

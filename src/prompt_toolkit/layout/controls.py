@@ -164,7 +164,6 @@ class UIContent:
         menu_position: Optional[Point] = None,
         show_cursor: bool = True,
     ):
-
         self.get_line = get_line
         self.line_count = line_count
         self.cursor_position = cursor_position or Point(x=0, y=0)
@@ -308,7 +307,6 @@ class FormattedTextControl(UIControl):
         modal: bool = False,
         get_cursor_position: Optional[Callable[[], Optional[Point]]] = None,
     ) -> None:
-
         self.text = text  # No type check on 'text'. This is done dynamically.
         self.style = style
         self.focusable = to_filter(focusable)
@@ -536,7 +534,6 @@ class BufferControl(UIControl):
         focus_on_click: FilterOrBool = False,
         key_bindings: Optional["KeyBindingsBase"] = None,
     ):
-
         self.input_processors = input_processors
         self.include_default_input_processors = include_default_input_processors
 
@@ -627,7 +624,6 @@ class BufferControl(UIControl):
         wrap_lines: bool,
         get_line_prefix: Optional[GetLinePrefixCallable],
     ) -> Optional[int]:
-
         # Calculate the content height, if it was drawn on a screen with the
         # given width.
         height = 0
@@ -657,6 +653,7 @@ class BufferControl(UIControl):
         """
         Create a function that returns the fragments for a given line.
         """
+
         # Cache using `document.text`.
         def get_formatted_text_for_line() -> Callable[[int], StyleAndTextTuples]:
             return self.lexer.lex_document(document)
@@ -681,6 +678,7 @@ class BufferControl(UIControl):
 
         def transform(lineno: int, fragments: StyleAndTextTuples) -> _ProcessedLine:
             "Transform the fragments for a given line number."
+
             # Get cursor position at this line.
             def source_to_display(i: int) -> int:
                 """X position from the buffer to the x position in the
@@ -943,7 +941,6 @@ class SearchBufferControl(BufferControl):
         key_bindings: Optional["KeyBindingsBase"] = None,
         ignore_case: FilterOrBool = False,
     ):
-
         super().__init__(
             buffer=buffer,
             input_processors=input_processors,

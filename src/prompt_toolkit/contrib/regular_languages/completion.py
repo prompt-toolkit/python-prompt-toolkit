@@ -26,7 +26,6 @@ class GrammarCompleter(Completer):
     def __init__(
         self, compiled_grammar: _CompiledGrammar, completers: Dict[str, Completer]
     ) -> None:
-
         self.compiled_grammar = compiled_grammar
         self.completers = completers
 
