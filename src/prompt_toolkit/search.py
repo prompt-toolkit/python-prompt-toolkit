@@ -5,6 +5,8 @@ For the key bindings implementation with attached filters, check
 `prompt_toolkit.key_binding.bindings.search`. (Use these for new key bindings
 instead of calling these function directly.)
 """
+from __future__ import annotations
+
 from enum import Enum
 from typing import TYPE_CHECKING, Dict, Optional
 
@@ -64,7 +66,7 @@ class SearchState:
             self.ignore_case,
         )
 
-    def __invert__(self) -> "SearchState":
+    def __invert__(self) -> SearchState:
         """
         Create a new SearchState where backwards becomes forwards and the other
         way around.
@@ -80,7 +82,7 @@ class SearchState:
 
 
 def start_search(
-    buffer_control: Optional["BufferControl"] = None,
+    buffer_control: BufferControl | None = None,
     direction: SearchDirection = SearchDirection.FORWARD,
 ) -> None:
     """
@@ -118,7 +120,7 @@ def start_search(
         get_app().vi_state.input_mode = InputMode.INSERT
 
 
-def stop_search(buffer_control: Optional["BufferControl"] = None) -> None:
+def stop_search(buffer_control: BufferControl | None = None) -> None:
     """
     Stop search through the given `buffer_control`.
     """
@@ -217,8 +219,8 @@ def accept_search() -> None:
 
 
 def _get_reverse_search_links(
-    layout: "Layout",
-) -> Dict["BufferControl", "SearchBufferControl"]:
+    layout: Layout,
+) -> dict[BufferControl, SearchBufferControl]:
     """
     Return mapping from BufferControl to SearchBufferControl.
     """

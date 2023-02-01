@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 from typing import Callable, Iterable, List, Optional
 
@@ -25,8 +27,8 @@ class PathCompleter(Completer):
     def __init__(
         self,
         only_directories: bool = False,
-        get_paths: Optional[Callable[[], List[str]]] = None,
-        file_filter: Optional[Callable[[str], bool]] = None,
+        get_paths: Callable[[], list[str]] | None = None,
+        file_filter: Callable[[str], bool] | None = None,
         min_input_len: int = 0,
         expanduser: bool = False,
     ) -> None:

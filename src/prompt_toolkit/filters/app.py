@@ -1,6 +1,8 @@
 """
 Filters that accept a `Application` as argument.
 """
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, cast
 
 from prompt_toolkit.application.current import get_app
@@ -52,7 +54,7 @@ __all__ = [
 #       `PromptSession` instances, then previous instances won't be released,
 #       because this memoize (which caches results in the global scope) will
 #       still refer to each instance.
-def has_focus(value: "FocusableElement") -> Condition:
+def has_focus(value: FocusableElement) -> Condition:
     """
     Enable when this buffer has the focus.
     """

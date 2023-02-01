@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 from contextlib import contextmanager
 from contextvars import ContextVar
@@ -38,20 +40,20 @@ class AppSession:
     """
 
     def __init__(
-        self, input: Optional["Input"] = None, output: Optional["Output"] = None
+        self, input: Input | None = None, output: Output | None = None
     ) -> None:
         self._input = input
         self._output = output
 
         # The application will be set dynamically by the `set_app` context
         # manager. This is called in the application itself.
-        self.app: Optional["Application[Any]"] = None
+        self.app: Application[Any] | None = None
 
     def __repr__(self) -> str:
         return f"AppSession(app={self.app!r})"
 
     @property
-    def input(self) -> "Input":
+    def input(self) -> Input:
         if self._input is None:
             from prompt_toolkit.input.defaults import create_input
 
@@ -59,7 +61,7 @@ class AppSession:
         return self._input
 
     @property
-    def output(self) -> "Output":
+    def output(self) -> Output:
         if self._output is None:
             from prompt_toolkit.output.defaults import create_output
 
@@ -67,7 +69,7 @@ class AppSession:
         return self._output
 
 
-_current_app_session: ContextVar["AppSession"] = ContextVar(
+_current_app_session: ContextVar[AppSession] = ContextVar(
     "_current_app_session", default=AppSession()
 )
 
@@ -76,7 +78,7 @@ def get_app_session() -> AppSession:
     return _current_app_session.get()
 
 
-def get_app() -> "Application[Any]":
+def get_app() -> Application[Any]:
     """
     Get the current active (running) Application.
     An :class:`.Application` is active during the
@@ -104,7 +106,7 @@ def get_app() -> "Application[Any]":
     return DummyApplication()
 
 
-def get_app_or_none() -> Optional["Application[Any]"]:
+def get_app_or_none() -> Application[Any] | None:
     """
     Get the current active (running) Application, or return `None` if no
     application is running.
@@ -114,7 +116,7 @@ def get_app_or_none() -> Optional["Application[Any]"]:
 
 
 @contextmanager
-def set_app(app: "Application[Any]") -> Generator[None, None, None]:
+def set_app(app: Application[Any]) -> Generator[None, None, None]:
     """
     Context manager that sets the given :class:`.Application` active in an
     `AppSession`.
@@ -137,7 +139,7 @@ def set_app(app: "Application[Any]") -> Generator[None, None, None]:
 
 @contextmanager
 def create_app_session(
-    input: Optional["Input"] = None, output: Optional["Output"] = None
+    input: Input | None = None, output: Output | None = None
 ) -> Generator[AppSession, None, None]:
     """
     Create a separate AppSession.

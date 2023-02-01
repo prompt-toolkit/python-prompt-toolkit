@@ -1,6 +1,8 @@
 """
 Validator for a regular language.
 """
+from __future__ import annotations
+
 from typing import Dict
 
 from prompt_toolkit.document import Document
@@ -24,7 +26,7 @@ class GrammarValidator(Validator):
     """
 
     def __init__(
-        self, compiled_grammar: _CompiledGrammar, validators: Dict[str, Validator]
+        self, compiled_grammar: _CompiledGrammar, validators: dict[str, Validator]
     ) -> None:
         self.compiled_grammar = compiled_grammar
         self.validators = validators

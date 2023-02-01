@@ -5,6 +5,8 @@ the input in the :class:`~prompt_toolkit.inputstream.InputStream` instance.
 The `KeyProcessor` will according to the implemented keybindings call the
 correct callbacks when new key presses are feed through `feed`.
 """
+from __future__ import annotations
+
 import weakref
 from asyncio import Task, sleep
 from collections import deque
@@ -36,7 +38,7 @@ class KeyPress:
     :param data: The received string on stdin. (Often vt100 escape codes.)
     """
 
-    def __init__(self, key: Union[Keys, str], data: Optional[str] = None) -> None:
+    def __init__(self, key: Keys | str, data: str | None = None) -> None:
         assert isinstance(key, Keys) or len(key) == 1
 
         if data is None:
@@ -92,30 +94,30 @@ class KeyProcessor:
         self.before_key_press = Event(self)
         self.after_key_press = Event(self)
 
-        self._flush_wait_task: Optional[Task[None]] = None
+        self._flush_wait_task: Task[None] | None = None
 
         self.reset()
 
     def reset(self) -> None:
-        self._previous_key_sequence: List[KeyPress] = []
-        self._previous_handler: Optional[Binding] = None
+        self._previous_key_sequence: list[KeyPress] = []
+        self._previous_handler: Binding | None = None
 
         # The queue of keys not yet send to our _process generator/state machine.
         self.input_queue: Deque[KeyPress] = deque()
 
         # The key buffer that is matched in the generator state machine.
         # (This is at at most the amount of keys that make up for one key binding.)
-        self.key_buffer: List[KeyPress] = []
+        self.key_buffer: list[KeyPress] = []
 
         #: Readline argument (for repetition of commands.)
         #: https://www.gnu.org/software/bash/manual/html_node/Readline-Arguments.html
-        self.arg: Optional[str] = None
+        self.arg: str | None = None
 
         # Start the processor coroutine.
         self._process_coroutine = self._process()
         self._process_coroutine.send(None)  # type: ignore
 
-    def _get_matches(self, key_presses: List[KeyPress]) -> List[Binding]:
+    def _get_matches(self, key_presses: list[KeyPress]) -> list[Binding]:
         """
         For a list of :class:`KeyPress` instances. Give the matching handlers
         that would handle this.
@@ -125,7 +127,7 @@ class KeyProcessor:
         # Try match, with mode flag
         return [b for b in self._bindings.get_bindings_for_keys(keys) if b.filter()]
 
-    def _is_prefix_of_longer_match(self, key_presses: List[KeyPress]) -> bool:
+    def _is_prefix_of_longer_match(self, key_presses: list[KeyPress]) -> bool:
         """
         For a list of :class:`KeyPress` instances. Return True if there is any
         handler that is bound to a suffix of this keys.
@@ -214,7 +216,7 @@ class KeyProcessor:
         else:
             self.input_queue.append(key_press)
 
-    def feed_multiple(self, key_presses: List[KeyPress], first: bool = False) -> None:
+    def feed_multiple(self, key_presses: list[KeyPress], first: bool = False) -> None:
         """
         :param first: If true, insert before everything else.
         """
@@ -282,7 +284,7 @@ class KeyProcessor:
         if not is_flush:
             self._start_timeout()
 
-    def empty_queue(self) -> List[KeyPress]:
+    def empty_queue(self) -> list[KeyPress]:
         """
         Empty the input queue. Return the unprocessed input.
         """
@@ -293,7 +295,7 @@ class KeyProcessor:
         key_presses = [k for k in key_presses if k.key != Keys.CPRResponse]
         return key_presses
 
-    def _call_handler(self, handler: Binding, key_sequence: List[KeyPress]) -> None:
+    def _call_handler(self, handler: Binding, key_sequence: list[KeyPress]) -> None:
         app = get_app()
         was_recording_emacs = app.emacs_state.is_recording
         was_recording_vi = bool(app.vi_state.recording_register)
@@ -344,7 +346,7 @@ class KeyProcessor:
                 for k in key_sequence:
                     app.vi_state.current_recording += k.data
 
-    def _fix_vi_cursor_position(self, event: "KeyPressEvent") -> None:
+    def _fix_vi_cursor_position(self, event: KeyPressEvent) -> None:
         """
         After every command, make sure that if we are in Vi navigation mode, we
         never put the cursor after the last character of a line. (Unless it's
@@ -365,7 +367,7 @@ class KeyProcessor:
             # (This was cleared after changing the cursor position.)
             buff.preferred_column = preferred_column
 
-    def _leave_vi_temp_navigation_mode(self, event: "KeyPressEvent") -> None:
+    def _leave_vi_temp_navigation_mode(self, event: KeyPressEvent) -> None:
         """
         If we're in Vi temporary navigation (normal) mode, return to
         insert/replace mode after executing one action.
@@ -431,10 +433,10 @@ class KeyPressEvent:
 
     def __init__(
         self,
-        key_processor_ref: "weakref.ReferenceType[KeyProcessor]",
-        arg: Optional[str],
-        key_sequence: List[KeyPress],
-        previous_key_sequence: List[KeyPress],
+        key_processor_ref: weakref.ReferenceType[KeyProcessor],
+        arg: str | None,
+        key_sequence: list[KeyPress],
+        previous_key_sequence: list[KeyPress],
         is_repeat: bool,
     ) -> None:
         self._key_processor_ref = key_processor_ref
@@ -466,14 +468,14 @@ class KeyPressEvent:
         return processor
 
     @property
-    def app(self) -> "Application[Any]":
+    def app(self) -> Application[Any]:
         """
         The current `Application` object.
         """
         return self._app
 
     @property
-    def current_buffer(self) -> "Buffer":
+    def current_buffer(self) -> Buffer:
         """
         The current buffer.
         """
@@ -522,6 +524,6 @@ class KeyPressEvent:
         self.key_processor.arg = result
 
     @property
-    def cli(self) -> "Application[Any]":
+    def cli(self) -> Application[Any]:
         "For backward-compatibility."
         return self.app

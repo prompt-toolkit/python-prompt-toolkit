@@ -1,6 +1,8 @@
 """
 Telnet server.
 """
+from __future__ import annotations
+
 import asyncio
 import socket
 import sys
@@ -33,10 +35,7 @@ from .protocol import (
     TelnetProtocolParser,
 )
 
-if sys.version_info >= (3, 7):
-    import contextvars  # Requires Python3.7!
-else:
-    contextvars: Any = None
+import contextvars  # Requires Python3.7!
 
 __all__ = [
     "TelnetServer",
@@ -86,7 +85,7 @@ class _ConnectionStdout:
         self._encoding = encoding
         self._connection = connection
         self._errors = "strict"
-        self._buffer: List[bytes] = []
+        self._buffer: list[bytes] = []
         self._closed = False
 
     def write(self, data: str) -> None:
@@ -126,11 +125,11 @@ class TelnetConnection:
     def __init__(
         self,
         conn: socket.socket,
-        addr: Tuple[str, int],
-        interact: Callable[["TelnetConnection"], Awaitable[None]],
-        server: "TelnetServer",
+        addr: tuple[str, int],
+        interact: Callable[[TelnetConnection], Awaitable[None]],
+        server: TelnetServer,
         encoding: str,
-        style: Optional[BaseStyle],
+        style: BaseStyle | None,
         vt100_input: PipeInput,
         enable_cpr: bool = True,
     ) -> None:
@@ -144,7 +143,7 @@ class TelnetConnection:
         self._ready = asyncio.Event()
         self.vt100_input = vt100_input
         self.enable_cpr = enable_cpr
-        self.vt100_output: Optional[Vt100_Output] = None
+        self.vt100_output: Vt100_Output | None = None
 
         # Create "Output" object.
         self.size = Size(rows=40, columns=79)
@@ -176,7 +175,7 @@ class TelnetConnection:
             self._ready.set()
 
         self.parser = TelnetProtocolParser(data_received, size_received, ttype_received)
-        self.context: Optional[contextvars.Context] = None
+        self.context: contextvars.Context | None = None
 
     async def run_application(self) -> None:
         """
@@ -276,7 +275,7 @@ class TelnetServer:
         port: int = 23,
         interact: Callable[[TelnetConnection], Awaitable[None]] = _dummy_interact,
         encoding: str = "utf-8",
-        style: Optional[BaseStyle] = None,
+        style: BaseStyle | None = None,
         enable_cpr: bool = True,
     ) -> None:
         self.host = host
@@ -285,10 +284,10 @@ class TelnetServer:
         self.encoding = encoding
         self.style = style
         self.enable_cpr = enable_cpr
-        self._application_tasks: List[asyncio.Task[None]] = []
+        self._application_tasks: list[asyncio.Task[None]] = []
 
-        self.connections: Set[TelnetConnection] = set()
-        self._listen_socket: Optional[socket.socket] = None
+        self.connections: set[TelnetConnection] = set()
+        self._listen_socket: socket.socket | None = None
 
     @classmethod
     def _create_socket(cls, host: str, port: int) -> socket.socket:

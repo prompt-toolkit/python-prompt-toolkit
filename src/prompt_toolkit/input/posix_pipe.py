@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 
 assert sys.platform != "win32"
@@ -81,7 +83,7 @@ class PosixPipeInput(Vt100Input, PipeInput):
 
     @classmethod
     @contextmanager
-    def create(cls, text: str = "") -> Iterator["PosixPipeInput"]:
+    def create(cls, text: str = "") -> Iterator[PosixPipeInput]:
         pipe = _Pipe()
         try:
             yield PosixPipeInput(_pipe=pipe, _text=text)

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Iterable, List, TypeVar, Union, cast, overload
 
 from prompt_toolkit.formatted_text.base import OneStyleAndTextTuple
@@ -28,13 +30,13 @@ class _ExplodedList(List[_T]):
     def extend(self, lst: Iterable[_T]) -> None:
         super().extend(explode_text_fragments(lst))
 
-    def insert(self, index: "SupportsIndex", item: _T) -> None:
+    def insert(self, index: SupportsIndex, item: _T) -> None:
         raise NotImplementedError  # TODO
 
     # TODO: When creating a copy() or [:], return also an _ExplodedList.
 
     @overload
-    def __setitem__(self, index: "SupportsIndex", value: _T) -> None:
+    def __setitem__(self, index: SupportsIndex, value: _T) -> None:
         ...
 
     @overload
@@ -42,7 +44,7 @@ class _ExplodedList(List[_T]):
         ...
 
     def __setitem__(
-        self, index: Union["SupportsIndex", slice], value: Union[_T, Iterable[_T]]
+        self, index: SupportsIndex | slice, value: _T | Iterable[_T]
     ) -> None:
         """
         Ensure that when `(style_str, 'long string')` is set, the string will be
@@ -71,7 +73,7 @@ def explode_text_fragments(fragments: Iterable[_T]) -> _ExplodedList[_T]:
     if isinstance(fragments, _ExplodedList):
         return fragments
 
-    result: List[_T] = []
+    result: list[_T] = []
 
     for style, string, *rest in fragments:
         for c in string:

@@ -1,4 +1,6 @@
 # pylint: disable=function-redefined
+from __future__ import annotations
+
 import codecs
 import string
 from enum import Enum
@@ -84,7 +86,7 @@ class TextObject:
         else:
             return SelectionType.CHARACTERS
 
-    def sorted(self) -> Tuple[int, int]:
+    def sorted(self) -> tuple[int, int]:
         """
         Return a (start, end) tuple where start <= end.
         """
@@ -93,7 +95,7 @@ class TextObject:
         else:
             return self.end, self.start
 
-    def operator_range(self, document: Document) -> Tuple[int, int]:
+    def operator_range(self, document: Document) -> tuple[int, int]:
         """
         Return a (start, end) tuple with start <= end that indicates the range
         operators should operate on.
@@ -125,7 +127,7 @@ class TextObject:
             )
         return start, end
 
-    def get_line_numbers(self, buffer: Buffer) -> Tuple[int, int]:
+    def get_line_numbers(self, buffer: Buffer) -> tuple[int, int]:
         """
         Return a (start_line, end_line) pair.
         """
@@ -140,7 +142,7 @@ class TextObject:
 
         return from_, to
 
-    def cut(self, buffer: Buffer) -> Tuple[Document, ClipboardData]:
+    def cut(self, buffer: Buffer) -> tuple[Document, ClipboardData]:
         """
         Turn text object into `ClipboardData` instance.
         """
@@ -179,7 +181,7 @@ def create_text_object_decorator(
     """
 
     def text_object_decorator(
-        *keys: Union[Keys, str],
+        *keys: Keys | str,
         filter: Filter = Always(),
         no_move_handler: bool = False,
         no_selection_handler: bool = False,
@@ -302,7 +304,7 @@ def create_operator_decorator(
     """
 
     def operator_decorator(
-        *keys: Union[Keys, str], filter: Filter = Always(), eager: bool = False
+        *keys: Keys | str, filter: Filter = Always(), eager: bool = False
     ) -> Callable[[_OF], _OF]:
         """
         Register a Vi operator.
@@ -393,7 +395,7 @@ def load_vi_bindings() -> KeyBindingsBase:
 
     TransformFunction = Tuple[Tuple[str, ...], Filter, Callable[[str], str]]
 
-    vi_transform_functions: List[TransformFunction] = [
+    vi_transform_functions: list[TransformFunction] = [
         # Rot 13 transformation
         (
             ("g", "?"),
@@ -698,12 +700,12 @@ def load_vi_bindings() -> KeyBindingsBase:
 
         if after:
 
-            def get_pos(from_to: Tuple[int, int]) -> int:
+            def get_pos(from_to: tuple[int, int]) -> int:
                 return from_to[1]
 
         else:
 
-            def get_pos(from_to: Tuple[int, int]) -> int:
+            def get_pos(from_to: tuple[int, int]) -> int:
                 return from_to[0]
 
         for i, from_to in enumerate(buff.document.selection_ranges()):
@@ -1334,7 +1336,7 @@ def load_vi_bindings() -> KeyBindingsBase:
         )
 
     def create_ci_ca_handles(
-        ci_start: str, ci_end: str, inner: bool, key: Optional[str] = None
+        ci_start: str, ci_end: str, inner: bool, key: str | None = None
     ) -> None:
         # TODO: 'dat', 'dit', (tags (like xml)
         """
@@ -1472,7 +1474,7 @@ def load_vi_bindings() -> KeyBindingsBase:
             """
             Repeat the last 'f'/'F'/'t'/'T' command.
             """
-            pos: Optional[int] = 0
+            pos: int | None = 0
             vi_state = event.app.vi_state
 
             type = TextObjectType.EXCLUSIVE
@@ -2085,7 +2087,7 @@ def load_vi_bindings() -> KeyBindingsBase:
         """
         try:
             # Lookup.
-            code: Tuple[str, str] = (
+            code: tuple[str, str] = (
                 event.app.vi_state.digraph_symbol1 or "",
                 event.data,
             )
@@ -2158,7 +2160,7 @@ def load_vi_bindings() -> KeyBindingsBase:
 
         # Expand macro (which is a string in the register), in individual keys.
         # Use vt100 parser for this.
-        keys: List[KeyPress] = []
+        keys: list[KeyPress] = []
 
         parser = Vt100Parser(keys.append)
         parser.feed(macro.text)

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from prompt_toolkit.completion.filesystem import ExecutableCompleter, PathCompleter
 from prompt_toolkit.contrib.regular_languages.compiler import compile
 from prompt_toolkit.contrib.regular_languages.completion import GrammarCompleter

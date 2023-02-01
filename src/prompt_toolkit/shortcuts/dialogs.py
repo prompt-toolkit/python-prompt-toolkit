@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import functools
 from asyncio import get_running_loop
 from typing import Any, Callable, List, Optional, Sequence, Tuple, TypeVar
@@ -45,7 +47,7 @@ def yes_no_dialog(
     text: AnyFormattedText = "",
     yes_text: str = "Yes",
     no_text: str = "No",
-    style: Optional[BaseStyle] = None,
+    style: BaseStyle | None = None,
 ) -> Application[bool]:
     """
     Display a Yes/No dialog.
@@ -77,8 +79,8 @@ _T = TypeVar("_T")
 def button_dialog(
     title: AnyFormattedText = "",
     text: AnyFormattedText = "",
-    buttons: List[Tuple[str, _T]] = [],
-    style: Optional[BaseStyle] = None,
+    buttons: list[tuple[str, _T]] = [],
+    style: BaseStyle | None = None,
 ) -> Application[_T]:
     """
     Display a dialog with button choices (given as a list of tuples).
@@ -106,10 +108,10 @@ def input_dialog(
     text: AnyFormattedText = "",
     ok_text: str = "OK",
     cancel_text: str = "Cancel",
-    completer: Optional[Completer] = None,
-    validator: Optional[Validator] = None,
+    completer: Completer | None = None,
+    validator: Validator | None = None,
     password: FilterOrBool = False,
-    style: Optional[BaseStyle] = None,
+    style: BaseStyle | None = None,
     default: str = "",
 ) -> Application[str]:
     """
@@ -157,7 +159,7 @@ def message_dialog(
     title: AnyFormattedText = "",
     text: AnyFormattedText = "",
     ok_text: str = "Ok",
-    style: Optional[BaseStyle] = None,
+    style: BaseStyle | None = None,
 ) -> Application[None]:
     """
     Display a simple message box and wait until the user presses enter.
@@ -177,9 +179,9 @@ def radiolist_dialog(
     text: AnyFormattedText = "",
     ok_text: str = "Ok",
     cancel_text: str = "Cancel",
-    values: Optional[Sequence[Tuple[_T, AnyFormattedText]]] = None,
-    default: Optional[_T] = None,
-    style: Optional[BaseStyle] = None,
+    values: Sequence[tuple[_T, AnyFormattedText]] | None = None,
+    default: _T | None = None,
+    style: BaseStyle | None = None,
 ) -> Application[_T]:
     """
     Display a simple list of element the user can choose amongst.
@@ -216,10 +218,10 @@ def checkboxlist_dialog(
     text: AnyFormattedText = "",
     ok_text: str = "Ok",
     cancel_text: str = "Cancel",
-    values: Optional[Sequence[Tuple[_T, AnyFormattedText]]] = None,
-    default_values: Optional[Sequence[_T]] = None,
-    style: Optional[BaseStyle] = None,
-) -> Application[List[_T]]:
+    values: Sequence[tuple[_T, AnyFormattedText]] | None = None,
+    default_values: Sequence[_T] | None = None,
+    style: BaseStyle | None = None,
+) -> Application[list[_T]]:
     """
     Display a simple list of element the user can choose multiple values amongst.
 
@@ -256,7 +258,7 @@ def progress_dialog(
     run_callback: Callable[[Callable[[int], None], Callable[[str], None]], None] = (
         lambda *a: None
     ),
-    style: Optional[BaseStyle] = None,
+    style: BaseStyle | None = None,
 ) -> Application[None]:
     """
     :param run_callback: A function that receives as input a `set_percentage`
@@ -308,7 +310,7 @@ def progress_dialog(
     return app
 
 
-def _create_app(dialog: AnyContainer, style: Optional[BaseStyle]) -> Application[Any]:
+def _create_app(dialog: AnyContainer, style: BaseStyle | None) -> Application[Any]:
     # Key bindings.
     bindings = KeyBindings()
     bindings.add("tab")(focus_next)

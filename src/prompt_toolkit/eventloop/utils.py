@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import contextvars
 import sys
@@ -18,7 +20,7 @@ _T = TypeVar("_T")
 def run_in_executor_with_context(
     func: Callable[..., _T],
     *args: Any,
-    loop: Optional[asyncio.AbstractEventLoop] = None,
+    loop: asyncio.AbstractEventLoop | None = None,
 ) -> Awaitable[_T]:
     """
     Run a function in an executor, but make sure it uses the same contextvars.
@@ -34,8 +36,8 @@ def run_in_executor_with_context(
 
 def call_soon_threadsafe(
     func: Callable[[], None],
-    max_postpone_time: Optional[float] = None,
-    loop: Optional[asyncio.AbstractEventLoop] = None,
+    max_postpone_time: float | None = None,
+    loop: asyncio.AbstractEventLoop | None = None,
 ) -> None:
     """
     Wrapper around asyncio's `call_soon_threadsafe`.
@@ -82,7 +84,7 @@ def call_soon_threadsafe(
     loop2.call_soon_threadsafe(schedule)
 
 
-def get_traceback_from_context(context: Dict[str, Any]) -> Optional[TracebackType]:
+def get_traceback_from_context(context: dict[str, Any]) -> TracebackType | None:
     """
     Get the traceback object from the context.
     """

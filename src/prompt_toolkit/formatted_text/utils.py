@@ -4,6 +4,8 @@ Utilities for manipulating formatted text.
 When ``to_formatted_text`` has been called, we get a list of ``(style, text)``
 tuples. This file contains functions for manipulating such a list.
 """
+from __future__ import annotations
+
 from typing import Iterable, cast
 
 from prompt_toolkit.utils import get_cwidth

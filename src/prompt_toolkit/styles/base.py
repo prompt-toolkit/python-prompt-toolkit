@@ -1,6 +1,8 @@
 """
 The base classes for the styling.
 """
+from __future__ import annotations
+
 from abc import ABCMeta, abstractmethod, abstractproperty
 from typing import Callable, Dict, Hashable, List, NamedTuple, Optional, Tuple
 
@@ -17,15 +19,15 @@ __all__ = [
 
 #: Style attributes.
 class Attrs(NamedTuple):
-    color: Optional[str]
-    bgcolor: Optional[str]
-    bold: Optional[bool]
-    underline: Optional[bool]
-    strike: Optional[bool]
-    italic: Optional[bool]
-    blink: Optional[bool]
-    reverse: Optional[bool]
-    hidden: Optional[bool]
+    color: str | None
+    bgcolor: str | None
+    bold: bool | None
+    underline: bool | None
+    strike: bool | None
+    italic: bool | None
+    blink: bool | None
+    reverse: bool | None
+    hidden: bool | None
 
 
 """
@@ -87,7 +89,7 @@ ANSI_COLOR_NAMES = [
 # Pygments). This is fixed now, but we still support the old names.
 
 # The table below maps the old aliases to the current names.
-ANSI_COLOR_NAMES_ALIASES: Dict[str, str] = {
+ANSI_COLOR_NAMES_ALIASES: dict[str, str] = {
     "ansidarkgray": "ansibrightblack",
     "ansiteal": "ansicyan",
     "ansiturquoise": "ansibrightcyan",
@@ -121,7 +123,7 @@ class BaseStyle(metaclass=ABCMeta):
         """
 
     @abstractproperty
-    def style_rules(self) -> List[Tuple[str, str]]:
+    def style_rules(self) -> list[tuple[str, str]]:
         """
         The list of style rules, used to create this style.
         (Required for `DynamicStyle` and `_MergedStyle` to work.)
@@ -151,7 +153,7 @@ class DummyStyle(BaseStyle):
         return 1  # Always the same value.
 
     @property
-    def style_rules(self) -> List[Tuple[str, str]]:
+    def style_rules(self) -> list[tuple[str, str]]:
         return []
 
 
@@ -162,7 +164,7 @@ class DynamicStyle(BaseStyle):
     :param get_style: Callable that returns a :class:`.Style` instance.
     """
 
-    def __init__(self, get_style: Callable[[], Optional[BaseStyle]]):
+    def __init__(self, get_style: Callable[[], BaseStyle | None]):
         self.get_style = get_style
         self._dummy = DummyStyle()
 
@@ -177,5 +179,5 @@ class DynamicStyle(BaseStyle):
         return (self.get_style() or self._dummy).invalidation_hash()
 
     @property
-    def style_rules(self) -> List[Tuple[str, str]]:
+    def style_rules(self) -> list[tuple[str, str]]:
         return (self.get_style() or self._dummy).style_rules

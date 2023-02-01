@@ -6,6 +6,8 @@ module.
 Most of these widgets implement the ``__pt_container__`` method, which makes it
 possible to embed these in the layout like any other container.
 """
+from __future__ import annotations
+
 from .base import (
     Box,
     Button,

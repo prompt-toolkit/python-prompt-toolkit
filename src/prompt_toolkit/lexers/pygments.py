@@ -4,6 +4,8 @@ Adaptor classes for using Pygments lexers within prompt_toolkit.
 This includes syntax synchronization code, so that we don't have to start
 lexing at the beginning of a document, when displaying a very large text.
 """
+from __future__ import annotations
+
 import re
 from abc import ABCMeta, abstractmethod
 from typing import (
@@ -47,7 +49,7 @@ class SyntaxSync(metaclass=ABCMeta):
     @abstractmethod
     def get_sync_start_position(
         self, document: Document, lineno: int
-    ) -> Tuple[int, int]:
+    ) -> tuple[int, int]:
         """
         Return the position from where we can start lexing as a (row, column)
         tuple.
@@ -65,7 +67,7 @@ class SyncFromStart(SyntaxSync):
 
     def get_sync_start_position(
         self, document: Document, lineno: int
-    ) -> Tuple[int, int]:
+    ) -> tuple[int, int]:
         return 0, 0
 
 
@@ -87,7 +89,7 @@ class RegexSync(SyntaxSync):
 
     def get_sync_start_position(
         self, document: Document, lineno: int
-    ) -> Tuple[int, int]:
+    ) -> tuple[int, int]:
         """
         Scan backwards, and find a possible position to start.
         """
@@ -110,7 +112,7 @@ class RegexSync(SyntaxSync):
             return lineno, 0
 
     @classmethod
-    def from_pygments_lexer_cls(cls, lexer_cls: "PygmentsLexerCls") -> "RegexSync":
+    def from_pygments_lexer_cls(cls, lexer_cls: PygmentsLexerCls) -> RegexSync:
         """
         Create a :class:`.RegexSync` instance for this Pygments lexer class.
         """
@@ -137,7 +139,7 @@ class _TokenCache(Dict[Tuple[str, ...], str]):
     ``class:pygments,pygments.A,pygments.A.B,pygments.A.B.C``
     """
 
-    def __missing__(self, key: Tuple[str, ...]) -> str:
+    def __missing__(self, key: tuple[str, ...]) -> str:
         result = "class:" + pygments_token_to_classname(key)
         self[key] = result
         return result
@@ -185,9 +187,9 @@ class PygmentsLexer(Lexer):
 
     def __init__(
         self,
-        pygments_lexer_cls: Type["PygmentsLexerCls"],
+        pygments_lexer_cls: type[PygmentsLexerCls],
         sync_from_start: FilterOrBool = True,
-        syntax_sync: Optional[SyntaxSync] = None,
+        syntax_sync: SyntaxSync | None = None,
     ) -> None:
         self.pygments_lexer_cls = pygments_lexer_cls
         self.sync_from_start = to_filter(sync_from_start)
@@ -205,7 +207,7 @@ class PygmentsLexer(Lexer):
     @classmethod
     def from_filename(
         cls, filename: str, sync_from_start: FilterOrBool = True
-    ) -> "Lexer":
+    ) -> Lexer:
         """
         Create a `Lexer` from a filename.
         """
@@ -228,11 +230,11 @@ class PygmentsLexer(Lexer):
         LineGenerator = Generator[Tuple[int, StyleAndTextTuples], None, None]
 
         # Cache of already lexed lines.
-        cache: Dict[int, StyleAndTextTuples] = {}
+        cache: dict[int, StyleAndTextTuples] = {}
 
         # Pygments generators that are currently lexing.
         # Map lexer generator to the line number.
-        line_generators: Dict[LineGenerator, int] = {}
+        line_generators: dict[LineGenerator, int] = {}
 
         def get_syntax_sync() -> SyntaxSync:
             "The Syntax synchronisation object that we currently use."
@@ -241,7 +243,7 @@ class PygmentsLexer(Lexer):
             else:
                 return self.syntax_sync
 
-        def find_closest_generator(i: int) -> Optional[LineGenerator]:
+        def find_closest_generator(i: int) -> LineGenerator | None:
             "Return a generator close to line 'i', or None if none was found."
             for generator, lineno in line_generators.items():
                 if lineno < i and i - lineno < self.REUSE_GENERATOR_MAX_DISTANCE:
@@ -254,7 +256,7 @@ class PygmentsLexer(Lexer):
             Each iteration it yields a (line_number, [(style_str, text), ...]) tuple.
             """
 
-            def get_text_fragments() -> Iterable[Tuple[str, str]]:
+            def get_text_fragments() -> Iterable[tuple[str, str]]:
                 text = "\n".join(document.lines[start_lineno:])[column:]
 
                 # We call `get_text_fragments_unprocessed`, because `get_tokens` will

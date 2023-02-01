@@ -9,6 +9,8 @@ When the UI is rendered, these transformations can be applied right after the
 style strings are turned into `Attrs` objects that represent the actual
 formatting.
 """
+from __future__ import annotations
+
 from abc import ABCMeta, abstractmethod
 from colorsys import hls_to_rgb, rgb_to_hls
 from typing import Callable, Hashable, Optional, Sequence, Tuple, Union
@@ -105,7 +107,7 @@ class SetDefaultColorStyleTransformation(StyleTransformation):
     """
 
     def __init__(
-        self, fg: Union[str, Callable[[], str]], bg: Union[str, Callable[[], str]]
+        self, fg: str | Callable[[], str], bg: str | Callable[[], str]
     ) -> None:
         self.fg = fg
         self.bg = bg
@@ -186,7 +188,7 @@ class AdjustBrightnessStyleTransformation(StyleTransformation):
 
         return attrs
 
-    def _color_to_rgb(self, color: str) -> Tuple[float, float, float]:
+    def _color_to_rgb(self, color: str) -> tuple[float, float, float]:
         """
         Parse `style.Attrs` color into RGB tuple.
         """
@@ -248,7 +250,7 @@ class DynamicStyleTransformation(StyleTransformation):
     """
 
     def __init__(
-        self, get_style_transformation: Callable[[], Optional[StyleTransformation]]
+        self, get_style_transformation: Callable[[], StyleTransformation | None]
     ) -> None:
         self.get_style_transformation = get_style_transformation
 
@@ -334,7 +336,7 @@ assert set(OPPOSITE_ANSI_COLOR_NAMES.values()) == set(ANSI_COLOR_NAMES)
 
 
 @memoized()
-def get_opposite_color(colorname: Optional[str]) -> Optional[str]:
+def get_opposite_color(colorname: str | None) -> str | None:
     """
     Take a color name in either 'ansi...' format or 6 digit RGB, return the
     color of opposite luminosity (same hue/saturation).

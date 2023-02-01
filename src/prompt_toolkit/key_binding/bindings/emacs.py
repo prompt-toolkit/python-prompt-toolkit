@@ -1,4 +1,6 @@
 # pylint: disable=function-redefined
+from __future__ import annotations
+
 from typing import Dict, Union
 
 from prompt_toolkit.application.current import get_app
@@ -425,7 +427,7 @@ def load_emacs_shift_selection_bindings() -> KeyBindingsBase:
             return
 
         # the other keys are handled through their readline command
-        key_to_command: Dict[Union[Keys, str], str] = {
+        key_to_command: dict[Keys | str, str] = {
             Keys.ShiftLeft: "backward-char",
             Keys.ShiftRight: "forward-char",
             Keys.ShiftHome: "beginning-of-line",

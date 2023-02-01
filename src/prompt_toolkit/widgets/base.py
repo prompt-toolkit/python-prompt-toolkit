@@ -12,6 +12,8 @@ container object.
     guarantees are made yet). The public API in
     `prompt_toolkit.shortcuts.dialogs` on the other hand is considered stable.
 """
+from __future__ import annotations
+
 from functools import partial
 from typing import Callable, Generic, List, Optional, Sequence, Tuple, TypeVar, Union
 
@@ -172,13 +174,13 @@ class TextArea:
         text: str = "",
         multiline: FilterOrBool = True,
         password: FilterOrBool = False,
-        lexer: Optional[Lexer] = None,
-        auto_suggest: Optional[AutoSuggest] = None,
-        completer: Optional[Completer] = None,
+        lexer: Lexer | None = None,
+        auto_suggest: AutoSuggest | None = None,
+        completer: Completer | None = None,
         complete_while_typing: FilterOrBool = True,
-        validator: Optional[Validator] = None,
-        accept_handler: Optional[BufferAcceptHandler] = None,
-        history: Optional[History] = None,
+        validator: Validator | None = None,
+        accept_handler: BufferAcceptHandler | None = None,
+        history: History | None = None,
         focusable: FilterOrBool = True,
         focus_on_click: FilterOrBool = False,
         wrap_lines: FilterOrBool = True,
@@ -188,13 +190,13 @@ class TextArea:
         dont_extend_height: FilterOrBool = False,
         dont_extend_width: FilterOrBool = False,
         line_numbers: bool = False,
-        get_line_prefix: Optional[GetLinePrefixCallable] = None,
+        get_line_prefix: GetLinePrefixCallable | None = None,
         scrollbar: bool = False,
         style: str = "",
-        search_field: Optional[SearchToolbar] = None,
+        search_field: SearchToolbar | None = None,
         preview_search: FilterOrBool = True,
         prompt: AnyFormattedText = "",
-        input_processors: Optional[List[Processor]] = None,
+        input_processors: list[Processor] | None = None,
         name: str = "",
     ) -> None:
         if search_field is None:
@@ -304,7 +306,7 @@ class TextArea:
         self.buffer.set_document(value, bypass_readonly=True)
 
     @property
-    def accept_handler(self) -> Optional[BufferAcceptHandler]:
+    def accept_handler(self) -> BufferAcceptHandler | None:
         """
         The accept handler. Called when the user accepts the input.
         """
@@ -344,7 +346,7 @@ class Label:
         width: AnyDimension = None,
         dont_extend_height: bool = True,
         dont_extend_width: bool = False,
-        align: Union[WindowAlign, Callable[[], WindowAlign]] = WindowAlign.LEFT,
+        align: WindowAlign | Callable[[], WindowAlign] = WindowAlign.LEFT,
         # There is no cursor navigation in a label, so it makes sense to always
         # wrap lines by default.
         wrap_lines: FilterOrBool = True,
@@ -394,7 +396,7 @@ class Button:
     def __init__(
         self,
         text: str,
-        handler: Optional[Callable[[], None]] = None,
+        handler: Callable[[], None] | None = None,
         width: int = 12,
         left_symbol: str = "<",
         right_symbol: str = ">",
@@ -487,7 +489,7 @@ class Frame:
         style: str = "",
         width: AnyDimension = None,
         height: AnyDimension = None,
-        key_bindings: Optional[KeyBindings] = None,
+        key_bindings: KeyBindings | None = None,
         modal: bool = False,
     ) -> None:
         self.title = title
@@ -629,9 +631,9 @@ class Box:
         width: AnyDimension = None,
         height: AnyDimension = None,
         style: str = "",
-        char: Union[None, str, Callable[[], str]] = None,
+        char: None | str | Callable[[], str] = None,
         modal: bool = False,
-        key_bindings: Optional[KeyBindings] = None,
+        key_bindings: KeyBindings | None = None,
     ) -> None:
         if padding is None:
             padding = D(preferred=0)
@@ -689,8 +691,8 @@ class _DialogList(Generic[_T]):
 
     def __init__(
         self,
-        values: Sequence[Tuple[_T, AnyFormattedText]],
-        default_values: Optional[Sequence[_T]] = None,
+        values: Sequence[tuple[_T, AnyFormattedText]],
+        default_values: Sequence[_T] | None = None,
     ) -> None:
         assert len(values) > 0
         default_values = default_values or []
@@ -698,8 +700,8 @@ class _DialogList(Generic[_T]):
         self.values = values
         # current_values will be used in multiple_selection,
         # current_value will be used otherwise.
-        keys: List[_T] = [value for (value, _) in values]
-        self.current_values: List[_T] = [
+        keys: list[_T] = [value for (value, _) in values]
+        self.current_values: list[_T] = [
             value for value in default_values if value in keys
         ]
         self.current_value: _T = (
@@ -852,8 +854,8 @@ class RadioList(_DialogList[_T]):
 
     def __init__(
         self,
-        values: Sequence[Tuple[_T, AnyFormattedText]],
-        default: Optional[_T] = None,
+        values: Sequence[tuple[_T, AnyFormattedText]],
+        default: _T | None = None,
     ) -> None:
         if default is None:
             default_values = None

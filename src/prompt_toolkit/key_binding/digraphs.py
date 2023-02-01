@@ -6,6 +6,8 @@ pressing Control-K followed by to normal characters.
 Taken from Neovim and translated to Python:
 https://raw.githubusercontent.com/neovim/neovim/master/src/nvim/digraph.c
 """
+from __future__ import annotations
+
 from typing import Dict, Tuple
 
 __all__ = [
@@ -14,7 +16,7 @@ __all__ = [
 
 # digraphs for Unicode from RFC1345
 # (also work for ISO-8859-1 aka latin1)
-DIGRAPHS: Dict[Tuple[str, str], int] = {
+DIGRAPHS: dict[tuple[str, str], int] = {
     ("N", "U"): 0x00,
     ("S", "H"): 0x01,
     ("S", "X"): 0x02,

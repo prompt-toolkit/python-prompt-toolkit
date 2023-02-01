@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 from typing import TYPE_CHECKING, FrozenSet
 
@@ -30,15 +32,15 @@ MOUSE_DOWN  = MouseEventType.MOUSE_DOWN
 MOUSE_MOVE  = MouseEventType.MOUSE_MOVE
 MOUSE_UP    = MouseEventType.MOUSE_UP
 
-NO_MODIFIER      : FrozenSet[MouseModifier] = frozenset()
-SHIFT            : FrozenSet[MouseModifier] = frozenset({MouseModifier.SHIFT})
-ALT              : FrozenSet[MouseModifier] = frozenset({MouseModifier.ALT})
-SHIFT_ALT        : FrozenSet[MouseModifier] = frozenset({MouseModifier.SHIFT, MouseModifier.ALT})
-CONTROL          : FrozenSet[MouseModifier] = frozenset({MouseModifier.CONTROL})
-SHIFT_CONTROL    : FrozenSet[MouseModifier] = frozenset({MouseModifier.SHIFT, MouseModifier.CONTROL})
-ALT_CONTROL      : FrozenSet[MouseModifier] = frozenset({MouseModifier.ALT, MouseModifier.CONTROL})
-SHIFT_ALT_CONTROL: FrozenSet[MouseModifier] = frozenset({MouseModifier.SHIFT, MouseModifier.ALT, MouseModifier.CONTROL})
-UNKNOWN_MODIFIER : FrozenSet[MouseModifier] = frozenset()
+NO_MODIFIER      : frozenset[MouseModifier] = frozenset()
+SHIFT            : frozenset[MouseModifier] = frozenset({MouseModifier.SHIFT})
+ALT              : frozenset[MouseModifier] = frozenset({MouseModifier.ALT})
+SHIFT_ALT        : frozenset[MouseModifier] = frozenset({MouseModifier.SHIFT, MouseModifier.ALT})
+CONTROL          : frozenset[MouseModifier] = frozenset({MouseModifier.CONTROL})
+SHIFT_CONTROL    : frozenset[MouseModifier] = frozenset({MouseModifier.SHIFT, MouseModifier.CONTROL})
+ALT_CONTROL      : frozenset[MouseModifier] = frozenset({MouseModifier.ALT, MouseModifier.CONTROL})
+SHIFT_ALT_CONTROL: frozenset[MouseModifier] = frozenset({MouseModifier.SHIFT, MouseModifier.ALT, MouseModifier.CONTROL})
+UNKNOWN_MODIFIER : frozenset[MouseModifier] = frozenset()
 
 LEFT           = MouseButton.LEFT
 MIDDLE         = MouseButton.MIDDLE
@@ -188,7 +190,7 @@ def load_mouse_bindings() -> KeyBindings:
     key_bindings = KeyBindings()
 
     @key_bindings.add(Keys.Vt100MouseEvent)
-    def _(event: E) -> "NotImplementedOrNone":
+    def _(event: E) -> NotImplementedOrNone:
         """
         Handling of incoming mouse event.
         """
@@ -299,7 +301,7 @@ def load_mouse_bindings() -> KeyBindings:
         event.key_processor.feed(KeyPress(Keys.Down), first=True)
 
     @key_bindings.add(Keys.WindowsMouseEvent)
-    def _mouse(event: E) -> "NotImplementedOrNone":
+    def _mouse(event: E) -> NotImplementedOrNone:
         """
         Handling of mouse events for Windows.
         """

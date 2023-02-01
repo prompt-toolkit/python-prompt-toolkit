@@ -1,6 +1,8 @@
 """
 Utility for running a prompt_toolkit application in an asyncssh server.
 """
+from __future__ import annotations
+
 import asyncio
 import traceback
 from asyncio import get_running_loop
@@ -19,21 +21,21 @@ __all__ = ["PromptToolkitSSHSession", "PromptToolkitSSHServer"]
 class PromptToolkitSSHSession(asyncssh.SSHServerSession):  # type: ignore
     def __init__(
         self,
-        interact: Callable[["PromptToolkitSSHSession"], Awaitable[None]],
+        interact: Callable[[PromptToolkitSSHSession], Awaitable[None]],
         *,
         enable_cpr: bool,
     ) -> None:
         self.interact = interact
         self.enable_cpr = enable_cpr
-        self.interact_task: Optional[asyncio.Task[None]] = None
-        self._chan: Optional[Any] = None
-        self.app_session: Optional[AppSession] = None
+        self.interact_task: asyncio.Task[None] | None = None
+        self._chan: Any | None = None
+        self.app_session: AppSession | None = None
 
         # PipInput object, for sending input in the CLI.
         # (This is something that we can use in the prompt_toolkit event loop,
         # but still write date in manually.)
-        self._input: Optional[PipeInput] = None
-        self._output: Optional[Vt100_Output] = None
+        self._input: PipeInput | None = None
+        self._output: Vt100_Output | None = None
 
         # Output object. Don't render to the real stdout, but write everything
         # in the SSH channel.

@@ -2,6 +2,8 @@
 These are almost end-to-end tests. They create a Prompt, feed it with some
 input and check the result.
 """
+from __future__ import annotations
+
 from functools import partial
 
 import pytest

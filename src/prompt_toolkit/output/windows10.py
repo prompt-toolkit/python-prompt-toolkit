@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 
 assert sys.platform == "win32"
@@ -29,7 +31,7 @@ class Windows10_Output:
     """
 
     def __init__(
-        self, stdout: TextIO, default_color_depth: Optional[ColorDepth] = None
+        self, stdout: TextIO, default_color_depth: ColorDepth | None = None
     ) -> None:
         self.win32_output = Win32Output(stdout, default_color_depth=default_color_depth)
         self.vt100_output = Vt100_Output(

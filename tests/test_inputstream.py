@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 
 from prompt_toolkit.input.vt100_parser import Vt100Parser

@@ -2,6 +2,8 @@
 Data structures for the Buffer.
 It holds the text, cursor position, history, etc...
 """
+from __future__ import annotations
+
 import asyncio
 import logging
 import os
@@ -80,9 +82,9 @@ class CompletionState:
 
     def __init__(
         self,
-        original_document: "Document",
-        completions: Optional[List["Completion"]] = None,
-        complete_index: Optional[int] = None,
+        original_document: Document,
+        completions: list[Completion] | None = None,
+        complete_index: int | None = None,
     ) -> None:
         #: Document as it was when the completion started.
         self.original_document = original_document
@@ -103,7 +105,7 @@ class CompletionState:
             self.complete_index,
         )
 
-    def go_to_index(self, index: Optional[int]) -> None:
+    def go_to_index(self, index: int | None) -> None:
         """
         Create a new :class:`.CompletionState` object with the new index.
 
@@ -113,7 +115,7 @@ class CompletionState:
             assert index is None or 0 <= index < len(self.completions)
             self.complete_index = index
 
-    def new_text_and_position(self) -> Tuple[str, int]:
+    def new_text_and_position(self) -> tuple[str, int]:
         """
         Return (new_text, new_cursor_position) for this completion.
         """
@@ -134,7 +136,7 @@ class CompletionState:
             return new_text, new_cursor_position
 
     @property
-    def current_completion(self) -> Optional["Completion"]:
+    def current_completion(self) -> Completion | None:
         """
         Return the current completion, or return `None` when no completion is
         selected.
@@ -231,25 +233,25 @@ class Buffer:
 
     def __init__(
         self,
-        completer: Optional[Completer] = None,
-        auto_suggest: Optional[AutoSuggest] = None,
-        history: Optional[History] = None,
-        validator: Optional[Validator] = None,
-        tempfile_suffix: Union[str, Callable[[], str]] = "",
-        tempfile: Union[str, Callable[[], str]] = "",
+        completer: Completer | None = None,
+        auto_suggest: AutoSuggest | None = None,
+        history: History | None = None,
+        validator: Validator | None = None,
+        tempfile_suffix: str | Callable[[], str] = "",
+        tempfile: str | Callable[[], str] = "",
         name: str = "",
         complete_while_typing: FilterOrBool = False,
         validate_while_typing: FilterOrBool = False,
         enable_history_search: FilterOrBool = False,
-        document: Optional[Document] = None,
-        accept_handler: Optional[BufferAcceptHandler] = None,
+        document: Document | None = None,
+        accept_handler: BufferAcceptHandler | None = None,
         read_only: FilterOrBool = False,
         multiline: FilterOrBool = True,
-        on_text_changed: Optional[BufferEventHandler] = None,
-        on_text_insert: Optional[BufferEventHandler] = None,
-        on_cursor_position_changed: Optional[BufferEventHandler] = None,
-        on_completions_changed: Optional[BufferEventHandler] = None,
-        on_suggestion_set: Optional[BufferEventHandler] = None,
+        on_text_changed: BufferEventHandler | None = None,
+        on_text_insert: BufferEventHandler | None = None,
+        on_cursor_position_changed: BufferEventHandler | None = None,
+        on_completions_changed: BufferEventHandler | None = None,
+        on_suggestion_set: BufferEventHandler | None = None,
     ):
         # Accept both filters and booleans as input.
         enable_history_search = to_filter(enable_history_search)
@@ -284,19 +286,17 @@ class Buffer:
         self.__cursor_position = 0
 
         # Events
-        self.on_text_changed: Event["Buffer"] = Event(self, on_text_changed)
-        self.on_text_insert: Event["Buffer"] = Event(self, on_text_insert)
-        self.on_cursor_position_changed: Event["Buffer"] = Event(
+        self.on_text_changed: Event[Buffer] = Event(self, on_text_changed)
+        self.on_text_insert: Event[Buffer] = Event(self, on_text_insert)
+        self.on_cursor_position_changed: Event[Buffer] = Event(
             self, on_cursor_position_changed
         )
-        self.on_completions_changed: Event["Buffer"] = Event(
-            self, on_completions_changed
-        )
-        self.on_suggestion_set: Event["Buffer"] = Event(self, on_suggestion_set)
+        self.on_completions_changed: Event[Buffer] = Event(self, on_completions_changed)
+        self.on_suggestion_set: Event[Buffer] = Event(self, on_suggestion_set)
 
         # Document cache. (Avoid creating new Document instances.)
         self._document_cache: FastDictCache[
-            Tuple[str, int, Optional[SelectionState]], Document
+            tuple[str, int, SelectionState | None], Document
         ] = FastDictCache(Document, size=10)
 
         # Create completer / auto suggestion / validation coroutines.
@@ -305,7 +305,7 @@ class Buffer:
         self._async_validator = self._create_auto_validate_coroutine()
 
         # Asyncio task for populating the history.
-        self._load_history_task: Optional[asyncio.Future[None]] = None
+        self._load_history_task: asyncio.Future[None] | None = None
 
         # Reset other attributes.
         self.reset(document=document)
@@ -319,7 +319,7 @@ class Buffer:
         return f"<Buffer(name={self.name!r}, text={text!r}) at {id(self)!r}>"
 
     def reset(
-        self, document: Optional[Document] = None, append_to_history: bool = False
+        self, document: Document | None = None, append_to_history: bool = False
     ) -> None:
         """
         :param append_to_history: Append current input to history first.
@@ -332,41 +332,41 @@ class Buffer:
         self.__cursor_position = document.cursor_position
 
         # `ValidationError` instance. (Will be set when the input is wrong.)
-        self.validation_error: Optional[ValidationError] = None
-        self.validation_state: Optional[ValidationState] = ValidationState.UNKNOWN
+        self.validation_error: ValidationError | None = None
+        self.validation_state: ValidationState | None = ValidationState.UNKNOWN
 
         # State of the selection.
-        self.selection_state: Optional[SelectionState] = None
+        self.selection_state: SelectionState | None = None
 
         # Multiple cursor mode. (When we press 'I' or 'A' in visual-block mode,
         # we can insert text on multiple lines at once. This is implemented by
         # using multiple cursors.)
-        self.multiple_cursor_positions: List[int] = []
+        self.multiple_cursor_positions: list[int] = []
 
         # When doing consecutive up/down movements, prefer to stay at this column.
-        self.preferred_column: Optional[int] = None
+        self.preferred_column: int | None = None
 
         # State of complete browser
         # For interactive completion through Ctrl-N/Ctrl-P.
-        self.complete_state: Optional[CompletionState] = None
+        self.complete_state: CompletionState | None = None
 
         # State of Emacs yank-nth-arg completion.
-        self.yank_nth_arg_state: Optional[YankNthArgState] = None  # for yank-nth-arg.
+        self.yank_nth_arg_state: YankNthArgState | None = None  # for yank-nth-arg.
 
         # Remember the document that we had *right before* the last paste
         # operation. This is used for rotating through the kill ring.
-        self.document_before_paste: Optional[Document] = None
+        self.document_before_paste: Document | None = None
 
         # Current suggestion.
-        self.suggestion: Optional[Suggestion] = None
+        self.suggestion: Suggestion | None = None
 
         # The history search text. (Used for filtering the history when we
         # browse through it.)
-        self.history_search_text: Optional[str] = None
+        self.history_search_text: str | None = None
 
         # Undo/redo stacks (stack of `(text, cursor_position)`).
-        self._undo_stack: List[Tuple[str, int]] = []
-        self._redo_stack: List[Tuple[str, int]] = []
+        self._undo_stack: list[tuple[str, int]] = []
+        self._redo_stack: list[tuple[str, int]] = []
 
         # Cancel history loader. If history loading was still ongoing.
         # Cancel the `_load_history_task`, so that next repaint of the
@@ -413,7 +413,7 @@ class Buffer:
 
             self._load_history_task = get_app().create_background_task(load_history())
 
-            def load_history_done(f: "asyncio.Future[None]") -> None:
+            def load_history_done(f: asyncio.Future[None]) -> None:
                 """
                 Handle `load_history` result when either done, cancelled, or
                 when an exception was raised.
@@ -880,7 +880,7 @@ class Buffer:
         Browse to the next completions.
         (Does nothing if there are no completion.)
         """
-        index: Optional[int]
+        index: int | None
 
         if self.complete_state:
             completions_count = len(self.complete_state.completions)
@@ -905,7 +905,7 @@ class Buffer:
         Browse to the previous completions.
         (Does nothing if there are no completion.)
         """
-        index: Optional[int]
+        index: int | None
 
         if self.complete_state:
             if self.complete_state.complete_index == 0:
@@ -928,7 +928,7 @@ class Buffer:
             self.go_to_completion(None)
             self.complete_state = None
 
-    def _set_completions(self, completions: List[Completion]) -> CompletionState:
+    def _set_completions(self, completions: list[Completion]) -> CompletionState:
         """
         Start completions. (Generate list of completions and initialize.)
 
@@ -948,7 +948,7 @@ class Buffer:
         Start a completion based on all the other lines in the document and the
         history.
         """
-        found_completions: Set[str] = set()
+        found_completions: set[str] = set()
         completions = []
 
         # For every line of the whole history, find matches with the current line.
@@ -979,7 +979,7 @@ class Buffer:
         self._set_completions(completions=completions[::-1])
         self.go_to_completion(0)
 
-    def go_to_completion(self, index: Optional[int]) -> None:
+    def go_to_completion(self, index: int | None) -> None:
         """
         Select a completion from the list of current completions.
         """
@@ -1074,9 +1074,7 @@ class Buffer:
         if found_something:
             self.cursor_position = len(self.text)
 
-    def yank_nth_arg(
-        self, n: Optional[int] = None, _yank_last_arg: bool = False
-    ) -> None:
+    def yank_nth_arg(self, n: int | None = None, _yank_last_arg: bool = False) -> None:
         """
         Pick nth word from previous history entry (depending on current
         `yank_nth_arg_state`) and insert it at current position. Rotate through
@@ -1127,7 +1125,7 @@ class Buffer:
         state.history_position = new_pos
         self.yank_nth_arg_state = state
 
-    def yank_last_arg(self, n: Optional[int] = None) -> None:
+    def yank_last_arg(self, n: int | None = None) -> None:
         """
         Like `yank_nth_arg`, but if no argument has been given, yank the last
         word by default.
@@ -1388,7 +1386,7 @@ class Buffer:
         search_state: SearchState,
         include_current_position: bool = False,
         count: int = 1,
-    ) -> Optional[Tuple[int, int]]:
+    ) -> tuple[int, int] | None:
         """
         Execute search. Return (working_index, cursor_position) tuple when this
         search is applied. Returns `None` when this text cannot be found.
@@ -1401,7 +1399,7 @@ class Buffer:
 
         def search_once(
             working_index: int, document: Document
-        ) -> Optional[Tuple[int, Document]]:
+        ) -> tuple[int, Document] | None:
             """
             Do search one time.
             Return (working_index, document) or `None`
@@ -1539,7 +1537,7 @@ class Buffer:
     def exit_selection(self) -> None:
         self.selection_state = None
 
-    def _editor_simple_tempfile(self) -> Tuple[str, Callable[[], None]]:
+    def _editor_simple_tempfile(self) -> tuple[str, Callable[[], None]]:
         """
         Simple (file) tempfile implementation.
         Return (tempfile, cleanup_func).
@@ -1555,7 +1553,7 @@ class Buffer:
 
         return filename, cleanup
 
-    def _editor_complex_tempfile(self) -> Tuple[str, Callable[[], None]]:
+    def _editor_complex_tempfile(self) -> tuple[str, Callable[[], None]]:
         # Complex (directory) tempfile implementation.
         headtail = to_str(self.tempfile)
         if not headtail:
@@ -1584,7 +1582,7 @@ class Buffer:
 
         return filename, cleanup
 
-    def open_in_editor(self, validate_and_handle: bool = False) -> "asyncio.Task[None]":
+    def open_in_editor(self, validate_and_handle: bool = False) -> asyncio.Task[None]:
         """
         Open code in editor.
 
@@ -1672,7 +1670,7 @@ class Buffer:
         select_first: bool = False,
         select_last: bool = False,
         insert_common_part: bool = False,
-        complete_event: Optional[CompleteEvent] = None,
+        complete_event: CompleteEvent | None = None,
     ) -> None:
         """
         Start asynchronous autocompletion of this buffer.
@@ -1715,7 +1713,7 @@ class Buffer:
             select_first: bool = False,
             select_last: bool = False,
             insert_common_part: bool = False,
-            complete_event: Optional[CompleteEvent] = None,
+            complete_event: CompleteEvent | None = None,
         ) -> None:
             document = self.document
             complete_event = complete_event or CompleteEvent(text_inserted=True)

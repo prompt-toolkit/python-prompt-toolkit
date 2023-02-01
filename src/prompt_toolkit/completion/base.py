@@ -1,5 +1,7 @@
 """
 """
+from __future__ import annotations
+
 from abc import ABCMeta, abstractmethod
 from typing import AsyncGenerator, Callable, Iterable, Optional, Sequence
 
@@ -41,8 +43,8 @@ class Completion:
         self,
         text: str,
         start_position: int = 0,
-        display: Optional[AnyFormattedText] = None,
-        display_meta: Optional[AnyFormattedText] = None,
+        display: AnyFormattedText | None = None,
+        display_meta: AnyFormattedText | None = None,
         style: str = "",
         selected_style: str = "",
     ) -> None:
@@ -111,7 +113,7 @@ class Completion:
 
         return fragment_list_to_text(self.display_meta)
 
-    def new_completion_from_position(self, position: int) -> "Completion":
+    def new_completion_from_position(self, position: int) -> Completion:
         """
         (Only for internal use!)
         Get a new completion by splitting this one. Used by `Application` when
@@ -304,7 +306,7 @@ class DynamicCompleter(Completer):
     :param get_completer: Callable that returns a :class:`.Completer` instance.
     """
 
-    def __init__(self, get_completer: Callable[[], Optional[Completer]]) -> None:
+    def __init__(self, get_completer: Callable[[], Completer | None]) -> None:
         self.get_completer = get_completer
 
     def get_completions(

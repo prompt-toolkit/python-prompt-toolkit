@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from ctypes import Structure, Union, c_char, c_long, c_short, c_ulong
 from ctypes.wintypes import BOOL, DWORD, LPVOID, WCHAR, WORD
 from typing import TYPE_CHECKING

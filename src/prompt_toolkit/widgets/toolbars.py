@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, Optional
 
 from prompt_toolkit.application.current import get_app
@@ -214,7 +216,7 @@ class SearchToolbar:
 
     def __init__(
         self,
-        search_buffer: Optional[Buffer] = None,
+        search_buffer: Buffer | None = None,
         vi_mode: bool = False,
         text_if_not_searching: AnyFormattedText = "",
         forward_search_prompt: AnyFormattedText = "I-search: ",

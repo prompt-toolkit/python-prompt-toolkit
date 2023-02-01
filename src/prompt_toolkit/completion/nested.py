@@ -1,6 +1,8 @@
 """
 Nestedcompleter for completion of hierarchical data structures.
 """
+from __future__ import annotations
+
 from typing import Any, Dict, Iterable, Mapping, Optional, Set, Union
 
 from prompt_toolkit.completion import CompleteEvent, Completer, Completion
@@ -26,7 +28,7 @@ class NestedCompleter(Completer):
     """
 
     def __init__(
-        self, options: Dict[str, Optional[Completer]], ignore_case: bool = True
+        self, options: dict[str, Completer | None], ignore_case: bool = True
     ) -> None:
         self.options = options
         self.ignore_case = ignore_case
@@ -35,7 +37,7 @@ class NestedCompleter(Completer):
         return f"NestedCompleter({self.options!r}, ignore_case={self.ignore_case!r})"
 
     @classmethod
-    def from_nested_dict(cls, data: NestedDict) -> "NestedCompleter":
+    def from_nested_dict(cls, data: NestedDict) -> NestedCompleter:
         """
         Create a `NestedCompleter`, starting from a nested dictionary data
         structure, like this:
@@ -59,7 +61,7 @@ class NestedCompleter(Completer):
 
         Values in this data structure can be a completers as well.
         """
-        options: Dict[str, Optional[Completer]] = {}
+        options: dict[str, Completer | None] = {}
         for key, value in data.items():
             if isinstance(value, Completer):
                 options[key] = value

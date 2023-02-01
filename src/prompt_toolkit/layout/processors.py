@@ -5,6 +5,8 @@ from a buffer before the BufferControl will render it to the screen.
 They can insert fragments before or after, or highlight fragments by replacing the
 fragment types.
 """
+from __future__ import annotations
+
 import re
 from abc import ABCMeta, abstractmethod
 from typing import (
@@ -70,8 +72,8 @@ class Processor(metaclass=ABCMeta):
 
     @abstractmethod
     def apply_transformation(
-        self, transformation_input: "TransformationInput"
-    ) -> "Transformation":
+        self, transformation_input: TransformationInput
+    ) -> Transformation:
         """
         Apply transformation. Returns a :class:`.Transformation` instance.
 
@@ -97,7 +99,7 @@ class TransformationInput:
 
     def __init__(
         self,
-        buffer_control: "BufferControl",
+        buffer_control: BufferControl,
         document: Document,
         lineno: int,
         source_to_display: SourceToDisplay,
@@ -115,8 +117,8 @@ class TransformationInput:
 
     def unpack(
         self,
-    ) -> Tuple[
-        "BufferControl", Document, int, SourceToDisplay, StyleAndTextTuples, int, int
+    ) -> tuple[
+        BufferControl, Document, int, SourceToDisplay, StyleAndTextTuples, int, int
     ]:
         return (
             self.buffer_control,
@@ -147,8 +149,8 @@ class Transformation:
     def __init__(
         self,
         fragments: StyleAndTextTuples,
-        source_to_display: Optional[SourceToDisplay] = None,
-        display_to_source: Optional[DisplayToSource] = None,
+        source_to_display: SourceToDisplay | None = None,
+        display_to_source: DisplayToSource | None = None,
     ) -> None:
         self.fragments = fragments
         self.source_to_display = source_to_display or (lambda i: i)
@@ -178,7 +180,7 @@ class HighlightSearchProcessor(Processor):
     _classname = "search"
     _classname_current = "search.current"
 
-    def _get_search_text(self, buffer_control: "BufferControl") -> str:
+    def _get_search_text(self, buffer_control: BufferControl) -> str:
         """
         The text we are searching for.
         """
@@ -212,7 +214,7 @@ class HighlightSearchProcessor(Processor):
                 flags = re.RegexFlag(0)
 
             # Get cursor column.
-            cursor_column: Optional[int]
+            cursor_column: int | None
             if document.cursor_position_row == lineno:
                 cursor_column = source_to_display(document.cursor_position_col)
             else:
@@ -253,7 +255,7 @@ class HighlightIncrementalSearchProcessor(HighlightSearchProcessor):
     _classname = "incsearch"
     _classname_current = "incsearch.current"
 
-    def _get_search_text(self, buffer_control: "BufferControl") -> str:
+    def _get_search_text(self, buffer_control: BufferControl) -> str:
         """
         The text we are searching for.
         """
@@ -352,14 +354,14 @@ class HighlightMatchingBracketProcessor(Processor):
         self.max_cursor_distance = max_cursor_distance
 
         self._positions_cache: SimpleCache[
-            Hashable, List[Tuple[int, int]]
+            Hashable, list[tuple[int, int]]
         ] = SimpleCache(maxsize=8)
 
-    def _get_positions_to_highlight(self, document: Document) -> List[Tuple[int, int]]:
+    def _get_positions_to_highlight(self, document: Document) -> list[tuple[int, int]]:
         """
         Return a list of (row, col) tuples that need to be highlighted.
         """
-        pos: Optional[int]
+        pos: int | None
 
         # Try for the character under the cursor.
         if document.current_char and document.current_char in self.chars:
@@ -498,8 +500,8 @@ class BeforeInput(Processor):
         self.style = style
 
     def apply_transformation(self, ti: TransformationInput) -> Transformation:
-        source_to_display: Optional[SourceToDisplay]
-        display_to_source: Optional[DisplayToSource]
+        source_to_display: SourceToDisplay | None
+        display_to_source: DisplayToSource | None
 
         if ti.lineno == 0:
             # Get fragments.
@@ -611,7 +613,7 @@ class ShowLeadingWhiteSpaceProcessor(Processor):
 
     def __init__(
         self,
-        get_char: Optional[Callable[[], str]] = None,
+        get_char: Callable[[], str] | None = None,
         style: str = "class:leading-whitespace",
     ) -> None:
         def default_get_char() -> str:
@@ -649,7 +651,7 @@ class ShowTrailingWhiteSpaceProcessor(Processor):
 
     def __init__(
         self,
-        get_char: Optional[Callable[[], str]] = None,
+        get_char: Callable[[], str] | None = None,
         style: str = "class:training-whitespace",
     ) -> None:
         def default_get_char() -> str:
@@ -693,9 +695,9 @@ class TabsProcessor(Processor):
 
     def __init__(
         self,
-        tabstop: Union[int, Callable[[], int]] = 4,
-        char1: Union[str, Callable[[], str]] = "|",
-        char2: Union[str, Callable[[], str]] = "\u2508",
+        tabstop: int | Callable[[], int] = 4,
+        char1: str | Callable[[], str] = "|",
+        char2: str | Callable[[], str] = "\u2508",
         style: str = "class:tab",
     ) -> None:
         self.char1 = char1
@@ -771,16 +773,14 @@ class ReverseSearchProcessor(Processor):
     contains the search buffer, it's not meant for the original input.
     """
 
-    _excluded_input_processors: List[Type[Processor]] = [
+    _excluded_input_processors: list[type[Processor]] = [
         HighlightSearchProcessor,
         HighlightSelectionProcessor,
         BeforeInput,
         AfterInput,
     ]
 
-    def _get_main_buffer(
-        self, buffer_control: "BufferControl"
-    ) -> Optional["BufferControl"]:
+    def _get_main_buffer(self, buffer_control: BufferControl) -> BufferControl | None:
         from prompt_toolkit.layout.controls import BufferControl
 
         prev_control = get_app().layout.search_target_buffer_control
@@ -792,15 +792,15 @@ class ReverseSearchProcessor(Processor):
         return None
 
     def _content(
-        self, main_control: "BufferControl", ti: TransformationInput
-    ) -> "UIContent":
+        self, main_control: BufferControl, ti: TransformationInput
+    ) -> UIContent:
         from prompt_toolkit.layout.controls import BufferControl
 
         # Emulate the BufferControl through which we are searching.
         # For this we filter out some of the input processors.
         excluded_processors = tuple(self._excluded_input_processors)
 
-        def filter_processor(item: Processor) -> Optional[Processor]:
+        def filter_processor(item: Processor) -> Processor | None:
             """Filter processors from the main control that we want to disable
             here. This returns either an accepted processor or None."""
             # For a `_MergedProcessor`, check each individual processor, recursively.
@@ -855,8 +855,8 @@ class ReverseSearchProcessor(Processor):
             ti.buffer_control, SearchBufferControl
         ), "`ReverseSearchProcessor` should be applied to a `SearchBufferControl` only."
 
-        source_to_display: Optional[SourceToDisplay]
-        display_to_source: Optional[DisplayToSource]
+        source_to_display: SourceToDisplay | None
+        display_to_source: DisplayToSource | None
 
         main_control = self._get_main_buffer(ti.buffer_control)
 
@@ -948,7 +948,7 @@ class DynamicProcessor(Processor):
     :param get_processor: Callable that returns a :class:`.Processor` instance.
     """
 
-    def __init__(self, get_processor: Callable[[], Optional[Processor]]) -> None:
+    def __init__(self, get_processor: Callable[[], Processor | None]) -> None:
         self.get_processor = get_processor
 
     def apply_transformation(self, ti: TransformationInput) -> Transformation:
@@ -956,7 +956,7 @@ class DynamicProcessor(Processor):
         return processor.apply_transformation(ti)
 
 
-def merge_processors(processors: List[Processor]) -> Processor:
+def merge_processors(processors: list[Processor]) -> Processor:
     """
     Merge multiple `Processor` objects into one.
     """
@@ -975,7 +975,7 @@ class _MergedProcessor(Processor):
     API as if it is one `Processor`.
     """
 
-    def __init__(self, processors: List[Processor]):
+    def __init__(self, processors: list[Processor]):
         self.processors = processors
 
     def apply_transformation(self, ti: TransformationInput) -> Transformation:

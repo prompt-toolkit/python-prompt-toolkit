@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .async_generator import aclosing, generator_to_async_generator
 from .inputhook import (
     InputHookContext,

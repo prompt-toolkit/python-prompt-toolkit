@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import io
 import sys
 from typing import ContextManager, Optional, TextIO
@@ -10,9 +12,7 @@ __all__ = [
 ]
 
 
-def create_input(
-    stdin: Optional[TextIO] = None, always_prefer_tty: bool = False
-) -> Input:
+def create_input(stdin: TextIO | None = None, always_prefer_tty: bool = False) -> Input:
     """
     Create the appropriate `Input` object for the current os/environment.
 

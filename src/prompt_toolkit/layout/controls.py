@@ -1,6 +1,8 @@
 """
 User interface Controls for the layout.
 """
+from __future__ import annotations
+
 import time
 from abc import ABCMeta, abstractmethod
 from typing import (
@@ -76,7 +78,7 @@ class UIControl(metaclass=ABCMeta):
         # Default reset. (Doesn't have to be implemented.)
         pass
 
-    def preferred_width(self, max_available_width: int) -> Optional[int]:
+    def preferred_width(self, max_available_width: int) -> int | None:
         return None
 
     def preferred_height(
@@ -84,8 +86,8 @@ class UIControl(metaclass=ABCMeta):
         width: int,
         max_available_height: int,
         wrap_lines: bool,
-        get_line_prefix: Optional[GetLinePrefixCallable],
-    ) -> Optional[int]:
+        get_line_prefix: GetLinePrefixCallable | None,
+    ) -> int | None:
         return None
 
     def is_focusable(self) -> bool:
@@ -95,14 +97,14 @@ class UIControl(metaclass=ABCMeta):
         return False
 
     @abstractmethod
-    def create_content(self, width: int, height: int) -> "UIContent":
+    def create_content(self, width: int, height: int) -> UIContent:
         """
         Generate the content for this user control.
 
         Returns a :class:`.UIContent` instance.
         """
 
-    def mouse_handler(self, mouse_event: MouseEvent) -> "NotImplementedOrNone":
+    def mouse_handler(self, mouse_event: MouseEvent) -> NotImplementedOrNone:
         """
         Handle mouse events.
 
@@ -126,7 +128,7 @@ class UIControl(metaclass=ABCMeta):
         Request to move the cursor up.
         """
 
-    def get_key_bindings(self) -> Optional["KeyBindingsBase"]:
+    def get_key_bindings(self) -> KeyBindingsBase | None:
         """
         The key bindings that are specific for this user control.
 
@@ -134,7 +136,7 @@ class UIControl(metaclass=ABCMeta):
         specified, or `None` otherwise.
         """
 
-    def get_invalidate_events(self) -> Iterable["Event[object]"]:
+    def get_invalidate_events(self) -> Iterable[Event[object]]:
         """
         Return a list of `Event` objects. This can be a generator.
         (The application collects all these events, in order to bind redraw
@@ -160,8 +162,8 @@ class UIContent:
         self,
         get_line: Callable[[int], StyleAndTextTuples] = (lambda i: []),
         line_count: int = 0,
-        cursor_position: Optional[Point] = None,
-        menu_position: Optional[Point] = None,
+        cursor_position: Point | None = None,
+        menu_position: Point | None = None,
         show_cursor: bool = True,
     ):
         self.get_line = get_line
@@ -171,7 +173,7 @@ class UIContent:
         self.show_cursor = show_cursor
 
         # Cache for line heights. Maps cache key -> height
-        self._line_heights_cache: Dict[Hashable, int] = {}
+        self._line_heights_cache: dict[Hashable, int] = {}
 
     def __getitem__(self, lineno: int) -> StyleAndTextTuples:
         "Make it iterable (iterate line by line)."
@@ -184,8 +186,8 @@ class UIContent:
         self,
         lineno: int,
         width: int,
-        get_line_prefix: Optional[GetLinePrefixCallable],
-        slice_stop: Optional[int] = None,
+        get_line_prefix: GetLinePrefixCallable | None,
+        slice_stop: int | None = None,
     ) -> int:
         """
         Return the height that a given line would need if it is rendered in a
@@ -302,10 +304,10 @@ class FormattedTextControl(UIControl):
         text: AnyFormattedText = "",
         style: str = "",
         focusable: FilterOrBool = False,
-        key_bindings: Optional["KeyBindingsBase"] = None,
+        key_bindings: KeyBindingsBase | None = None,
         show_cursor: bool = True,
         modal: bool = False,
-        get_cursor_position: Optional[Callable[[], Optional[Point]]] = None,
+        get_cursor_position: Callable[[], Point | None] | None = None,
     ) -> None:
         self.text = text  # No type check on 'text'. This is done dynamically.
         self.style = style
@@ -325,7 +327,7 @@ class FormattedTextControl(UIControl):
         # Only cache one fragment list. We don't need the previous item.
 
         # Render info for the mouse support.
-        self._fragments: Optional[StyleAndTextTuples] = None
+        self._fragments: StyleAndTextTuples | None = None
 
     def reset(self) -> None:
         self._fragments = None
@@ -360,8 +362,8 @@ class FormattedTextControl(UIControl):
         width: int,
         max_available_height: int,
         wrap_lines: bool,
-        get_line_prefix: Optional[GetLinePrefixCallable],
-    ) -> Optional[int]:
+        get_line_prefix: GetLinePrefixCallable | None,
+    ) -> int | None:
         """
         Return the preferred height for this control.
         """
@@ -376,7 +378,7 @@ class FormattedTextControl(UIControl):
         else:
             return content.line_count
 
-    def create_content(self, width: int, height: Optional[int]) -> UIContent:
+    def create_content(self, width: int, height: int | None) -> UIContent:
         # Get fragments
         fragments_with_mouse_handlers = self._get_formatted_text_cached()
         fragment_lines_with_mouse_handlers = list(
@@ -384,7 +386,7 @@ class FormattedTextControl(UIControl):
         )
 
         # Strip mouse handlers from fragments.
-        fragment_lines: List[StyleAndTextTuples] = [
+        fragment_lines: list[StyleAndTextTuples] = [
             [(item[0], item[1]) for item in line]
             for line in fragment_lines_with_mouse_handlers
         ]
@@ -397,7 +399,7 @@ class FormattedTextControl(UIControl):
         # cursor position here.
         def get_cursor_position(
             fragment: str = "[SetCursorPosition]",
-        ) -> Optional[Point]:
+        ) -> Point | None:
             for y, line in enumerate(fragment_lines):
                 x = 0
                 for style_str, text, *_ in line:
@@ -407,7 +409,7 @@ class FormattedTextControl(UIControl):
             return None
 
         # If there is a `[SetMenuPosition]`, set the menu over here.
-        def get_menu_position() -> Optional[Point]:
+        def get_menu_position() -> Point | None:
             return get_cursor_position("[SetMenuPosition]")
 
         cursor_position = (self.get_cursor_position or get_cursor_position)()
@@ -426,7 +428,7 @@ class FormattedTextControl(UIControl):
 
         return self._content_cache.get(key, get_content)
 
-    def mouse_handler(self, mouse_event: MouseEvent) -> "NotImplementedOrNone":
+    def mouse_handler(self, mouse_event: MouseEvent) -> NotImplementedOrNone:
         """
         Handle mouse events.
 
@@ -468,7 +470,7 @@ class FormattedTextControl(UIControl):
     def is_modal(self) -> bool:
         return self.modal
 
-    def get_key_bindings(self) -> Optional["KeyBindingsBase"]:
+    def get_key_bindings(self) -> KeyBindingsBase | None:
         return self.key_bindings
 
 
@@ -521,18 +523,18 @@ class BufferControl(UIControl):
 
     def __init__(
         self,
-        buffer: Optional[Buffer] = None,
-        input_processors: Optional[List[Processor]] = None,
+        buffer: Buffer | None = None,
+        input_processors: list[Processor] | None = None,
         include_default_input_processors: bool = True,
-        lexer: Optional[Lexer] = None,
+        lexer: Lexer | None = None,
         preview_search: FilterOrBool = False,
         focusable: FilterOrBool = True,
-        search_buffer_control: Union[
-            None, "SearchBufferControl", Callable[[], "SearchBufferControl"]
-        ] = None,
-        menu_position: Optional[Callable[[], Optional[int]]] = None,
+        search_buffer_control: (
+            None | SearchBufferControl | Callable[[], SearchBufferControl]
+        ) = None,
+        menu_position: Callable[[], int | None] | None = None,
         focus_on_click: FilterOrBool = False,
-        key_bindings: Optional["KeyBindingsBase"] = None,
+        key_bindings: KeyBindingsBase | None = None,
     ):
         self.input_processors = input_processors
         self.include_default_input_processors = include_default_input_processors
@@ -562,15 +564,15 @@ class BufferControl(UIControl):
             Hashable, Callable[[int], StyleAndTextTuples]
         ] = SimpleCache(maxsize=8)
 
-        self._last_click_timestamp: Optional[float] = None
-        self._last_get_processed_line: Optional[Callable[[int], _ProcessedLine]] = None
+        self._last_click_timestamp: float | None = None
+        self._last_get_processed_line: Callable[[int], _ProcessedLine] | None = None
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} buffer={self.buffer!r} at {id(self)!r}>"
 
     @property
-    def search_buffer_control(self) -> Optional["SearchBufferControl"]:
-        result: Optional[SearchBufferControl]
+    def search_buffer_control(self) -> SearchBufferControl | None:
+        result: SearchBufferControl | None
 
         if callable(self._search_buffer_control):
             result = self._search_buffer_control()
@@ -581,7 +583,7 @@ class BufferControl(UIControl):
         return result
 
     @property
-    def search_buffer(self) -> Optional[Buffer]:
+    def search_buffer(self) -> Buffer | None:
         control = self.search_buffer_control
         if control is not None:
             return control.buffer
@@ -604,7 +606,7 @@ class BufferControl(UIControl):
     def is_focusable(self) -> bool:
         return self.focusable()
 
-    def preferred_width(self, max_available_width: int) -> Optional[int]:
+    def preferred_width(self, max_available_width: int) -> int | None:
         """
         This should return the preferred width.
 
@@ -622,8 +624,8 @@ class BufferControl(UIControl):
         width: int,
         max_available_height: int,
         wrap_lines: bool,
-        get_line_prefix: Optional[GetLinePrefixCallable],
-    ) -> Optional[int]:
+        get_line_prefix: GetLinePrefixCallable | None,
+    ) -> int | None:
         # Calculate the content height, if it was drawn on a screen with the
         # given width.
         height = 0
@@ -700,7 +702,7 @@ class BufferControl(UIControl):
 
         def create_func() -> Callable[[int], _ProcessedLine]:
             get_line = self._get_formatted_text_for_line_func(document)
-            cache: Dict[int, _ProcessedLine] = {}
+            cache: dict[int, _ProcessedLine] = {}
 
             def get_processed_line(i: int) -> _ProcessedLine:
                 try:
@@ -819,7 +821,7 @@ class BufferControl(UIControl):
 
         return content
 
-    def mouse_handler(self, mouse_event: MouseEvent) -> "NotImplementedOrNone":
+    def mouse_handler(self, mouse_event: MouseEvent) -> NotImplementedOrNone:
         """
         Mouse handler for this control.
         """
@@ -906,13 +908,13 @@ class BufferControl(UIControl):
         b = self.buffer
         b.cursor_position += b.document.get_cursor_up_position()
 
-    def get_key_bindings(self) -> Optional["KeyBindingsBase"]:
+    def get_key_bindings(self) -> KeyBindingsBase | None:
         """
         When additional key bindings are given. Return these.
         """
         return self.key_bindings
 
-    def get_invalidate_events(self) -> Iterable["Event[object]"]:
+    def get_invalidate_events(self) -> Iterable[Event[object]]:
         """
         Return the Window invalidate events.
         """
@@ -934,11 +936,11 @@ class SearchBufferControl(BufferControl):
 
     def __init__(
         self,
-        buffer: Optional[Buffer] = None,
-        input_processors: Optional[List[Processor]] = None,
-        lexer: Optional[Lexer] = None,
+        buffer: Buffer | None = None,
+        input_processors: list[Processor] | None = None,
+        lexer: Lexer | None = None,
         focus_on_click: FilterOrBool = False,
-        key_bindings: Optional["KeyBindingsBase"] = None,
+        key_bindings: KeyBindingsBase | None = None,
         ignore_case: FilterOrBool = False,
     ):
         super().__init__(

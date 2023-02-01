@@ -2,6 +2,8 @@
 Renders the command line on the console.
 (Redraws parts of the input line that were changed.)
 """
+from __future__ import annotations
+
 from asyncio import FIRST_COMPLETED, Future, ensure_future, sleep, wait
 from collections import deque
 from enum import Enum
@@ -34,20 +36,20 @@ __all__ = [
 
 
 def _output_screen_diff(
-    app: "Application[Any]",
+    app: Application[Any],
     output: Output,
     screen: Screen,
     current_pos: Point,
     color_depth: ColorDepth,
-    previous_screen: Optional[Screen],
-    last_style: Optional[str],
+    previous_screen: Screen | None,
+    last_style: str | None,
     is_done: bool,  # XXX: drop is_done
     full_screen: bool,
-    attrs_for_style_string: "_StyleStringToAttrsCache",
-    style_string_has_style: "_StyleStringHasStyleCache",
+    attrs_for_style_string: _StyleStringToAttrsCache,
+    style_string_has_style: _StyleStringHasStyleCache,
     size: Size,
     previous_width: int,
-) -> Tuple[Point, Optional[str]]:
+) -> tuple[Point, str | None]:
     """
     Render the diff between this screen and the previous screen.
 
@@ -139,7 +141,7 @@ def _output_screen_diff(
             write(char.char)
             last_style = char.style
 
-    def get_max_column_index(row: Dict[int, Char]) -> int:
+    def get_max_column_index(row: dict[int, Char]) -> int:
         """
         Return max used column index, ignoring whitespace (without style) at
         the end of the line. This is important for people that copy/paste
@@ -272,7 +274,7 @@ class _StyleStringToAttrsCache(Dict[str, Attrs]):
 
     def __init__(
         self,
-        get_attrs_for_style_str: Callable[["str"], Attrs],
+        get_attrs_for_style_str: Callable[[str], Attrs],
         style_transformation: StyleTransformation,
     ) -> None:
         self.get_attrs_for_style_str = get_attrs_for_style_str
@@ -297,7 +299,7 @@ class _StyleStringHasStyleCache(Dict[str, bool]):
     output if there's no text in the cell.
     """
 
-    def __init__(self, style_string_to_attrs: Dict[str, Attrs]) -> None:
+    def __init__(self, style_string_to_attrs: dict[str, Attrs]) -> None:
         self.style_string_to_attrs = style_string_to_attrs
 
     def __missing__(self, style_str: str) -> bool:
@@ -341,7 +343,7 @@ class Renderer:
         output: Output,
         full_screen: bool = False,
         mouse_support: FilterOrBool = False,
-        cpr_not_supported_callback: Optional[Callable[[], None]] = None,
+        cpr_not_supported_callback: Callable[[], None] | None = None,
     ) -> None:
         self.style = style
         self.output = output
@@ -362,11 +364,11 @@ class Renderer:
             self.cpr_support = CPR_Support.NOT_SUPPORTED
 
         # Cache for the style.
-        self._attrs_for_style: Optional[_StyleStringToAttrsCache] = None
-        self._style_string_has_style: Optional[_StyleStringHasStyleCache] = None
-        self._last_style_hash: Optional[Hashable] = None
-        self._last_transformation_hash: Optional[Hashable] = None
-        self._last_color_depth: Optional[ColorDepth] = None
+        self._attrs_for_style: _StyleStringToAttrsCache | None = None
+        self._style_string_has_style: _StyleStringHasStyleCache | None = None
+        self._last_style_hash: Hashable | None = None
+        self._last_transformation_hash: Hashable | None = None
+        self._last_color_depth: ColorDepth | None = None
 
         self.reset(_scroll=True)
 
@@ -378,10 +380,10 @@ class Renderer:
         # we can create a `diff` between two screens and only output the
         # difference. It's also to remember the last height. (To show for
         # instance a toolbar at the bottom position.)
-        self._last_screen: Optional[Screen] = None
-        self._last_size: Optional[Size] = None
-        self._last_style: Optional[str] = None
-        self._last_cursor_shape: Optional[CursorShape] = None
+        self._last_screen: Screen | None = None
+        self._last_size: Size | None = None
+        self._last_style: str | None = None
+        self._last_cursor_shape: CursorShape | None = None
 
         # Default MouseHandlers. (Just empty.)
         self.mouse_handlers = MouseHandlers()
@@ -419,7 +421,7 @@ class Renderer:
         self.output.flush()
 
     @property
-    def last_rendered_screen(self) -> Optional[Screen]:
+    def last_rendered_screen(self) -> Screen | None:
         """
         The `Screen` class that was generated during the last rendering.
         This can be `None`.
@@ -578,7 +580,7 @@ class Renderer:
             task.cancel()
 
     def render(
-        self, app: "Application[Any]", layout: "Layout", is_done: bool = False
+        self, app: Application[Any], layout: Layout, is_done: bool = False
     ) -> None:
         """
         Render the current interface to the output.
@@ -763,8 +765,8 @@ def print_formatted_text(
     output: Output,
     formatted_text: AnyFormattedText,
     style: BaseStyle,
-    style_transformation: Optional[StyleTransformation] = None,
-    color_depth: Optional[ColorDepth] = None,
+    style_transformation: StyleTransformation | None = None,
+    color_depth: ColorDepth | None = None,
 ) -> None:
     """
     Print a list of (style_str, text) tuples in the given style to the output.
@@ -776,7 +778,7 @@ def print_formatted_text(
     # Reset first.
     output.reset_attributes()
     output.enable_autowrap()
-    last_attrs: Optional[Attrs] = None
+    last_attrs: Attrs | None = None
 
     # Print all (style_str, text) tuples.
     attrs_for_style_string = _StyleStringToAttrsCache(

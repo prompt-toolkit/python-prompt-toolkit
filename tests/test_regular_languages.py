@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from prompt_toolkit.completion import CompleteEvent, Completer, Completion
 from prompt_toolkit.contrib.regular_languages import compile
 from prompt_toolkit.contrib.regular_languages.compiler import Match, Variables

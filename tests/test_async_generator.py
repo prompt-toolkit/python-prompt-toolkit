@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from asyncio import run
 
 from prompt_toolkit.eventloop import generator_to_async_generator

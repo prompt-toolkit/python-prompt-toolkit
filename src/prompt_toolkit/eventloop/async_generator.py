@@ -1,6 +1,8 @@
 """
 Implementation for async generators.
 """
+from __future__ import annotations
+
 from asyncio import get_running_loop
 from contextlib import asynccontextmanager
 from queue import Empty, Full, Queue
@@ -63,7 +65,7 @@ async def generator_to_async_generator(
     """
     quitting = False
     # NOTE: We are limiting the queue size in order to have back-pressure.
-    q: Queue[Union[_T, _Done]] = Queue(maxsize=buffer_size)
+    q: Queue[_T | _Done] = Queue(maxsize=buffer_size)
     loop = get_running_loop()
 
     def runner() -> None:

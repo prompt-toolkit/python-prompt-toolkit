@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import deque
 from functools import wraps
 from typing import Any, Callable, Deque, Dict, Generic, Hashable, Tuple, TypeVar, cast
@@ -23,7 +25,7 @@ class SimpleCache(Generic[_T, _U]):
     def __init__(self, maxsize: int = 8) -> None:
         assert maxsize > 0
 
-        self._data: Dict[_T, _U] = {}
+        self._data: dict[_T, _U] = {}
         self._keys: Deque[_T] = deque()
         self.maxsize: int = maxsize
 

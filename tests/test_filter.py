@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 
 from prompt_toolkit.filters import Always, Condition, Filter, Never, to_filter

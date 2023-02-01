@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from string import Formatter
 from typing import Generator, List, Optional
 
@@ -32,8 +34,8 @@ class ANSI:
         self._formatted_text: StyleAndTextTuples = []
 
         # Default style attributes.
-        self._color: Optional[str] = None
-        self._bgcolor: Optional[str] = None
+        self._color: str | None = None
+        self._bgcolor: str | None = None
         self._bold = False
         self._underline = False
         self._strike = False
@@ -133,7 +135,7 @@ class ANSI:
                 #       output.
                 formatted_text.append((style, c))
 
-    def _select_graphic_rendition(self, attrs: List[int]) -> None:
+    def _select_graphic_rendition(self, attrs: list[int]) -> None:
         """
         Taken a list of graphics attributes and apply changes.
         """
@@ -253,14 +255,14 @@ class ANSI:
     def __pt_formatted_text__(self) -> StyleAndTextTuples:
         return self._formatted_text
 
-    def format(self, *args: str, **kwargs: str) -> "ANSI":
+    def format(self, *args: str, **kwargs: str) -> ANSI:
         """
         Like `str.format`, but make sure that the arguments are properly
         escaped. (No ANSI escapes can be injected.)
         """
         return ANSI(FORMATTER.vformat(self.value, args, kwargs))
 
-    def __mod__(self, value: object) -> "ANSI":
+    def __mod__(self, value: object) -> ANSI:
         """
         ANSI('<b>%s</b>') % value
         """

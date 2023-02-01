@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import contextvars
 import os
@@ -189,36 +191,33 @@ class Application(Generic[_AppResult]):
 
     def __init__(
         self,
-        layout: Optional[Layout] = None,
-        style: Optional[BaseStyle] = None,
+        layout: Layout | None = None,
+        style: BaseStyle | None = None,
         include_default_pygments_style: FilterOrBool = True,
-        style_transformation: Optional[StyleTransformation] = None,
-        key_bindings: Optional[KeyBindingsBase] = None,
-        clipboard: Optional[Clipboard] = None,
+        style_transformation: StyleTransformation | None = None,
+        key_bindings: KeyBindingsBase | None = None,
+        clipboard: Clipboard | None = None,
         full_screen: bool = False,
-        color_depth: Union[
-            ColorDepth, Callable[[], Union[ColorDepth, None]], None
-        ] = None,
+        color_depth: (ColorDepth | Callable[[], ColorDepth | None] | None) = None,
         mouse_support: FilterOrBool = False,
-        enable_page_navigation_bindings: Optional[
-            FilterOrBool
-        ] = None,  # Can be None, True or False.
+        enable_page_navigation_bindings: None
+        | (FilterOrBool) = None,  # Can be None, True or False.
         paste_mode: FilterOrBool = False,
         editing_mode: EditingMode = EditingMode.EMACS,
         erase_when_done: bool = False,
         reverse_vi_search_direction: FilterOrBool = False,
-        min_redraw_interval: Union[float, int, None] = None,
-        max_render_postpone_time: Union[float, int, None] = 0.01,
-        refresh_interval: Optional[float] = None,
-        terminal_size_polling_interval: Optional[float] = 0.5,
+        min_redraw_interval: float | int | None = None,
+        max_render_postpone_time: float | int | None = 0.01,
+        refresh_interval: float | None = None,
+        terminal_size_polling_interval: float | None = 0.5,
         cursor: AnyCursorShapeConfig = None,
-        on_reset: Optional["ApplicationEventHandler[_AppResult]"] = None,
-        on_invalidate: Optional["ApplicationEventHandler[_AppResult]"] = None,
-        before_render: Optional["ApplicationEventHandler[_AppResult]"] = None,
-        after_render: Optional["ApplicationEventHandler[_AppResult]"] = None,
+        on_reset: ApplicationEventHandler[_AppResult] | None = None,
+        on_invalidate: ApplicationEventHandler[_AppResult] | None = None,
+        before_render: ApplicationEventHandler[_AppResult] | None = None,
+        after_render: ApplicationEventHandler[_AppResult] | None = None,
         # I/O.
-        input: Optional[Input] = None,
-        output: Optional[Output] = None,
+        input: Input | None = None,
+        output: Output | None = None,
     ) -> None:
         # If `enable_page_navigation_bindings` is not specified, enable it in
         # case of full screen applications only. This can be overridden by the user.
@@ -275,12 +274,12 @@ class Application(Generic[_AppResult]):
         self.input = input or session.input
 
         # List of 'extra' functions to execute before a Application.run.
-        self.pre_run_callables: List[Callable[[], None]] = []
+        self.pre_run_callables: list[Callable[[], None]] = []
 
         self._is_running = False
-        self.future: Optional[Future[_AppResult]] = None
-        self.loop: Optional[AbstractEventLoop] = None
-        self.context: Optional[contextvars.Context] = None
+        self.future: Future[_AppResult] | None = None
+        self.loop: AbstractEventLoop | None = None
+        self.context: contextvars.Context | None = None
 
         #: Quoted insert. This flag is set if we go into quoted insert mode.
         self.quoted_insert = False
@@ -325,7 +324,7 @@ class Application(Generic[_AppResult]):
 
         # Invalidate flag. When 'True', a repaint has been scheduled.
         self._invalidated = False
-        self._invalidate_events: List[
+        self._invalidate_events: list[
             Event[object]
         ] = []  # Collection of 'invalidate' Event objects.
         self._last_redraw_time = 0.0  # Unix timestamp of last redraw. Used when
@@ -337,7 +336,7 @@ class Application(Generic[_AppResult]):
         # If `run_in_terminal` was called. This will point to a `Future` what will be
         # set at the point when the previous run finishes.
         self._running_in_terminal = False
-        self._running_in_terminal_f: Optional[Future[None]] = None
+        self._running_in_terminal_f: Future[None] | None = None
 
         # Trigger initialize callback.
         self.reset()
@@ -425,7 +424,7 @@ class Application(Generic[_AppResult]):
 
         self.exit_style = ""
 
-        self._background_tasks: Set[Task[None]] = set()
+        self._background_tasks: set[Task[None]] = set()
 
         self.renderer.reset()
         self.key_processor.reset()
@@ -605,7 +604,7 @@ class Application(Generic[_AppResult]):
         self._request_absolute_cursor_position()
         self._redraw()
 
-    def _pre_run(self, pre_run: Optional[Callable[[], None]] = None) -> None:
+    def _pre_run(self, pre_run: Callable[[], None] | None = None) -> None:
         """
         Called during `run`.
 
@@ -625,7 +624,7 @@ class Application(Generic[_AppResult]):
 
     async def run_async(
         self,
-        pre_run: Optional[Callable[[], None]] = None,
+        pre_run: Callable[[], None] | None = None,
         set_exception_handler: bool = True,
         handle_sigint: bool = True,
         slow_callback_duration: float = 0.5,
@@ -670,7 +669,7 @@ class Application(Generic[_AppResult]):
             # pressed, we start a 'flush' timer for flushing our escape key. But
             # when any subsequent input is received, a new timer is started and
             # the current timer will be ignored.
-            flush_task: Optional[asyncio.Task[None]] = None
+            flush_task: asyncio.Task[None] | None = None
 
             # Reset.
             # (`self.future` needs to be set when `pre_run` is called.)
@@ -840,7 +839,7 @@ class Application(Generic[_AppResult]):
         @contextmanager
         def create_future(
             loop: AbstractEventLoop,
-        ) -> "Iterator[asyncio.Future[_AppResult]]":
+        ) -> Iterator[asyncio.Future[_AppResult]]:
             f = loop.create_future()
             self.future = f  # XXX: make sure to set this before calling '_redraw'.
 
@@ -889,7 +888,7 @@ class Application(Generic[_AppResult]):
 
     def run(
         self,
-        pre_run: Optional[Callable[[], None]] = None,
+        pre_run: Callable[[], None] | None = None,
         set_exception_handler: bool = True,
         handle_sigint: bool = True,
         in_thread: bool = False,
@@ -922,7 +921,7 @@ class Application(Generic[_AppResult]):
         """
         if in_thread:
             result: _AppResult
-            exception: Optional[BaseException] = None
+            exception: BaseException | None = None
 
             def run_in_thread() -> None:
                 nonlocal result, exception
@@ -953,7 +952,7 @@ class Application(Generic[_AppResult]):
         )
 
     def _handle_exception(
-        self, loop: AbstractEventLoop, context: Dict[str, Any]
+        self, loop: AbstractEventLoop, context: dict[str, Any]
     ) -> None:
         """
         Handler for event loop exceptions.
@@ -1029,7 +1028,7 @@ class Application(Generic[_AppResult]):
 
     def create_background_task(
         self, coroutine: Coroutine[Any, Any, None]
-    ) -> "asyncio.Task[None]":
+    ) -> asyncio.Task[None]:
         """
         Start a background task (coroutine) for the running application. When
         the `Application` terminates, unfinished background tasks will be
@@ -1053,7 +1052,7 @@ class Application(Generic[_AppResult]):
         task.add_done_callback(self._on_background_task_done)
         return task
 
-    def _on_background_task_done(self, task: "asyncio.Task[None]") -> None:
+    def _on_background_task_done(self, task: asyncio.Task[None]) -> None:
         """
         Called when a background task completes. Remove it from
         `_background_tasks`, and handle exceptions if any.
@@ -1114,7 +1113,7 @@ class Application(Generic[_AppResult]):
         - If we are not running in the main thread.
         - On Windows.
         """
-        size: Optional[Size] = None
+        size: Size | None = None
         interval = self.terminal_size_polling_interval
 
         if interval is None:
@@ -1153,14 +1152,14 @@ class Application(Generic[_AppResult]):
 
     @overload
     def exit(
-        self, *, exception: Union[BaseException, Type[BaseException]], style: str = ""
+        self, *, exception: BaseException | type[BaseException], style: str = ""
     ) -> None:
         "Exit with exception."
 
     def exit(
         self,
-        result: Optional[_AppResult] = None,
-        exception: Optional[Union[BaseException, Type[BaseException]]] = None,
+        result: _AppResult | None = None,
+        exception: BaseException | type[BaseException] | None = None,
         style: str = "",
     ) -> None:
         """
@@ -1275,7 +1274,7 @@ class Application(Generic[_AppResult]):
             run_in_terminal(run)
 
     def print_text(
-        self, text: AnyFormattedText, style: Optional[BaseStyle] = None
+        self, text: AnyFormattedText, style: BaseStyle | None = None
     ) -> None:
         """
         Print a list of (style_str, text) tuples to the output.
@@ -1304,7 +1303,7 @@ class Application(Generic[_AppResult]):
             return self.future.done()
         return False
 
-    def get_used_style_strings(self) -> List[str]:
+    def get_used_style_strings(self) -> list[str]:
         """
         Return a list of used style strings. This is helpful for debugging, and
         for writing a new `Style`.
@@ -1330,7 +1329,7 @@ class _CombinedRegistry(KeyBindingsBase):
     def __init__(self, app: Application[_AppResult]) -> None:
         self.app = app
         self._cache: SimpleCache[
-            Tuple[Window, FrozenSet[UIControl]], KeyBindingsBase
+            tuple[Window, frozenset[UIControl]], KeyBindingsBase
         ] = SimpleCache()
 
     @property
@@ -1340,13 +1339,13 @@ class _CombinedRegistry(KeyBindingsBase):
         raise NotImplementedError
 
     @property
-    def bindings(self) -> List[Binding]:
+    def bindings(self) -> list[Binding]:
         """Not needed - this object is not going to be wrapped in another
         KeyBindings object."""
         raise NotImplementedError
 
     def _create_key_bindings(
-        self, current_window: Window, other_controls: List[UIControl]
+        self, current_window: Window, other_controls: list[UIControl]
     ) -> KeyBindingsBase:
         """
         Create a `KeyBindings` object that merges the `KeyBindings` from the
@@ -1409,10 +1408,10 @@ class _CombinedRegistry(KeyBindingsBase):
             key, lambda: self._create_key_bindings(current_window, other_controls)
         )
 
-    def get_bindings_for_keys(self, keys: KeysTuple) -> List[Binding]:
+    def get_bindings_for_keys(self, keys: KeysTuple) -> list[Binding]:
         return self._key_bindings.get_bindings_for_keys(keys)
 
-    def get_bindings_starting_with_keys(self, keys: KeysTuple) -> List[Binding]:
+    def get_bindings_starting_with_keys(self, keys: KeysTuple) -> list[Binding]:
         return self._key_bindings.get_bindings_starting_with_keys(keys)
 
 

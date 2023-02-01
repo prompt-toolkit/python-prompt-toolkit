@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 from enum import Enum
 from typing import Optional
@@ -33,7 +35,7 @@ class ColorDepth(str, Enum):
     TRUE_COLOR = DEPTH_24_BIT
 
     @classmethod
-    def from_env(cls) -> Optional["ColorDepth"]:
+    def from_env(cls) -> ColorDepth | None:
         """
         Return the color depth if the $PROMPT_TOOLKIT_COLOR_DEPTH environment
         variable has been set.
@@ -49,7 +51,7 @@ class ColorDepth(str, Enum):
         return None
 
     @classmethod
-    def default(cls) -> "ColorDepth":
+    def default(cls) -> ColorDepth:
         """
         Return the default color depth for the default output.
         """

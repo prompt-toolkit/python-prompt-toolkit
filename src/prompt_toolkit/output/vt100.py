@@ -6,6 +6,8 @@ A lot of thanks, regarding outputting of colors, goes to the Pygments project:
 everything has been highly optimized.)
 http://pygments.org/
 """
+from __future__ import annotations
+
 import io
 import os
 import sys
@@ -159,10 +161,10 @@ class _16ColorCache:
 
     def __init__(self, bg: bool = False) -> None:
         self.bg = bg
-        self._cache: Dict[Hashable, _ColorCodeAndName] = {}
+        self._cache: dict[Hashable, _ColorCodeAndName] = {}
 
     def get_code(
-        self, value: Tuple[int, int, int], exclude: Sequence[str] = ()
+        self, value: tuple[int, int, int], exclude: Sequence[str] = ()
     ) -> _ColorCodeAndName:
         """
         Return a (ansi_code, ansi_name) tuple. (E.g. ``(44, 'ansiblue')``.) for
@@ -177,7 +179,7 @@ class _16ColorCache:
         return cache[key]
 
     def _get(
-        self, value: Tuple[int, int, int], exclude: Sequence[str] = ()
+        self, value: tuple[int, int, int], exclude: Sequence[str] = ()
     ) -> _ColorCodeAndName:
         r, g, b = value
         match = _get_closest_ansi_color(r, g, b, exclude=exclude)
@@ -198,7 +200,7 @@ class _256ColorCache(Dict[Tuple[int, int, int], int]):
 
     def __init__(self) -> None:
         # Build color table.
-        colors: List[Tuple[int, int, int]] = []
+        colors: list[tuple[int, int, int]] = []
 
         # colors 0..15: 16 basic colors
         colors.append((0x00, 0x00, 0x00))  # 0
@@ -234,7 +236,7 @@ class _256ColorCache(Dict[Tuple[int, int, int], int]):
 
         self.colors = colors
 
-    def __missing__(self, value: Tuple[int, int, int]) -> int:
+    def __missing__(self, value: tuple[int, int, int]) -> int:
         r, g, b = value
 
         # Find closest color.
@@ -286,7 +288,7 @@ class _EscapeCodeCache(Dict[Attrs, str]):
             reverse,
             hidden,
         ) = attrs
-        parts: List[str] = []
+        parts: list[str] = []
 
         parts.extend(self._colors_to_code(fgcolor or "", bgcolor or ""))
 
@@ -313,7 +315,7 @@ class _EscapeCodeCache(Dict[Attrs, str]):
         self[attrs] = result
         return result
 
-    def _color_name_to_rgb(self, color: str) -> Tuple[int, int, int]:
+    def _color_name_to_rgb(self, color: str) -> tuple[int, int, int]:
         "Turn 'ffffff', into (0xff, 0xff, 0xff)."
         try:
             rgb = int(color, 16)
@@ -334,7 +336,7 @@ class _EscapeCodeCache(Dict[Attrs, str]):
         # same. (Unless they were explicitly defined to be the same color.)
         fg_ansi = ""
 
-        def get(color: str, bg: bool) -> List[int]:
+        def get(color: str, bg: bool) -> list[int]:
             nonlocal fg_ansi
 
             table = BG_ANSI_COLORS if bg else FG_ANSI_COLORS
@@ -376,14 +378,14 @@ class _EscapeCodeCache(Dict[Attrs, str]):
                 else:
                     return [(48 if bg else 38), 5, _256_colors[rgb]]
 
-        result: List[int] = []
+        result: list[int] = []
         result.extend(get(fg_color, False))
         result.extend(get(bg_color, True))
 
         return map(str, result)
 
 
-def _get_size(fileno: int) -> Tuple[int, int]:
+def _get_size(fileno: int) -> tuple[int, int]:
     """
     Get the size of this pseudo terminal.
 
@@ -410,20 +412,20 @@ class Vt100_Output(Output):
 
     # For the error messages. Only display "Output is not a terminal" once per
     # file descriptor.
-    _fds_not_a_terminal: Set[int] = set()
+    _fds_not_a_terminal: set[int] = set()
 
     def __init__(
         self,
         stdout: TextIO,
         get_size: Callable[[], Size],
-        term: Optional[str] = None,
-        default_color_depth: Optional[ColorDepth] = None,
+        term: str | None = None,
+        default_color_depth: ColorDepth | None = None,
         enable_bell: bool = True,
         enable_cpr: bool = True,
     ) -> None:
         assert all(hasattr(stdout, a) for a in ("write", "flush"))
 
-        self._buffer: List[str] = []
+        self._buffer: list[str] = []
         self.stdout: TextIO = stdout
         self.default_color_depth = default_color_depth
         self._get_size = get_size
@@ -432,7 +434,7 @@ class Vt100_Output(Output):
         self.enable_cpr = enable_cpr
 
         # Cache for escape codes.
-        self._escape_code_caches: Dict[ColorDepth, _EscapeCodeCache] = {
+        self._escape_code_caches: dict[ColorDepth, _EscapeCodeCache] = {
             ColorDepth.DEPTH_1_BIT: _EscapeCodeCache(ColorDepth.DEPTH_1_BIT),
             ColorDepth.DEPTH_4_BIT: _EscapeCodeCache(ColorDepth.DEPTH_4_BIT),
             ColorDepth.DEPTH_8_BIT: _EscapeCodeCache(ColorDepth.DEPTH_8_BIT),
@@ -448,16 +450,16 @@ class Vt100_Output(Output):
     def from_pty(
         cls,
         stdout: TextIO,
-        term: Optional[str] = None,
-        default_color_depth: Optional[ColorDepth] = None,
+        term: str | None = None,
+        default_color_depth: ColorDepth | None = None,
         enable_bell: bool = True,
-    ) -> "Vt100_Output":
+    ) -> Vt100_Output:
         """
         Create an Output class from a pseudo terminal.
         (This will take the dimensions by reading the pseudo
         terminal attributes.)
         """
-        fd: Optional[int]
+        fd: int | None
         # Normally, this requires a real TTY device, but people instantiate
         # this class often during unit tests as well. For convenience, we print
         # an error message, use standard dimensions, and go on.
