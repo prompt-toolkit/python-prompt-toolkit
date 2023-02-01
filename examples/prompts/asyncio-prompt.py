@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 """
-(Python >= 3.6)
 This is an example of how to prompt inside an application that uses the asyncio
 eventloop. The ``prompt_toolkit`` library will make sure that when other
 coroutines are writing to stdout, they write above the prompt, not destroying
