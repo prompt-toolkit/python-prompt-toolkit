@@ -4,6 +4,7 @@ Telnet server.
 from __future__ import annotations
 
 import asyncio
+import contextvars
 import socket
 import sys
 from asyncio import get_running_loop
@@ -34,8 +35,6 @@ from .protocol import (
     WILL,
     TelnetProtocolParser,
 )
-
-import contextvars  # Requires Python3.7!
 
 __all__ = [
     "TelnetServer",
