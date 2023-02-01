@@ -1,14 +1,10 @@
 import asyncio
+import contextvars
 import sys
 import time
 from asyncio import get_running_loop
 from types import TracebackType
 from typing import Any, Awaitable, Callable, Dict, Optional, TypeVar, cast
-
-try:
-    import contextvars
-except ImportError:
-    from . import dummy_contextvars as contextvars  # type: ignore
 
 __all__ = [
     "run_in_executor_with_context",

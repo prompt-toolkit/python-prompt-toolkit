@@ -1,11 +1,7 @@
 import sys
 from contextlib import contextmanager
+from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any, Generator, Optional
-
-try:
-    from contextvars import ContextVar
-except ImportError:
-    from prompt_toolkit.eventloop.dummy_contextvars import ContextVar  # type: ignore
 
 if TYPE_CHECKING:
     from prompt_toolkit.input.base import Input

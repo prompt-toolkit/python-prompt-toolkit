@@ -7,6 +7,7 @@ Progress bar implementation on top of prompt_toolkit.
         for item in pb(data):
             ...
 """
+import contextvars
 import datetime
 import functools
 import os
@@ -54,14 +55,6 @@ from prompt_toolkit.styles import BaseStyle
 from prompt_toolkit.utils import in_main_thread
 
 from .formatters import Formatter, create_default_formatters
-
-try:
-    import contextvars
-except ImportError:
-    from prompt_toolkit.eventloop import dummy_contextvars
-
-    contextvars = dummy_contextvars  # type: ignore
-
 
 __all__ = ["ProgressBar"]
 
