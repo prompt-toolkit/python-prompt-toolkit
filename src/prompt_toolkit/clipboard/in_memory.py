@@ -19,7 +19,6 @@ class InMemoryClipboard(Clipboard):
     def __init__(
         self, data: Optional[ClipboardData] = None, max_size: int = 60
     ) -> None:
-
         assert max_size >= 1
 
         self.max_size = max_size

@@ -79,7 +79,6 @@ class SystemToolbar:
         prompt: AnyFormattedText = "Shell command: ",
         enable_global_bindings: FilterOrBool = True,
     ) -> None:
-
         self.prompt = prompt
         self.enable_global_bindings = to_filter(enable_global_bindings)
 
@@ -222,7 +221,6 @@ class SearchToolbar:
         backward_search_prompt: AnyFormattedText = "I-search backward: ",
         ignore_case: FilterOrBool = False,
     ) -> None:
-
         if search_buffer is None:
             search_buffer = Buffer()
 

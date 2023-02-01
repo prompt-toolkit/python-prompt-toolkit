@@ -40,7 +40,6 @@ class WordCompleter(Completer):
         match_middle: bool = False,
         pattern: Optional[Pattern[str]] = None,
     ) -> None:
-
         assert not (WORD and sentence)
 
         self.words = words

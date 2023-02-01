@@ -179,7 +179,6 @@ class _16ColorCache:
     def _get(
         self, value: Tuple[int, int, int], exclude: Sequence[str] = ()
     ) -> _ColorCodeAndName:
-
         r, g, b = value
         match = _get_closest_ansi_color(r, g, b, exclude=exclude)
 
@@ -422,7 +421,6 @@ class Vt100_Output(Output):
         enable_bell: bool = True,
         enable_cpr: bool = True,
     ) -> None:
-
         assert all(hasattr(stdout, a) for a in ("write", "flush"))
 
         self._buffer: List[str] = []

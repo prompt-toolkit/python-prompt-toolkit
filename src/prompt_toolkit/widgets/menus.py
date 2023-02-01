@@ -43,7 +43,6 @@ class MenuContainer:
         floats: Optional[List[Float]] = None,
         key_bindings: Optional[KeyBindingsBase] = None,
     ) -> None:
-
         self.body = body
         self.menu_items = menu_items
         self.selected_menu = [0]
@@ -358,7 +357,6 @@ class MenuItem:
         shortcut: Optional[Sequence[Union[Keys, str]]] = None,
         disabled: bool = False,
     ) -> None:
-
         self.text = text
         self.handler = handler
         self.children = children or []

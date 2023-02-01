@@ -41,7 +41,6 @@ def main():
         formatters=custom_formatters,
         style=style,
     ) as pb:
-
         for i in pb(range(20), label="Downloading..."):
             time.sleep(1)
 

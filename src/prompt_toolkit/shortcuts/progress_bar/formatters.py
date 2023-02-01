@@ -99,7 +99,6 @@ class Label(Formatter):
         progress: "ProgressBarCounter[object]",
         width: int,
     ) -> AnyFormattedText:
-
         label = self._add_suffix(progress.label)
         cwidth = fragment_list_width(label)
 
@@ -137,7 +136,6 @@ class Percentage(Formatter):
         progress: "ProgressBarCounter[object]",
         width: int,
     ) -> AnyFormattedText:
-
         return HTML(self.template).format(percentage=round(progress.percentage, 1))
 
     def get_width(self, progress_bar: "ProgressBar") -> AnyDimension:
@@ -160,7 +158,6 @@ class Bar(Formatter):
         sym_c: str = " ",
         unknown: str = "#",
     ) -> None:
-
         assert len(sym_a) == 1 and get_cwidth(sym_a) == 1
         assert len(sym_c) == 1 and get_cwidth(sym_c) == 1
 
@@ -224,7 +221,6 @@ class Progress(Formatter):
         progress: "ProgressBarCounter[object]",
         width: int,
     ) -> AnyFormattedText:
-
         return HTML(self.template).format(
             current=progress.items_completed, total=progress.total or "?"
         )
@@ -258,7 +254,6 @@ class TimeElapsed(Formatter):
         progress: "ProgressBarCounter[object]",
         width: int,
     ) -> AnyFormattedText:
-
         text = _format_timedelta(progress.time_elapsed).rjust(width)
         return HTML("<time-elapsed>{time_elapsed}</time-elapsed>").format(
             time_elapsed=text
@@ -287,7 +282,6 @@ class TimeLeft(Formatter):
         progress: "ProgressBarCounter[object]",
         width: int,
     ) -> AnyFormattedText:
-
         time_left = progress.time_left
         if time_left is not None:
             formatted_time_left = _format_timedelta(time_left)
@@ -321,7 +315,6 @@ class IterationsPerSecond(Formatter):
         progress: "ProgressBarCounter[object]",
         width: int,
     ) -> AnyFormattedText:
-
         value = progress.items_completed / progress.time_elapsed.total_seconds()
         return HTML(self.template.format(iterations_per_second=value))
 
@@ -348,7 +341,6 @@ class SpinningWheel(Formatter):
         progress: "ProgressBarCounter[object]",
         width: int,
     ) -> AnyFormattedText:
-
         index = int(time.time() * 3) % len(self.characters)
         return HTML("<spinning-wheel>{0}</spinning-wheel>").format(
             self.characters[index]
@@ -396,7 +388,6 @@ class Rainbow(Formatter):
         progress: "ProgressBarCounter[object]",
         width: int,
     ) -> AnyFormattedText:
-
         # Get formatted text from nested formatter, and explode it in
         # text/style tuples.
         result = self.formatter.format(progress_bar, progress, width)

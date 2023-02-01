@@ -84,7 +84,6 @@ class CompletionState:
         completions: Optional[List["Completion"]] = None,
         complete_index: Optional[int] = None,
     ) -> None:
-
         #: Document as it was when the completion started.
         self.original_document = original_document
 
@@ -156,7 +155,6 @@ class YankNthArgState:
     def __init__(
         self, history_position: int = 0, n: int = -1, previous_inserted_word: str = ""
     ) -> None:
-
         self.history_position = history_position
         self.previous_inserted_word = previous_inserted_word
         self.n = n
@@ -253,7 +251,6 @@ class Buffer:
         on_completions_changed: Optional[BufferEventHandler] = None,
         on_suggestion_set: Optional[BufferEventHandler] = None,
     ):
-
         # Accept both filters and booleans as input.
         enable_history_search = to_filter(enable_history_search)
         complete_while_typing = to_filter(complete_while_typing)
@@ -1720,7 +1717,6 @@ class Buffer:
             insert_common_part: bool = False,
             complete_event: Optional[CompleteEvent] = None,
         ) -> None:
-
             document = self.document
             complete_event = complete_event or CompleteEvent(text_inserted=True)
 

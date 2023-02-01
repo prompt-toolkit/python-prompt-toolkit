@@ -213,7 +213,6 @@ class _Split(Container):
         key_bindings: Optional[KeyBindingsBase] = None,
         style: Union[str, Callable[[], str]] = "",
     ) -> None:
-
         self.children = [to_container(c) for c in children]
         self.window_too_small = window_too_small or _window_too_small()
         self.padding = padding
@@ -287,7 +286,6 @@ class HSplit(_Split):
         key_bindings: Optional[KeyBindingsBase] = None,
         style: Union[str, Callable[[], str]] = "",
     ) -> None:
-
         super().__init__(
             children=children,
             window_too_small=window_too_small,
@@ -525,7 +523,6 @@ class VSplit(_Split):
         key_bindings: Optional[KeyBindingsBase] = None,
         style: Union[str, Callable[[], str]] = "",
     ) -> None:
-
         super().__init__(
             children=children,
             window_too_small=window_too_small,
@@ -769,7 +766,6 @@ class FloatContainer(Container):
         style: Union[str, Callable[[], str]] = "",
         z_index: Optional[int] = None,
     ) -> None:
-
         self.content = to_container(content)
         self.floats = floats
 
@@ -1069,7 +1065,6 @@ class Float:
         z_index: int = 1,
         transparent: bool = False,
     ) -> None:
-
         assert z_index >= 1
 
         self.left = left
@@ -1149,7 +1144,6 @@ class WindowRenderInfo:
         y_offset: int,
         wrap_lines: bool,
     ) -> None:
-
         self.window = window
         self.ui_content = ui_content
         self.vertical_scroll = vertical_scroll
@@ -1342,7 +1336,6 @@ class ScrollOffsets:
         left: Union[int, Callable[[], int]] = 0,
         right: Union[int, Callable[[], int]] = 0,
     ) -> None:
-
         self._top = top
         self._bottom = bottom
         self._left = left
@@ -1490,7 +1483,6 @@ class Window(Container):
         char: Union[None, str, Callable[[], str]] = None,
         get_line_prefix: Optional[GetLinePrefixCallable] = None,
     ) -> None:
-
         self.allow_scroll_beyond_bottom = to_filter(allow_scroll_beyond_bottom)
         self.always_hide_cursor = to_filter(always_hide_cursor)
         self.wrap_lines = to_filter(wrap_lines)
@@ -1551,6 +1543,7 @@ class Window(Container):
         Return the width for this margin.
         (Calculate only once per render time.)
         """
+
         # Margin.get_width, needs to have a UIContent instance.
         def get_ui_content() -> UIContent:
             return self._get_ui_content(width=0, height=0)
@@ -2205,7 +2198,6 @@ class Window(Container):
     def _apply_style(
         self, new_screen: Screen, write_position: WritePosition, parent_style: str
     ) -> None:
-
         # Apply `self.style`.
         style = parent_style + " " + to_str(self.style)
 

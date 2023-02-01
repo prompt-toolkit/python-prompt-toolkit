@@ -37,7 +37,6 @@ class GrammarLexer(Lexer):
         default_style: str = "",
         lexers: Optional[Dict[str, Lexer]] = None,
     ) -> None:
-
         self.compiled_grammar = compiled_grammar
         self.default_style = default_style
         self.lexers = lexers or {}

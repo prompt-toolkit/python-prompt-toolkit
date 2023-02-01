@@ -76,7 +76,6 @@ class NumberedMargin(Margin):
     def __init__(
         self, relative: FilterOrBool = False, display_tildes: FilterOrBool = False
     ) -> None:
-
         self.relative = to_filter(relative)
         self.display_tildes = to_filter(display_tildes)
 
@@ -169,7 +168,6 @@ class ScrollbarMargin(Margin):
         up_arrow_symbol: str = "^",
         down_arrow_symbol: str = "v",
     ) -> None:
-
         self.display_arrows = to_filter(display_arrows)
         self.up_arrow_symbol = up_arrow_symbol
         self.down_arrow_symbol = down_arrow_symbol
@@ -272,7 +270,6 @@ class PromptMargin(Margin):
             Callable[[int, int, bool], StyleAndTextTuples]
         ] = None,
     ) -> None:
-
         self.get_prompt = get_prompt
         self.get_continuation = get_continuation
 

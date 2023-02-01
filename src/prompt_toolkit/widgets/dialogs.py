@@ -45,7 +45,6 @@ class Dialog:
         width: AnyDimension = None,
         with_background: bool = False,
     ) -> None:
-
         self.body = body
         self.title = title
 

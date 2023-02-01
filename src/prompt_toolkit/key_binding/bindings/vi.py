@@ -71,7 +71,6 @@ class TextObject:
     def __init__(
         self, start: int, end: int = 0, type: TextObjectType = TextObjectType.EXCLUSIVE
     ):
-
         self.start = start
         self.end = end
         self.type = type

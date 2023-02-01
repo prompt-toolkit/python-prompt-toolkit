@@ -26,7 +26,6 @@ class GrammarValidator(Validator):
     def __init__(
         self, compiled_grammar: _CompiledGrammar, validators: Dict[str, Validator]
     ) -> None:
-
         self.compiled_grammar = compiled_grammar
         self.validators = validators
 

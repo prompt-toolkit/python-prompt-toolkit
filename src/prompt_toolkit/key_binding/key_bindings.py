@@ -547,7 +547,6 @@ class ConditionalKeyBindings(_Proxy):
     def __init__(
         self, key_bindings: KeyBindingsBase, filter: FilterOrBool = True
     ) -> None:
-
         _Proxy.__init__(self)
 
         self.key_bindings = key_bindings

@@ -134,7 +134,6 @@ class TelnetConnection:
         vt100_input: PipeInput,
         enable_cpr: bool = True,
     ) -> None:
-
         self.conn = conn
         self.addr = addr
         self.interact = interact
@@ -280,7 +279,6 @@ class TelnetServer:
         style: Optional[BaseStyle] = None,
         enable_cpr: bool = True,
     ) -> None:
-
         self.host = host
         self.port = port
         self.interact = interact

@@ -94,7 +94,6 @@ class StdoutProxy:
         sleep_between_writes: float = 0.2,
         raw: bool = False,
     ) -> None:
-
         self.sleep_between_writes = sleep_between_writes
         self.raw = raw
 

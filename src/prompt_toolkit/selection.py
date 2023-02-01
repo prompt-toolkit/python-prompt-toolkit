@@ -44,7 +44,6 @@ class SelectionState:
         original_cursor_position: int = 0,
         type: SelectionType = SelectionType.CHARACTERS,
     ) -> None:
-
         self.original_cursor_position = original_cursor_position
         self.type = type
         self.shift_mode = False

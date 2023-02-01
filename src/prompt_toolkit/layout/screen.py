@@ -156,7 +156,6 @@ class Screen:
         initial_width: int = 0,
         initial_height: int = 0,
     ) -> None:
-
         if default_char is None:
             default_char2 = _CHAR_CACHE[" ", Transparent]
         else:

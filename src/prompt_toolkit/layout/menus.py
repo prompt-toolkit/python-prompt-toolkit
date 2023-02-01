@@ -90,7 +90,6 @@ class CompletionsMenuControl(UIControl):
         wrap_lines: bool,
         get_line_prefix: Optional[GetLinePrefixCallable],
     ) -> Optional[int]:
-
         complete_state = get_app().current_buffer.complete_state
         if complete_state:
             return len(complete_state.completions)
@@ -176,7 +175,6 @@ class CompletionsMenuControl(UIControl):
     def _get_menu_item_meta_fragments(
         self, completion: Completion, is_current_completion: bool, width: int
     ) -> StyleAndTextTuples:
-
         if is_current_completion:
             style_str = "class:completion-menu.meta.completion.current"
         else:
@@ -284,7 +282,6 @@ class CompletionsMenu(ConditionalContainer):
         display_arrows: FilterOrBool = False,
         z_index: int = 10**8,
     ) -> None:
-
         extra_filter = to_filter(extra_filter)
         display_arrows = to_filter(display_arrows)
 
@@ -654,7 +651,6 @@ class MultiColumnCompletionsMenu(HSplit):
         extra_filter: FilterOrBool = True,
         z_index: int = 10**8,
     ) -> None:
-
         show_meta = to_filter(show_meta)
         extra_filter = to_filter(extra_filter)
 

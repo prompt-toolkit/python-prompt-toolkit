@@ -46,7 +46,6 @@ class Completion:
         style: str = "",
         selected_style: str = "",
     ) -> None:
-
         from prompt_toolkit.formatted_text import to_formatted_text
 
         self.text = text
@@ -354,7 +353,6 @@ class ConditionalCompleter(Completer):
     async def get_completions_async(
         self, document: Document, complete_event: CompleteEvent
     ) -> AsyncGenerator[Completion, None]:
-
         # Get all completions in a non-blocking way.
         if self.filter():
             async with aclosing(
@@ -382,7 +380,6 @@ class _MergedCompleter(Completer):
     async def get_completions_async(
         self, document: Document, complete_event: CompleteEvent
     ) -> AsyncGenerator[Completion, None]:
-
         # Get all completions from the other completers in a non-blocking way.
         for completer in self.completers:
             async with aclosing(
@@ -416,6 +413,7 @@ def get_common_complete_suffix(
     """
     Return the common prefix for all completions.
     """
+
     # Take only completions that don't change the text before the cursor.
     def doesnt_change_before_cursor(completion: Completion) -> bool:
         end = completion.text[: -completion.start_position]

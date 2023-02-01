@@ -189,7 +189,6 @@ class PygmentsLexer(Lexer):
         sync_from_start: FilterOrBool = True,
         syntax_sync: Optional[SyntaxSync] = None,
     ) -> None:
-
         self.pygments_lexer_cls = pygments_lexer_cls
         self.sync_from_start = to_filter(sync_from_start)
 

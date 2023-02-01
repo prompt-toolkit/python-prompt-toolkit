@@ -275,7 +275,6 @@ class _StyleStringToAttrsCache(Dict[str, Attrs]):
         get_attrs_for_style_str: Callable[["str"], Attrs],
         style_transformation: StyleTransformation,
     ) -> None:
-
         self.get_attrs_for_style_str = get_attrs_for_style_str
         self.style_transformation = style_transformation
 
@@ -344,7 +343,6 @@ class Renderer:
         mouse_support: FilterOrBool = False,
         cpr_not_supported_callback: Optional[Callable[[], None]] = None,
     ) -> None:
-
         self.style = style
         self.output = output
         self.full_screen = full_screen
@@ -373,7 +371,6 @@ class Renderer:
         self.reset(_scroll=True)
 
     def reset(self, _scroll: bool = False, leave_alternate_screen: bool = True) -> None:
-
         # Reset position
         self._cursor_pos = Point(x=0, y=0)
 

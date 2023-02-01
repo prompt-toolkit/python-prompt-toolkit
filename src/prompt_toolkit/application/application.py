@@ -226,7 +226,6 @@ class Application(Generic[_AppResult]):
         input: Optional[Input] = None,
         output: Optional[Output] = None,
     ) -> None:
-
         # If `enable_page_navigation_bindings` is not specified, enable it in
         # case of full screen applications only. This can be overridden by the user.
         if enable_page_navigation_bindings is None:
@@ -736,7 +735,6 @@ class Application(Generic[_AppResult]):
             with self.input.raw_mode(), self.input.attach(
                 read_from_input
             ), attach_winch_signal_handler(self._on_resize):
-
                 # Draw UI.
                 self._request_absolute_cursor_position()
                 self._redraw()

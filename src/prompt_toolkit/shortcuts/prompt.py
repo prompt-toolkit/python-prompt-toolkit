@@ -418,7 +418,6 @@ class PromptSession(Generic[_T]):
         input: Optional[Input] = None,
         output: Optional[Output] = None,
     ) -> None:
-
         history = history or InMemoryHistory()
         clipboard = clipboard or InMemoryClipboard()
 
@@ -1137,7 +1136,6 @@ class PromptSession(Generic[_T]):
         set_exception_handler: bool = True,
         handle_sigint: bool = True,
     ) -> _T:
-
         if message is not None:
             self.message = message
         if editing_mode is not None:

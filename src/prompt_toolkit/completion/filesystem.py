@@ -30,7 +30,6 @@ class PathCompleter(Completer):
         min_input_len: int = 0,
         expanduser: bool = False,
     ) -> None:
-
         self.only_directories = only_directories
         self.get_paths = get_paths or (lambda: ["."])
         self.file_filter = file_filter or (lambda _: True)
