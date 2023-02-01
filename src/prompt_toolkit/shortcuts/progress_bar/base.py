@@ -16,7 +16,6 @@ import os
 import signal
 import threading
 import traceback
-from asyncio import new_event_loop, set_event_loop
 from typing import (
     Callable,
     Generic,
@@ -156,7 +155,6 @@ class ProgressBar:
 
         self._thread: threading.Thread | None = None
 
-        self._app_loop = new_event_loop()
         self._has_sigwinch = False
         self._app_started = threading.Event()
 
@@ -224,7 +222,6 @@ class ProgressBar:
 
         # Run application in different thread.
         def run() -> None:
-            set_event_loop(self._app_loop)
             try:
                 self.app.run(pre_run=self._app_started.set)
             except BaseException as e:
@@ -245,12 +242,11 @@ class ProgressBar:
         self._app_started.wait()
 
         # Quit UI application.
-        if self.app.is_running:
-            self._app_loop.call_soon_threadsafe(self.app.exit)
+        if self.app.is_running and self.app.loop is not None:
+            self.app.loop.call_soon_threadsafe(self.app.exit)
 
         if self._thread is not None:
             self._thread.join()
-        self._app_loop.close()
 
     def __call__(
         self,
