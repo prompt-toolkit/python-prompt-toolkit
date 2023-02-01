@@ -2,10 +2,10 @@
 Implementation for async generators.
 """
 from asyncio import get_running_loop
+from contextlib import asynccontextmanager
 from queue import Empty, Full, Queue
 from typing import Any, AsyncGenerator, Callable, Iterable, TypeVar, Union
 
-from .async_context_manager import asynccontextmanager
 from .utils import run_in_executor_with_context
 
 __all__ = [
