@@ -943,13 +943,22 @@ class Application(Generic[_AppResult]):
                 raise exception
             return result
 
-        return asyncio.run(
-            self.run_async(
-                pre_run=pre_run,
-                set_exception_handler=set_exception_handler,
-                handle_sigint=handle_sigint,
-            )
+        coro = self.run_async(
+            pre_run=pre_run,
+            set_exception_handler=set_exception_handler,
+            handle_sigint=handle_sigint,
         )
+        try:
+            # See whether a loop was installed already. If so, use that. That's
+            # required for the input hooks to work, they are installed using
+            # `set_event_loop`.
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            # No loop installed. Run like usual.
+            return asyncio.run(coro)
+        else:
+            # Use existing loop.
+            return loop.run_until_complete(coro)
 
     def _handle_exception(
         self, loop: AbstractEventLoop, context: dict[str, Any]
