@@ -11,9 +11,8 @@ import datetime
 import os
 import threading
 from abc import ABCMeta, abstractmethod
+from asyncio import get_running_loop
 from typing import AsyncGenerator, Iterable, List, Optional, Sequence, Tuple
-
-from prompt_toolkit.eventloop import get_event_loop
 
 __all__ = [
     "History",
@@ -135,7 +134,7 @@ class ThreadedHistory(History):
             self._load_thread.start()
 
         # Consume the `_loaded_strings` list, using asyncio.
-        loop = get_event_loop()
+        loop = get_running_loop()
 
         # Create threading Event so that we can wait for new items.
         event = threading.Event()

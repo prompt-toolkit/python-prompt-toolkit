@@ -28,11 +28,9 @@ import select
 import selectors
 import sys
 import threading
-from asyncio import AbstractEventLoop
+from asyncio import AbstractEventLoop, get_running_loop
 from selectors import BaseSelector, SelectorKey
 from typing import TYPE_CHECKING, Any, Callable, List, Mapping, Optional, Tuple
-
-from .utils import get_event_loop
 
 __all__ = [
     "new_eventloop_with_inputhook",
@@ -103,7 +101,7 @@ class InputHookSelector(BaseSelector):
     ) -> List[Tuple["SelectorKey", "_EventMask"]]:
         # If there are tasks in the current event loop,
         # don't run the input hook.
-        if len(getattr(get_event_loop(), "_ready", [])) > 0:
+        if len(getattr(get_running_loop(), "_ready", [])) > 0:
             return self.selector.select(timeout=timeout)
 
         ready = False

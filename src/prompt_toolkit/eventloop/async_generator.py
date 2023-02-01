@@ -1,11 +1,12 @@
 """
 Implementation for async generators.
 """
+from asyncio import get_running_loop
 from queue import Empty, Full, Queue
 from typing import Any, AsyncGenerator, Callable, Iterable, TypeVar, Union
 
 from .async_context_manager import asynccontextmanager
-from .utils import get_event_loop, run_in_executor_with_context
+from .utils import run_in_executor_with_context
 
 __all__ = [
     "aclosing",
@@ -63,7 +64,7 @@ async def generator_to_async_generator(
     quitting = False
     # NOTE: We are limiting the queue size in order to have back-pressure.
     q: Queue[Union[_T, _Done]] = Queue(maxsize=buffer_size)
-    loop = get_event_loop()
+    loop = get_running_loop()
 
     def runner() -> None:
         """

@@ -1,9 +1,8 @@
 import os
 import sys
 from abc import abstractmethod
+from asyncio import get_running_loop
 from contextlib import contextmanager
-
-from prompt_toolkit.eventloop import get_event_loop
 
 from ..utils import SPHINX_AUTODOC_RUNNING
 
@@ -598,7 +597,7 @@ class _Win32Handles:
         # Make sure to remove a previous registered handler first.
         self.remove_win32_handle(handle)
 
-        loop = get_event_loop()
+        loop = get_running_loop()
         self._handle_callbacks[handle_value] = callback
 
         # Create remove event.

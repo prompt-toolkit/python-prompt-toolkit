@@ -267,7 +267,7 @@ class ThreadedCompleter(Completer):
         # def get_all_in_thread() -> List[Completion]:
         #   return list(self.get_completions(document, complete_event))
 
-        # completions = await get_event_loop().run_in_executor(None, get_all_in_thread)
+        # completions = await get_running_loop().run_in_executor(None, get_all_in_thread)
         # for completion in completions:
         #   yield completion
 

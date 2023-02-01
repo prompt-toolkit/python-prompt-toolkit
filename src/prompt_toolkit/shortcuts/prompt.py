@@ -24,6 +24,7 @@ Example::
         s = PromptSession()
         result = s.prompt('Say something: ')
 """
+from asyncio import get_running_loop
 from contextlib import contextmanager
 from enum import Enum
 from functools import partial
@@ -53,7 +54,6 @@ from prompt_toolkit.cursor_shapes import (
 )
 from prompt_toolkit.document import Document
 from prompt_toolkit.enums import DEFAULT_BUFFER, SEARCH_BUFFER, EditingMode
-from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.filters import (
     Condition,
     FilterOrBool,
@@ -1239,7 +1239,7 @@ class PromptSession(Generic[_T]):
                 # order to run it "soon" (during the next iteration of the
                 # event loop), instead of right now. Otherwise, it won't
                 # display the default value.
-                get_event_loop().call_soon(self.default_buffer.validate_and_handle)
+                get_running_loop().call_soon(self.default_buffer.validate_and_handle)
 
         self.app.pre_run_callables.append(pre_run2)
 

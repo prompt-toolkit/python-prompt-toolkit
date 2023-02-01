@@ -4,12 +4,12 @@ Telnet server.
 import asyncio
 import socket
 import sys
+from asyncio import get_running_loop
 from typing import Any, Awaitable, Callable, List, Optional, Set, TextIO, Tuple, cast
 
 from prompt_toolkit.application.current import create_app_session, get_app
 from prompt_toolkit.application.run_in_terminal import run_in_terminal
 from prompt_toolkit.data_structures import Size
-from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.formatted_text import AnyFormattedText, to_formatted_text
 from prompt_toolkit.input import PipeInput, create_pipe_input
 from prompt_toolkit.output.vt100 import Vt100_Output
@@ -193,7 +193,7 @@ class TelnetConnection:
                 self.close()
 
         # Add reader.
-        loop = get_event_loop()
+        loop = get_running_loop()
         loop.add_reader(self.conn, handle_incoming_data)
 
         try:
@@ -219,7 +219,7 @@ class TelnetConnection:
             self._closed = True
 
             self.vt100_input.close()
-            get_event_loop().remove_reader(self.conn)
+            get_running_loop().remove_reader(self.conn)
             self.conn.close()
             self.stdout.close()
 
@@ -310,11 +310,11 @@ class TelnetServer:
             "Listening for telnet connections on %s port %r", self.host, self.port
         )
 
-        get_event_loop().add_reader(self._listen_socket, self._accept)
+        get_running_loop().add_reader(self._listen_socket, self._accept)
 
     async def stop(self) -> None:
         if self._listen_socket:
-            get_event_loop().remove_reader(self._listen_socket)
+            get_running_loop().remove_reader(self._listen_socket)
             self._listen_socket.close()
 
         # Wait for all applications to finish.
@@ -379,5 +379,5 @@ class TelnetServer:
             finally:
                 self._application_tasks.remove(task)
 
-        task = get_event_loop().create_task(run())
+        task = get_running_loop().create_task(run())
         self._application_tasks.append(task)
