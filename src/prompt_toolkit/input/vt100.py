@@ -6,7 +6,7 @@ import contextlib
 import io
 import termios
 import tty
-from asyncio import AbstractEventLoop
+from asyncio import AbstractEventLoop, get_running_loop
 from typing import (
     Callable,
     ContextManager,
@@ -19,8 +19,6 @@ from typing import (
     Tuple,
     Union,
 )
-
-from prompt_toolkit.eventloop import get_event_loop
 
 from ..key_binding import KeyPress
 from .base import Input
@@ -158,7 +156,7 @@ def _attached_input(
     :param input: :class:`~prompt_toolkit.input.Input` object.
     :param callback: Called when the input is ready to read.
     """
-    loop = get_event_loop()
+    loop = get_running_loop()
     fd = input.fileno()
     previous = _current_callbacks.get((loop, fd))
 
@@ -200,7 +198,7 @@ def _attached_input(
 
 @contextlib.contextmanager
 def _detached_input(input: Vt100Input) -> Generator[None, None, None]:
-    loop = get_event_loop()
+    loop = get_running_loop()
     fd = input.fileno()
     previous = _current_callbacks.get((loop, fd))
 

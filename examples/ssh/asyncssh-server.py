@@ -4,13 +4,13 @@ Example of running a prompt_toolkit application in an asyncssh server.
 """
 import asyncio
 import logging
+from asyncio import run
 
 import asyncssh
 from pygments.lexers.html import HtmlLexer
 
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.contrib.ssh import PromptToolkitSSHServer, PromptToolkitSSHSession
-from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.shortcuts import ProgressBar, print_formatted_text
 from prompt_toolkit.shortcuts.dialogs import input_dialog, yes_no_dialog
@@ -101,22 +101,21 @@ async def interact(ssh_session: PromptToolkitSSHSession) -> None:
     await input_dialog("Input dialog", "Running over asyncssh").run_async()
 
 
-def main(port=8222):
+async def main(port=8222):
     # Set up logging.
     logging.basicConfig()
     logging.getLogger().setLevel(logging.DEBUG)
 
-    loop = get_event_loop()
-    loop.run_until_complete(
-        asyncssh.create_server(
-            lambda: PromptToolkitSSHServer(interact),
-            "",
-            port,
-            server_host_keys=["/etc/ssh/ssh_host_ecdsa_key"],
-        )
+    await asyncssh.create_server(
+        lambda: PromptToolkitSSHServer(interact),
+        "",
+        port,
+        server_host_keys=["/etc/ssh/ssh_host_ecdsa_key"],
     )
-    loop.run_forever()
+
+    # Run forever.
+    await asyncio.Future()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

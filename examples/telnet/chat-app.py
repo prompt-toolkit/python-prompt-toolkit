@@ -6,9 +6,9 @@ each other.
 """
 import logging
 import random
+from asyncio import Future, run
 
 from prompt_toolkit.contrib.telnet.server import TelnetServer
-from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.shortcuts import PromptSession, clear
 
@@ -91,11 +91,13 @@ def _send_to_everyone(sender_connection, name, message, color):
             )
 
 
-def main():
+async def main():
     server = TelnetServer(interact=interact, port=2323)
     server.start()
-    get_event_loop().run_forever()
+
+    # Run forever.
+    await Future()
 
 
 if __name__ == "__main__":
-    main()
+    run(main())

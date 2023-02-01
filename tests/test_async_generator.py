@@ -1,4 +1,6 @@
-from prompt_toolkit.eventloop import generator_to_async_generator, get_event_loop
+from asyncio import run
+
+from prompt_toolkit.eventloop import generator_to_async_generator
 
 
 def _sync_generator():
@@ -20,5 +22,5 @@ def test_generator_to_async_generator():
             items.append(item)
 
     # Run the event loop until all items are collected.
-    get_event_loop().run_until_complete(consume_async_generator())
+    run(consume_async_generator())
     assert items == [1, 10]

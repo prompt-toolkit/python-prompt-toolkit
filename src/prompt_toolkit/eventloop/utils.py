@@ -1,6 +1,7 @@
 import asyncio
 import sys
 import time
+from asyncio import get_running_loop
 from types import TracebackType
 from typing import Any, Awaitable, Callable, Dict, Optional, TypeVar, cast
 
@@ -13,7 +14,6 @@ __all__ = [
     "run_in_executor_with_context",
     "call_soon_threadsafe",
     "get_traceback_from_context",
-    "get_event_loop",
 ]
 
 _T = TypeVar("_T")
@@ -30,7 +30,7 @@ def run_in_executor_with_context(
 
     See also: https://bugs.python.org/issue34014
     """
-    loop = loop or get_event_loop()
+    loop = loop or get_running_loop()
     ctx: contextvars.Context = contextvars.copy_context()
 
     return loop.run_in_executor(None, ctx.run, func, *args)
@@ -57,7 +57,7 @@ def call_soon_threadsafe(
     However, we want to set a deadline value, for when the rendering should
     happen. (The UI should stay responsive).
     """
-    loop2 = loop or get_event_loop()
+    loop2 = loop or get_running_loop()
 
     # If no `max_postpone_time` has been given, schedule right now.
     if max_postpone_time is None:
@@ -101,20 +101,3 @@ def get_traceback_from_context(context: Dict[str, Any]) -> Optional[TracebackTyp
             return sys.exc_info()[2]
 
     return None
-
-
-def get_event_loop() -> asyncio.AbstractEventLoop:
-    """Backward compatible way to get the event loop"""
-    # Python 3.6 doesn't have get_running_loop
-    # Python 3.10 deprecated get_event_loop
-    if sys.version_info >= (3, 7):
-        getloop = asyncio.get_running_loop
-    else:
-        getloop = asyncio.get_event_loop
-
-    try:
-        return getloop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        return loop

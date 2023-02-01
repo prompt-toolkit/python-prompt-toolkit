@@ -10,8 +10,7 @@ from asyncio import (
     Future,
     Task,
     ensure_future,
-    new_event_loop,
-    set_event_loop,
+    get_running_loop,
     sleep,
 )
 from contextlib import ExitStack, contextmanager
@@ -49,7 +48,7 @@ from prompt_toolkit.eventloop import (
     get_traceback_from_context,
     run_in_executor_with_context,
 )
-from prompt_toolkit.eventloop.utils import call_soon_threadsafe, get_event_loop
+from prompt_toolkit.eventloop.utils import call_soon_threadsafe
 from prompt_toolkit.filters import Condition, Filter, FilterOrBool, to_filter
 from prompt_toolkit.formatted_text import AnyFormattedText
 from prompt_toolkit.input.base import Input
@@ -458,7 +457,7 @@ class Application(Generic[_AppResult]):
         """
         if not self._is_running:
             # Don't schedule a redraw if we're not running.
-            # Otherwise, `get_event_loop()` in `call_soon_threadsafe` can fail.
+            # Otherwise, `get_running_loop()` in `call_soon_threadsafe` can fail.
             # See: https://github.com/dbcli/mycli/issues/797
             return
 
@@ -787,7 +786,7 @@ class Application(Generic[_AppResult]):
 
         @contextmanager
         def get_loop() -> Iterator[AbstractEventLoop]:
-            loop = get_event_loop()
+            loop = get_running_loop()
             self.loop = loop
 
             try:
@@ -941,14 +940,6 @@ class Application(Generic[_AppResult]):
                     )
                 except BaseException as e:
                     exception = e
-                finally:
-                    # Make sure to close the event loop in this thread. Running
-                    # the application creates a new loop (because we're in
-                    # another thread), but it doesn't get closed automatically
-                    # (also not by the garbage collector).
-                    loop = get_event_loop()
-                    loop.run_until_complete(loop.shutdown_asyncgens())
-                    loop.close()
 
             thread = threading.Thread(target=run_in_thread)
             thread.start()
@@ -958,21 +949,7 @@ class Application(Generic[_AppResult]):
                 raise exception
             return result
 
-        # We don't create a new event loop by default, because we want to be
-        # sure that when this is called multiple times, each call of `run()`
-        # goes through the same event loop. This way, users can schedule
-        # background-tasks that keep running across multiple prompts.
-        try:
-            loop = get_event_loop()
-        except RuntimeError:
-            # Possibly we are not running in the main thread, where no event
-            # loop is set by default. Or somebody called `asyncio.run()`
-            # before, which closes the existing event loop. We can create a new
-            # loop.
-            loop = new_event_loop()
-            set_event_loop(loop)
-
-        return loop.run_until_complete(
+        return asyncio.run(
             self.run_async(
                 pre_run=pre_run,
                 set_exception_handler=set_exception_handler,
@@ -1074,7 +1051,7 @@ class Application(Generic[_AppResult]):
 
         This is not threadsafe.
         """
-        loop = self.loop or get_event_loop()
+        loop = self.loop or get_running_loop()
         task: asyncio.Task[None] = loop.create_task(coroutine)
         self._background_tasks.add(task)
 
@@ -1093,7 +1070,7 @@ class Application(Generic[_AppResult]):
 
         exc = task.exception()
         if exc is not None:
-            get_event_loop().call_exception_handler(
+            get_running_loop().call_exception_handler(
                 {
                     "message": f"prompt_toolkit.Application background task {task!r} "
                     "raised an unexpected exception.",
@@ -1501,7 +1478,7 @@ def attach_winch_signal_handler(
 
     # Keep track of the previous handler.
     # (Only UnixSelectorEventloop has `_signal_handlers`.)
-    loop = get_event_loop()
+    loop = get_running_loop()
     previous_winch_handler = getattr(loop, "_signal_handlers", {}).get(sigwinch)
 
     try:

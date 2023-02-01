@@ -3,13 +3,13 @@ Utility for running a prompt_toolkit application in an asyncssh server.
 """
 import asyncio
 import traceback
+from asyncio import get_running_loop
 from typing import Any, Awaitable, Callable, Optional, TextIO, cast
 
 import asyncssh
 
 from prompt_toolkit.application.current import AppSession, create_app_session
 from prompt_toolkit.data_structures import Size
-from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.input import PipeInput, create_pipe_input
 from prompt_toolkit.output.vt100 import Vt100_Output
 
@@ -75,7 +75,7 @@ class PromptToolkitSSHSession(asyncssh.SSHServerSession):  # type: ignore
         return True
 
     def session_started(self) -> None:
-        self.interact_task = get_event_loop().create_task(self._interact())
+        self.interact_task = get_running_loop().create_task(self._interact())
 
     async def _interact(self) -> None:
         if self._chan is None:
@@ -141,7 +141,7 @@ class PromptToolkitSSHServer(asyncssh.SSHServer):
             print_formatted_text('You said: ', text)
 
         server = PromptToolkitSSHServer(interact=interact)
-        loop = get_event_loop()
+        loop = get_running_loop()
         loop.run_until_complete(
             asyncssh.create_server(
                 lambda: MySSHServer(interact),

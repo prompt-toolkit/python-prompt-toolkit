@@ -7,9 +7,9 @@ Also see the `hello-world-asyncio.py` example which uses an asyncio coroutine.
 That is probably the preferred way if you only need Python 3 support.
 """
 import logging
+from asyncio import Future, run
 
 from prompt_toolkit.contrib.telnet.server import TelnetServer
-from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.shortcuts import PromptSession, clear
 
 # Set up logging
@@ -30,11 +30,13 @@ async def interact(connection):
     connection.send("Bye.\n")
 
 
-def main():
+async def main():
     server = TelnetServer(interact=interact, port=2323)
     server.start()
-    get_event_loop().run_forever()
+
+    # Run forever.
+    await Future()
 
 
 if __name__ == "__main__":
-    main()
+    run(main())
