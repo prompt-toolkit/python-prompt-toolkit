@@ -32,10 +32,7 @@ async def interact(connection):
 
 async def main():
     server = TelnetServer(interact=interact, port=2323)
-    server.start()
-
-    # Run forever.
-    await Future()
+    await server.run()
 
 
 if __name__ == "__main__":
