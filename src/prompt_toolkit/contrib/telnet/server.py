@@ -266,6 +266,18 @@ async def _dummy_interact(connection: TelnetConnection) -> None:
 class TelnetServer:
     """
     Telnet server implementation.
+
+    Example::
+
+        async def interact(connection):
+            connection.send("Welcome")
+            session = PromptSession()
+            result = await session.prompt_async(message="Say something: ")
+            connection.send(f"You said: {result}\n")
+
+        async def main():
+            server = TelnetServer(interact=interact, port=2323)
+            await server.run()
     """
 
     def __init__(
@@ -340,9 +352,9 @@ class TelnetServer:
 
     def start(self) -> None:
         """
-        Start the telnet server (stop by calling and awaiting `stop()`).
+        Deprecated: Use `.run()` instead.
 
-        Note: When possible, it's better to call `.run()` instead.
+        Start the telnet server (stop by calling and awaiting `stop()`).
         """
         if self._run_task is not None:
             # Already running.
@@ -352,6 +364,8 @@ class TelnetServer:
 
     async def stop(self) -> None:
         """
+        Deprecated: Use `.run()` instead.
+
         Stop a telnet server that was started using `.start()` and wait for the
         cancellation to complete.
         """
