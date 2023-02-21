@@ -1,6 +1,26 @@
 CHANGELOG
 =========
 
+3.0.37: 2023-02-21
+------------------
+
+Bug fixes:
+- Fix `currentThread()` deprecation warning.
+- Fix memory leak in filters.
+- Make VERSION tuple numeric.
+
+New features:
+- Add `.run()` method in `TelnetServer`. (To be used instead of
+  `.start()/.stop()`.
+
+Breaking changes:
+- Subclasses of `Filter` have to call `super()` in their `__init__`.
+- Drop support for Python 3.6:
+  * This includes code cleanup for Python 3.6 compatibility.
+  * Use `get_running_loop()` instead of `get_event_loop()`.
+  * Use `asyncio.run()` instead of `asyncio.run_until_complete()`.
+
+
 3.0.36: 2022-12-06
 ------------------
 
