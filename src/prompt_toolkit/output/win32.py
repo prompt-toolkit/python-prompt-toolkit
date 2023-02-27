@@ -525,11 +525,6 @@ class Win32Output(Output):
         if self.default_color_depth is not None:
             return self.default_color_depth
 
-        # For now, by default, always use 4 bit color on Windows 10 by default,
-        # even when vt100 escape sequences with
-        # ENABLE_VIRTUAL_TERMINAL_PROCESSING are supported. We don't have a
-        # reliable way yet to know whether our console supports true color or
-        # only 4-bit.
         return ColorDepth.DEPTH_4_BIT
 
 

@@ -33,6 +33,7 @@ class Windows10_Output:
     def __init__(
         self, stdout: TextIO, default_color_depth: ColorDepth | None = None
     ) -> None:
+        self.default_color_depth = default_color_depth
         self.win32_output = Win32Output(stdout, default_color_depth=default_color_depth)
         self.vt100_output = Vt100_Output(
             stdout, lambda: Size(0, 0), default_color_depth=default_color_depth
@@ -74,11 +75,29 @@ class Windows10_Output:
             "get_win32_screen_buffer_info",
             "enable_bracketed_paste",
             "disable_bracketed_paste",
-            "get_default_color_depth",
         ):
             return getattr(self.win32_output, name)
         else:
             return getattr(self.vt100_output, name)
+
+    def get_default_color_depth(self) -> ColorDepth:
+        """
+        Return the default color depth for a windows terminal.
+
+        Contrary to the Vt100 implementation, this doesn't depend on a $TERM
+        variable.
+        """
+        if self.default_color_depth is not None:
+            return self.default_color_depth
+
+        # Previously, we used `DEPTH_4_BIT`, even on Windows 10. This was
+        # because true color support was added after "Console Virtual Terminal
+        # Sequences" support was added, and there was no good way to detect
+        # what support was given.
+        # 24bit color support was added in 2016, so let's assume it's safe to
+        # take that as a default:
+        # https://devblogs.microsoft.com/commandline/24-bit-color-in-the-windows-console/
+        return ColorDepth.TRUE_COLOR
 
 
 Output.register(Windows10_Output)
