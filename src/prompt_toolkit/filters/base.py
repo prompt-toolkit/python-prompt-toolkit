@@ -15,8 +15,8 @@ class Filter(metaclass=ABCMeta):
     """
 
     def __init__(self) -> None:
-        self._and_cache: dict[Filter, _AndList] = {}
-        self._or_cache: dict[Filter, _OrList] = {}
+        self._and_cache: dict[Filter, Filter] = {}
+        self._or_cache: dict[Filter, Filter] = {}
         self._invert_result: Filter | None = None
 
     @abstractmethod
@@ -40,7 +40,7 @@ class Filter(metaclass=ABCMeta):
         if other in self._and_cache:
             return self._and_cache[other]
 
-        result = _AndList([self, other])
+        result = _AndList.create([self, other])
         self._and_cache[other] = result
         return result
 
@@ -58,7 +58,7 @@ class Filter(metaclass=ABCMeta):
         if other in self._or_cache:
             return self._or_cache[other]
 
-        result = _OrList([self, other])
+        result = _OrList.create([self, other])
         self._or_cache[other] = result
         return result
 
@@ -86,20 +86,49 @@ class Filter(metaclass=ABCMeta):
         )
 
 
+def _remove_duplicates(filters: list[Filter]) -> list[Filter]:
+    result = []
+    for f in filters:
+        if f not in result:
+            result.append(f)
+    return result
+
+
 class _AndList(Filter):
     """
     Result of &-operation between several filters.
     """
 
-    def __init__(self, filters: Iterable[Filter]) -> None:
+    def __init__(self, filters: list[Filter]) -> None:
         super().__init__()
-        self.filters: list[Filter] = []
+        self.filters = filters
+
+    @classmethod
+    def create(cls, filters: Iterable[Filter]) -> Filter:
+        """
+        Create a new filter by applying an `&` operator between them.
+
+        If there's only one unique filter in the given iterable, it will return
+        that one filter instead of an `_AndList`.
+        """
+        filters_2: list[Filter] = []
 
         for f in filters:
             if isinstance(f, _AndList):  # Turn nested _AndLists into one.
-                self.filters.extend(f.filters)
+                filters_2.extend(f.filters)
             else:
-                self.filters.append(f)
+                filters_2.append(f)
+
+        # Remove duplicates. This could speed up execution, and doesn't make a
+        # difference for the evaluation.
+        filters = _remove_duplicates(filters_2)
+
+        # If only one filter is left, return that without wrapping into an
+        # `_AndList`.
+        if len(filters) == 1:
+            return filters[0]
+
+        return cls(filters)
 
     def __call__(self) -> bool:
         return all(f() for f in self.filters)
@@ -113,15 +142,36 @@ class _OrList(Filter):
     Result of |-operation between several filters.
     """
 
-    def __init__(self, filters: Iterable[Filter]) -> None:
+    def __init__(self, filters: list[Filter]) -> None:
         super().__init__()
-        self.filters: list[Filter] = []
+        self.filters = filters
+
+    @classmethod
+    def create(cls, filters: Iterable[Filter]) -> Filter:
+        """
+        Create a new filter by applying an `|` operator between them.
+
+        If there's only one unique filter in the given iterable, it will return
+        that one filter instead of an `_OrList`.
+        """
+        filters_2: list[Filter] = []
 
         for f in filters:
-            if isinstance(f, _OrList):  # Turn nested _OrLists into one.
-                self.filters.extend(f.filters)
+            if isinstance(f, _OrList):  # Turn nested _AndLists into one.
+                filters_2.extend(f.filters)
             else:
-                self.filters.append(f)
+                filters_2.append(f)
+
+        # Remove duplicates. This could speed up execution, and doesn't make a
+        # difference for the evaluation.
+        filters = _remove_duplicates(filters_2)
+
+        # If only one filter is left, return that without wrapping into an
+        # `_AndList`.
+        if len(filters) == 1:
+            return filters[0]
+
+        return cls(filters)
 
     def __call__(self) -> bool:
         return any(f() for f in self.filters)
