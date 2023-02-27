@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-import pytest
 import gc
 
+import pytest
+
 from prompt_toolkit.filters import Always, Condition, Filter, Never, to_filter
+from prompt_toolkit.filters.base import _AndList, _OrList
 
 
 def test_never():
@@ -44,6 +46,32 @@ def test_and():
             assert c3() == (a and b)
 
 
+def test_nested_and():
+    for a in (True, False):
+        for b in (True, False):
+            for c in (True, False):
+                c1 = Condition(lambda: a)
+                c2 = Condition(lambda: b)
+                c3 = Condition(lambda: c)
+                c4 = (c1 & c2) & c3
+
+                assert isinstance(c4, Filter)
+                assert c4() == (a and b and c)
+
+
+def test_nested_or():
+    for a in (True, False):
+        for b in (True, False):
+            for c in (True, False):
+                c1 = Condition(lambda: a)
+                c2 = Condition(lambda: b)
+                c3 = Condition(lambda: c)
+                c4 = (c1 | c2) | c3
+
+                assert isinstance(c4, Filter)
+                assert c4() == (a or b or c)
+
+
 def test_to_filter():
     f1 = to_filter(True)
     f2 = to_filter(False)
@@ -75,6 +103,7 @@ def test_filter_cache_regression_1():
     y = (cond & cond) & cond
     assert x == y
 
+
 def test_filter_cache_regression_2():
     cond1 = Condition(lambda: True)
     cond2 = Condition(lambda: True)
@@ -83,3 +112,22 @@ def test_filter_cache_regression_2():
     x = (cond1 & cond2) & cond3
     y = (cond1 & cond2) & cond3
     assert x == y
+
+
+def test_filter_remove_duplicates():
+    cond1 = Condition(lambda: True)
+    cond2 = Condition(lambda: True)
+
+    # When a condition is appended to itself using an `&` or `|` operator, it
+    # should not be present twice. Having it twice in the `_AndList` or
+    # `_OrList` will make them more expensive to evaluate.
+
+    assert isinstance(cond1 & cond1, Condition)
+    assert isinstance(cond1 & cond1 & cond1, Condition)
+    assert isinstance(cond1 & cond1 & cond2, _AndList)
+    assert len((cond1 & cond1 & cond2).filters) == 2
+
+    assert isinstance(cond1 | cond1, Condition)
+    assert isinstance(cond1 | cond1 | cond1, Condition)
+    assert isinstance(cond1 | cond1 | cond2, _OrList)
+    assert len((cond1 | cond1 | cond2).filters) == 2
