@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import weakref
 from abc import ABCMeta, abstractmethod
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
 
@@ -16,12 +15,8 @@ class Filter(metaclass=ABCMeta):
     """
 
     def __init__(self) -> None:
-        self._and_cache: weakref.WeakValueDictionary[
-            Filter, _AndList
-        ] = weakref.WeakValueDictionary()
-        self._or_cache: weakref.WeakValueDictionary[
-            Filter, _OrList
-        ] = weakref.WeakValueDictionary()
+        self._and_cache: dict[Filter, _AndList] = {}
+        self._or_cache: dict[Filter, _OrList] = {}
         self._invert_result: Filter | None = None
 
     @abstractmethod

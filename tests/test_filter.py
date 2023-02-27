@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+import gc
 
 from prompt_toolkit.filters import Always, Condition, Filter, Never, to_filter
 
@@ -60,3 +61,25 @@ def test_to_filter():
 
     with pytest.raises(TypeError):
         to_filter(4)
+
+
+def test_filter_cache_regression_1():
+    # See: https://github.com/prompt-toolkit/python-prompt-toolkit/issues/1729
+
+    cond = Condition(lambda: True)
+
+    # The use of a `WeakValueDictionary` caused this following expression to
+    # fail. The problem is that the nested `(a & a)` expression gets garbage
+    # collected between the two statements and is removed from our cache.
+    x = (cond & cond) & cond
+    y = (cond & cond) & cond
+    assert x == y
+
+def test_filter_cache_regression_2():
+    cond1 = Condition(lambda: True)
+    cond2 = Condition(lambda: True)
+    cond3 = Condition(lambda: True)
+
+    x = (cond1 & cond2) & cond3
+    y = (cond1 & cond2) & cond3
+    assert x == y
