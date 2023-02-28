@@ -1,6 +1,17 @@
 CHANGELOG
 =========
 
+3.0.38: 2023-02-28
+------------------
+
+Fixes:
+- Fix regression in filters. (Use of `WeakValueDictionary` caused filters to
+  not be cached).
+
+New features:
+- Use 24-bit true color now by default on Windows 10/11.
+
+
 3.0.37: 2023-02-21
 ------------------
 
