@@ -27,7 +27,7 @@ from .formatted_text import ANSI, HTML
 from .shortcuts import PromptSession, print_formatted_text, prompt
 
 # Don't forget to update in `docs/conf.py`!
-__version__ = "3.0.37"
+__version__ = "3.0.38"
 
 assert pep440.match(__version__)
 
