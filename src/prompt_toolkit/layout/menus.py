@@ -2,18 +2,7 @@ from __future__ import annotations
 
 import math
 from itertools import zip_longest
-from typing import (
-    TYPE_CHECKING,
-    Callable,
-    Dict,
-    Iterable,
-    Optional,
-    Sequence,
-    Tuple,
-    TypeVar,
-    Union,
-    cast,
-)
+from typing import TYPE_CHECKING, Callable, Iterable, Sequence, Tuple, TypeVar, cast
 from weakref import WeakKeyDictionary
 
 from prompt_toolkit.application.current import get_app

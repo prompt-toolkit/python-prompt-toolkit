@@ -5,7 +5,7 @@ See: http://www.delorie.com/gnu/docs/readline/rlman_13.html
 """
 from __future__ import annotations
 
-from typing import Callable, Dict, TypeVar, Union, cast
+from typing import Callable, TypeVar, Union, cast
 
 from prompt_toolkit.document import Document
 from prompt_toolkit.enums import EditingMode

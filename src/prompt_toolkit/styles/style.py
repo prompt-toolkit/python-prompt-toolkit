@@ -6,7 +6,7 @@ from __future__ import annotations
 import itertools
 import re
 from enum import Enum
-from typing import Dict, Hashable, List, Set, Tuple, TypeVar
+from typing import Hashable, TypeVar
 
 from prompt_toolkit.cache import SimpleCache
 

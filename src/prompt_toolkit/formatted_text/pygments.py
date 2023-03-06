@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Tuple
+from typing import TYPE_CHECKING
 
 from prompt_toolkit.styles.pygments import pygments_token_to_classname
 

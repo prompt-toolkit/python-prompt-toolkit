@@ -8,16 +8,7 @@ from __future__ import annotations
 
 import re
 from abc import ABCMeta, abstractmethod
-from typing import (
-    TYPE_CHECKING,
-    Callable,
-    Dict,
-    Generator,
-    Iterable,
-    Optional,
-    Tuple,
-    Type,
-)
+from typing import TYPE_CHECKING, Callable, Dict, Generator, Iterable, Tuple
 
 from prompt_toolkit.document import Document
 from prompt_toolkit.filters import FilterOrBool, to_filter

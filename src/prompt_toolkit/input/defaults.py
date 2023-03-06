@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import io
 import sys
-from typing import ContextManager, Optional, TextIO
+from typing import ContextManager, TextIO
 
 from .base import DummyInput, Input, PipeInput
 

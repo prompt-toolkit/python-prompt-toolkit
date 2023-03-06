@@ -3,8 +3,6 @@ Validator for a regular language.
 """
 from __future__ import annotations
 
-from typing import Dict
-
 from prompt_toolkit.document import Document
 from prompt_toolkit.validation import ValidationError, Validator
 

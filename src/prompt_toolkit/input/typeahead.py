@@ -34,7 +34,6 @@ the next prompt_toolkit `Application`.
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Dict, List
 
 from ..key_binding import KeyPress
 from .base import Input

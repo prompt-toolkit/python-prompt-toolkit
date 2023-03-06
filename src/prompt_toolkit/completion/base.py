@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import AsyncGenerator, Callable, Iterable, Optional, Sequence
+from typing import AsyncGenerator, Callable, Iterable, Sequence
 
 from prompt_toolkit.document import Document
 from prompt_toolkit.eventloop import aclosing, generator_to_async_generator

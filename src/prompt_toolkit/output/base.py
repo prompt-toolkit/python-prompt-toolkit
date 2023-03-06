@@ -4,7 +4,7 @@ Interface for an output.
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import Optional, TextIO
+from typing import TextIO
 
 from prompt_toolkit.cursor_shapes import CursorShape
 from prompt_toolkit.data_structures import Size

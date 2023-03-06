@@ -17,7 +17,6 @@ Limitations:
 from __future__ import annotations
 
 import re
-from typing import List, Optional
 
 __all__ = [
     "Repeat",

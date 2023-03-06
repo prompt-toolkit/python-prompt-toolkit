@@ -43,8 +43,6 @@ from typing import (
     Awaitable,
     Callable,
     Hashable,
-    List,
-    Optional,
     Sequence,
     Tuple,
     TypeVar,

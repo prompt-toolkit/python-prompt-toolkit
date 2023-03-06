@@ -9,18 +9,7 @@ import io
 import termios
 import tty
 from asyncio import AbstractEventLoop, get_running_loop
-from typing import (
-    Callable,
-    ContextManager,
-    Dict,
-    Generator,
-    List,
-    Optional,
-    Set,
-    TextIO,
-    Tuple,
-    Union,
-)
+from typing import Callable, ContextManager, Generator, TextIO
 
 from ..key_binding import KeyPress
 from .base import Input

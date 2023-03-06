@@ -7,17 +7,7 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from functools import partial
-from typing import (
-    TYPE_CHECKING,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-    cast,
-)
+from typing import TYPE_CHECKING, Callable, Sequence, Union, cast
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.cache import SimpleCache

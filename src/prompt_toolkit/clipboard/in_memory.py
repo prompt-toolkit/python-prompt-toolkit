@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import deque
-from typing import Deque, Optional
+from typing import Deque
 
 from .base import Clipboard, ClipboardData
 

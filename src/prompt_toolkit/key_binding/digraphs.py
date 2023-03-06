@@ -8,8 +8,6 @@ https://raw.githubusercontent.com/neovim/neovim/master/src/nvim/digraph.c
 """
 from __future__ import annotations
 
-from typing import Dict, Tuple
-
 __all__ = [
     "DIGRAPHS",
 ]

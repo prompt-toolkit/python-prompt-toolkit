@@ -7,17 +7,7 @@ import bisect
 import re
 import string
 import weakref
-from typing import (
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    NoReturn,
-    Optional,
-    Pattern,
-    Tuple,
-    cast,
-)
+from typing import Callable, Dict, Iterable, List, NoReturn, Pattern, cast
 
 from .clipboard import ClipboardData
 from .filters import vi_mode

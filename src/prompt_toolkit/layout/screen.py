@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import TYPE_CHECKING, Callable, DefaultDict, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, DefaultDict
 
 from prompt_toolkit.cache import FastDictCache
 from prompt_toolkit.data_structures import Point

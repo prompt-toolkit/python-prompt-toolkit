@@ -8,7 +8,7 @@ instead of calling these function directly.)
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import TYPE_CHECKING
 
 from .application.current import get_app
 from .filters import FilterOrBool, is_searching, to_filter

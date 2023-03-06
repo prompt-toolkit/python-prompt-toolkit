@@ -41,9 +41,9 @@ Partial matches are possible::
 from __future__ import annotations
 
 import re
-from typing import Callable, Dict, Iterable, Iterator, List
+from typing import Callable, Dict, Iterable, Iterator
 from typing import Match as RegexMatch
-from typing import Optional, Pattern, Tuple
+from typing import Pattern
 
 from .regex_parser import (
     AnyNode,

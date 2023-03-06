@@ -6,9 +6,8 @@ from __future__ import annotations
 import asyncio
 import contextvars
 import socket
-import sys
 from asyncio import get_running_loop
-from typing import Any, Awaitable, Callable, List, Optional, Set, TextIO, Tuple, cast
+from typing import Awaitable, Callable, TextIO, cast
 
 from prompt_toolkit.application.current import create_app_session, get_app
 from prompt_toolkit.application.run_in_terminal import run_in_terminal
