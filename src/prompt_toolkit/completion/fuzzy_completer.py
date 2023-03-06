@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
+from typing import Callable, Iterable, NamedTuple
 
 from prompt_toolkit.document import Document
 from prompt_toolkit.filters import FilterOrBool, to_filter

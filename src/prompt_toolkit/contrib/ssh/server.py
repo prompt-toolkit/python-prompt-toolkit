@@ -6,7 +6,7 @@ from __future__ import annotations
 import asyncio
 import traceback
 from asyncio import get_running_loop
-from typing import Any, Awaitable, Callable, Optional, TextIO, cast
+from typing import Any, Awaitable, Callable, TextIO, cast
 
 import asyncssh
 

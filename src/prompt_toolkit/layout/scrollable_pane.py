@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Dict, List, Optional
-
 from prompt_toolkit.data_structures import Point
 from prompt_toolkit.filters import FilterOrBool, to_filter
 from prompt_toolkit.key_binding import KeyBindingsBase

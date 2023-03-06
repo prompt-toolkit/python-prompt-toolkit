@@ -4,7 +4,7 @@ import sys
 
 assert sys.platform == "win32"
 
-from typing import Any, Optional, TextIO
+from typing import Any, TextIO
 
 from prompt_toolkit.data_structures import Size
 

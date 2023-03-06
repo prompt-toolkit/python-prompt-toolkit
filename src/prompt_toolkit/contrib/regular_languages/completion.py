@@ -3,7 +3,7 @@ Completer for a regular grammar.
 """
 from __future__ import annotations
 
-from typing import Dict, Iterable, List
+from typing import Iterable
 
 from prompt_toolkit.completion import CompleteEvent, Completer, Completion
 from prompt_toolkit.document import Document

@@ -3,7 +3,7 @@ Wrapper for the layout.
 """
 from __future__ import annotations
 
-from typing import Dict, Generator, Iterable, List, Optional, Union
+from typing import Generator, Iterable, Union
 
 from prompt_toolkit.buffer import Buffer
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys
 from contextlib import contextmanager
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Any, Generator, Optional
+from typing import TYPE_CHECKING, Any, Generator
 
 if TYPE_CHECKING:
     from prompt_toolkit.input.base import Input

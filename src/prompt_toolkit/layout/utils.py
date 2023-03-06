@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterable, List, TypeVar, Union, cast, overload
+from typing import TYPE_CHECKING, Iterable, List, TypeVar, cast, overload
 
 from prompt_toolkit.formatted_text.base import OneStyleAndTextTuple
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import xml.dom.minidom as minidom
 from string import Formatter
-from typing import Any, List
+from typing import Any
 
 from .base import FormattedText, StyleAndTextTuples
 

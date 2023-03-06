@@ -18,16 +18,7 @@ if not SPHINX_AUTODOC_RUNNING:
 
 from ctypes import Array, pointer
 from ctypes.wintypes import DWORD, HANDLE
-from typing import (
-    Callable,
-    ContextManager,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    TextIO,
-)
+from typing import Callable, ContextManager, Iterable, Iterator, TextIO
 
 from prompt_toolkit.eventloop import run_in_executor_with_context
 from prompt_toolkit.eventloop.win32 import create_win32_event, wait_for_handles

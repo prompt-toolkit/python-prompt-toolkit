@@ -10,7 +10,7 @@ from __future__ import annotations
 import weakref
 from asyncio import Task, sleep
 from collections import deque
-from typing import TYPE_CHECKING, Any, Deque, Generator, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Deque, Generator
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.enums import EditingMode

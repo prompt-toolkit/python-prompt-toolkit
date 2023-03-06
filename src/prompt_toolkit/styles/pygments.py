@@ -8,7 +8,7 @@ Usage::
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Type
+from typing import TYPE_CHECKING
 
 from .style import Style
 

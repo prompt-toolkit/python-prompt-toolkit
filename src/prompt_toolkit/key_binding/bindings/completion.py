@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import asyncio
 import math
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from prompt_toolkit.application.run_in_terminal import in_terminal
 from prompt_toolkit.completion import (

@@ -12,8 +12,6 @@ from typing import (
     Dict,
     Generator,
     Generic,
-    List,
-    Optional,
     TypeVar,
     Union,
 )

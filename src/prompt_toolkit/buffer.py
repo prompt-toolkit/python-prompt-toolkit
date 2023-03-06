@@ -15,21 +15,7 @@ import tempfile
 from collections import deque
 from enum import Enum
 from functools import wraps
-from typing import (
-    Any,
-    Awaitable,
-    Callable,
-    Coroutine,
-    Deque,
-    Iterable,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    TypeVar,
-    Union,
-    cast,
-)
+from typing import Any, Awaitable, Callable, Coroutine, Deque, Iterable, TypeVar, cast
 
 from .application.current import get_app
 from .application.run_in_terminal import run_in_terminal

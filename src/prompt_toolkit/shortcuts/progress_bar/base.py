@@ -21,8 +21,6 @@ from typing import (
     Generic,
     Iterable,
     Iterator,
-    List,
-    Optional,
     Sequence,
     Sized,
     TextIO,

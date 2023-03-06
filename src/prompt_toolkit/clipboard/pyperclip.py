@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 import pyperclip
 
 from prompt_toolkit.selection import SelectionType

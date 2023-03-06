@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Optional
+from typing import Callable
 
 from prompt_toolkit.formatted_text import AnyFormattedText
 from prompt_toolkit.input import DummyInput

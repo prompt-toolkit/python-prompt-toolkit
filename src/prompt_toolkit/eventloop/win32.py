@@ -14,7 +14,6 @@ if not SPHINX_AUTODOC_RUNNING:
     from ctypes import windll
 
 from ctypes.wintypes import BOOL, DWORD, HANDLE
-from typing import List, Optional
 
 from prompt_toolkit.win32_types import SECURITY_ATTRIBUTES
 

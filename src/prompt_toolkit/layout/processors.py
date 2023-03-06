@@ -9,17 +9,7 @@ from __future__ import annotations
 
 import re
 from abc import ABCMeta, abstractmethod
-from typing import (
-    TYPE_CHECKING,
-    Callable,
-    Hashable,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-    cast,
-)
+from typing import TYPE_CHECKING, Callable, Hashable, cast
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.cache import SimpleCache

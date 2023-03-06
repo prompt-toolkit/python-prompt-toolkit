@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sys
-from typing import Optional, TextIO, cast
+from typing import TextIO, cast
 
 from prompt_toolkit.utils import (
     get_bell_environment_variable,

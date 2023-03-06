@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import List, Optional
-
 from .key_processor import KeyPress
 
 __all__ = [

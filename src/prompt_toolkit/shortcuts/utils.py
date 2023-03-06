@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from asyncio.events import AbstractEventLoop
-from typing import TYPE_CHECKING, Any, Optional, TextIO
+from typing import TYPE_CHECKING, Any, TextIO
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app_or_none, get_app_session

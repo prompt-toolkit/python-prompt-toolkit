@@ -15,7 +15,7 @@ if not SPHINX_AUTODOC_RUNNING:
     from ctypes import windll
 
 from ctypes.wintypes import DWORD, HANDLE
-from typing import Callable, Dict, List, Optional, TextIO, Tuple, Type, TypeVar, Union
+from typing import Callable, TextIO, TypeVar
 
 from prompt_toolkit.cursor_shapes import CursorShape
 from prompt_toolkit.data_structures import Size

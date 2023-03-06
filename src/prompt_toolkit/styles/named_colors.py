@@ -4,8 +4,6 @@ Taken from: https://www.w3schools.com/colors/colors_names.asp
 """
 from __future__ import annotations
 
-from typing import Dict
-
 __all__ = [
     "NAMED_COLORS",
 ]
