@@ -271,6 +271,7 @@ class Application(Generic[_AppResult]):
         self._is_running = False
         self.future: Future[_AppResult] | None = None
         self.loop: AbstractEventLoop | None = None
+        self._loop_thread: threading.Thread | None = None
         self.context: contextvars.Context | None = None
 
         #: Quoted insert. This flag is set if we go into quoted insert mode.
@@ -771,14 +772,16 @@ class Application(Generic[_AppResult]):
                 return result
 
         @contextmanager
-        def get_loop() -> Iterator[AbstractEventLoop]:
+        def set_loop() -> Iterator[AbstractEventLoop]:
             loop = get_running_loop()
             self.loop = loop
+            self._loop_thread = threading.current_thread()
 
             try:
                 yield loop
             finally:
                 self.loop = None
+                self._loop_thread = None
 
         @contextmanager
         def set_is_running() -> Iterator[None]:
@@ -853,7 +856,7 @@ class Application(Generic[_AppResult]):
             # `max_postpone_time`.
             self._invalidated = False
 
-            loop = stack.enter_context(get_loop())
+            loop = stack.enter_context(set_loop())
 
             stack.enter_context(set_handle_sigint(loop))
             stack.enter_context(set_exception_handler_ctx(loop))
@@ -999,6 +1002,10 @@ class Application(Generic[_AppResult]):
         """
         Breakpointhook which uses PDB, but ensures that the application is
         hidden and input echoing is restored during each debugger dispatch.
+
+        This can be called from any thread. In any case, the application's
+        event loop will be blocked while the PDB input is displayed. The event
+        will continue after leaving the debugger.
         """
         app = self
         # Inline import on purpose. We don't want to import pdb, if not needed.
@@ -1007,22 +1014,71 @@ class Application(Generic[_AppResult]):
 
         TraceDispatch = Callable[[FrameType, str, Any], Any]
 
-        class CustomPdb(pdb.Pdb):
-            def trace_dispatch(
-                self, frame: FrameType, event: str, arg: Any
-            ) -> TraceDispatch:
+        @contextmanager
+        def hide_app_from_eventloop_thread() -> Generator[None, None, None]:
+            """Stop application if `__breakpointhook__` is called from within
+            the App's event loop."""
+            # Hide application.
+            app.renderer.erase()
+
+            # Detach input and dispatch to debugger.
+            with app.input.detach():
+                with app.input.cooked_mode():
+                    yield
+
+            # Note: we don't render the application again here, because
+            # there's a good chance that there's a breakpoint on the next
+            # line. This paint/erase cycle would move the PDB prompt back
+            # to the middle of the screen.
+
+        @contextmanager
+        def hide_app_from_other_thread() -> Generator[None, None, None]:
+            """Stop application if `__breakpointhook__` is called from a
+            thread other than the App's event loop."""
+            ready = threading.Event()
+            done = threading.Event()
+
+            async def in_loop() -> None:
+                # from .run_in_terminal import in_terminal
+                # async with in_terminal():
+                #     ready.set()
+                #     await asyncio.get_running_loop().run_in_executor(None, done.wait)
+                #     return
+
                 # Hide application.
                 app.renderer.erase()
 
                 # Detach input and dispatch to debugger.
                 with app.input.detach():
                     with app.input.cooked_mode():
+                        ready.set()
+                        # Here we block the App's event loop thread until the
+                        # debugger resumes. We could have used `with
+                        # run_in_terminal.in_terminal():` like the commented
+                        # code above, but it seems to work better if we
+                        # completely stop the main event loop while debugging.
+                        done.wait()
+
+            self.create_background_task(in_loop())
+            ready.wait()
+            try:
+                yield
+            finally:
+                done.set()
+
+        class CustomPdb(pdb.Pdb):
+            def trace_dispatch(
+                self, frame: FrameType, event: str, arg: Any
+            ) -> TraceDispatch:
+                if app._loop_thread is None:
+                    return super().trace_dispatch(frame, event, arg)
+
+                if app._loop_thread == threading.current_thread():
+                    with hide_app_from_eventloop_thread():
                         return super().trace_dispatch(frame, event, arg)
 
-                # Note: we don't render the application again here, because
-                # there's a good chance that there's a breakpoint on the next
-                # line. This paint/erase cycle would move the PDB prompt back
-                # to the middle of the screen.
+                with hide_app_from_other_thread():
+                    return super().trace_dispatch(frame, event, arg)
 
         frame = sys._getframe().f_back
         CustomPdb(stdout=sys.__stdout__).set_trace(frame)
