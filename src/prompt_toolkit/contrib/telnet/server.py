@@ -64,7 +64,7 @@ def _initialize_telnet(connection: socket.socket) -> None:
     connection.send(IAC + DO + NAWS)
 
     # Negotiate terminal type
-    # Assume the client will accept the negociation with `IAC +  WILL + TTYPE`
+    # Assume the client will accept the negotiation with `IAC +  WILL + TTYPE`
     connection.send(IAC + DO + TTYPE)
 
     # We can then select the first terminal type supported by the client,

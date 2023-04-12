@@ -1030,7 +1030,7 @@ def load_vi_bindings() -> KeyBindingsBase:
         buff.transform_current_line(lambda s: s.swapcase())
 
     @handle("#", filter=vi_navigation_mode)
-    def _prev_occurence(event: E) -> None:
+    def _prev_occurrence(event: E) -> None:
         """
         Go to previous occurrence of this word.
         """
@@ -1043,7 +1043,7 @@ def load_vi_bindings() -> KeyBindingsBase:
         b.apply_search(search_state, count=event.arg, include_current_position=False)
 
     @handle("*", filter=vi_navigation_mode)
-    def _next_occurance(event: E) -> None:
+    def _next_occurrence(event: E) -> None:
         """
         Go to next occurrence of this word.
         """
@@ -1411,7 +1411,7 @@ def load_vi_bindings() -> KeyBindingsBase:
         return TextObject(index)
 
     @text_object("f", Keys.Any)
-    def _next_occurence(event: E) -> TextObject:
+    def _find_next_occurrence(event: E) -> TextObject:
         """
         Go to next occurrence of character. Typing 'fx' will move the
         cursor to the next occurrence of character. 'x'.
@@ -1426,7 +1426,7 @@ def load_vi_bindings() -> KeyBindingsBase:
             return TextObject(0)
 
     @text_object("F", Keys.Any)
-    def _previous_occurance(event: E) -> TextObject:
+    def _find_previous_occurrence(event: E) -> TextObject:
         """
         Go to previous occurrence of character. Typing 'Fx' will move the
         cursor to the previous occurrence of character. 'x'.

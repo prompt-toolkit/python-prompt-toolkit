@@ -206,7 +206,7 @@ class Output(metaclass=ABCMeta):
         """
         Get default color depth for this output.
 
-        This value will be used if no color depth was explicitely passed to the
+        This value will be used if no color depth was explicitly passed to the
         `Application`.
 
         .. note::

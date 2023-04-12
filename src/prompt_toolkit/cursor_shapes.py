@@ -26,7 +26,7 @@ class CursorShape(Enum):
     # before this `CursorShape` functionality was introduced into
     # prompt_toolkit itself, people had workarounds to send cursor shapes
     # escapes into the terminal, by monkey patching some of prompt_toolkit's
-    # internals. We don't want the default prompt_toolkit implemetation to
+    # internals. We don't want the default prompt_toolkit implementation to
     # interfere with that. E.g., IPython patches the `ViState.input_mode`
     # property. See: https://github.com/ipython/ipython/pull/13501/files
     _NEVER_CHANGE = "_NEVER_CHANGE"
