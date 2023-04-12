@@ -39,9 +39,9 @@ class ScrollablePane(Container):
         top/bottom (left/right offset is not used).
     :param keep_cursor_visible: When `True`, automatically scroll the pane so
         that the cursor (of the focused window) is always visible.
-    :param keep_focused_window_visible: When `True`, automatically scroll th e
+    :param keep_focused_window_visible: When `True`, automatically scroll the
         pane so that the focused window is visible, or as much visible as
-        possible if it doen't completely fit the screen.
+        possible if it doesn't completely fit the screen.
     :param max_available_height: Always constraint the height to this amount
         for performance reasons.
     :param width: When given, use this width instead of looking at the children.

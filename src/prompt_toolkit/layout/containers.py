@@ -2365,7 +2365,7 @@ class Window(Container):
             self.vertical_scroll_2 = min(
                 text_before_height - 1,  # Keep the cursor visible.
                 line_height
-                - height,  # Avoid blank lines at the bottom when scolling up again.
+                - height,  # Avoid blank lines at the bottom when scrolling up again.
                 self.vertical_scroll_2,
             )
             self.vertical_scroll_2 = max(

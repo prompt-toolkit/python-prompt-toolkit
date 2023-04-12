@@ -1589,12 +1589,12 @@ class Buffer:
                 # (We need to use `run_in_terminal`, because not all editors go to
                 # the alternate screen buffer, and some could influence the cursor
                 # position.)
-                succes = await run_in_terminal(
+                success = await run_in_terminal(
                     lambda: self._open_file_in_editor(filename), in_executor=True
                 )
 
                 # Read content again.
-                if succes:
+                if success:
                     with open(filename, "rb") as f:
                         text = f.read().decode("utf-8")
 

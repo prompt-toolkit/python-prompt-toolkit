@@ -58,7 +58,7 @@ if TYPE_CHECKING:
     # Avoid circular imports.
     from .key_processor import KeyPressEvent
 
-    # The only two return values for a mouse hander (and key bindings) are
+    # The only two return values for a mouse handler (and key bindings) are
     # `None` and `NotImplemented`. For the type checker it's best to annotate
     # this as `object`. (The consumer never expects a more specific instance:
     # checking for NotImplemented can be done using `is NotImplemented`.)

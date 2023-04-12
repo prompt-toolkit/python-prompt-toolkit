@@ -375,7 +375,7 @@ class Win32Output(Output):
             self.LOG.flush()
 
         # Print characters one by one. This appears to be the best solution
-        # in oder to avoid traces of vertical lines when the completion
+        # in order to avoid traces of vertical lines when the completion
         # menu disappears.
         for b in data:
             written = DWORD()
