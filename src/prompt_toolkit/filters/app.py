@@ -176,12 +176,13 @@ def has_arg() -> bool:
     return get_app().key_processor.arg is not None
 
 
-@Condition
 def is_done() -> bool:
     """
     True when the CLI is returning, aborting or exiting.
     """
     return get_app().is_done
+
+is_done = Condition(is_done, can_cache=False)
 
 
 @Condition

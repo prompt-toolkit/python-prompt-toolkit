@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import Callable, Iterable, Union
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 __all__ = ["Filter", "Never", "Always", "Condition", "FilterOrBool"]
 
@@ -14,7 +14,8 @@ class Filter(metaclass=ABCMeta):
     The return value of ``__call__`` will tell if the feature should be active.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, can_cache=True) -> None:
+        self.can_cache = can_cache
         self._and_cache: dict[Filter, Filter] = {}
         self._or_cache: dict[Filter, Filter] = {}
         self._invert_result: Filter | None = None
@@ -41,6 +42,8 @@ class Filter(metaclass=ABCMeta):
             return self._and_cache[other]
 
         result = _AndList.create([self, other])
+        if not (self.can_cache and other.can_cache):
+            return result
         self._and_cache[other] = result
         return result
 
@@ -102,6 +105,7 @@ class _AndList(Filter):
     def __init__(self, filters: list[Filter]) -> None:
         super().__init__()
         self.filters = filters
+        self.can_cache = all(e.can_cache for e in filters)
 
     @classmethod
     def create(cls, filters: Iterable[Filter]) -> Filter:
@@ -188,6 +192,7 @@ class _Invert(Filter):
     def __init__(self, filter: Filter) -> None:
         super().__init__()
         self.filter = filter
+        self.can_cache = filter.can_cache
 
     def __call__(self) -> bool:
         return not self.filter()
@@ -200,6 +205,11 @@ class Always(Filter):
     """
     Always enable feature.
     """
+    _instance = None
+    def __new__(cls, *args, **kw):
+        if cls._instance is None:
+            cls._instance = object.__new__(cls, *args, **kw)
+        return cls._instance
 
     def __call__(self) -> bool:
         return True
@@ -240,8 +250,8 @@ class Condition(Filter):
     :param func: Callable which takes no inputs and returns a boolean.
     """
 
-    def __init__(self, func: Callable[[], bool]) -> None:
-        super().__init__()
+    def __init__(self, func: Callable[[], bool], can_cache=True) -> None:
+        super().__init__(can_cache=can_cache)
         self.func = func
 
     def __call__(self) -> bool:
