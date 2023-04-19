@@ -571,9 +571,9 @@ class PromptSession(Generic[_T]):
                 dont_extend_height=True,
                 height=Dimension(min=1),
             ),
-            filter=~is_done
-            & renderer_height_is_known
-            & Condition(lambda: self.bottom_toolbar is not None),
+            filter=Condition(lambda: self.bottom_toolbar is not None)
+            & ~is_done
+            & renderer_height_is_known,
         )
 
         search_toolbar = SearchToolbar(
