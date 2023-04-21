@@ -9,10 +9,10 @@ from prompt_toolkit.filters import (
     Condition,
     FilterOrBool,
     emacs_mode,
+    has_any_validation_error,
     has_arg,
     has_completions,
     has_focus,
-    has_validation_error,
     to_filter,
     vi_mode,
     vi_navigation_mode,
@@ -342,16 +342,19 @@ class CompletionsToolbar:
 
 
 class ValidationToolbar:
-    def __init__(self, show_position: bool = False) -> None:
+    def __init__(self, show_position: bool = False, buffer: Buffer | None = None) -> None:
         def get_formatted_text() -> StyleAndTextTuples:
-            buff = get_app().current_buffer
-
+            # If buffer not specified, use the currently focused buffer
+            if buffer is None:
+                buff = get_app().current_buffer
+            else:
+                buff = buffer
             if buff.validation_error:
-                row, column = buff.document.translate_index_to_position(
-                    buff.validation_error.cursor_position
-                )
-
                 if show_position:
+                    row, column = buff.document.translate_index_to_position(
+                        buff.validation_error.cursor_position
+                    )
+
                     text = "{} (line={} column={})".format(
                         buff.validation_error.message,
                         row + 1,
@@ -367,7 +370,7 @@ class ValidationToolbar:
         self.control = FormattedTextControl(get_formatted_text)
 
         self.container = ConditionalContainer(
-            content=Window(self.control, height=1), filter=has_validation_error
+            content=Window(self.control, height=1), filter=has_any_validation_error
         )
 
     def __pt_container__(self) -> Container:

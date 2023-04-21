@@ -110,6 +110,7 @@ def input_dialog(
     cancel_text: str = "Cancel",
     completer: Completer | None = None,
     validator: Validator | None = None,
+    validate_while_typing: FilterOrBool = False,
     password: FilterOrBool = False,
     style: BaseStyle | None = None,
     default: str = "",
@@ -124,7 +125,9 @@ def input_dialog(
         return True  # Keep text.
 
     def ok_handler() -> None:
-        get_app().exit(result=textfield.text)
+        textfield.buffer.validate()  # validate one final time before exiting
+        if textfield.buffer.validation_error is None:
+            get_app().exit(result=textfield.text)
 
     ok_button = Button(text=ok_text, handler=ok_handler)
     cancel_button = Button(text=cancel_text, handler=_return_none)
@@ -135,6 +138,7 @@ def input_dialog(
         password=password,
         completer=completer,
         validator=validator,
+        validate_while_typing=validate_while_typing,
         accept_handler=accept,
     )
 
@@ -144,7 +148,7 @@ def input_dialog(
             [
                 Label(text=text, dont_extend_height=True),
                 textfield,
-                ValidationToolbar(),
+                ValidationToolbar(buffer=textfield.buffer),
             ],
             padding=D(preferred=1, max=1),
         ),

@@ -179,6 +179,7 @@ class TextArea:
         completer: Completer | None = None,
         complete_while_typing: FilterOrBool = True,
         validator: Validator | None = None,
+        validate_while_typing: FilterOrBool = False,
         accept_handler: BufferAcceptHandler | None = None,
         history: History | None = None,
         focusable: FilterOrBool = True,
@@ -215,6 +216,7 @@ class TextArea:
         self.read_only = read_only
         self.wrap_lines = wrap_lines
         self.validator = validator
+        self.validate_while_typing = validate_while_typing
 
         self.buffer = Buffer(
             document=Document(text, 0),
@@ -225,6 +227,9 @@ class TextArea:
                 lambda: is_true(self.complete_while_typing)
             ),
             validator=DynamicValidator(lambda: self.validator),
+            validate_while_typing=Condition(
+                lambda: is_true(self.validate_while_typing)
+            ),
             auto_suggest=DynamicAutoSuggest(lambda: self.auto_suggest),
             accept_handler=accept_handler,
             history=history,
