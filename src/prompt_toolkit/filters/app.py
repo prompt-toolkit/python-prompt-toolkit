@@ -187,6 +187,7 @@ def has_any_validation_error() -> bool:
             return content.buffer.validation_error is not None
         else:
             return False
+
     # Get all windows for the current layout
     windows = get_app().layout.find_all_windows()
     # Iterate over each window in the layout and return true if any of the buffers have validation errors

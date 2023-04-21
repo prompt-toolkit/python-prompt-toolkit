@@ -342,7 +342,9 @@ class CompletionsToolbar:
 
 
 class ValidationToolbar:
-    def __init__(self, show_position: bool = False, buffer: Buffer | None = None) -> None:
+    def __init__(
+        self, show_position: bool = False, buffer: Buffer | None = None
+    ) -> None:
         def get_formatted_text() -> StyleAndTextTuples:
             # If buffer not specified, use the currently focused buffer
             if buffer is None:
