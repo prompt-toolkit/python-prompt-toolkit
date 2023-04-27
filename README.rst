@@ -1,7 +1,7 @@
 Python Prompt Toolkit
 =====================
 
-|Build Status|  |AppVeyor|  |PyPI|  |RTD|  |License|  |Codecov|
+|AppVeyor|  |PyPI|  |RTD|  |License|  |Codecov|
 
 .. image :: https://github.com/prompt-toolkit/python-prompt-toolkit/raw/master/docs/images/logo_400px.png
 
@@ -127,9 +127,6 @@ Special thanks to
 
 - `Pygments <http://pygments.org/>`_: Syntax highlighter.
 - `wcwidth <https://github.com/jquast/wcwidth>`_: Determine columns needed for a wide characters.
-
-.. |Build Status| image:: https://api.travis-ci.org/prompt-toolkit/python-prompt-toolkit.svg?branch=master
-    :target: https://travis-ci.org/prompt-toolkit/python-prompt-toolkit#
 
 .. |PyPI| image:: https://img.shields.io/pypi/v/prompt_toolkit.svg
     :target: https://pypi.python.org/pypi/prompt-toolkit/
