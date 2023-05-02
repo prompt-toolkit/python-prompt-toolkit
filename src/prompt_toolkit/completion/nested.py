@@ -28,7 +28,10 @@ class NestedCompleter(Completer):
     """
 
     def __init__(
-        self, options: dict[str, Completer | None], ignore_case: bool = True, pattern: Pattern[str] | None = None
+        self,
+        options: dict[str, Completer | None],
+        ignore_case: bool = True,
+        pattern: Pattern[str] | None = None,
     ) -> None:
         self.options = options
         self.ignore_case = ignore_case
@@ -104,6 +107,8 @@ class NestedCompleter(Completer):
         # No space in the input: behave exactly like `WordCompleter`.
         else:
             completer = WordCompleter(
-                list(self.options.keys()), ignore_case=self.ignore_case, pattern=self.pattern
+                list(self.options.keys()),
+                ignore_case=self.ignore_case,
+                pattern=self.pattern,
             )
             yield from completer.get_completions(document, complete_event)
