@@ -3,7 +3,7 @@ Nestedcompleter for completion of hierarchical data structures.
 """
 from __future__ import annotations
 
-from typing import Any, Iterable, Mapping, Set, Union
+from typing import Any, Iterable, Mapping, Set, Union, Pattern
 
 from prompt_toolkit.completion import CompleteEvent, Completer, Completion
 from prompt_toolkit.completion.word_completer import WordCompleter
@@ -28,10 +28,11 @@ class NestedCompleter(Completer):
     """
 
     def __init__(
-        self, options: dict[str, Completer | None], ignore_case: bool = True
+        self, options: dict[str, Completer | None], ignore_case: bool = True, pattern: Pattern[str] | None = None
     ) -> None:
         self.options = options
         self.ignore_case = ignore_case
+        self.pattern = pattern
 
     def __repr__(self) -> str:
         return f"NestedCompleter({self.options!r}, ignore_case={self.ignore_case!r})"
@@ -103,6 +104,6 @@ class NestedCompleter(Completer):
         # No space in the input: behave exactly like `WordCompleter`.
         else:
             completer = WordCompleter(
-                list(self.options.keys()), ignore_case=self.ignore_case
+                list(self.options.keys()), ignore_case=self.ignore_case, pattern=self.pattern
             )
             yield from completer.get_completions(document, complete_event)
