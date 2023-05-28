@@ -63,7 +63,9 @@ PROMPT_TOOLKIT_STYLE = [
     # Completions menu.
     ("completion-menu", "bg:#bbbbbb #000000"),
     ("completion-menu.completion", ""),
-    ("completion-menu.completion.current", "bg:#888888 #ffffff"),
+    # (Note: for the current completion, we use 'reverse' on top of fg/bg
+    # colors. This is to have proper rendering with NO_COLOR=1).
+    ("completion-menu.completion.current", "fg:#888888 bg:#ffffff reverse"),
     ("completion-menu.meta.completion", "bg:#999999 #000000"),
     ("completion-menu.meta.completion.current", "bg:#aaaaaa #000000"),
     ("completion-menu.multi-column-meta", "bg:#aaaaaa #000000"),

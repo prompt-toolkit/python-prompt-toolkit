@@ -42,6 +42,11 @@ class ColorDepth(str, Enum):
         This is a way to enforce a certain color depth in all prompt_toolkit
         applications.
         """
+        # Disable color if a `NO_COLOR` environment variable is set.
+        # See: https://no-color.org/
+        if os.environ.get("NO_COLOR"):
+            return cls.DEPTH_1_BIT
+
         # Check the `PROMPT_TOOLKIT_COLOR_DEPTH` environment variable.
         all_values = [i.value for i in ColorDepth]
         if os.environ.get("PROMPT_TOOLKIT_COLOR_DEPTH") in all_values:
