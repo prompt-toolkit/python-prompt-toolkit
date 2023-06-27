@@ -1393,6 +1393,7 @@ def prompt(
     enable_open_in_editor: FilterOrBool | None = None,
     tempfile_suffix: str | Callable[[], str] | None = None,
     tempfile: str | Callable[[], str] | None = None,
+    in_thread: bool = False,
     # Following arguments are specific to the current `prompt()` call.
     default: str = "",
     accept_default: bool = False,
@@ -1447,6 +1448,7 @@ def prompt(
         default=default,
         accept_default=accept_default,
         pre_run=pre_run,
+        in_thread=in_thread,
     )
 
 
