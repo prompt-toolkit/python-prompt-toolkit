@@ -56,7 +56,7 @@ class _ExplodedList(List[_T]):
         if isinstance(value, tuple):  # In case of `OneStyleAndTextTuple`.
             value = cast("List[_T]", [value])
 
-        super().__setitem__(index, explode_text_fragments(cast("Iterable[_T]", value)))
+        super().__setitem__(index, explode_text_fragments(value))
 
 
 def explode_text_fragments(fragments: Iterable[_T]) -> _ExplodedList[_T]:
