@@ -50,7 +50,7 @@ in order to make displaying the progress possible:
         yield ...
 
     with ProgressBar() as pb:
-        for i in pb(some_iterable, total=1000):
+        for i in pb(some_iterable(), total=1000):
             time.sleep(.01)
 
 
