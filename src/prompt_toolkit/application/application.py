@@ -700,6 +700,9 @@ class Application(Generic[_AppResult]):
                         flush_task.cancel()
                     flush_task = self.create_background_task(auto_flush_input())
 
+            def read_from_input_in_context() -> None:
+                self.context.copy().run(read_from_input)
+
             async def auto_flush_input() -> None:
                 # Flush input after timeout.
                 # (Used for flushing the enter key.)
@@ -719,7 +722,10 @@ class Application(Generic[_AppResult]):
 
             # Enter raw mode, attach input and attach WINCH event handler.
             with self.input.raw_mode(), self.input.attach(
-                read_from_input
+                # Passing callbacks is prone to the lose of the original application
+                # context. So we should pass here a wrapper that will execute reading
+                # in the right context of the application.
+                read_from_input_in_context
             ), attach_winch_signal_handler(self._on_resize):
                 # Draw UI.
                 self._request_absolute_cursor_position()
