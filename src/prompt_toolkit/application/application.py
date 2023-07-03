@@ -656,7 +656,8 @@ class Application(Generic[_AppResult]):
             handle_sigint = False
 
         async def _run_async(f: "asyncio.Future[_AppResult]") -> _AppResult:
-            self.context = contextvars.copy_context()
+            context = contextvars.copy_context()
+            self.context = context
 
             # Counter for cancelling 'flush' timeouts. Every time when a key is
             # pressed, we start a 'flush' timer for flushing our escape key. But
@@ -700,6 +701,16 @@ class Application(Generic[_AppResult]):
                         flush_task.cancel()
                     flush_task = self.create_background_task(auto_flush_input())
 
+            def read_from_input_in_context() -> None:
+                # Ensure that key bindings callbacks are always executed in the
+                # current context. This is important when key bindings are
+                # accessing contextvars. (These callbacks are currently being
+                # called from a different context. Underneath,
+                # `loop.add_reader` is used to register the stdin FD.)
+                # (We copy the context to avoid a `RuntimeError` in case the
+                # context is already active.)
+                context.copy().run(read_from_input)
+
             async def auto_flush_input() -> None:
                 # Flush input after timeout.
                 # (Used for flushing the enter key.)
@@ -719,7 +730,7 @@ class Application(Generic[_AppResult]):
 
             # Enter raw mode, attach input and attach WINCH event handler.
             with self.input.raw_mode(), self.input.attach(
-                read_from_input
+                read_from_input_in_context
             ), attach_winch_signal_handler(self._on_resize):
                 # Draw UI.
                 self._request_absolute_cursor_position()
