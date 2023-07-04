@@ -1,6 +1,20 @@
 CHANGELOG
 =========
 
+3.0.39: 2023-07-04
+------------------
+
+Fixes:
+- Fix `RuntimeError` when `__breakpointhook__` is called from another thread.
+- Fix memory leak in filters usage.
+- Ensure that key bindings are handled in the right context (when using
+  contextvars).
+
+New features:
+- Accept `in_thread` keyword in `prompt_toolkit.shortcuts.prompt()`.
+- Support the `NO_COLOR` environment variable.
+
+
 3.0.38: 2023-02-28
 ------------------
 
