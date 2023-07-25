@@ -66,8 +66,8 @@ def yes_no_dialog(
         title=title,
         body=Label(text=text, dont_extend_height=True),
         buttons=[
-            Button(text=yes_text, handler=yes_handler, width=width),
-            Button(text=no_text, handler=no_handler, width=width),
+            Button(text=yes_text, handler=yes_handler, width=yes_width),
+            Button(text=no_text, handler=no_handler, width=no_width),
         ],
         with_background=True,
     )
