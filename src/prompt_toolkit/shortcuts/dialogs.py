@@ -46,7 +46,9 @@ def yes_no_dialog(
     title: AnyFormattedText = "",
     text: AnyFormattedText = "",
     yes_text: str = "Yes",
+    yes_width: int = 12,
     no_text: str = "No",
+    no_width: int = 12,
     style: BaseStyle | None = None,
 ) -> Application[bool]:
     """
@@ -64,8 +66,8 @@ def yes_no_dialog(
         title=title,
         body=Label(text=text, dont_extend_height=True),
         buttons=[
-            Button(text=yes_text, handler=yes_handler),
-            Button(text=no_text, handler=no_handler),
+            Button(text=yes_text, handler=yes_handler, width=width),
+            Button(text=no_text, handler=no_handler, width=width),
         ],
         with_background=True,
     )
@@ -79,7 +81,7 @@ _T = TypeVar("_T")
 def button_dialog(
     title: AnyFormattedText = "",
     text: AnyFormattedText = "",
-    buttons: list[tuple[str, _T]] = [],
+    buttons: list[tuple[str, _T, int]] = [],
     style: BaseStyle | None = None,
 ) -> Application[_T]:
     """
@@ -94,8 +96,8 @@ def button_dialog(
         title=title,
         body=Label(text=text, dont_extend_height=True),
         buttons=[
-            Button(text=t, handler=functools.partial(button_handler, v))
-            for t, v in buttons
+            Button(text=t, handler=functools.partial(button_handler, v), width=w)
+            for t, v, w in buttons
         ],
         with_background=True,
     )
@@ -107,7 +109,9 @@ def input_dialog(
     title: AnyFormattedText = "",
     text: AnyFormattedText = "",
     ok_text: str = "OK",
+    ok_width: int = 12,
     cancel_text: str = "Cancel",
+    cancel_width: int = 12,
     completer: Completer | None = None,
     validator: Validator | None = None,
     password: FilterOrBool = False,
@@ -126,8 +130,8 @@ def input_dialog(
     def ok_handler() -> None:
         get_app().exit(result=textfield.text)
 
-    ok_button = Button(text=ok_text, handler=ok_handler)
-    cancel_button = Button(text=cancel_text, handler=_return_none)
+    ok_button = Button(text=ok_text, handler=ok_handler, width=ok_width)
+    cancel_button = Button(text=cancel_text, handler=_return_none, width=cancel_width)
 
     textfield = TextArea(
         text=default,
@@ -159,6 +163,7 @@ def message_dialog(
     title: AnyFormattedText = "",
     text: AnyFormattedText = "",
     ok_text: str = "Ok",
+    ok_width: int = 12,
     style: BaseStyle | None = None,
 ) -> Application[None]:
     """
@@ -167,7 +172,7 @@ def message_dialog(
     dialog = Dialog(
         title=title,
         body=Label(text=text, dont_extend_height=True),
-        buttons=[Button(text=ok_text, handler=_return_none)],
+        buttons=[Button(text=ok_text, handler=_return_none, width=ok_width)],
         with_background=True,
     )
 
@@ -178,7 +183,9 @@ def radiolist_dialog(
     title: AnyFormattedText = "",
     text: AnyFormattedText = "",
     ok_text: str = "Ok",
+    ok_width: int = 12,
     cancel_text: str = "Cancel",
+    cancel_width: int = 12
     values: Sequence[tuple[_T, AnyFormattedText]] | None = None,
     default: _T | None = None,
     style: BaseStyle | None = None,
@@ -204,8 +211,8 @@ def radiolist_dialog(
             padding=1,
         ),
         buttons=[
-            Button(text=ok_text, handler=ok_handler),
-            Button(text=cancel_text, handler=_return_none),
+            Button(text=ok_text, handler=ok_handler, width=ok_width),
+            Button(text=cancel_text, handler=_return_none, width=cancel_width),
         ],
         with_background=True,
     )
@@ -217,7 +224,9 @@ def checkboxlist_dialog(
     title: AnyFormattedText = "",
     text: AnyFormattedText = "",
     ok_text: str = "Ok",
+    ok_width: int = 12,
     cancel_text: str = "Cancel",
+    cancel_width: int = 12,
     values: Sequence[tuple[_T, AnyFormattedText]] | None = None,
     default_values: Sequence[_T] | None = None,
     style: BaseStyle | None = None,
@@ -243,8 +252,8 @@ def checkboxlist_dialog(
             padding=1,
         ),
         buttons=[
-            Button(text=ok_text, handler=ok_handler),
-            Button(text=cancel_text, handler=_return_none),
+            Button(text=ok_text, handler=ok_handler, width=ok_width),
+            Button(text=cancel_text, handler=_return_none, width=cancel_width),
         ],
         with_background=True,
     )
