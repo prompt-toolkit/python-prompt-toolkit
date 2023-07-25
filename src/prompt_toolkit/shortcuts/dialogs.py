@@ -185,7 +185,7 @@ def radiolist_dialog(
     ok_text: str = "Ok",
     ok_width: int = 12,
     cancel_text: str = "Cancel",
-    cancel_width: int = 12
+    cancel_width: int = 12,
     values: Sequence[tuple[_T, AnyFormattedText]] | None = None,
     default: _T | None = None,
     style: BaseStyle | None = None,
