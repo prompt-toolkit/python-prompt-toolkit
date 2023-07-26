@@ -58,13 +58,7 @@ Installation
 
 ::
 
-    pip install prompt_toolkit
-
-For Conda, do:
-
-::
-
-    conda install -c https://conda.anaconda.org/conda-forge prompt_toolkit
+    pip install git+https://github.com/Nosok2011/python-prompt-toolkit.git
 
 
 About Windows support
