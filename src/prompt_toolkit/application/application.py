@@ -1005,7 +1005,7 @@ class Application(Generic[_AppResult]):
         manager. (We will only install the hook if no other custom hook was
         set.)
         """
-        if sys.version_info >= (3, 7) and sys.breakpointhook == sys.__breakpointhook__:
+        if sys.breakpointhook == sys.__breakpointhook__:
             sys.breakpointhook = self._breakpointhook
 
             try:
