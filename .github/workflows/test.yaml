@@ -5,6 +5,9 @@ on:
   pull_request:
     branches: [master]
 
+env:
+  FORCE_COLOR: 1
+
 jobs:
   test-ubuntu:
     runs-on: ubuntu-latest
