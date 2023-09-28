@@ -41,24 +41,6 @@ def do_exit():
     get_app().exit(result=False)
 
 
-yes_button = Button(text="Yes", handler=accept_yes)
-no_button = Button(text="No", handler=accept_no)
-textfield = TextArea(lexer=PygmentsLexer(HtmlLexer))
-checkbox1 = Checkbox(text="Checkbox")
-checkbox2 = Checkbox(text="Checkbox")
-
-radios = RadioList(
-    values=[
-        ("Red", "red"),
-        ("Green", "green"),
-        ("Blue", "blue"),
-        ("Orange", "orange"),
-        ("Yellow", "yellow"),
-        ("Purple", "Purple"),
-        ("Brown", "Brown"),
-    ]
-)
-
 animal_completer = WordCompleter(
     [
         "alligator",
@@ -96,6 +78,26 @@ animal_completer = WordCompleter(
     ],
     ignore_case=True,
 )
+
+
+yes_button = Button(text="Yes", handler=accept_yes)
+no_button = Button(text="No", handler=accept_no)
+textfield = TextArea(lexer=PygmentsLexer(HtmlLexer), completer=animal_completer)
+checkbox1 = Checkbox(text="Checkbox")
+checkbox2 = Checkbox(text="Checkbox")
+
+radios = RadioList(
+    values=[
+        ("Red", "red"),
+        ("Green", "green"),
+        ("Blue", "blue"),
+        ("Orange", "orange"),
+        ("Yellow", "yellow"),
+        ("Purple", "Purple"),
+        ("Brown", "Brown"),
+    ]
+)
+
 
 root_container = HSplit(
     [
