@@ -11,7 +11,6 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import os
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -26,7 +25,7 @@ import os
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.graphviz"]
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.graphviz", "sphinx_copybutton"]
 
 # Add any paths that contain templates here, relative to this directory.
 # templates_path = ["_templates"]
@@ -42,7 +41,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "prompt_toolkit"
-copyright = "2014-2020, Jonathan Slenders"
+copyright = "2014-2023, Jonathan Slenders"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -83,7 +82,8 @@ exclude_patterns = ["_build"]
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = "sphinx"
+pygments_style = "pastie"
+pygments_dark_style = "dracula"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -105,23 +105,46 @@ autodoc_mock_imports = [
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 
-on_rtd = os.environ.get("READTHEDOCS", None) == "True"
+# on_rtd = os.environ.get("READTHEDOCS", None) == "True"
 
-if on_rtd:
-    html_theme = "default"
-else:
-    try:
-        import sphinx_rtd_theme
+try:
+    import sphinx_nefertiti
 
-        html_theme = "sphinx_rtd_theme"
-        html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-    except ImportError:
-        html_theme = "pyramid"
+    html_theme = "sphinx_nefertiti"
+    html_theme_path = [sphinx_nefertiti.get_html_theme_path()]
+    html_theme_options = {
+        # "style" can take the following values: "blue", "indigo", "purple",
+        # "pink", "red", "orange", "yellow", "green", "tail", and "default".
+        "style": "default",
+        # Fonts are customizable (and are not retrieved online).
+        # https://sphinx-nefertiti.readthedocs.io/en/latest/users-guide/customization/fonts.html
+        # "documentation_font": "Open Sans",
+        # "monospace_font": "Ubuntu Mono",
+        # "monospace_font_size": "1.1rem",
+        "logo": "logo_400px.png",
+        "logo_alt": "python-prompt-toolkit",
+        "logo_width": "36",
+        "logo_height": "36",
+        "repository_url": "https://github.com/prompt-toolkit/python-prompt-toolkit",
+        "repository_name": "python-prompt-toolkit",
+        "footer_links": ",".join(
+            [
+                "Documentation|https://python-prompt-toolkit.readthedocs.io/",
+                "Package|https://pypi.org/project/prompt-toolkit/",
+                "Repository|https://github.com/prompt-toolkit/python-prompt-toolkit",
+                "Issues|https://github.com/prompt-toolkit/python-prompt-toolkit/issues",
+            ]
+        ),
+    }
+
+except ImportError:
+    html_theme = "pyramid"
+
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-# html_theme_options = {}
+
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
