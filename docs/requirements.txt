@@ -1,4 +1,5 @@
 Sphinx<7
 wcwidth<1
 pyperclip<2
-sphinx_rtd_theme<2
+sphinx_copybutton>=0.5.0,<1.0.0
+sphinx-nefertiti>=0.2.1
