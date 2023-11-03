@@ -75,6 +75,7 @@ Table of contents
    pages/tutorials/index
    pages/advanced_topics/index
    pages/reference
+   pages/related_projects
 
 
 Indices and tables
