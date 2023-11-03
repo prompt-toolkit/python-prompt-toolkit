@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from prompt_toolkit.shortcuts import print_container
 from prompt_toolkit.shortcuts.prompt import _split_multiline_prompt
-from prompt_toolkit.shortcuts.utils import print_container
 from prompt_toolkit.widgets import Frame, TextArea
 
 

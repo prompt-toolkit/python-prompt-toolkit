@@ -60,9 +60,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    try:
-        from asyncio import run
-    except ImportError:
-        asyncio.run_until_complete(main())
-    else:
-        asyncio.run(main())
+    asyncio.run(main())

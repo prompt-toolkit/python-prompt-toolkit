@@ -4,7 +4,6 @@ Example of running a prompt_toolkit application in an asyncssh server.
 """
 import asyncio
 import logging
-from asyncio import run
 
 import asyncssh
 from pygments.lexers.html import HtmlLexer

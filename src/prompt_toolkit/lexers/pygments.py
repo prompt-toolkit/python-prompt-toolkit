@@ -114,7 +114,7 @@ class RegexSync(SyntaxSync):
             # For HTML, start at any open/close tag definition.
             "HTML": r"<[/a-zA-Z]",
             # For javascript, start at a function.
-            "JavaScript": r"\bfunction\b"
+            "JavaScript": r"\bfunction\b",
             # TODO: Add definitions for other languages.
             #       By default, we start at every possible line.
         }
