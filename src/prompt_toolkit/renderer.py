@@ -7,7 +7,7 @@ from __future__ import annotations
 from asyncio import FIRST_COMPLETED, Future, ensure_future, sleep, wait
 from collections import deque
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Callable, Deque, Dict, Hashable
+from typing import TYPE_CHECKING, Any, Callable, Dict, Hashable
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.cursor_shapes import CursorShape
@@ -319,6 +319,7 @@ class _StyleStringHasStyleCache(Dict[str, bool]):
 
 class CPR_Support(Enum):
     "Enum: whether or not CPR is supported."
+
     SUPPORTED = "SUPPORTED"
     NOT_SUPPORTED = "NOT_SUPPORTED"
     UNKNOWN = "UNKNOWN"
@@ -357,7 +358,7 @@ class Renderer:
         self._cursor_key_mode_reset = False
 
         # Future set when we are waiting for a CPR flag.
-        self._waiting_for_cpr_futures: Deque[Future[None]] = deque()
+        self._waiting_for_cpr_futures: deque[Future[None]] = deque()
         self.cpr_support = CPR_Support.UNKNOWN
 
         if not output.responds_to_cpr:

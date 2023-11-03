@@ -172,6 +172,7 @@ def _window_too_small() -> Window:
 
 class VerticalAlign(Enum):
     "Alignment for `HSplit`."
+
     TOP = "TOP"
     CENTER = "CENTER"
     BOTTOM = "BOTTOM"
@@ -180,6 +181,7 @@ class VerticalAlign(Enum):
 
 class HorizontalAlign(Enum):
     "Alignment for `VSplit`."
+
     LEFT = "LEFT"
     CENTER = "CENTER"
     RIGHT = "RIGHT"

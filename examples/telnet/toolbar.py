@@ -4,7 +4,7 @@ Example of a telnet application that displays a bottom toolbar and completions
 in the prompt.
 """
 import logging
-from asyncio import Future, run
+from asyncio import run
 
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.contrib.telnet.server import TelnetServer

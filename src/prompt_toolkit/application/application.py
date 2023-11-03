@@ -655,7 +655,7 @@ class Application(Generic[_AppResult]):
             # See: https://github.com/prompt-toolkit/python-prompt-toolkit/issues/1553
             handle_sigint = False
 
-        async def _run_async(f: "asyncio.Future[_AppResult]") -> _AppResult:
+        async def _run_async(f: asyncio.Future[_AppResult]) -> _AppResult:
             context = contextvars.copy_context()
             self.context = context
 

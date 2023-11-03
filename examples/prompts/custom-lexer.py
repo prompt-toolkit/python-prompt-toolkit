@@ -9,7 +9,7 @@ from prompt_toolkit.styles.named_colors import NAMED_COLORS
 
 class RainbowLexer(Lexer):
     def lex_document(self, document):
-        colors = list(sorted(NAMED_COLORS, key=NAMED_COLORS.get))
+        colors = sorted(NAMED_COLORS, key=NAMED_COLORS.get)
 
         def get_line(lineno):
             return [

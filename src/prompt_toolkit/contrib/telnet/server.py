@@ -186,7 +186,7 @@ class TelnetConnection:
                 self.feed(data)
             else:
                 # Connection closed by client.
-                logger.info("Connection closed by client. %r %r" % self.addr)
+                logger.info("Connection closed by client. {!r} {!r}".format(*self.addr))
                 self.close()
 
         # Add reader.

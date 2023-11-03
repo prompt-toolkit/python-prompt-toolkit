@@ -1,13 +1,38 @@
-[tool.black]
-target-version = ['py36']
+[tool.ruff]
+target-version = "py37"
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "C",  # flake8-comprehensions
+    "T",  # Print.
+    "I",  # isort
+    # "B",  # flake8-bugbear
+    "UP",  # pyupgrade
+    "RUF100",  # unused-noqa
+    "Q", # quotes
+]
+ignore = [
+    "E501",  # Line too long, handled by black
+    "C901",  # Too complex
+    "E731",  # Assign lambda.
+    "E402", # Module level import not at the top.
+    "E741", # Ambiguous variable name.
+]
 
 
-[tool.isort]
-# isort configuration that is compatible with Black.
-multi_line_output = 3
-include_trailing_comma = true
-known_first_party = "prompt_toolkit"
-known_third_party = "asyncssh,pygments"
-force_grid_wrap = 0
-use_parentheses = true
-line_length = 88
+[tool.ruff.per-file-ignores]
+"examples/*" = ["T201"]  # Print allowed in examples.
+"src/prompt_toolkit/application/application.py" = ["T100", "T201", "F821"]  # pdb and print allowed.
+"src/prompt_toolkit/contrib/telnet/server.py" = ["T201"]  # Print allowed.
+"src/prompt_toolkit/key_binding/bindings/named_commands.py" = ["T201"]  # Print allowed.
+"src/prompt_toolkit/shortcuts/progress_bar/base.py" = ["T201"]  # Print allowed.
+"tools/*" = ["T201"]  # Print allowed.
+"src/prompt_toolkit/filters/__init__.py" = ["F403", "F405"]  # Possibly undefined due to star import.
+"src/prompt_toolkit/filters/cli.py" = ["F403", "F405"]  # Possibly undefined due to star import.
+"src/prompt_toolkit/shortcuts/progress_bar/formatters.py" = ["UP031"] # %-style formatting.
+
+
+[tool.ruff.isort]
+known-first-party = ["prompt_toolkit"]
+known-third-party = ["pygments", "asyncssh"]

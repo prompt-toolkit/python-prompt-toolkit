@@ -15,7 +15,7 @@ import tempfile
 from collections import deque
 from enum import Enum
 from functools import wraps
-from typing import Any, Awaitable, Callable, Coroutine, Deque, Iterable, TypeVar, cast
+from typing import Any, Awaitable, Callable, Coroutine, Iterable, TypeVar, cast
 
 from .application.current import get_app
 from .application.run_in_terminal import run_in_terminal
@@ -56,6 +56,7 @@ class EditReadOnlyBuffer(Exception):
 
 class ValidationState(Enum):
     "The validation state of a buffer. This is set after the validation."
+
     VALID = "VALID"
     INVALID = "INVALID"
     UNKNOWN = "UNKNOWN"
@@ -366,7 +367,7 @@ class Buffer:
         #: Ctrl-C should reset this, and copy the whole history back in here.
         #: Enter should process the current command and append to the real
         #: history.
-        self._working_lines: Deque[str] = deque([document.text])
+        self._working_lines: deque[str] = deque([document.text])
         self.__working_index = 0
 
     def load_history_if_not_yet_loaded(self) -> None:
