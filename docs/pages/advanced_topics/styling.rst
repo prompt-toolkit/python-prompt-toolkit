@@ -69,7 +69,7 @@ The following ANSI colors are available (both for foreground and background):
 
     # Low intensity, dark.  (One or two components 0x80, the other 0x00.)
     ansiblack, ansired, ansigreen, ansiyellow, ansiblue
-    ansimagenta, 'ansicyan, ansigray
+    ansimagenta, ansicyan, ansigray
 
     # High intensity, bright.
     ansibrightblack, ansibrightred, ansibrightgreen, ansibrightyellow
