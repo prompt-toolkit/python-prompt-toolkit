@@ -49,9 +49,7 @@ def main():
     def accept(buff):
         # Evaluate "calculator" expression.
         try:
-            output = (
-                f"\n\nIn:  {input_field.text}\nOut: {eval(input_field.text)}"
-            )  # Don't do 'eval' in real code!
+            output = f"\n\nIn:  {input_field.text}\nOut: {eval(input_field.text)}"  # Don't do 'eval' in real code!
         except BaseException as e:
             output = f"\n\n{e}"
         new_text = output_field.text + output
