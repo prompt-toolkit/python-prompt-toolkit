@@ -1,6 +1,19 @@
 CHANGELOG
 =========
 
+3.0.40: 2023-11-10
+------------------
+
+Fixes:
+- Improved Python 3.12 support (fixes event loop `DeprecationWarning`).
+
+New features:
+- Vi key bindings: `control-t` and `control-d` for indent/unindent in insert
+  mode.
+- Insert partial suggestion when `control+right` is pressed, similar to Fish.
+- Use sphinx-nefertiti theme for the docs.
+
+
 3.0.39: 2023-07-04
 ------------------
 
