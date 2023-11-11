@@ -449,7 +449,7 @@ class FormattedTextControl(UIControl):
                             # Handler found. Call it.
                             # (Handler can return NotImplemented, so return
                             # that result.)
-                            handler = item[2]  # type: ignore
+                            handler = item[2]
                             return handler(mouse_event)
                         else:
                             break

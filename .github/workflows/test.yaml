@@ -36,8 +36,9 @@ jobs:
       - name: Tests
         run: |
           coverage run -m pytest
-      - name: Mypy
-        # Check wheather the imports were sorted correctly.
+      - if: "matrix.python-version != '3.7'"
+        name: Mypy
+        # Check whether the imports were sorted correctly.
         # When this fails, please run ./tools/sort-imports.sh
         run: |
           mypy --strict src/prompt_toolkit --platform win32

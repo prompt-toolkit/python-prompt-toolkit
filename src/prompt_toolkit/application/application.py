@@ -40,7 +40,9 @@ from prompt_toolkit.cursor_shapes import AnyCursorShapeConfig, to_cursor_shape_c
 from prompt_toolkit.data_structures import Size
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.eventloop import (
+    InputHook,
     get_traceback_from_context,
+    new_eventloop_with_inputhook,
     run_in_executor_with_context,
 )
 from prompt_toolkit.eventloop.utils import call_soon_threadsafe
@@ -898,13 +900,12 @@ class Application(Generic[_AppResult]):
         set_exception_handler: bool = True,
         handle_sigint: bool = True,
         in_thread: bool = False,
+        inputhook: InputHook | None = None,
     ) -> _AppResult:
         """
         A blocking 'run' call that waits until the UI is finished.
 
-        This will start the current asyncio event loop. If no loop is set for
-        the current thread, then it will create a new loop. If a new loop was
-        created, this won't close the new loop (if `in_thread=False`).
+        This will run the application in a fresh asyncio event loop.
 
         :param pre_run: Optional callable, which is called right after the
             "reset" of the application.
@@ -937,6 +938,7 @@ class Application(Generic[_AppResult]):
                         set_exception_handler=set_exception_handler,
                         # Signal handling only works in the main thread.
                         handle_sigint=False,
+                        inputhook=inputhook,
                     )
                 except BaseException as e:
                     exception = e
@@ -954,23 +956,18 @@ class Application(Generic[_AppResult]):
             set_exception_handler=set_exception_handler,
             handle_sigint=handle_sigint,
         )
-        try:
-            # See whether a loop was installed already. If so, use that. That's
-            # required for the input hooks to work, they are installed using
-            # `set_event_loop`.
-            if sys.version_info < (3, 10):
-                loop = asyncio.get_event_loop()
-            else:
-                try:
-                    loop = asyncio.get_running_loop()
-                except RuntimeError:
-                    loop = asyncio.new_event_loop()
-        except RuntimeError:
+        if inputhook is None:
             # No loop installed. Run like usual.
             return asyncio.run(coro)
         else:
-            # Use existing loop.
-            return loop.run_until_complete(coro)
+            # Create new event loop with given input hook and run the app.
+            # In Python 3.12, we can use asyncio.run(loop_factory=...)
+            # For now, use `run_until_complete()`.
+            loop = new_eventloop_with_inputhook(inputhook)
+            result = loop.run_until_complete(coro)
+            loop.run_until_complete(loop.shutdown_asyncgens())
+            loop.close()
+            return result
 
     def _handle_exception(
         self, loop: AbstractEventLoop, context: dict[str, Any]
