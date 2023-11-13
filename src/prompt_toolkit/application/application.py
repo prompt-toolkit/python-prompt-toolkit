@@ -956,10 +956,17 @@ class Application(Generic[_AppResult]):
             set_exception_handler=set_exception_handler,
             handle_sigint=handle_sigint,
         )
-        if inputhook is None:
-            # No loop installed. Run like usual.
-            return asyncio.run(coro)
-        else:
+
+        def _called_from_ipython() -> bool:
+            try:
+                return (
+                    "IPython/terminal/interactiveshell.py"
+                    in sys._getframe(3).f_code.co_filename
+                )
+            except BaseException:
+                return False
+
+        if inputhook is not None:
             # Create new event loop with given input hook and run the app.
             # In Python 3.12, we can use asyncio.run(loop_factory=...)
             # For now, use `run_until_complete()`.
@@ -968,6 +975,27 @@ class Application(Generic[_AppResult]):
             loop.run_until_complete(loop.shutdown_asyncgens())
             loop.close()
             return result
+
+        elif _called_from_ipython():
+            # workaround to make input hooks work for IPython until
+            # https://github.com/ipython/ipython/pull/14241 is merged.
+            # IPython was setting the input hook by installing an event loop
+            # previously.
+            try:
+                # See whether a loop was installed already. If so, use that.
+                # That's required for the input hooks to work, they are
+                # installed using `set_event_loop`.
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                # No loop installed. Run like usual.
+                return asyncio.run(coro)
+            else:
+                # Use existing loop.
+                return loop.run_until_complete(coro)
+
+        else:
+            # No loop installed. Run like usual.
+            return asyncio.run(coro)
 
     def _handle_exception(
         self, loop: AbstractEventLoop, context: dict[str, Any]
