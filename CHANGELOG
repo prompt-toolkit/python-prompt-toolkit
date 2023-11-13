@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+3.0.41: 2023-11-14
+------------------
+
+Fixes:
+- Fix regression regarding IPython input hook (%gui) integration.
+
 3.0.40: 2023-11-10
 ------------------
 
