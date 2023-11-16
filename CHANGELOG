@@ -471,7 +471,7 @@ New features:
   * The color depth logic has been refactored and moved to the `Output`
     implementations. Added `get_default_color_depth` method to `Output`
     objects.
-  * All line feets are now preceded by a carriage return in the telnet
+  * All line feet are now preceded by a carriage return in the telnet
     connection stdout.
 - Introduce `REPLACE_SINGLE` input mode for Vi key bindings.
 - Improvements to the checkbox implementation:
@@ -1141,7 +1141,7 @@ Fixes:
 
 New features:
 - Allow users to enter Vi digraphs in reverse order.
-- Improved autocompletion behaviour. See IPython issue #9658.
+- Improved autocompletion behavior. See IPython issue #9658.
 - Added a 'clear' function in the shortcuts module.
 
 For future compatibility:
@@ -1162,7 +1162,7 @@ For future compatibility:
 
 Fixes:
 - Bugfix for Python2 in readline-like completion.
-- Bugfix in readline-like completion visualisation.
+- Bugfix in readline-like completion visualization.
 
 New features:
 - Added `erase_when_done` parameter to the `Application` class.  (This was
@@ -1175,7 +1175,7 @@ New features:
 
 Fixes:
 - Don't select the first completion when `complete_while_typing` is False.
-  (Restore the old behaviour.)
+  (Restore the old behavior.)
 
 
 1.0.1: 2016-06-15
@@ -1327,7 +1327,7 @@ Backwards-incompatible changes:
   the `vi_mode` parameter in `KeyBindingManager`.
 - The default accept_action for the default Buffer in Application now becomes
   IGNORE. This is a much more sensible default. Pass RETURN_DOCUMENT to get
-  the previous behaviour,
+  the previous behavior,
 - Always expect an EventLoop instance in CommandLineInterface. Creating it in
   __init__ caused a memory leak.
 
@@ -1344,8 +1344,8 @@ Fixes:
 - Correctly align right prompt to the top when the left prompt consists of
   multiple lines.
 - Correctly use Token.Transparent as default token for a TokenListControl.
-- Fix in syntax synchronisation. (Better handle the case when no
-  synchronisation point was found.)
+- Fix in syntax synchronization. (Better handle the case when no
+  synchronization point was found.)
 - Send SIGTSTP to the whole process group.
 - Correctly raise on_buffer_changed on all text changes.
 - Fix in regular_languages.GrammarLexer. (Fixes bug in ptipython syntax
@@ -1403,7 +1403,7 @@ New features:
   `create_prompt_layout`.
 - Some improvements to the default style.
 - Also handle Ctrl-R and Ctrl-S in Vi mode when searching.
-- Added TabsProcessor: a tool to visualise tabs instead of displaying ^I.
+- Added TabsProcessor: a tool to visualize tabs instead of displaying ^I.
 - Give a better error message when trying to run in git-bash.
 - Support for ANSI color names in style dictionaries.
 
@@ -1421,7 +1421,7 @@ New features:
     they process one line at a time.)
   - Lexers work differently. `Lexer.lex_document` should now return a function
     that returns the tokens for one line. PygmentsLexer has been optimized that
-    it becomes 'lazy', and it has optional syntax synchronisation. That means,
+    it becomes 'lazy', and it has optional syntax synchronization. That means,
     that the lexer doesn't have to start the lexing at the beginning of the
     document. (Which would be slow for big documents.)
 
@@ -1672,7 +1672,7 @@ New features:
 - Added `prompt_toolkit.layout.utils.iter_token_lines`.
 - Allow `None` values on the focus stack.
 - Buffers can be readonly. Added `IsReadOnly` filter.
-- `eager` behaviour for key bindings. When a key binding is eager it will be
+- `eager` behavior for key bindings. When a key binding is eager it will be
   executed as soon as it's matched, even when there is another binding that
   starts with this key sequence.
 - Custom margins for BufferControl.
@@ -1738,7 +1738,7 @@ Fixes:
 New features:
 - CompletionsMenu got a scroll_offset.
 - Use 256 colors and ANSI sequences when ConEmu ANSI support has been detected.
-- Added PyperclipClipboard for synchronisation with the system clipboard.
+- Added PyperclipClipboard for synchronization with the system clipboard.
   and clipboard parameter in shortcut functions.
 - Filter for enabling/disabling handling of Vi 'v' binding.
 
@@ -2033,7 +2033,7 @@ New features:
 - prompt_toolkit.contrib.shortcuts.get_input has been extended.
 
 Fixed:
-- Behaviour of Control+left/right/up/down.
+- Behavior of Control+left/right/up/down.
 - Backspace in incremental search.
 - Hide completion menu correctly when the cursor position changes.
 
@@ -2108,7 +2108,7 @@ New features:
 - Experimental Win32 support added.
 
 Fixed:
-- Behaviour of 'r' and 'R' key bindings in Vi mode.
+- Behavior of 'r' and 'R' key bindings in Vi mode.
 - Detect multiline correctly for ptpython when there are triple quoted strings.
 - Some other small improvements.
 

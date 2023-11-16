@@ -385,7 +385,7 @@ Input processors
 A :class:`~prompt_toolkit.layout.processors.Processor` is used to postprocess
 the content of a :class:`~prompt_toolkit.layout.BufferControl` before it's
 displayed. It can for instance highlight matching brackets or change the
-visualisation of tabs and so on.
+visualization of tabs and so on.
 
 A :class:`~prompt_toolkit.layout.processors.Processor` operates on individual
 lines. Basically, it takes a (formatted) line and produces a new (formatted)
@@ -410,11 +410,11 @@ Some build-in processors:
 +----------------------------------------------------------------------------+-----------------------------------------------------------+
 | :class:`~prompt_toolkit.layout.processors.AppendAutoSuggestion`            | Append auto suggestion text.                              |
 +----------------------------------------------------------------------------+-----------------------------------------------------------+
-| :class:`~prompt_toolkit.layout.processors.ShowLeadingWhiteSpaceProcessor`  | Visualise leading whitespace.                             |
+| :class:`~prompt_toolkit.layout.processors.ShowLeadingWhiteSpaceProcessor`  | Visualize leading whitespace.                             |
 +----------------------------------------------------------------------------+-----------------------------------------------------------+
-| :class:`~prompt_toolkit.layout.processors.ShowTrailingWhiteSpaceProcessor` | Visualise trailing whitespace.                            |
+| :class:`~prompt_toolkit.layout.processors.ShowTrailingWhiteSpaceProcessor` | Visualize trailing whitespace.                            |
 +----------------------------------------------------------------------------+-----------------------------------------------------------+
-| :class:`~prompt_toolkit.layout.processors.TabsProcessor`                   | Visualise tabs as `n` spaces, or some symbols.            |
+| :class:`~prompt_toolkit.layout.processors.TabsProcessor`                   | Visualize tabs as `n` spaces, or some symbols.            |
 +----------------------------------------------------------------------------+-----------------------------------------------------------+
 
 A :class:`~prompt_toolkit.layout.BufferControl` takes only one processor as

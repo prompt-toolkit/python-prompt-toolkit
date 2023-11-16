@@ -33,7 +33,7 @@ What happens when a :class:`~prompt_toolkit.renderer.Renderer` objects wants a
 :class:`~prompt_toolkit.layout.Container` to be rendered on a certain
 :class:`~prompt_toolkit.layout.screen.Screen`?
 
-The visualisation happens in several steps:
+The visualization happens in several steps:
 
 1. The :class:`~prompt_toolkit.renderer.Renderer` calls the
    :meth:`~prompt_toolkit.layout.Container.write_to_screen` method

@@ -679,7 +679,7 @@ class MultiColumnCompletionsMenu(HSplit):
             filter=full_filter & show_meta & any_completion_has_meta,
         )
 
-        # Initialise split.
+        # Initialize split.
         super().__init__([completions_window, meta_window], z_index=z_index)
 
 
