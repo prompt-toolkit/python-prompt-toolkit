@@ -17,7 +17,7 @@ with `sys.stdin` and `sys.stdout`. In unit tests however, we want to replace
 these.
 
 - For the input, we want a "pipe input". This is an input device, in which we
-  can programatically send some input. It can be created with
+  can programmatically send some input. It can be created with
   :func:`~prompt_toolkit.input.create_pipe_input`, and that return either a
   :class:`~prompt_toolkit.input.posix_pipe.PosixPipeInput` or a
   :class:`~prompt_toolkit.input.win32_pipe.Win32PipeInput` depending on the

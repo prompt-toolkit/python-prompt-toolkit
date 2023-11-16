@@ -264,9 +264,9 @@ There are four different levels of color depths available:
 +--------+-----------------+-----------------------------+---------------------------------+
 
 By default, 256 colors are used, because this is what most terminals support
-these days. If the ``TERM`` enviroment variable is set to ``linux`` or
+these days. If the ``TERM`` environment variable is set to ``linux`` or
 ``eterm-color``, then only ANSI colors are used, because of these terminals. The 24
-bit true color output needs to be enabled explicitely. When 4 bit color output
+bit true color output needs to be enabled explicitly. When 4 bit color output
 is chosen, all colors will be mapped to the closest ANSI color.
 
 Setting the default color depth for any prompt_toolkit application can be done

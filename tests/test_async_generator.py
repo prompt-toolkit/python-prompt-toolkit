@@ -12,7 +12,7 @@ def _sync_generator():
 
 def test_generator_to_async_generator():
     """
-    Test conversion of sync to asycn generator.
+    Test conversion of sync to async generator.
     This should run the synchronous parts in a background thread.
     """
     async_gen = generator_to_async_generator(_sync_generator)

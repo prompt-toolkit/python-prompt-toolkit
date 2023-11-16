@@ -369,7 +369,7 @@ Fixes:
 
 Fixes:
 - Fixed a race condition in `ThreadedHistory` that happens when continuously
-  pasting input text (which would continously repopulate the history).
+  pasting input text (which would continuously repopulate the history).
 - Move cursor key mode resetting (for vt100 terminals) to the renderer. (Mostly
   cleanup).
 
@@ -451,7 +451,7 @@ Other changes:
 
 Fixes:
 - Bugfix in shift-selection key bindings.
-- Fix hight calculation of `FormattedTextControl` when line wrapping is turned
+- Fix height calculation of `FormattedTextControl` when line wrapping is turned
   on.
 - Fixes for SSH server:
   * Missing encoding property.
@@ -615,7 +615,7 @@ Bug fixes:
 Bug fixes:
 - Fixes the issue where changes made to the buffer in the accept handler were
   not reflected in the history.
-- Fix in the application invalidate handler. This prevents a significat slow
+- Fix in the application invalidate handler. This prevents a significant slow
   down in some applications after some time (especially if there is a refresh
   interval).
 - Make `print_container` utility work if the input is not a pty.
@@ -882,7 +882,7 @@ Changes:
     of the content. `TokenListControl` (renamed to `FormattedTextControl`) does
     not have an alignment argument anymore.
   * All container objects, like `Window`, got a `style` argument. The style for
-    parent containers propagate to child containers, but can be overriden.
+    parent containers propagate to child containers, but can be overridden.
     This is in particular useful for setting a background color.
   * `FillControl` does not exist anymore. Use the `style` and `char` arguments
     of the `Window` class instead.
