@@ -27,12 +27,13 @@ jobs:
         run: |
           sudo apt remove python3-pip
           python -m pip install --upgrade pip
-          python -m pip install . ruff coverage codecov mypy pytest readme_renderer types-contextvars asyncssh
+          python -m pip install . ruff typos coverage codecov mypy pytest readme_renderer types-contextvars asyncssh
           pip list
       - name: Ruff
         run: |
           ruff .
           ruff format --check .
+          typos .
       - name: Tests
         run: |
           coverage run -m pytest
