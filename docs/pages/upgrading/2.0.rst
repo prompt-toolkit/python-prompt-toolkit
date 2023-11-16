@@ -193,7 +193,7 @@ the completer in a :class:`~prompt_toolkit.completion.ThreadedCompleter`.
 Filters
 ^^^^^^^
 
-We don't distiguish anymore between `CLIFilter` and `SimpleFilter`, because the
+We don't distinguish anymore between `CLIFilter` and `SimpleFilter`, because the
 application object is no longer passed around. This means that all filters are
 a `Filter` from now on.
 

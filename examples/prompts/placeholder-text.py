@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Example of a placeholer that's displayed as long as no input is given.
+Example of a placeholder that's displayed as long as no input is given.
 """
 from prompt_toolkit import prompt
 from prompt_toolkit.formatted_text import HTML

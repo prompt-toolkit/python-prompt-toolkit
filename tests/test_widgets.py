@@ -10,7 +10,7 @@ def _to_text(button: Button) -> str:
     return fragment_list_to_text(control.text())
 
 
-def test_defaulf_button():
+def test_default_button():
     button = Button("Exit")
     assert _to_text(button) == "<   Exit   >"
 
