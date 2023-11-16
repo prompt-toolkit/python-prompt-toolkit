@@ -43,7 +43,7 @@ def patch_stdout(raw: bool = False) -> Generator[None, None, None]:
 
     Writing to this proxy will make sure that the text appears above the
     prompt, and that it doesn't destroy the output from the renderer.  If no
-    application is curring, the behaviour should be identical to writing to
+    application is curring, the behavior should be identical to writing to
     `sys.stdout` directly.
 
     Warning: If a new event loop is installed using `asyncio.set_event_loop()`,

@@ -656,7 +656,7 @@ Adding a right prompt
 ---------------------
 
 The :func:`~prompt_toolkit.shortcuts.prompt` function has out of the box
-support for right prompts as well. People familiar to ZSH could recognise this
+support for right prompts as well. People familiar to ZSH could recognize this
 as the `RPROMPT` option.
 
 So, similar to adding a bottom toolbar, we can pass an ``rprompt`` argument.
@@ -706,7 +706,7 @@ Adding custom key bindings
 --------------------------
 
 By default, every prompt already has a set of key bindings which implements the
-usual Vi or Emacs behaviour. We can extend this by passing another
+usual Vi or Emacs behavior. We can extend this by passing another
 :class:`~prompt_toolkit.key_binding.KeyBindings` instance to the
 ``key_bindings`` argument of the :func:`~prompt_toolkit.shortcuts.prompt`
 function or the :class:`~prompt_toolkit.shortcuts.PromptSession` class.

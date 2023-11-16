@@ -36,3 +36,31 @@ ignore = [
 [tool.ruff.isort]
 known-first-party = ["prompt_toolkit"]
 known-third-party = ["pygments", "asyncssh"]
+
+[tool.typos.default]
+extend-ignore-re = [
+    "Formicidae",
+    "Iterm",
+    "goes",
+    "iterm",
+    "prepend",
+    "prepended",
+    "prev",
+    "ret",
+    "rouble",
+    "x1b\\[4m",
+    # Deliberate spelling mistakes in autocorrection.py
+    "wolrd",
+    "impotr",
+    # Lorem ipsum.
+    "Nam",
+    "varius",
+]
+
+locale = 'en-us'  # US English.
+
+[tool.typos.files]
+extend-exclude = [
+    "tests/test_cli.py",
+    "tests/test_regular_languages.py",
+]

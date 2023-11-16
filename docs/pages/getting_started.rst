@@ -21,7 +21,7 @@ Several use cases: prompts versus full screen terminal applications
 --------------------------------------------------------------------
 
 `prompt_toolkit` was in the first place meant to be a replacement for readline.
-However, when it became more mature, we realised that all the components for
+However, when it became more mature, we realized that all the components for
 full screen applications are there and `prompt_toolkit` is very capable of
 handling many use situations. `Pyvim
 <http://github.com/prompt-toolkit/pyvim>`_ and `pymux

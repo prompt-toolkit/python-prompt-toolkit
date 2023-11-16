@@ -94,7 +94,7 @@ kb = KeyBindings()
 # sure that we won't wait for that key binding to match, but instead execute
 # Ctrl-Q immediately, we can pass eager=True. (Don't make a habit of adding
 # `eager=True` to all key bindings, but do it when it conflicts with another
-# existing key binding, and you definitely want to override that behaviour.
+# existing key binding, and you definitely want to override that behavior.
 
 
 @kb.add("c-c", eager=True)

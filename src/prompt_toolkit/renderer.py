@@ -233,7 +233,7 @@ def _output_screen_diff(
     # output. That way, we're sure that the terminal scrolls up, even when the
     # lower lines of the canvas just contain whitespace.
 
-    # The most obvious reason that we actually want this behaviour is the avoid
+    # The most obvious reason that we actually want this behavior is the avoid
     # the artifact of the input scrolling when the completion menu is shown.
     # (If the scrolling is actually wanted, the layout can still be build in a
     # way to behave that way by setting a dynamic height.)
