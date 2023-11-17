@@ -42,7 +42,7 @@ class NestedCompleter(Completer):
     def __repr__(self) -> str:
         return (
             f"NestedCompleter({self.options!r}, ignore_case={self.ignore_case!r}, "
-            f" separator={self.separator!r})"
+            f"separator={self.separator!r})"
         )
 
     @classmethod
