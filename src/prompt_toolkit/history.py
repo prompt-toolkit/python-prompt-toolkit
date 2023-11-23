@@ -256,11 +256,13 @@ class DummyHistory(History):
 
 class FileHistory(History):
     """
-    :class:`.History` class that stores all strings in a file.
+    :class:`.History` class that stores all strings in a file. You can optionally specify the
+    maximum amount of initially loaded commands.
     """
 
-    def __init__(self, filename: str) -> None:
+    def __init__(self, filename: str, max_loaded_history: None | int = None) -> None:
         self.filename = filename
+        self.max_loaded_history = max_loaded_history
         super().__init__()
 
     def load_history_strings(self) -> Iterable[str]:
@@ -287,6 +289,8 @@ class FileHistory(History):
 
                 add()
 
+        if self.max_loaded_history is not None:
+            return list(reversed(strings))[: len(strings) - self.max_loaded_history]
         # Reverse the order, because newest items have to go first.
         return reversed(strings)
 
@@ -300,3 +304,53 @@ class FileHistory(History):
             write("\n# %s\n" % datetime.datetime.now())
             for line in string.split("\n"):
                 write("+%s\n" % line)
+
+
+class BoundedFileHistory(FileHistory):
+    """
+    :class:`.History` class that stores all strings in a file but also limits the total number of
+    contained history items. The file will be re-written with the specified bound number as the
+    number of most recent history items when re-loading the history strings.
+    """
+
+    def __init__(self, filename: str, bound: int) -> None:
+        self.bound = bound
+        super().__init__(filename)
+
+    def load_history_strings(self) -> Iterable[str]:
+        strings: list[str] = []
+        date_lines: list[bytes] = []
+        lines: list[str] = []
+
+        def add() -> None:
+            if lines:
+                # Join and drop trailing newline.
+                string = "".join(lines)[:-1]
+
+                strings.append(string)
+
+        if os.path.exists(self.filename):
+            with open(self.filename, "rb") as f:
+                for line_bytes in f:
+                    line = line_bytes.decode("utf-8", errors="replace")
+                    if line.startswith("+"):
+                        lines.append(line[1:])
+                    else:
+                        if line.startswith("#"):
+                            date_lines.append(line_bytes)
+                        add()
+                        lines = []
+
+                add()
+
+        if len(strings) > self.bound:
+            assert len(date_lines) == len(strings)
+            # Reverse the order, because newest items have to go first.
+            list_of_strings = list(reversed(strings))[: self.bound]
+            # Re-write the truncated file.
+            with open(self.filename, "wb") as f:
+                for date_str, string in zip(date_lines, strings):
+                    f.write(date_str)
+                    f.write(f"{string}\n".encode())
+            return list_of_strings
+        return reversed(strings)
