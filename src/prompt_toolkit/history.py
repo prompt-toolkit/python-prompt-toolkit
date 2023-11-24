@@ -260,9 +260,8 @@ class FileHistory(History):
     maximum amount of initially loaded commands.
     """
 
-    def __init__(self, filename: str, max_loaded_history: None | int = None) -> None:
+    def __init__(self, filename: str) -> None:
         self.filename = filename
-        self.max_loaded_history = max_loaded_history
         super().__init__()
 
     def load_history_strings(self) -> Iterable[str]:
@@ -289,8 +288,6 @@ class FileHistory(History):
 
                 add()
 
-        if self.max_loaded_history is not None:
-            return list(reversed(strings))[: len(strings) - self.max_loaded_history]
         # Reverse the order, because newest items have to go first.
         return reversed(strings)
 
