@@ -960,7 +960,8 @@ class Application(Generic[_AppResult]):
         def _called_from_ipython() -> bool:
             try:
                 return (
-                    "IPython/terminal/interactiveshell.py"
+                    sys.modules["IPython"].version_info < (8, 18, 0, "")
+                    and "IPython/terminal/interactiveshell.py"
                     in sys._getframe(3).f_code.co_filename
                 )
             except BaseException:
