@@ -1545,7 +1545,7 @@ async def _do_wait_for_enter(wait_text: AnyFormattedText) -> None:
 
 @contextmanager
 def attach_winch_signal_handler(
-    handler: Callable[[], None]
+    handler: Callable[[], None],
 ) -> Generator[None, None, None]:
     """
     Attach the given callback as a WINCH signal handler within the context
