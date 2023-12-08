@@ -203,6 +203,13 @@ class StdoutProxy:
         """
 
         def write_and_flush() -> None:
+            # Ensure that autowrap is enabled before calling `write`.
+            # XXX: On Windows, the `Windows10_Output` enables/disables VT
+            #      terminal processing for every flush. It turns out that this
+            #      causes autowrap to be reset (disabled) after each flush. So,
+            #      we have to enable it again before writing text.
+            self._output.enable_autowrap()
+
             if self.raw:
                 self._output.write_raw(text)
             else:
