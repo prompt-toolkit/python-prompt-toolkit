@@ -66,7 +66,7 @@ InputHook: TypeAlias = Callable[[InputHookContext], None]
 
 
 def new_eventloop_with_inputhook(
-    inputhook: Callable[[InputHookContext], None]
+    inputhook: Callable[[InputHookContext], None],
 ) -> AbstractEventLoop:
     """
     Create a new event loop with the given inputhook.
@@ -77,7 +77,7 @@ def new_eventloop_with_inputhook(
 
 
 def set_eventloop_with_inputhook(
-    inputhook: Callable[[InputHookContext], None]
+    inputhook: Callable[[InputHookContext], None],
 ) -> AbstractEventLoop:
     """
     Create a new event loop with the given inputhook, and activate it.
