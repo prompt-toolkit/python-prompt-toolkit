@@ -22,22 +22,33 @@ class NestedCompleter(Completer):
 
     By combining multiple `NestedCompleter` instances, we can achieve multiple
     hierarchical levels of autocompletion. This is useful when `WordCompleter`
-    is not sufficient.
+    is not sufficient. The separator to trigger completion on the previously
+    typed word is the Space character by default, but it is also possible
+    to set a custom separator.
 
     If you need multiple levels, check out the `from_nested_dict` classmethod.
     """
 
     def __init__(
-        self, options: dict[str, Completer | None], ignore_case: bool = True
+        self,
+        options: dict[str, Completer | None],
+        ignore_case: bool = True,
+        separator: str = " ",
     ) -> None:
         self.options = options
         self.ignore_case = ignore_case
+        self.separator = separator
 
     def __repr__(self) -> str:
-        return f"NestedCompleter({self.options!r}, ignore_case={self.ignore_case!r})"
+        return (
+            f"NestedCompleter({self.options!r}, ignore_case={self.ignore_case!r}, "
+            f"separator={self.separator!r})"
+        )
 
     @classmethod
-    def from_nested_dict(cls, data: NestedDict) -> NestedCompleter:
+    def from_nested_dict(
+        cls, data: NestedDict, ignore_case: bool = True, separator: str = " "
+    ) -> NestedCompleter:
         """
         Create a `NestedCompleter`, starting from a nested dictionary data
         structure, like this:
@@ -66,31 +77,37 @@ class NestedCompleter(Completer):
             if isinstance(value, Completer):
                 options[key] = value
             elif isinstance(value, dict):
-                options[key] = cls.from_nested_dict(value)
+                options[key] = cls.from_nested_dict(
+                    data=value, ignore_case=ignore_case, separator=separator
+                )
             elif isinstance(value, set):
-                options[key] = cls.from_nested_dict({item: None for item in value})
+                options[key] = cls.from_nested_dict(
+                    data={item: None for item in value},
+                    ignore_case=ignore_case,
+                    separator=separator,
+                )
             else:
                 assert value is None
                 options[key] = None
 
-        return cls(options)
+        return cls(options=options, ignore_case=ignore_case, separator=separator)
 
     def get_completions(
         self, document: Document, complete_event: CompleteEvent
     ) -> Iterable[Completion]:
         # Split document.
-        text = document.text_before_cursor.lstrip()
+        text = document.text_before_cursor.lstrip(self.separator)
         stripped_len = len(document.text_before_cursor) - len(text)
 
-        # If there is a space, check for the first term, and use a
+        # If there is a separator character, check for the first term, and use a
         # subcompleter.
-        if " " in text:
-            first_term = text.split()[0]
+        if self.separator in text:
+            first_term = text.split(self.separator)[0]
             completer = self.options.get(first_term)
 
             # If we have a sub completer, use this for the completions.
             if completer is not None:
-                remaining_text = text[len(first_term) :].lstrip()
+                remaining_text = text[len(first_term) :].lstrip(self.separator)
                 move_cursor = len(text) - len(remaining_text) + stripped_len
 
                 new_document = Document(

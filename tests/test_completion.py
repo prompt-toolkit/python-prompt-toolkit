@@ -400,19 +400,7 @@ def test_fuzzy_completer():
     assert [c.text for c in completions] == ["users.txt", "accounts.txt"]
 
 
-def test_nested_completer():
-    completer = NestedCompleter.from_nested_dict(
-        {
-            "show": {
-                "version": None,
-                "clock": None,
-                "interfaces": None,
-                "ip": {"interface": {"brief"}},
-            },
-            "exit": None,
-        }
-    )
-
+def _generic_test_nested_completer(completer: NestedCompleter):
     # Empty input.
     completions = completer.get_completions(Document(""), CompleteEvent())
     assert {c.text for c in completions} == {"show", "exit"}
@@ -426,22 +414,62 @@ def test_nested_completer():
     assert {c.text for c in completions} == {"show"}
 
     # One word + space.
-    completions = completer.get_completions(Document("show "), CompleteEvent())
+    completions = completer.get_completions(
+        Document(f"show{completer.separator}"), CompleteEvent()
+    )
     assert {c.text for c in completions} == {"version", "clock", "interfaces", "ip"}
 
     # One word + space + one character.
-    completions = completer.get_completions(Document("show i"), CompleteEvent())
+    completions = completer.get_completions(
+        Document(f"show{completer.separator}i"), CompleteEvent()
+    )
     assert {c.text for c in completions} == {"ip", "interfaces"}
 
     # One space + one word + space + one character.
-    completions = completer.get_completions(Document(" show i"), CompleteEvent())
+    completions = completer.get_completions(
+        Document(f"{completer.separator}show{completer.separator}i"), CompleteEvent()
+    )
     assert {c.text for c in completions} == {"ip", "interfaces"}
 
     # Test nested set.
     completions = completer.get_completions(
-        Document("show ip interface br"), CompleteEvent()
+        Document(
+            f"show{completer.separator}ip{completer.separator}interface{completer.separator}br"
+        ),
+        CompleteEvent(),
     )
     assert {c.text for c in completions} == {"brief"}
+
+
+def test_nested_completer():
+    completer = NestedCompleter.from_nested_dict(
+        {
+            "show": {
+                "version": None,
+                "clock": None,
+                "interfaces": None,
+                "ip": {"interface": {"brief"}},
+            },
+            "exit": None,
+        }
+    )
+    _generic_test_nested_completer(completer)
+
+
+def test_nested_completer_different_separator():
+    completer = NestedCompleter.from_nested_dict(
+        data={
+            "show": {
+                "version": None,
+                "clock": None,
+                "interfaces": None,
+                "ip": {"interface": {"brief"}},
+            },
+            "exit": None,
+        },
+        separator="/",
+    )
+    _generic_test_nested_completer(completer)
 
 
 def test_deduplicate_completer():

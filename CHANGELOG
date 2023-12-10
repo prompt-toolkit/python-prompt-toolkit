@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+New features:
+
+- `NestedCompleter` now accepts an optional separator argument which allows to specify custom
+  separators. Space will still be the default separator.
+- `NestedCompleter.from_nested_dict` now accepts optional `ignore_case` and `separator` arguments
+  of the default constructor and passes them on recursively to all contained nested separator
+  instances.
+
 3.0.41: 2023-11-14
 ------------------
 
