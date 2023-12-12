@@ -1,6 +1,16 @@
 CHANGELOG
 =========
 
+3.0.42: 2023-12-12
+------------------
+
+Fixes:
+- Fix line wrapping in `patch_stdout` on Windows.
+- Make `formatted_text.split_lines()` accept an iterable instead of lists only.
+- Disable the IPython workaround (from 3.0.41) for IPython >= 8.18.
+- Restore signal.SIGINT handler between prompts.
+
+
 3.0.41: 2023-11-14
 ------------------
 
