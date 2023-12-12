@@ -17,7 +17,6 @@ from asyncio import (
     sleep,
 )
 from contextlib import ExitStack, contextmanager
-from ctypes import c_int, c_void_p, pythonapi
 from subprocess import Popen
 from traceback import format_tb
 from typing import (
@@ -101,21 +100,6 @@ ApplicationEventHandler = Callable[["Application[_AppResult]"], None]
 
 _SIGWINCH = getattr(signal, "SIGWINCH", None)
 _SIGTSTP = getattr(signal, "SIGTSTP", None)
-
-
-# The following functions are part of the stable ABI since python 3.2
-# See: https://docs.python.org/3/c-api/sys.html#c.PyOS_getsig
-
-# PyOS_sighandler_t PyOS_getsig(int i)
-pythonapi.PyOS_getsig.restype = c_void_p
-pythonapi.PyOS_getsig.argtypes = (c_int,)
-
-# PyOS_sighandler_t PyOS_setsig(int i, PyOS_sighandler_t h)
-pythonapi.PyOS_setsig.restype = c_void_p
-pythonapi.PyOS_setsig.argtypes = (
-    c_int,
-    c_void_p,
-)
 
 
 class Application(Generic[_AppResult]):
@@ -823,22 +807,19 @@ class Application(Generic[_AppResult]):
         @contextmanager
         def set_handle_sigint(loop: AbstractEventLoop) -> Iterator[None]:
             if handle_sigint:
-                # save sigint handlers (python and os level)
-                # See: https://github.com/prompt-toolkit/python-prompt-toolkit/issues/1576
-                sigint = signal.getsignal(signal.SIGINT)
-                sigint_os = pythonapi.PyOS_getsig(signal.SIGINT)
-                loop.add_signal_handler(
-                    signal.SIGINT,
-                    lambda *_: loop.call_soon_threadsafe(
-                        self.key_processor.send_sigint
-                    ),
-                )
-                try:
-                    yield
-                finally:
-                    loop.remove_signal_handler(signal.SIGINT)
-                    signal.signal(signal.SIGINT, sigint)
-                    pythonapi.PyOS_setsig(signal.SIGINT, sigint_os)
+                with _restore_sigint_from_ctypes():
+                    # save sigint handlers (python and os level)
+                    # See: https://github.com/prompt-toolkit/python-prompt-toolkit/issues/1576
+                    loop.add_signal_handler(
+                        signal.SIGINT,
+                        lambda *_: loop.call_soon_threadsafe(
+                            self.key_processor.send_sigint
+                        ),
+                    )
+                    try:
+                        yield
+                    finally:
+                        loop.remove_signal_handler(signal.SIGINT)
             else:
                 yield
 
@@ -1609,3 +1590,36 @@ def attach_winch_signal_handler(
                 previous_winch_handler._callback,
                 *previous_winch_handler._args,
             )
+
+
+@contextmanager
+def _restore_sigint_from_ctypes() -> Generator[None, None, None]:
+    # The following functions are part of the stable ABI since python 3.2
+    # See: https://docs.python.org/3/c-api/sys.html#c.PyOS_getsig
+    # Inline import: these are not available on Pypy.
+    try:
+        from ctypes import c_int, c_void_p, pythonapi
+    except ImportError:
+        # Any of the above imports don't exist? Don't do anything here.
+        yield
+        return
+
+    # PyOS_sighandler_t PyOS_getsig(int i)
+    pythonapi.PyOS_getsig.restype = c_void_p
+    pythonapi.PyOS_getsig.argtypes = (c_int,)
+
+    # PyOS_sighandler_t PyOS_setsig(int i, PyOS_sighandler_t h)
+    pythonapi.PyOS_setsig.restype = c_void_p
+    pythonapi.PyOS_setsig.argtypes = (
+        c_int,
+        c_void_p,
+    )
+
+    sigint = signal.getsignal(signal.SIGINT)
+    sigint_os = pythonapi.PyOS_getsig(signal.SIGINT)
+
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGINT, sigint)
+        pythonapi.PyOS_setsig(signal.SIGINT, sigint_os)
