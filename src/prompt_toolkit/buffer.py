@@ -15,7 +15,7 @@ import tempfile
 from collections import deque
 from enum import Enum
 from functools import wraps
-from typing import Any, Awaitable, Callable, Coroutine, Iterable, TypeVar, cast
+from typing import Any, Callable, Coroutine, Iterable, TypeVar, cast
 
 from .application.current import get_app
 from .application.run_in_terminal import run_in_terminal
@@ -1891,7 +1891,7 @@ class Buffer:
                 self.reset()
 
 
-_T = TypeVar("_T", bound=Callable[..., Awaitable[None]])
+_T = TypeVar("_T", bound=Callable[..., Coroutine[Any, Any, None]])
 
 
 def _only_one_at_a_time(coroutine: _T) -> _T:
