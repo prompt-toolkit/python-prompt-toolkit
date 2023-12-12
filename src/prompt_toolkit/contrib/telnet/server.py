@@ -7,7 +7,7 @@ import asyncio
 import contextvars
 import socket
 from asyncio import get_running_loop
-from typing import Awaitable, Callable, TextIO, cast
+from typing import Any, Callable, Coroutine, TextIO, cast
 
 from prompt_toolkit.application.current import create_app_session, get_app
 from prompt_toolkit.application.run_in_terminal import run_in_terminal
@@ -124,7 +124,7 @@ class TelnetConnection:
         self,
         conn: socket.socket,
         addr: tuple[str, int],
-        interact: Callable[[TelnetConnection], Awaitable[None]],
+        interact: Callable[[TelnetConnection], Coroutine[Any, Any, None]],
         server: TelnetServer,
         encoding: str,
         style: BaseStyle | None,
@@ -283,7 +283,9 @@ class TelnetServer:
         self,
         host: str = "127.0.0.1",
         port: int = 23,
-        interact: Callable[[TelnetConnection], Awaitable[None]] = _dummy_interact,
+        interact: Callable[
+            [TelnetConnection], Coroutine[Any, Any, None]
+        ] = _dummy_interact,
         encoding: str = "utf-8",
         style: BaseStyle | None = None,
         enable_cpr: bool = True,
