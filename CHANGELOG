@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+3.0.43: 2023-12-13
+------------------
+
+Fixes:
+- Fix regression on Pypy: Don't use `ctypes.pythonapi` to restore SIGINT if not
+  available.
+
+
 3.0.42: 2023-12-12
 ------------------
 
