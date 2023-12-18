@@ -207,6 +207,9 @@ class Always(Filter):
     def __or__(self, other: Filter) -> Filter:
         return self
 
+    def __and__(self, other: Filter) -> Filter:
+        return other
+
     def __invert__(self) -> Never:
         return Never()
 
@@ -221,6 +224,9 @@ class Never(Filter):
 
     def __and__(self, other: Filter) -> Filter:
         return self
+
+    def __or__(self, other: Filter) -> Filter:
+        return other
 
     def __invert__(self) -> Always:
         return Always()
