@@ -38,6 +38,11 @@ def is_returnable() -> bool:
     return get_app().current_buffer.is_returnable
 
 
+@Condition
+def is_arg() -> bool:
+    return get_app().key_processor.arg == "-"
+
+
 def load_emacs_bindings() -> KeyBindingsBase:
     """
     Some e-macs extensions.
@@ -139,7 +144,7 @@ def load_emacs_bindings() -> KeyBindingsBase:
         if event._arg is None:
             event.append_to_arg_count("-")
 
-    @handle("-", filter=Condition(lambda: get_app().key_processor.arg == "-"))
+    @handle("-", filter=is_arg)
     def _dash(event: E) -> None:
         """
         When '-' is typed again, after exactly '-' has been given as an
