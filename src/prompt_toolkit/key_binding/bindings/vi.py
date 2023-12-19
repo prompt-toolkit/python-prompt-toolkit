@@ -371,6 +371,35 @@ def create_operator_decorator(
     return operator_decorator
 
 
+@Condition
+def is_returnable() -> bool:
+    return get_app().current_buffer.is_returnable
+
+
+@Condition
+def in_block_selection() -> bool:
+    buff = get_app().current_buffer
+    return bool(
+        buff.selection_state and buff.selection_state.type == SelectionType.BLOCK
+    )
+
+
+@Condition
+def digraph_symbol_1_given() -> bool:
+    return get_app().vi_state.digraph_symbol1 is not None
+
+
+@Condition
+def search_buffer_is_empty() -> bool:
+    "Returns True when the search buffer is empty."
+    return get_app().current_buffer.text == ""
+
+
+@Condition
+def tilde_operator() -> bool:
+    return get_app().vi_state.tilde_operator
+
+
 def load_vi_bindings() -> KeyBindingsBase:
     """
     Vi extensions.
@@ -410,7 +439,7 @@ def load_vi_bindings() -> KeyBindingsBase:
         (("g", "~"), Always(), lambda string: string.swapcase()),
         (
             ("~",),
-            Condition(lambda: get_app().vi_state.tilde_operator),
+            tilde_operator,
             lambda string: string.swapcase(),
         ),
     ]
@@ -527,10 +556,6 @@ def load_vi_bindings() -> KeyBindingsBase:
         Cancel completion. Go back to originally typed text.
         """
         event.current_buffer.cancel_completion()
-
-    @Condition
-    def is_returnable() -> bool:
-        return get_app().current_buffer.is_returnable
 
     # In navigation mode, pressing enter will always return the input.
     handle("enter", filter=vi_navigation_mode & is_returnable)(
@@ -679,13 +704,6 @@ def load_vi_bindings() -> KeyBindingsBase:
             event.current_buffer.document.get_start_of_line_position(
                 after_whitespace=True
             )
-        )
-
-    @Condition
-    def in_block_selection() -> bool:
-        buff = get_app().current_buffer
-        return bool(
-            buff.selection_state and buff.selection_state.type == SelectionType.BLOCK
         )
 
     @handle("I", filter=in_block_selection & ~is_read_only)
@@ -2071,10 +2089,6 @@ def load_vi_bindings() -> KeyBindingsBase:
         """
         event.app.vi_state.waiting_for_digraph = True
 
-    @Condition
-    def digraph_symbol_1_given() -> bool:
-        return get_app().vi_state.digraph_symbol1 is not None
-
     @handle(Keys.Any, filter=vi_digraph_mode & ~digraph_symbol_1_given)
     def _digraph1(event: E) -> None:
         """
@@ -2179,11 +2193,6 @@ def load_vi_search_bindings() -> KeyBindingsBase:
     key_bindings = KeyBindings()
     handle = key_bindings.add
     from . import search
-
-    @Condition
-    def search_buffer_is_empty() -> bool:
-        "Returns True when the search buffer is empty."
-        return get_app().current_buffer.text == ""
 
     # Vi-style forward search.
     handle(

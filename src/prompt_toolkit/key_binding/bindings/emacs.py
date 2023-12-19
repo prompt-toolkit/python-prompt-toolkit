@@ -33,6 +33,11 @@ __all__ = [
 E = KeyPressEvent
 
 
+@Condition
+def is_returnable() -> bool:
+    return get_app().current_buffer.is_returnable
+
+
 def load_emacs_bindings() -> KeyBindingsBase:
     """
     Some e-macs extensions.
@@ -141,10 +146,6 @@ def load_emacs_bindings() -> KeyBindingsBase:
         argument, ignore this.
         """
         event.app.key_processor.arg = "-"
-
-    @Condition
-    def is_returnable() -> bool:
-        return get_app().current_buffer.is_returnable
 
     # Meta + Enter: always accept input.
     handle("escape", "enter", filter=insert_mode & is_returnable)(
