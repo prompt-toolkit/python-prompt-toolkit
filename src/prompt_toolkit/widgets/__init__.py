@@ -32,6 +32,7 @@ from .toolbars import (
     SystemToolbar,
     ValidationToolbar,
 )
+from .vertmenu import VertMenu
 
 __all__ = [
     # Base.
@@ -59,4 +60,6 @@ __all__ = [
     # Menus.
     "MenuContainer",
     "MenuItem",
+    # Vertical menu.
+    "VertMenu",
 ]
