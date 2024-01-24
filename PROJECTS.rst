@@ -39,6 +39,7 @@ Shells:
 - `kafka-shell <https://github.com/devshawn/kafka-shell>`_: A supercharged shell for Apache Kafka.
 - `starterTree <https://github.com/thomas10-10/starterTree>`_: A command launcher organized in a tree structure with fuzzy autocompletion 
 - `git-delete-merged-branches <https://github.com/hartwork/git-delete-merged-branches>`_: Command-line tool to delete merged Git branches
+- `radian <https://github.com/randy3k/radian>`_: A 21 century R console
 
 Full screen applications:
 
