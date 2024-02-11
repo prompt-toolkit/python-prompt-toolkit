@@ -1,6 +1,6 @@
 [tool.ruff]
 target-version = "py37"
-select = [
+lint.select = [
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
     "F",  # pyflakes
@@ -12,7 +12,7 @@ select = [
     "RUF100",  # unused-noqa
     "Q", # quotes
 ]
-ignore = [
+lint.ignore = [
     "E501",  # Line too long, handled by black
     "C901",  # Too complex
     "E731",  # Assign lambda.
@@ -21,7 +21,7 @@ ignore = [
 ]
 
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "examples/*" = ["T201"]  # Print allowed in examples.
 "src/prompt_toolkit/application/application.py" = ["T100", "T201", "F821"]  # pdb and print allowed.
 "src/prompt_toolkit/contrib/telnet/server.py" = ["T201"]  # Print allowed.
@@ -33,7 +33,7 @@ ignore = [
 "src/prompt_toolkit/shortcuts/progress_bar/formatters.py" = ["UP031"] # %-style formatting.
 
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["prompt_toolkit"]
 known-third-party = ["pygments", "asyncssh"]
 
