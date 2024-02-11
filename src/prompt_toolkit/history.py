@@ -259,7 +259,7 @@ class FileHistory(History):
     :class:`.History` class that stores all strings in a file.
     """
 
-    def __init__(self, filename: str) -> None:
+    def __init__(self, filename: str | os.PathLike) -> None:
         self.filename = filename
         super().__init__()
 
