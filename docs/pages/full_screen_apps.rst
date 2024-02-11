@@ -358,7 +358,7 @@ As said earlier, a :class:`~prompt_toolkit.layout.Window` is a
 
 .. note::
 
-    Basically, windows are the leafs in the tree structure that represent the UI.
+    Basically, windows are the leaves in the tree structure that represent the UI.
 
 A :class:`~prompt_toolkit.layout.Window` provides a "view" on the
 :class:`~prompt_toolkit.layout.UIControl`, which provides lines of content. The
