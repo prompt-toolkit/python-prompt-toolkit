@@ -24,6 +24,7 @@ __all__ = [
     "has_selection",
     "has_suggestion",
     "has_validation_error",
+    "has_any_validation_error",
     "is_done",
     "is_read_only",
     "is_multiline",
@@ -168,6 +169,33 @@ def is_multiline() -> bool:
 def has_validation_error() -> bool:
     "Current buffer has validation error."
     return get_app().current_buffer.validation_error is not None
+
+
+@Condition
+def has_any_validation_error() -> bool:
+    "Any buffer in the layout has validation error."
+    from prompt_toolkit.layout.containers import Window
+    from prompt_toolkit.layout.controls import (
+        BufferControl,
+        SearchBufferControl,
+        UIControl,
+    )
+
+    # Extract buffer validation errors for buffer UIControl children classes
+    def get_buffer_from_content(content: UIControl) -> bool:
+        if isinstance(content, (BufferControl, SearchBufferControl)):
+            return content.buffer.validation_error is not None
+        else:
+            return False
+
+    # Get all windows for the current layout
+    windows = get_app().layout.find_all_windows()
+    # Iterate over each window in the layout and return true if any of the buffers have validation errors
+    for window in windows:
+        if isinstance(window, Window):
+            if get_buffer_from_content(window.content):
+                return True
+    return False
 
 
 @Condition
