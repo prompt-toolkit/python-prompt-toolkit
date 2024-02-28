@@ -25,10 +25,11 @@ import sys
 import threading
 import time
 from contextlib import contextmanager
-from typing import Generator, TextIO, cast
+from typing import Any, Generator, TextIO, cast
 
 from .application import get_app_session, run_in_terminal
 from .output import Output
+from .shortcuts.prompt import PromptSession
 
 __all__ = [
     "patch_stdout",
@@ -95,6 +96,7 @@ class StdoutProxy:
         self,
         sleep_between_writes: float = 0.2,
         raw: bool = False,
+        app_session: PromptSession[Any] | None = None,
     ) -> None:
         self.sleep_between_writes = sleep_between_writes
         self.raw = raw
@@ -103,7 +105,9 @@ class StdoutProxy:
         self._buffer: list[str] = []
 
         # Keep track of the curret app session.
-        self.app_session = get_app_session()
+        self.app_session = app_session
+        if not self.app_session:
+            self.app_session = get_app_session()
 
         # See what output is active *right now*. We should do it at this point,
         # before this `StdoutProxy` instance is possibly assigned to `sys.stdout`.
@@ -220,7 +224,9 @@ class StdoutProxy:
         def write_and_flush_in_loop() -> None:
             # If an application is running, use `run_in_terminal`, otherwise
             # call it directly.
-            run_in_terminal(write_and_flush, in_executor=False)
+            run_in_terminal(
+                write_and_flush, in_executor=False, app=self.app_session.app
+            )
 
         if loop is None:
             # No loop, write immediately.

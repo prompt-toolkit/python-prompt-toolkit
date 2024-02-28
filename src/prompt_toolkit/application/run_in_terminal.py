@@ -20,7 +20,10 @@ _T = TypeVar("_T")
 
 
 def run_in_terminal(
-    func: Callable[[], _T], render_cli_done: bool = False, in_executor: bool = False
+    func: Callable[[], _T],
+    render_cli_done: bool = False,
+    in_executor: bool = False,
+    app=None,
 ) -> Awaitable[_T]:
     """
     Run function on the terminal above the current application or prompt.
@@ -40,12 +43,13 @@ def run_in_terminal(
             erase the interface first.
     :param in_executor: When True, run in executor. (Use this for long
         blocking functions, when you don't want to block the event loop.)
+    :param app: instance of Application. (default None)
 
     :returns: A `Future`.
     """
 
     async def run() -> _T:
-        async with in_terminal(render_cli_done=render_cli_done):
+        async with in_terminal(render_cli_done=render_cli_done, app=app):
             if in_executor:
                 return await run_in_executor_with_context(func)
             else:
@@ -55,7 +59,9 @@ def run_in_terminal(
 
 
 @asynccontextmanager
-async def in_terminal(render_cli_done: bool = False) -> AsyncGenerator[None, None]:
+async def in_terminal(
+    render_cli_done: bool = False, app=None
+) -> AsyncGenerator[None, None]:
     """
     Asynchronous context manager that suspends the current application and runs
     the body in the terminal.
@@ -67,7 +73,8 @@ async def in_terminal(render_cli_done: bool = False) -> AsyncGenerator[None, Non
                 call_some_function()
                 await call_some_async_function()
     """
-    app = get_app_or_none()
+    if not app:
+        app = get_app_or_none()
     if app is None or not app._is_running:
         yield
         return

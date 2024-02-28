@@ -11,6 +11,7 @@ from pygments.lexers.html import HtmlLexer
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.contrib.ssh import PromptToolkitSSHServer, PromptToolkitSSHSession
 from prompt_toolkit.lexers import PygmentsLexer
+from prompt_toolkit.patch_stdout import StdoutProxy
 from prompt_toolkit.shortcuts import ProgressBar, print_formatted_text
 from prompt_toolkit.shortcuts.dialogs import input_dialog, yes_no_dialog
 from prompt_toolkit.shortcuts.prompt import PromptSession
@@ -98,6 +99,29 @@ async def interact(ssh_session: PromptToolkitSSHSession) -> None:
     # Show input dialog
     await prompt_session.prompt_async("Showing input dialog... [ENTER]")
     await input_dialog("Input dialog", "Running over asyncssh").run_async()
+
+    async def print_counter(output):
+        """
+        Coroutine that prints counters.
+        """
+        try:
+            i = 0
+            while True:
+                output.write(f"Counter: {i}\n")
+                i += 1
+                await asyncio.sleep(3)
+        except asyncio.CancelledError:
+            print("Background task cancelled.")
+
+    with StdoutProxy(app_session=prompt_session) as output:
+        background_task = asyncio.create_task(print_counter(output))
+        try:
+            text = await prompt_session.prompt_async(
+                "Type something with background task: "
+            )
+            output.write(f"You typed: {text}\n")
+        finally:
+            background_task.cancel()
 
 
 async def main(port=8222):
