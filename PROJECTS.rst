@@ -52,6 +52,7 @@ Full screen applications:
 - `sanctuary-zero <https://github.com/t0xic0der/sanctuary-zero>`_: A secure chatroom with zero logging and total transience.
 - `Hummingbot <https://github.com/CoinAlpha/hummingbot>`_: A Cryptocurrency Algorithmic Trading Platform
 - `git-bbb <https://github.com/MrMino/git-bbb>`_: A `git blame` browser.
+- `ass <https://github.com/mlang/ass`_: An OpenAI Assistants API client.
 
 Libraries:
 
