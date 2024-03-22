@@ -391,7 +391,7 @@ A :class:`~prompt_toolkit.layout.processors.Processor` operates on individual
 lines. Basically, it takes a (formatted) line and produces a new (formatted)
 line.
 
-Some build-in processors:
+Some built-in processors:
 
 +----------------------------------------------------------------------------+-----------------------------------------------------------+
 | Processor                                                                  | Usage:                                                    |

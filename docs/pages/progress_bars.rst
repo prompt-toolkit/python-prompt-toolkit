@@ -237,7 +237,7 @@ printing text possible while the progress bar is displayed. This ensures that
 printing happens above the progress bar.
 
 Further, when "x" is pressed, we set a cancel flag, which stops the progress.
-It would also be possible to send `SIGINT` to the mean thread, but that's not
+It would also be possible to send `SIGINT` to the main thread, but that's not
 always considered a clean way of cancelling something.
 
 In the example above, we also display a toolbar at the bottom which shows the
