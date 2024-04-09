@@ -1621,5 +1621,6 @@ def _restore_sigint_from_ctypes() -> Generator[None, None, None]:
     try:
         yield
     finally:
-        signal.signal(signal.SIGINT, sigint)
+        if sigint is not None:
+            signal.signal(signal.SIGINT, sigint)
         pythonapi.PyOS_setsig(signal.SIGINT, sigint_os)
