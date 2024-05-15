@@ -6,6 +6,7 @@ user typed without allowing him/her to edit it.
 This should display the prompt with all the formatting like usual, but not
 allow any editing.
 """
+
 from prompt_toolkit import HTML, prompt
 
 if __name__ == "__main__":
@@ -13,4 +14,4 @@ if __name__ == "__main__":
         HTML("<b>Type <u>some input</u>: </b>"), accept_default=True, default="test"
     )
 
-    print("You said: %s" % answer)
+    print(f"You said: {answer}")

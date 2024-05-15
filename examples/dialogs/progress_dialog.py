@@ -2,6 +2,7 @@
 """
 Example of a progress bar dialog.
 """
+
 import os
 import time
 

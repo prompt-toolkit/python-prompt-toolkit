@@ -9,6 +9,7 @@ See:
 - https://github.com/xonsh/xonsh/issues/3356
 - https://github.com/prompt-toolkit/python-prompt-toolkit/issues/1111
 """
+
 import datetime
 
 from prompt_toolkit import prompt
@@ -72,7 +73,7 @@ def get_prompt() -> HTML:
 def main() -> None:
     while True:
         answer = prompt(get_prompt, style=style, refresh_interval=1)
-        print("You said: %s" % answer)
+        print(f"You said: {answer}")
 
 
 if __name__ == "__main__":

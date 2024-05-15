@@ -6,6 +6,7 @@ pressing Control-K followed by to normal characters.
 Taken from Neovim and translated to Python:
 https://raw.githubusercontent.com/neovim/neovim/master/src/nvim/digraph.c
 """
+
 from __future__ import annotations
 
 __all__ = [

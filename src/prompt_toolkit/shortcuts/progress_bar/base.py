@@ -7,6 +7,7 @@ Progress bar implementation on top of prompt_toolkit.
         for item in pb(data):
             ...
 """
+
 from __future__ import annotations
 
 import contextvars

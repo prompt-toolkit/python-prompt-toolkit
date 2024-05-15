@@ -5,6 +5,7 @@ For testing terminal input.
 
 (This does not use the `Input` implementation, but only the `Vt100Parser`.)
 """
+
 import sys
 
 from prompt_toolkit.input.vt100 import raw_mode

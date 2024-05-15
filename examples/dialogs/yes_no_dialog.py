@@ -2,6 +2,7 @@
 """
 Example of confirmation (yes/no) dialog window.
 """
+
 from prompt_toolkit.shortcuts import yes_no_dialog
 
 

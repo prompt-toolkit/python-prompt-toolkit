@@ -36,12 +36,10 @@ class _ExplodedList(List[_T]):
     # TODO: When creating a copy() or [:], return also an _ExplodedList.
 
     @overload
-    def __setitem__(self, index: SupportsIndex, value: _T) -> None:
-        ...
+    def __setitem__(self, index: SupportsIndex, value: _T) -> None: ...
 
     @overload
-    def __setitem__(self, index: slice, value: Iterable[_T]) -> None:
-        ...
+    def __setitem__(self, index: slice, value: Iterable[_T]) -> None: ...
 
     def __setitem__(
         self, index: SupportsIndex | slice, value: _T | Iterable[_T]

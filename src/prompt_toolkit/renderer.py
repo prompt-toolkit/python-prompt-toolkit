@@ -2,6 +2,7 @@
 Renders the command line on the console.
 (Redraws parts of the input line that were changed.)
 """
+
 from __future__ import annotations
 
 from asyncio import FIRST_COMPLETED, Future, ensure_future, sleep, wait

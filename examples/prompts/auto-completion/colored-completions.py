@@ -3,6 +3,7 @@
 Demonstration of a custom completer class and the possibility of styling
 completions independently.
 """
+
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.output.color_depth import ColorDepth
 from prompt_toolkit.shortcuts import CompleteStyle, prompt

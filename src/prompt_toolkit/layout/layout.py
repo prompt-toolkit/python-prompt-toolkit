@@ -1,6 +1,7 @@
 """
 Wrapper for the layout.
 """
+
 from __future__ import annotations
 
 from typing import Generator, Iterable, Union

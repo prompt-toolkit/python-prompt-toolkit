@@ -10,6 +10,7 @@ an :class:`.HTML` object, an :class:`.ANSI` object or a sequence of
 `(style_string, text)` tuples. The :func:`.to_formatted_text` conversion
 function takes any of these and turns all of them into such a tuple sequence.
 """
+
 from __future__ import annotations
 
 from .ansi import ANSI

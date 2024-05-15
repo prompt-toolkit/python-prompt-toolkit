@@ -5,6 +5,7 @@ For the key bindings implementation with attached filters, check
 `prompt_toolkit.key_binding.bindings.search`. (Use these for new key bindings
 instead of calling these function directly.)
 """
+
 from __future__ import annotations
 
 from enum import Enum
@@ -59,12 +60,7 @@ class SearchState:
         self.ignore_case = to_filter(ignore_case)
 
     def __repr__(self) -> str:
-        return "{}({!r}, direction={!r}, ignore_case={!r})".format(
-            self.__class__.__name__,
-            self.text,
-            self.direction,
-            self.ignore_case,
-        )
+        return f"{self.__class__.__name__}({self.text!r}, direction={self.direction!r}, ignore_case={self.ignore_case!r})"
 
     def __invert__(self) -> SearchState:
         """

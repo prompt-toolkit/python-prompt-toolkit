@@ -5,6 +5,7 @@ Demo of "operate-and-get-next".
 (Actually, this creates one prompt application, and keeps running the same app
 over and over again. -- For now, this is the only way to get this working.)
 """
+
 from prompt_toolkit.shortcuts import PromptSession
 
 

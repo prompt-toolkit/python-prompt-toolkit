@@ -2,6 +2,7 @@
 """
 Demonstration of how to print using the HTML class.
 """
+
 from prompt_toolkit import HTML, print_formatted_text
 
 print = print_formatted_text

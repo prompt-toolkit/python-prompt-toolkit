@@ -4,6 +4,7 @@ A simple chat application over telnet.
 Everyone that connects is asked for his name, and then people can chat with
 each other.
 """
+
 import logging
 import random
 from asyncio import Future, run
@@ -84,9 +85,9 @@ def _send_to_everyone(sender_connection, name, message, color):
         if c != sender_connection:
             c.send_above_prompt(
                 [
-                    ("fg:" + color, "[%s]" % name),
+                    ("fg:" + color, f"[{name}]"),
                     ("", " "),
-                    ("fg:" + color, "%s\n" % message),
+                    ("fg:" + color, f"{message}\n"),
                 ]
             )
 

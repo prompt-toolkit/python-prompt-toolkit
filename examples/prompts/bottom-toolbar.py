@@ -10,6 +10,7 @@ The bottom toolbar will always receive the style 'bottom-toolbar', and the text
 inside will get 'bottom-toolbar.text'. These can be used to change the default
 style.
 """
+
 import time
 
 from prompt_toolkit import prompt
@@ -20,14 +21,14 @@ from prompt_toolkit.styles import Style
 def main():
     # Example 1: fixed text.
     text = prompt("Say something: ", bottom_toolbar="This is a toolbar")
-    print("You said: %s" % text)
+    print(f"You said: {text}")
 
     # Example 2: fixed text from a callable:
     def get_toolbar():
-        return "Bottom toolbar: time=%r" % time.time()
+        return f"Bottom toolbar: time={time.time()!r}"
 
     text = prompt("Say something: ", bottom_toolbar=get_toolbar, refresh_interval=0.5)
-    print("You said: %s" % text)
+    print(f"You said: {text}")
 
     # Example 3: Using HTML:
     text = prompt(
@@ -36,7 +37,7 @@ def main():
             '(html) <b>This</b> <u>is</u> a <style bg="ansired">toolbar</style>'
         ),
     )
-    print("You said: %s" % text)
+    print(f"You said: {text}")
 
     # Example 4: Using ANSI:
     text = prompt(
@@ -45,7 +46,7 @@ def main():
             "(ansi): \x1b[1mThis\x1b[0m \x1b[4mis\x1b[0m a \x1b[91mtoolbar"
         ),
     )
-    print("You said: %s" % text)
+    print(f"You said: {text}")
 
     # Example 5: styling differently.
     style = Style.from_dict(
@@ -56,7 +57,7 @@ def main():
     )
 
     text = prompt("Say something: ", bottom_toolbar="This is a toolbar", style=style)
-    print("You said: %s" % text)
+    print(f"You said: {text}")
 
     # Example 6: Using a list of tokens.
     def get_bottom_toolbar():
@@ -69,11 +70,11 @@ def main():
         ]
 
     text = prompt("Say something: ", bottom_toolbar=get_bottom_toolbar)
-    print("You said: %s" % text)
+    print(f"You said: {text}")
 
     # Example 7: multiline fixed text.
     text = prompt("Say something: ", bottom_toolbar="This is\na multiline toolbar")
-    print("You said: %s" % text)
+    print(f"You said: {text}")
 
 
 if __name__ == "__main__":

@@ -26,4 +26,4 @@ if __name__ == "__main__":
     answer = prompt(
         "Multiline input: ", multiline=True, prompt_continuation=prompt_continuation
     )
-    print("You said: %s" % answer)
+    print(f"You said: {answer}")

@@ -3,6 +3,7 @@
 Demonstration of a custom clipboard class.
 This requires the 'pyperclip' library to be installed.
 """
+
 from prompt_toolkit import prompt
 from prompt_toolkit.clipboard.pyperclip import PyperclipClipboard
 
@@ -14,4 +15,4 @@ if __name__ == "__main__":
     print("")
 
     answer = prompt("Give me some input: ", clipboard=PyperclipClipboard())
-    print("You said: %s" % answer)
+    print(f"You said: {answer}")

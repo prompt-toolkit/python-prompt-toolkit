@@ -3,6 +3,7 @@
 Example of adding a custom Vi operator and text object.
 (Note that this API is not guaranteed to remain stable.)
 """
+
 from prompt_toolkit import prompt
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.key_binding import KeyBindings
@@ -63,7 +64,7 @@ def main():
     text = prompt(
         "> ", default="hello world", key_bindings=bindings, editing_mode=EditingMode.VI
     )
-    print("You said: %s" % text)
+    print(f"You said: {text}")
 
 
 if __name__ == "__main__":

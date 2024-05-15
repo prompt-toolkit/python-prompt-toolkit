@@ -1,5 +1,5 @@
-"""
-"""
+""" """
+
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
@@ -66,18 +66,9 @@ class Completion:
 
     def __repr__(self) -> str:
         if isinstance(self.display, str) and self.display == self.text:
-            return "{}(text={!r}, start_position={!r})".format(
-                self.__class__.__name__,
-                self.text,
-                self.start_position,
-            )
+            return f"{self.__class__.__name__}(text={self.text!r}, start_position={self.start_position!r})"
         else:
-            return "{}(text={!r}, start_position={!r}, display={!r})".format(
-                self.__class__.__name__,
-                self.text,
-                self.start_position,
-                self.display,
-            )
+            return f"{self.__class__.__name__}(text={self.text!r}, start_position={self.start_position!r}, display={self.display!r})"
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Completion):
@@ -156,11 +147,7 @@ class CompleteEvent:
         self.completion_requested = completion_requested
 
     def __repr__(self) -> str:
-        return "{}(text_inserted={!r}, completion_requested={!r})".format(
-            self.__class__.__name__,
-            self.text_inserted,
-            self.completion_requested,
-        )
+        return f"{self.__class__.__name__}(text_inserted={self.text_inserted!r}, completion_requested={self.completion_requested!r})"
 
 
 class Completer(metaclass=ABCMeta):

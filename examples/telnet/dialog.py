@@ -2,6 +2,7 @@
 """
 Example of a telnet application that displays a dialog window.
 """
+
 import logging
 from asyncio import Future, run
 

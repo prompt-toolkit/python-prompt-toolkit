@@ -7,6 +7,7 @@ NOTE: There is no `DynamicHistory`:
       loading can be done asynchronously and making the history swappable would
       probably break this.
 """
+
 from __future__ import annotations
 
 import datetime
@@ -297,6 +298,6 @@ class FileHistory(History):
             def write(t: str) -> None:
                 f.write(t.encode("utf-8"))
 
-            write("\n# %s\n" % datetime.datetime.now())
+            write(f"\n# {datetime.datetime.now()}\n")
             for line in string.split("\n"):
-                write("+%s\n" % line)
+                write(f"+{line}\n")

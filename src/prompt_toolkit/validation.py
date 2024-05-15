@@ -2,6 +2,7 @@
 Input validation for a `Buffer`.
 (Validators will be called before accepting input.)
 """
+
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
@@ -36,11 +37,7 @@ class ValidationError(Exception):
         self.message = message
 
     def __repr__(self) -> str:
-        return "{}(cursor_position={!r}, message={!r})".format(
-            self.__class__.__name__,
-            self.cursor_position,
-            self.message,
-        )
+        return f"{self.__class__.__name__}(cursor_position={self.cursor_position!r}, message={self.message!r})"
 
 
 class Validator(metaclass=ABCMeta):

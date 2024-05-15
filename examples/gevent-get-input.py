@@ -3,6 +3,7 @@
 For testing: test to make sure that everything still works when gevent monkey
 patches are applied.
 """
+
 from gevent.monkey import patch_all
 
 from prompt_toolkit.eventloop.defaults import create_event_loop
@@ -21,4 +22,4 @@ if __name__ == "__main__":
     # Ask for input.
     session = PromptSession("Give me some input: ", loop=eventloop)
     answer = session.prompt()
-    print("You said: %s" % answer)
+    print(f"You said: {answer}")

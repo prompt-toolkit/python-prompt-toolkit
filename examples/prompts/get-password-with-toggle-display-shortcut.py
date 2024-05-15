@@ -3,6 +3,7 @@
 get_password function that displays asterisks instead of the actual characters.
 With the addition of a ControlT shortcut to hide/show the input.
 """
+
 from prompt_toolkit import prompt
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.key_binding import KeyBindings
@@ -21,7 +22,7 @@ def main():
     password = prompt(
         "Password: ", is_password=Condition(lambda: hidden[0]), key_bindings=bindings
     )
-    print("You said: %s" % password)
+    print(f"You said: {password}")
 
 
 if __name__ == "__main__":

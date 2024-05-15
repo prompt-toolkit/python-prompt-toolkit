@@ -5,6 +5,7 @@ the input in the :class:`~prompt_toolkit.inputstream.InputStream` instance.
 The `KeyProcessor` will according to the implemented keybindings call the
 correct callbacks when new key presses are feed through `feed`.
 """
+
 from __future__ import annotations
 
 import weakref
@@ -450,11 +451,7 @@ class KeyPressEvent:
         self._app = get_app()
 
     def __repr__(self) -> str:
-        return "KeyPressEvent(arg={!r}, key_sequence={!r}, is_repeat={!r})".format(
-            self.arg,
-            self.key_sequence,
-            self.is_repeat,
-        )
+        return f"KeyPressEvent(arg={self.arg!r}, key_sequence={self.key_sequence!r}, is_repeat={self.is_repeat!r})"
 
     @property
     def data(self) -> str:

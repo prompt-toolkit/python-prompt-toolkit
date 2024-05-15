@@ -2,6 +2,7 @@
 """
 Demonstration of how to programmatically focus a certain widget.
 """
+
 from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.document import Document

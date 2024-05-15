@@ -44,6 +44,7 @@ And one prepared menu:
 - CompletionsMenu
 
 """
+
 from __future__ import annotations
 
 from .containers import (

@@ -1,6 +1,7 @@
 """
 Open in editor key bindings.
 """
+
 from __future__ import annotations
 
 from prompt_toolkit.filters import emacs_mode, has_selection, vi_navigation_mode

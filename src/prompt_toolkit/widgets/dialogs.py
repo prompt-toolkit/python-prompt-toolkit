@@ -1,6 +1,7 @@
 """
 Collection of reusable components for building full screen applications.
 """
+
 from __future__ import annotations
 
 from typing import Sequence

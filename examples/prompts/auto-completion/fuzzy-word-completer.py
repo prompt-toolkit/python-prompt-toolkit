@@ -7,6 +7,7 @@ Press [Tab] to complete the current word.
     and shows all the completions. (In the menu)
 - Any following tab press cycles through all the possible completions.
 """
+
 from prompt_toolkit.completion import FuzzyWordCompleter
 from prompt_toolkit.shortcuts import prompt
 
@@ -52,7 +53,7 @@ def main():
     text = prompt(
         "Give some animals: ", completer=animal_completer, complete_while_typing=True
     )
-    print("You said: %s" % text)
+    print(f"You said: {text}")
 
 
 if __name__ == "__main__":

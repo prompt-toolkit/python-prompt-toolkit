@@ -29,7 +29,7 @@ def to_filter(bool_or_filter: FilterOrBool) -> Filter:
     if isinstance(bool_or_filter, Filter):
         return bool_or_filter
 
-    raise TypeError("Expecting a bool or a Filter instance. Got %r" % bool_or_filter)
+    raise TypeError(f"Expecting a bool or a Filter instance. Got {bool_or_filter!r}")
 
 
 def is_true(value: FilterOrBool) -> bool:

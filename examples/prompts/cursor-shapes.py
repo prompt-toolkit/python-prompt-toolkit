@@ -2,6 +2,7 @@
 """
 Example of cursor shape configurations.
 """
+
 from prompt_toolkit import prompt
 from prompt_toolkit.cursor_shapes import CursorShape, ModalCursorShapeConfig
 

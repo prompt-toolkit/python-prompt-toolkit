@@ -3,6 +3,7 @@
 A very simple progress bar where the name of the task scrolls, because it's too long.
 iterator.
 """
+
 import time
 
 from prompt_toolkit.shortcuts import ProgressBar

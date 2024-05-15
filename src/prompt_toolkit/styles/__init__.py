@@ -1,6 +1,7 @@
 """
 Styling for prompt_toolkit applications.
 """
+
 from __future__ import annotations
 
 from .base import (

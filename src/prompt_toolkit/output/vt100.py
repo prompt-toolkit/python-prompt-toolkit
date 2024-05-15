@@ -6,6 +6,7 @@ A lot of thanks, regarding outputting of colors, goes to the Pygments project:
 everything has been highly optimized.)
 http://pygments.org/
 """
+
 from __future__ import annotations
 
 import io
@@ -521,7 +522,7 @@ class Vt100_Output(Output):
             "eterm-color",
         ):  # Not supported by the Linux console.
             self.write_raw(
-                "\x1b]2;%s\x07" % title.replace("\x1b", "").replace("\x07", "")
+                "\x1b]2;{}\x07".format(title.replace("\x1b", "").replace("\x07", ""))
             )
 
     def clear_title(self) -> None:

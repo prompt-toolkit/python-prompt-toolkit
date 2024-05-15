@@ -12,6 +12,7 @@ An example of how to deal with slow auto completion code.
 - We also set a `loading` boolean in the completer function to keep track of
   when the completer is running, and display this in the toolbar.
 """
+
 import time
 
 from prompt_toolkit.completion import Completer, Completion
@@ -96,7 +97,7 @@ def main():
         bottom_toolbar=bottom_toolbar,
         complete_style=CompleteStyle.MULTI_COLUMN,
     )
-    print("You said: %s" % text)
+    print(f"You said: {text}")
 
 
 if __name__ == "__main__":

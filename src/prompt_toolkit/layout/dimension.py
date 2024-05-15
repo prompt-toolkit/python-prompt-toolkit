@@ -2,6 +2,7 @@
 Layout dimensions are used to give the minimum, maximum and preferred
 dimensions for containers and controls.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Callable, Union
@@ -105,15 +106,15 @@ class Dimension:
     def __repr__(self) -> str:
         fields = []
         if self.min_specified:
-            fields.append("min=%r" % self.min)
+            fields.append(f"min={self.min!r}")
         if self.max_specified:
-            fields.append("max=%r" % self.max)
+            fields.append(f"max={self.max!r}")
         if self.preferred_specified:
-            fields.append("preferred=%r" % self.preferred)
+            fields.append(f"preferred={self.preferred!r}")
         if self.weight_specified:
-            fields.append("weight=%r" % self.weight)
+            fields.append(f"weight={self.weight!r}")
 
-        return "Dimension(%s)" % ", ".join(fields)
+        return "Dimension({})".format(", ".join(fields))
 
 
 def sum_layout_dimensions(dimensions: list[Dimension]) -> Dimension:

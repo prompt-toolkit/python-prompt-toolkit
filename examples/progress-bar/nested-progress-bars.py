@@ -2,6 +2,7 @@
 """
 Example of nested progress bars.
 """
+
 import time
 
 from prompt_toolkit import HTML

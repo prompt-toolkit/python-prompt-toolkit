@@ -12,6 +12,7 @@ container object.
     guarantees are made yet). The public API in
     `prompt_toolkit.shortcuts.dialogs` on the other hand is considered stable.
 """
+
 from __future__ import annotations
 
 from functools import partial

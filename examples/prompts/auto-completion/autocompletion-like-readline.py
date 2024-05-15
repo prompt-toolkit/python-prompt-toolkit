@@ -3,6 +3,7 @@
 Autocompletion example that displays the autocompletions like readline does by
 binding a custom handler to the Tab key.
 """
+
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.shortcuts import CompleteStyle, prompt
 
@@ -51,7 +52,7 @@ def main():
         completer=animal_completer,
         complete_style=CompleteStyle.READLINE_LIKE,
     )
-    print("You said: %s" % text)
+    print(f"You said: {text}")
 
 
 if __name__ == "__main__":

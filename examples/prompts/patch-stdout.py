@@ -5,6 +5,7 @@ An example that demonstrates how `patch_stdout` works.
 This makes sure that output from other threads doesn't disturb the rendering of
 the prompt, but instead is printed nicely above the prompt.
 """
+
 import threading
 import time
 
@@ -31,7 +32,7 @@ def main():
     # should not disturb anything.
     with patch_stdout():
         result = prompt("Say something: ")
-    print("You said: %s" % result)
+    print(f"You said: {result}")
 
     # Stop thread.
     running = False

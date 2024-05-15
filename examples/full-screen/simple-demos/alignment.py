@@ -2,6 +2,7 @@
 """
 Demo of the different Window alignment options.
 """
+
 from prompt_toolkit.application import Application
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout.containers import HSplit, Window, WindowAlign

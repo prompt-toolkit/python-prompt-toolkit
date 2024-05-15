@@ -2,6 +2,7 @@
 """
 Example of printing colored text to the output.
 """
+
 from prompt_toolkit import print_formatted_text
 from prompt_toolkit.formatted_text import ANSI, HTML, FormattedText
 from prompt_toolkit.styles import Style

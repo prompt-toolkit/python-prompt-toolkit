@@ -4,6 +4,7 @@ Adaptor classes for using Pygments lexers within prompt_toolkit.
 This includes syntax synchronization code, so that we don't have to start
 lexing at the beginning of a document, when displaying a very large text.
 """
+
 from __future__ import annotations
 
 import re

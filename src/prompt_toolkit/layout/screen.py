@@ -320,10 +320,4 @@ class WritePosition:
         self.height = height
 
     def __repr__(self) -> str:
-        return "{}(x={!r}, y={!r}, width={!r}, height={!r})".format(
-            self.__class__.__name__,
-            self.xpos,
-            self.ypos,
-            self.width,
-            self.height,
-        )
+        return f"{self.__class__.__name__}(x={self.xpos!r}, y={self.ypos!r}, width={self.width!r}, height={self.height!r})"

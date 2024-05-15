@@ -7,6 +7,7 @@ entry of the history starts with the given input, then it will show the
 remaining part as a suggestion. Pressing the right arrow will insert this
 suggestion.
 """
+
 from prompt_toolkit import PromptSession
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.history import InMemoryHistory
@@ -41,7 +42,7 @@ def main():
         else:
             break
 
-    print("You said: %s" % text)
+    print(f"You said: {text}")
 
 
 if __name__ == "__main__":

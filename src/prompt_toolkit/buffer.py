@@ -2,6 +2,7 @@
 Data structures for the Buffer.
 It holds the text, cursor position, history, etc...
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -85,12 +86,7 @@ class CompletionState:
         self.complete_index = complete_index  # Position in the `_completions` array.
 
     def __repr__(self) -> str:
-        return "{}({!r}, <{!r}> completions, index={!r})".format(
-            self.__class__.__name__,
-            self.original_document,
-            len(self.completions),
-            self.complete_index,
-        )
+        return f"{self.__class__.__name__}({self.original_document!r}, <{len(self.completions)!r}> completions, index={self.complete_index!r})"
 
     def go_to_index(self, index: int | None) -> None:
         """
@@ -149,12 +145,7 @@ class YankNthArgState:
         self.n = n
 
     def __repr__(self) -> str:
-        return "{}(history_position={!r}, n={!r}, previous_inserted_word={!r})".format(
-            self.__class__.__name__,
-            self.history_position,
-            self.n,
-            self.previous_inserted_word,
-        )
+        return f"{self.__class__.__name__}(history_position={self.history_position!r}, n={self.n!r}, previous_inserted_word={self.previous_inserted_word!r})"
 
 
 BufferEventHandler = Callable[["Buffer"], None]

@@ -4,6 +4,7 @@ Simple example of a CLI that keeps a persistent history of all the entered
 strings in a file. When you run this script for a second time, pressing
 arrow-up will go back in history.
 """
+
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 
@@ -18,7 +19,7 @@ def main():
 
     while True:
         text = session.prompt("Say something: ")
-        print("You said: %s" % text)
+        print(f"You said: {text}")
 
 
 if __name__ == "__main__":

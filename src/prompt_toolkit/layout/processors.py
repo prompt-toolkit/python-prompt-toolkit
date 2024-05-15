@@ -5,6 +5,7 @@ from a buffer before the BufferControl will render it to the screen.
 They can insert fragments before or after, or highlight fragments by replacing the
 fragment types.
 """
+
 from __future__ import annotations
 
 import re
@@ -343,9 +344,9 @@ class HighlightMatchingBracketProcessor(Processor):
         self.chars = chars
         self.max_cursor_distance = max_cursor_distance
 
-        self._positions_cache: SimpleCache[
-            Hashable, list[tuple[int, int]]
-        ] = SimpleCache(maxsize=8)
+        self._positions_cache: SimpleCache[Hashable, list[tuple[int, int]]] = (
+            SimpleCache(maxsize=8)
+        )
 
     def _get_positions_to_highlight(self, document: Document) -> list[tuple[int, int]]:
         """
@@ -924,11 +925,7 @@ class ConditionalProcessor(Processor):
             return Transformation(transformation_input.fragments)
 
     def __repr__(self) -> str:
-        return "{}(processor={!r}, filter={!r})".format(
-            self.__class__.__name__,
-            self.processor,
-            self.filter,
-        )
+        return f"{self.__class__.__name__}(processor={self.processor!r}, filter={self.filter!r})"
 
 
 class DynamicProcessor(Processor):

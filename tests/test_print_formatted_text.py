@@ -1,6 +1,7 @@
 """
 Test the `print` function.
 """
+
 from __future__ import annotations
 
 import pytest

@@ -12,6 +12,7 @@ Type for instance::
 This example shows how you can define the grammar of a regular language and how
 to use variables in this grammar with completers and tokens attached.
 """
+
 import math
 
 from prompt_toolkit import prompt
@@ -99,7 +100,7 @@ if __name__ == "__main__":
                 }[vars.get("operator1") or vars.get("operator2")]
 
                 # Execute and print the result.
-                print("Result: %s\n" % (operator(var1, var2)))
+                print(f"Result: {operator(var1, var2)}\n")
 
             elif vars.get("operator2"):
                 print("Operator 2")

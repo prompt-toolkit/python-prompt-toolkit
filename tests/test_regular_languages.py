@@ -78,13 +78,13 @@ def test_prefix():
 def test_completer():
     class completer1(Completer):
         def get_completions(self, document, complete_event):
-            yield Completion("before-%s-after" % document.text, -len(document.text))
-            yield Completion("before-%s-after-B" % document.text, -len(document.text))
+            yield Completion(f"before-{document.text}-after", -len(document.text))
+            yield Completion(f"before-{document.text}-after-B", -len(document.text))
 
     class completer2(Completer):
         def get_completions(self, document, complete_event):
-            yield Completion("before2-%s-after2" % document.text, -len(document.text))
-            yield Completion("before2-%s-after2-B" % document.text, -len(document.text))
+            yield Completion(f"before2-{document.text}-after2", -len(document.text))
+            yield Completion(f"before2-{document.text}-after2-B", -len(document.text))
 
     # Create grammar.  "var1" + "whitespace" + "var2"
     g = compile(r"(?P<var1>[a-z]*) \s+ (?P<var2>[a-z]*)")

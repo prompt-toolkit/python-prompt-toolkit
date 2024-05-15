@@ -31,6 +31,7 @@ To support type ahead, this module will store all the key strokes that were
 read too early, so that they can be feed into to the next `prompt()` call or to
 the next prompt_toolkit `Application`.
 """
+
 from __future__ import annotations
 
 from collections import defaultdict

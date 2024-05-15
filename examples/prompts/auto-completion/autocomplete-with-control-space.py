@@ -2,6 +2,7 @@
 """
 Example of using the control-space key binding for auto completion.
 """
+
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.key_binding import KeyBindings
@@ -68,7 +69,7 @@ def main():
         complete_while_typing=False,
         key_bindings=kb,
     )
-    print("You said: %s" % text)
+    print(f"You said: {text}")
 
 
 if __name__ == "__main__":

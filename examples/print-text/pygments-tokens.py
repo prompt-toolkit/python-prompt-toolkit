@@ -3,6 +3,7 @@
 Printing a list of Pygments (Token, text) tuples,
 or an output of a Pygments lexer.
 """
+
 import pygments
 from pygments.lexers.python import PythonLexer
 from pygments.token import Token

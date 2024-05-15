@@ -1,6 +1,7 @@
 """
 Tool for creating styles from a dictionary.
 """
+
 from __future__ import annotations
 
 import itertools
@@ -72,7 +73,7 @@ def parse_color(text: str) -> str:
     elif text in ("", "default"):
         return text
 
-    raise ValueError("Wrong color format %r" % text)
+    raise ValueError(f"Wrong color format {text!r}")
 
 
 # Attributes, when they are not filled in by a style. None means that we take
