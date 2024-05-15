@@ -22,6 +22,7 @@ stuff to do. There are two ways to detect when to return:
   asynchronous autocompletion. When the completion for instance is ready, we
   also want prompt-toolkit to gain control again in order to display that.
 """
+
 from __future__ import annotations
 
 import asyncio

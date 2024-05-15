@@ -7,4 +7,4 @@ if __name__ == "__main__":
     answer = prompt("Give me some input: ")
     set_title("")
 
-    print("You said: %s" % answer)
+    print(f"You said: {answer}")

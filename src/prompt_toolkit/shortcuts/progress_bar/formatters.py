@@ -2,6 +2,7 @@
 Formatter classes for the progress bar.
 Each progress bar consists of a list of these formatters.
 """
+
 from __future__ import annotations
 
 import datetime
@@ -149,7 +150,9 @@ class Bar(Formatter):
     Display the progress bar itself.
     """
 
-    template = HTML("<bar>{start}<bar-a>{bar_a}</bar-a><bar-b>{bar_b}</bar-b><bar-c>{bar_c}</bar-c>{end}</bar>")
+    template = HTML(
+        "<bar>{start}<bar-a>{bar_a}</bar-a><bar-b>{bar_b}</bar-b><bar-c>{bar_c}</bar-c>{end}</bar>"
+    )
 
     def __init__(
         self,
@@ -259,9 +262,7 @@ class TimeElapsed(Formatter):
         width: int,
     ) -> AnyFormattedText:
         text = _format_timedelta(progress.time_elapsed).rjust(width)
-        return self.template.format(
-            time_elapsed=text
-        )
+        return self.template.format(time_elapsed=text)
 
     def get_width(self, progress_bar: ProgressBar) -> AnyDimension:
         all_values = [
@@ -347,9 +348,7 @@ class SpinningWheel(Formatter):
         width: int,
     ) -> AnyFormattedText:
         index = int(time.time() * 3) % len(self.characters)
-        return self.template.format(
-            self.characters[index]
-        )
+        return self.template.format(self.characters[index])
 
     def get_width(self, progress_bar: ProgressBar) -> AnyDimension:
         return D.exact(1)

@@ -2,6 +2,7 @@
 """
 Colorcolumn example.
 """
+
 from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.key_binding import KeyBindings

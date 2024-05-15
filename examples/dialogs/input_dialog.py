@@ -2,6 +2,7 @@
 """
 Example of an input box dialog.
 """
+
 from prompt_toolkit.shortcuts import input_dialog
 
 

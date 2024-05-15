@@ -11,6 +11,7 @@ because they take too much time, and could potentially block the event loop,
 then wrap the :class:`.AutoSuggest` instance into a
 :class:`.ThreadedAutoSuggest`.
 """
+
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
@@ -46,7 +47,7 @@ class Suggestion:
         self.text = text
 
     def __repr__(self) -> str:
-        return "Suggestion(%s)" % self.text
+        return f"Suggestion({self.text})"
 
 
 class AutoSuggest(metaclass=ABCMeta):

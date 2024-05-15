@@ -73,11 +73,11 @@ class NoConsoleScreenBufferError(Exception):
 
         if xterm:
             message = (
-                "Found %s, while expecting a Windows console. "
+                "Found {}, while expecting a Windows console. "
                 'Maybe try to run this program using "winpty" '
                 "or run it in cmd.exe instead. Or otherwise, "
                 "in case of Cygwin, use the Python executable "
-                "that is compiled for Cygwin." % os.environ["TERM"]
+                "that is compiled for Cygwin.".format(os.environ["TERM"])
             )
         else:
             message = "No Windows console found. Are you running cmd.exe?"
@@ -163,13 +163,13 @@ class Win32Output(Output):
         self.flush()
 
         if _DEBUG_RENDER_OUTPUT:
-            self.LOG.write(("%r" % func.__name__).encode("utf-8") + b"\n")
+            self.LOG.write((f"{func.__name__!r}").encode() + b"\n")
             self.LOG.write(
-                b"     " + ", ".join(["%r" % i for i in a]).encode("utf-8") + b"\n"
+                b"     " + ", ".join([f"{i!r}" for i in a]).encode("utf-8") + b"\n"
             )
             self.LOG.write(
                 b"     "
-                + ", ".join(["%r" % type(i) for i in a]).encode("utf-8")
+                + ", ".join([f"{type(i)!r}" for i in a]).encode("utf-8")
                 + b"\n"
             )
             self.LOG.flush()
@@ -370,7 +370,7 @@ class Win32Output(Output):
         data = "".join(self._buffer)
 
         if _DEBUG_RENDER_OUTPUT:
-            self.LOG.write(("%r" % data).encode("utf-8") + b"\n")
+            self.LOG.write((f"{data!r}").encode() + b"\n")
             self.LOG.flush()
 
         # Print characters one by one. This appears to be the best solution

@@ -3,6 +3,7 @@
 Example of a telnet application that displays a bottom toolbar and completions
 in the prompt.
 """
+
 import logging
 from asyncio import run
 

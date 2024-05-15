@@ -7,6 +7,7 @@ Notice that this doesn't swap foreground and background like "reverse" does. It
 turns light green into dark green and the other way around. Foreground and
 background are independent of each other.
 """
+
 from pygments.lexers.html import HtmlLexer
 
 from prompt_toolkit import prompt
@@ -71,7 +72,7 @@ def main():
         lexer=PygmentsLexer(HtmlLexer),
         swap_light_and_dark_colors=Condition(lambda: swapped[0]),
     )
-    print("You said: %s" % text)
+    print(f"You said: {text}")
 
 
 if __name__ == "__main__":

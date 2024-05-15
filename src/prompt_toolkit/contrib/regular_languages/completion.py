@@ -1,6 +1,7 @@
 """
 Completer for a regular grammar.
 """
+
 from __future__ import annotations
 
 from typing import Iterable

@@ -5,6 +5,7 @@ For testing terminal input.
 
 Works on both Windows and Posix.
 """
+
 import asyncio
 
 from prompt_toolkit.input import create_input

@@ -1,6 +1,7 @@
 """
 Validator for a regular language.
 """
+
 from __future__ import annotations
 
 from prompt_toolkit.document import Document

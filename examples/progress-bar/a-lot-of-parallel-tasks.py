@@ -2,6 +2,7 @@
 """
 More complex demonstration of what's possible with the progress bar.
 """
+
 import random
 import threading
 import time

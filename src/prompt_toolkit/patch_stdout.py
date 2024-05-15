@@ -17,6 +17,7 @@ Usage::
 Multiple applications can run in the body of the context manager, one after the
 other.
 """
+
 from __future__ import annotations
 
 import asyncio

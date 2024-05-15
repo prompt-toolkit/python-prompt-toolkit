@@ -24,6 +24,7 @@ Example::
         s = PromptSession()
         result = s.prompt('Say something: ')
 """
+
 from __future__ import annotations
 
 from asyncio import get_running_loop

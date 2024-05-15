@@ -1,6 +1,7 @@
 """
 Utility for running a prompt_toolkit application in an asyncssh server.
 """
+
 from __future__ import annotations
 
 import asyncio

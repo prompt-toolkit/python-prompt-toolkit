@@ -2,6 +2,7 @@
 """
 Similar to the autocompletion example. But display all the completions in multiple columns.
 """
+
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.shortcuts import CompleteStyle, prompt
 
@@ -50,7 +51,7 @@ def main():
         completer=animal_completer,
         complete_style=CompleteStyle.MULTI_COLUMN,
     )
-    print("You said: %s" % text)
+    print(f"You said: {text}")
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@
 """
 Vertical align demo with VSplit.
 """
+
 from prompt_toolkit.application import Application
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.key_binding import KeyBindings

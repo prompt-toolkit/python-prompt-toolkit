@@ -3,6 +3,7 @@
 Example that displays how to switch between Emacs and Vi input mode.
 
 """
+
 from prompt_toolkit import prompt
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.enums import EditingMode

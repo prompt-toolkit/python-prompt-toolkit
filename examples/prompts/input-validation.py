@@ -2,6 +2,7 @@
 """
 Simple example of input validation.
 """
+
 from prompt_toolkit import prompt
 from prompt_toolkit.validation import Validator
 
@@ -22,13 +23,13 @@ def main():
     text = prompt(
         "Enter e-mail address: ", validator=validator, validate_while_typing=False
     )
-    print("You said: %s" % text)
+    print(f"You said: {text}")
 
     # While typing
     text = prompt(
         "Enter e-mail address: ", validator=validator, validate_while_typing=True
     )
-    print("You said: %s" % text)
+    print(f"You said: {text}")
 
 
 if __name__ == "__main__":

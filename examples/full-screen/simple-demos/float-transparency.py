@@ -2,6 +2,7 @@
 """
 Example of the 'transparency' attribute of `Window' when used in a Float.
 """
+
 from prompt_toolkit.application import Application
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.key_binding import KeyBindings

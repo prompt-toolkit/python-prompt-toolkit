@@ -1,6 +1,7 @@
 """
 Margin implementations for a :class:`~prompt_toolkit.layout.containers.Window`.
 """
+
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
@@ -83,7 +84,7 @@ class NumberedMargin(Margin):
 
     def get_width(self, get_ui_content: Callable[[], UIContent]) -> int:
         line_count = get_ui_content().line_count
-        return max(3, len("%s" % line_count) + 1)
+        return max(3, len(f"{line_count}") + 1)
 
     def create_margin(
         self, window_render_info: WindowRenderInfo, width: int, height: int

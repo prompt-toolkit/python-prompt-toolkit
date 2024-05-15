@@ -1,6 +1,7 @@
 """
 Nestedcompleter for completion of hierarchical data structures.
 """
+
 from __future__ import annotations
 
 from typing import Any, Iterable, Mapping, Set, Union

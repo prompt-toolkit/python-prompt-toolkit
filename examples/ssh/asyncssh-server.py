@@ -2,6 +2,7 @@
 """
 Example of running a prompt_toolkit application in an asyncssh server.
 """
+
 import asyncio
 import logging
 

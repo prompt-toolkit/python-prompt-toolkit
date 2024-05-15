@@ -34,9 +34,9 @@ class MouseHandlers:
         # over the mouse handlers of the visible region in the scrollable pane.
 
         # Map y (row) to x (column) to handlers.
-        self.mouse_handlers: defaultdict[
-            int, defaultdict[int, MouseHandler]
-        ] = defaultdict(lambda: defaultdict(lambda: dummy_callback))
+        self.mouse_handlers: defaultdict[int, defaultdict[int, MouseHandler]] = (
+            defaultdict(lambda: defaultdict(lambda: dummy_callback))
+        )
 
     def set_mouse_handler_for_range(
         self,

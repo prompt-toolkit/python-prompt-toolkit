@@ -1,6 +1,7 @@
 """
 Key binding handlers for displaying completions.
 """
+
 from __future__ import annotations
 
 import asyncio

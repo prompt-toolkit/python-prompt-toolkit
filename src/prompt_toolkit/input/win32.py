@@ -329,8 +329,8 @@ class ConsoleInputReader:
         buffered_high_surrogate = None
         for key in key_presses:
             is_text = not isinstance(key.key, Keys)
-            is_high_surrogate = is_text and "\uD800" <= key.key <= "\uDBFF"
-            is_low_surrogate = is_text and "\uDC00" <= key.key <= "\uDFFF"
+            is_high_surrogate = is_text and "\ud800" <= key.key <= "\udbff"
+            is_low_surrogate = is_text and "\udc00" <= key.key <= "\udfff"
 
             if buffered_high_surrogate:
                 if is_low_surrogate:

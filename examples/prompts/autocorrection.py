@@ -4,6 +4,7 @@ Example of implementing auto correction while typing.
 
 The word "impotr" will be corrected when the user types a space afterwards.
 """
+
 from prompt_toolkit import prompt
 from prompt_toolkit.key_binding import KeyBindings
 
@@ -37,7 +38,7 @@ def main():
 
     # Read input.
     text = prompt("Say something: ", key_bindings=bindings)
-    print("You said: %s" % text)
+    print(f"You said: {text}")
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ Simple example of a CLI that demonstrates up-arrow partial string matching.
 When you type some input, it's possible to use the up arrow to filter the
 history on the items starting with the given input text.
 """
+
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import InMemoryHistory
 
@@ -34,7 +35,7 @@ def main():
         else:
             break
 
-    print("You said: %s" % text)
+    print(f"You said: {text}")
 
 
 if __name__ == "__main__":

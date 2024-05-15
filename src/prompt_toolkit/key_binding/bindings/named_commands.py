@@ -3,6 +3,7 @@ Key bindings which are also known by GNU Readline by the given names.
 
 See: http://www.delorie.com/gnu/docs/readline/rlman_13.html
 """
+
 from __future__ import annotations
 
 from typing import Callable, TypeVar, Union, cast
@@ -58,7 +59,7 @@ def get_by_name(name: str) -> Binding:
     try:
         return _readline_commands[name]
     except KeyError as e:
-        raise KeyError("Unknown Readline command: %r" % name) from e
+        raise KeyError(f"Unknown Readline command: {name!r}") from e
 
 
 #

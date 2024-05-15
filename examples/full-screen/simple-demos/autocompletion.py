@@ -6,6 +6,7 @@ completion.
 Important is to make sure that there is a `CompletionsMenu` in the layout,
 otherwise the completions won't be visible.
 """
+
 from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.completion import WordCompleter

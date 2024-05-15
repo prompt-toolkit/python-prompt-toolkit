@@ -2,6 +2,7 @@
 """
 Example of button dialog window.
 """
+
 from prompt_toolkit.shortcuts import button_dialog
 
 

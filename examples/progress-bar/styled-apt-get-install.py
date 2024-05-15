@@ -2,6 +2,7 @@
 """
 Styled just like an apt-get installation.
 """
+
 import time
 
 from prompt_toolkit.shortcuts import ProgressBar

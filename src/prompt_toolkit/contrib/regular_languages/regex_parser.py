@@ -14,6 +14,7 @@ Remarks:
 Limitations:
 - Lookahead is not supported.
 """
+
 from __future__ import annotations
 
 import re
@@ -115,11 +116,7 @@ class Variable(Node):
         self.varname = varname
 
     def __repr__(self) -> str:
-        return "{}(childnode={!r}, varname={!r})".format(
-            self.__class__.__name__,
-            self.childnode,
-            self.varname,
-        )
+        return f"{self.__class__.__name__}(childnode={self.childnode!r}, varname={self.varname!r})"
 
 
 class Repeat(Node):
@@ -265,7 +262,7 @@ def parse_regex(regex_tokens: list[str]) -> Node:
                 raise Exception(f"{t}-style repetition not yet supported")
 
             elif t.startswith("(?"):
-                raise Exception("%r not supported" % t)
+                raise Exception(f"{t!r} not supported")
 
             elif t.isspace():
                 pass

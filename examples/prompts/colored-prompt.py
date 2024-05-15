@@ -2,6 +2,7 @@
 """
 Example of a colored prompt.
 """
+
 from prompt_toolkit import prompt
 from prompt_toolkit.formatted_text import ANSI, HTML
 from prompt_toolkit.styles import Style
@@ -40,7 +41,7 @@ def example_1():
     ]
 
     answer = prompt(prompt_fragments, style=style)
-    print("You said: %s" % answer)
+    print(f"You said: {answer}")
 
 
 def example_2():
@@ -57,7 +58,7 @@ def example_2():
         ),
         style=style,
     )
-    print("You said: %s" % answer)
+    print(f"You said: {answer}")
 
 
 def example_3():
@@ -72,7 +73,7 @@ def example_3():
             "# "
         )
     )
-    print("You said: %s" % answer)
+    print(f"You said: {answer}")
 
 
 if __name__ == "__main__":

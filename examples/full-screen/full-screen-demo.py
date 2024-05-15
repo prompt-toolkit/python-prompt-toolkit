@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-"""
-"""
+""" """
+
 from pygments.lexers.html import HtmlLexer
 
 from prompt_toolkit.application import Application
@@ -218,7 +218,7 @@ application = Application(
 
 def run():
     result = application.run()
-    print("You said: %r" % result)
+    print(f"You said: {result!r}")
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@
 A progress bar that displays a formatted title above the progress bar and has a
 colored label.
 """
+
 import time
 
 from prompt_toolkit.formatted_text import HTML

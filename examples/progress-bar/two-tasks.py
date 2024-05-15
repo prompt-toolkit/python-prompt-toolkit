@@ -2,6 +2,7 @@
 """
 Two progress bars that run in parallel.
 """
+
 import threading
 import time
 

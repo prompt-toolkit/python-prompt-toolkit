@@ -2,6 +2,7 @@
 """
 A simple example of a few buttons and click handlers.
 """
+
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.key_binding import KeyBindings

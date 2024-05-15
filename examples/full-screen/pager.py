@@ -2,6 +2,7 @@
 """
 A simple application that shows a Pager application.
 """
+
 from pygments.lexers.python import PythonLexer
 
 from prompt_toolkit.application import Application
@@ -28,10 +29,7 @@ def get_statusbar_text():
         ("class:status", _pager_py_path + " - "),
         (
             "class:status.position",
-            "{}:{}".format(
-                text_area.document.cursor_position_row + 1,
-                text_area.document.cursor_position_col + 1,
-            ),
+            f"{text_area.document.cursor_position_row + 1}:{text_area.document.cursor_position_col + 1}",
         ),
         ("class:status", " - Press "),
         ("class:status.key", "Ctrl-C"),

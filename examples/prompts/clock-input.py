@@ -2,6 +2,7 @@
 """
 Example of a 'dynamic' prompt. On that shows the current time in the prompt.
 """
+
 import datetime
 
 from prompt_toolkit.shortcuts import prompt
@@ -18,7 +19,7 @@ def get_prompt():
 
 def main():
     result = prompt(get_prompt, refresh_interval=0.5)
-    print("You said: %s" % result)
+    print(f"You said: {result}")
 
 
 if __name__ == "__main__":

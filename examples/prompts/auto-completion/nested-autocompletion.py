@@ -2,6 +2,7 @@
 """
 Example of nested autocompletion.
 """
+
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import NestedCompleter
 
@@ -15,7 +16,7 @@ completer = NestedCompleter.from_nested_dict(
 
 def main():
     text = prompt("Type a command: ", completer=completer)
-    print("You said: %s" % text)
+    print(f"You said: {text}")
 
 
 if __name__ == "__main__":

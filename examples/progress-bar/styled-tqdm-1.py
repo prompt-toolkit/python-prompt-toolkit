@@ -4,6 +4,7 @@ Styled similar to tqdm, another progress bar implementation in Python.
 
 See: https://github.com/noamraph/tqdm
 """
+
 import time
 
 from prompt_toolkit.shortcuts import ProgressBar

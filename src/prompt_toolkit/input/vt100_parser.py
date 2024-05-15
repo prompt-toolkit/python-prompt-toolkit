@@ -1,6 +1,7 @@
 """
 Parser for VT100 input stream.
 """
+
 from __future__ import annotations
 
 import re

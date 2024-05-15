@@ -1,6 +1,7 @@
 """
 Data structures for the selection.
 """
+
 from __future__ import annotations
 
 from enum import Enum
@@ -54,8 +55,4 @@ class SelectionState:
         self.shift_mode = True
 
     def __repr__(self) -> str:
-        return "{}(original_cursor_position={!r}, type={!r})".format(
-            self.__class__.__name__,
-            self.original_cursor_position,
-            self.type,
-        )
+        return f"{self.__class__.__name__}(original_cursor_position={self.original_cursor_position!r}, type={self.type!r})"
