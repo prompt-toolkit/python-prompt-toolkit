@@ -15,7 +15,7 @@ import os
 import threading
 from abc import ABCMeta, abstractmethod
 from asyncio import get_running_loop
-from typing import AsyncGenerator, Iterable, Sequence
+from typing import AsyncGenerator, Iterable, Sequence, Union
 
 __all__ = [
     "History",
@@ -255,12 +255,15 @@ class DummyHistory(History):
         pass
 
 
+_StrOrBytesPath = Union[str, bytes, "os.PathLike[str]", "os.PathLike[bytes]"]
+
+
 class FileHistory(History):
     """
     :class:`.History` class that stores all strings in a file.
     """
 
-    def __init__(self, filename: str | os.PathLike) -> None:
+    def __init__(self, filename: _StrOrBytesPath) -> None:
         self.filename = filename
         super().__init__()
 
