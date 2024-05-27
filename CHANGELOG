@@ -1,6 +1,19 @@
 CHANGELOG
 =========
 
+3.0.44: 2024-05-27
+------------------
+
+New features:
+- Accept `os.PathLike` in `FileHistory` (typing fix).
+
+Fixes:
+- Fix memory leak in filters.
+- Improve performance of progress bar formatters.
+- Fix compatibility when a SIGINT handler is installed by non-Python (Rust, C).
+- Limit number of completions in buffer to 10k by default (for performance).
+
+
 3.0.43: 2023-12-13
 ------------------
 
