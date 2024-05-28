@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+3.0.45: 2024-05-28
+------------------
+
+Fixes:
+- Improve performance of `GrammarCompleter` (faster deduplication of completions).
+
+
 3.0.44: 2024-05-27
 ------------------
 
