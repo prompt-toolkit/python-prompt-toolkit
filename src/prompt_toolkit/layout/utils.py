@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Iterable, List, TypeVar, cast, overload
 from prompt_toolkit.formatted_text.base import OneStyleAndTextTuple
 
 if TYPE_CHECKING:
-    from typing_extensions import SupportsIndex
+    from typing import SupportsIndex
 
 __all__ = [
     "explode_text_fragments",

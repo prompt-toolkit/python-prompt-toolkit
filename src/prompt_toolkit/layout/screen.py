@@ -169,7 +169,7 @@ class Screen:
 
         #: Escape sequences to be injected.
         self.zero_width_escapes: defaultdict[int, defaultdict[int, str]] = defaultdict(
-            lambda: defaultdict(lambda: "")
+            lambda: defaultdict(str)
         )
 
         #: Position of the cursor.
