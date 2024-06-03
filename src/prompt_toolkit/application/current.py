@@ -53,7 +53,7 @@ class AppSession:
 
     @property
     def input(self) -> Input:
-        if self._input is None:
+        if self._input is None or self._input.closed:
             from prompt_toolkit.input.defaults import create_input
 
             self._input = create_input()
@@ -61,7 +61,7 @@ class AppSession:
 
     @property
     def output(self) -> Output:
-        if self._output is None:
+        if self._output is None or (self._output.stdout and self._output.stdout.closed):
             from prompt_toolkit.output.defaults import create_output
 
             self._output = create_output()
