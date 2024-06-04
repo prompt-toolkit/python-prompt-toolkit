@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+3.0.46: 2024-06-04
+------------------
+
+Fixes:
+- Fix pytest capsys fixture compatibility.
+
+
 3.0.45: 2024-05-28
 ------------------
 
