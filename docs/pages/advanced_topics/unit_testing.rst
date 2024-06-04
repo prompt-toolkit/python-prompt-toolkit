@@ -116,6 +116,21 @@ single fixture that does it for every test. Something like this:
             with create_app_session(input=pipe_input, output=DummyOutput()):
                 yield pipe_input
 
+For compatibility with pytest's ``capsys`` fixture, we have to create a new
+:class:`~prompt_toolkit.application.current.AppSession` for every test. This
+can be done in an autouse fixture. Pytest replaces ``sys.stdout`` with a new
+object in every test that uses ``capsys`` and the following will ensure that
+the new :class:`~prompt_toolkit.application.current.AppSession` will each time
+refer to the latest output.
+
+.. code:: python
+
+    from prompt_toolkit.application import create_app_session
+
+    @fixture(autouse=True, scope="function")
+    def _pt_app_session()
+        with create_app_session():
+            yield
 
 Type checking
 -------------

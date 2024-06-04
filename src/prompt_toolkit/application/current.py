@@ -147,11 +147,17 @@ def create_app_session(
     Like in the case of an Telnet/SSH server.
     """
     # If no input/output is specified, fall back to the current input/output,
-    # whatever that is.
+    # if there was one that was set/created for the current session.
+    # (Note that we check `_input`/`_output` and not `input`/`output`. This is
+    # because we don't want to accidently create a new input/output objects
+    # here and store it in the "parent" `AppSession`. Especially, when
+    # combining pytest's `capsys` fixture and `create_app_session`, sys.stdin
+    # and sys.stderr are patched for every test, so we don't want to leak
+    # those outputs object across `AppSession`s.)
     if input is None:
-        input = get_app_session().input
+        input = get_app_session()._input
     if output is None:
-        output = get_app_session().output
+        output = get_app_session()._output
 
     # Create new `AppSession` and activate.
     session = AppSession(input=input, output=output)
