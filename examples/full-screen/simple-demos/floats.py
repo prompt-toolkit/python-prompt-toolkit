@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Horizontal split example.
+Floats example.
 """
 
 from prompt_toolkit.application import Application
