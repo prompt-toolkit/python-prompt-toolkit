@@ -59,7 +59,7 @@ from prompt_toolkit.layout.controls import (
     FormattedTextControl,
     GetLinePrefixCallable,
 )
-from prompt_toolkit.layout.dimension import AnyDimension, to_dimension
+from prompt_toolkit.layout.dimension import AnyDimension
 from prompt_toolkit.layout.dimension import Dimension as D
 from prompt_toolkit.layout.margins import (
     ConditionalMargin,
@@ -636,31 +636,44 @@ class Box:
         modal: bool = False,
         key_bindings: KeyBindings | None = None,
     ) -> None:
-        if padding is None:
-            padding = D(preferred=0)
-
-        def get(value: AnyDimension) -> D:
-            if value is None:
-                value = padding
-            return to_dimension(value)
-
-        self.padding_left = get(padding_left)
-        self.padding_right = get(padding_right)
-        self.padding_top = get(padding_top)
-        self.padding_bottom = get(padding_bottom)
+        self.padding = padding
+        self.padding_left = padding_left
+        self.padding_right = padding_right
+        self.padding_top = padding_top
+        self.padding_bottom = padding_bottom
         self.body = body
+
+        def left() -> AnyDimension:
+            if self.padding_left is None:
+                return self.padding
+            return self.padding_left
+
+        def right() -> AnyDimension:
+            if self.padding_right is None:
+                return self.padding
+            return self.padding_right
+
+        def top() -> AnyDimension:
+            if self.padding_top is None:
+                return self.padding
+            return self.padding_top
+
+        def bottom() -> AnyDimension:
+            if self.padding_bottom is None:
+                return self.padding
+            return self.padding_bottom
 
         self.container = HSplit(
             [
-                Window(height=self.padding_top, char=char),
+                Window(height=top, char=char),
                 VSplit(
                     [
-                        Window(width=self.padding_left, char=char),
+                        Window(width=left, char=char),
                         body,
-                        Window(width=self.padding_right, char=char),
+                        Window(width=right, char=char),
                     ]
                 ),
-                Window(height=self.padding_bottom, char=char),
+                Window(height=bottom, char=char),
             ],
             width=width,
             height=height,
