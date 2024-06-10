@@ -1,6 +1,17 @@
 CHANGELOG
 =========
 
+3.0.47: 2024-06-10
+------------------
+
+New features:
+- Allow passing exception classes for `KeyboardInterrupt` and `EOFError` in
+  `PromptSession`.
+
+Fixes:
+- Compute padding parameters for `Box` widget lazily.
+
+
 3.0.46: 2024-06-04
 ------------------
 
