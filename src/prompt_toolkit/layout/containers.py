@@ -5,10 +5,12 @@ Container for the layout.
 
 from __future__ import annotations
 
+import re
+import sys
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from functools import partial
-from typing import TYPE_CHECKING, Callable, Sequence, Union, cast
+from typing import TYPE_CHECKING, Callable, Sequence, Tuple, Union, cast
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.cache import SimpleCache
@@ -23,8 +25,10 @@ from prompt_toolkit.formatted_text import (
     AnyFormattedText,
     StyleAndTextTuples,
     to_formatted_text,
+    to_plain_text,
 )
 from prompt_toolkit.formatted_text.utils import (
+    fragment_list_len,
     fragment_list_to_text,
     fragment_list_width,
 )
@@ -38,6 +42,7 @@ from .controls import (
     GetLinePrefixCallable,
     UIContent,
     UIControl,
+    WrapFinderCallable,
 )
 from .dimension import (
     AnyDimension,
@@ -1310,7 +1315,10 @@ class WindowRenderInfo:
         """
         if self.wrap_lines:
             return self.ui_content.get_height_for_line(
-                lineno, self.window_width, self.window.get_line_prefix
+                lineno,
+                self.window_width,
+                self.window.get_line_prefix,
+                self.window.wrap_finder,
             )
         else:
             return 1
@@ -1442,6 +1450,10 @@ class Window(Container):
         wrap_count and returns formatted text. This can be used for
         implementation of line continuations, things like Vim "breakindent" and
         so on.
+    :param wrap_finder: None or a callable that returns how to wrap a line.
+        It takes a line number, a start and an end position (ints) and returns
+        the the wrap position, a number of characters to be skipped (if any),
+        and formatted text for the continuation marker.
     """
 
     def __init__(
@@ -1459,6 +1471,7 @@ class Window(Container):
         scroll_offsets: ScrollOffsets | None = None,
         allow_scroll_beyond_bottom: FilterOrBool = False,
         wrap_lines: FilterOrBool = False,
+        word_wrap: FilterOrBool = False,
         get_vertical_scroll: Callable[[Window], int] | None = None,
         get_horizontal_scroll: Callable[[Window], int] | None = None,
         always_hide_cursor: FilterOrBool = False,
@@ -1471,10 +1484,12 @@ class Window(Container):
         style: str | Callable[[], str] = "",
         char: None | str | Callable[[], str] = None,
         get_line_prefix: GetLinePrefixCallable | None = None,
+        wrap_finder: WrapFinderCallable | None = None,
     ) -> None:
         self.allow_scroll_beyond_bottom = to_filter(allow_scroll_beyond_bottom)
         self.always_hide_cursor = to_filter(always_hide_cursor)
         self.wrap_lines = to_filter(wrap_lines)
+        self.word_wrap = to_filter(word_wrap)
         self.cursorline = to_filter(cursorline)
         self.cursorcolumn = to_filter(cursorcolumn)
 
@@ -1493,6 +1508,7 @@ class Window(Container):
         self.style = style
         self.char = char
         self.get_line_prefix = get_line_prefix
+        self.wrap_finder = wrap_finder
 
         self.width = width
         self.height = height
@@ -1601,6 +1617,7 @@ class Window(Container):
                 max_available_height,
                 wrap_lines,
                 self.get_line_prefix,
+                self.wrap_finder,
             )
 
         return self._merge_dimensions(
@@ -1766,6 +1783,9 @@ class Window(Container):
         self._scroll(
             ui_content, write_position.width - total_margin_width, write_position.height
         )
+        wrap_finder = self.wrap_finder or (
+            self._whitespace_wrap_finder(ui_content) if self.word_wrap() else None
+        )
 
         # Erase background and fill with `char`.
         self._fill_bg(screen, write_position, erase_bg)
@@ -1789,7 +1809,7 @@ class Window(Container):
             has_focus=get_app().layout.current_control == self.content,
             align=align,
             get_line_prefix=self.get_line_prefix,
-            wrap_finder=self._whitespace_wrap_finder(ui_content),
+            wrap_finder=wrap_finder,
         )
 
         # Remember render info. (Set before generating the margins. They need this.)
@@ -1924,26 +1944,30 @@ class Window(Container):
     def _whitespace_wrap_finder(
         self,
         ui_content: UIContent,
-        sep: str | re.Pattern = r'\s',
-        split: str = 'remove',
+        sep: str | re.Pattern = r"\s",
+        split: str = "remove",
         continuation: StyleAndTextTuples = [],
-    ) -> Callable[[int, int, int], tuple[int, int, StyleAndTextTuples]]:
-        """ Returns a function that defines where to break """
+    ) -> WrapFinderCallable:
+        """Returns a function that defines where to break"""
         sep_re = sep if isinstance(sep, re.Pattern) else re.compile(sep)
         if sep_re.groups:
-            raise ValueError(f'Pattern {sep_re.pattern!r} has capture group – use non-capturing groups instead')
-        elif split == 'after':
-            sep_re = re.compile('(?<={sep_re.pattern})()')
-        elif split == 'before':
-            sep_re = re.compile('(?={sep_re.pattern})()')
-        elif split == 'remove':
-            sep_re = re.compile(f'({sep_re.pattern})')
+            raise ValueError(
+                f"Pattern {sep_re.pattern!r} has capture group – use non-capturing groups instead"
+            )
+        elif split == "after":
+            sep_re = re.compile("(?<={sep_re.pattern})()")
+        elif split == "before":
+            sep_re = re.compile("(?={sep_re.pattern})()")
+        elif split == "remove":
+            sep_re = re.compile(f"({sep_re.pattern})")
         else:
-            raise ValueError(f'Unrecognized value of split paramter: {split!r}')
+            raise ValueError(f"Unrecognized value of split paramter: {split!r}")
 
-        cont_width = fragment_list_width(text)
+        cont_width = fragment_list_width(continuation)
 
-        def wrap_finder(lineno: int, start: int, end: int) -> tuple[int, int, StyleAndTextTuples]:
+        def wrap_finder(
+            lineno: int, start: int, end: int
+        ) -> Tuple[int, int, AnyFormattedText]:
             line = explode_text_fragments(ui_content.get_line(lineno))
             cont_reserved = 0
             while cont_reserved < cont_width:
@@ -1961,7 +1985,6 @@ class Window(Container):
 
         return wrap_finder
 
-
     def _copy_body(
         self,
         ui_content: UIContent,
@@ -1978,7 +2001,8 @@ class Window(Container):
         has_focus: bool = False,
         align: WindowAlign = WindowAlign.LEFT,
         get_line_prefix: Callable[[int, int], AnyFormattedText] | None = None,
-        wrap_finder: Callable[[int, int, int], tuple[int, int, AnyFormattedText] | None] | None = None,
+        wrap_finder: Callable[[int, int, int], Tuple[int, int, AnyFormattedText] | None]
+        | None = None,
     ) -> tuple[dict[int, tuple[int, int]], dict[tuple[int, int], tuple[int, int]]]:
         """
         Copy the UIContent into the output screen.
@@ -2007,10 +2031,9 @@ class Window(Container):
             line = ui_content.get_line(lineno)
             style0, text0, *more = line[fragment]
             fragment_pos = char_pos - fragment_list_len(line[:fragment])
-            line_part = [(style0, text0[char_pos:], *more), *line[fragment + 1:]]
+            line_part = [(style0, text0[char_pos:], *more), *line[fragment + 1 :]]
             line_width = [fragment_list_width([fragment]) for fragment in line_part]
 
-            orig_remaining_width = remaining_width
             if sum(line_width) <= remaining_width:
                 return sys.maxsize, 0, []
 
@@ -2083,7 +2106,10 @@ class Window(Container):
                     x += width - line_width
 
             new_buffer_row = new_buffer[y + ypos]
-            wrap_start, wrap_replaced, continuation = find_next_wrap(width - x, is_input, lineno)
+            wrap_start, wrap_replaced, continuation = find_next_wrap(
+                width - x, is_input, lineno
+            )
+            continuation = to_formatted_text(continuation)
 
             col = 0
             wrap_count = 0
@@ -2106,7 +2132,7 @@ class Window(Container):
                     if wrap_lines and char_count == wrap_start:
                         skipped_width = sum(
                             _CHAR_CACHE[char, style].width
-                            for char in text[wrap_start - text_start:][:wrap_replaced]
+                            for char in text[wrap_start - text_start :][:wrap_replaced]
                         )
                         col += wrap_replaced
                         visible_line_to_row_col[y + 1] = (
@@ -2135,8 +2161,13 @@ class Window(Container):
 
                         new_buffer_row = new_buffer[y + ypos]
                         wrap_start, wrap_replaced, continuation = find_next_wrap(
-                            width - x, is_input, lineno, fragment_count, wrap_start + wrap_replaced
+                            width - x,
+                            is_input,
+                            lineno,
+                            fragment_count,
+                            wrap_start + wrap_replaced,
                         )
+                        continuation = to_formatted_text(continuation)
 
                         if y >= write_position.height:
                             return x, y  # Break out of all for loops.
@@ -2435,7 +2466,9 @@ class Window(Container):
         self.horizontal_scroll = 0
 
         def get_line_height(lineno: int) -> int:
-            return ui_content.get_height_for_line(lineno, width, self.get_line_prefix)
+            return ui_content.get_height_for_line(
+                lineno, width, self.get_line_prefix, self.wrap_finder
+            )
 
         # When there is no space, reset `vertical_scroll_2` to zero and abort.
         # This can happen if the margin is bigger than the window width.
@@ -2460,6 +2493,7 @@ class Window(Container):
                 ui_content.cursor_position.y,
                 width,
                 self.get_line_prefix,
+                self.wrap_finder,
                 slice_stop=ui_content.cursor_position.x,
             )
 

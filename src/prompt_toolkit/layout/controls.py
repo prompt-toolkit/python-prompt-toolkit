@@ -40,6 +40,8 @@ from .processors import (
     merge_processors,
 )
 
+from typing import Tuple
+
 if TYPE_CHECKING:
     from prompt_toolkit.key_binding.key_bindings import (
         KeyBindingsBase,
@@ -58,6 +60,7 @@ __all__ = [
 ]
 
 GetLinePrefixCallable = Callable[[int, int], AnyFormattedText]
+WrapFinderCallable = Callable[[int, int, int], Tuple[int, int, AnyFormattedText]]
 
 
 class UIControl(metaclass=ABCMeta):
@@ -78,6 +81,7 @@ class UIControl(metaclass=ABCMeta):
         max_available_height: int,
         wrap_lines: bool,
         get_line_prefix: GetLinePrefixCallable | None,
+        wrap_finder: WrapFinderCallable | None,
     ) -> int | None:
         return None
 
@@ -178,6 +182,7 @@ class UIContent:
         lineno: int,
         width: int,
         get_line_prefix: GetLinePrefixCallable | None,
+        wrap_finder: WrapFinderCallable | None,
         slice_stop: int | None = None,
     ) -> int:
         """
@@ -204,33 +209,47 @@ class UIContent:
             else:
                 # Calculate line width first.
                 line = fragment_list_to_text(self.get_line(lineno))[:slice_stop]
-                text_width = get_cwidth(line)
+                start = 0
+                text_width = get_cwidth(line[start:])
 
-                if get_line_prefix:
+                if get_line_prefix or wrap_finder:
                     # Add prefix width.
-                    text_width += fragment_list_width(
-                        to_formatted_text(get_line_prefix(lineno, 0))
-                    )
+                    if get_line_prefix:
+                        prefix_width = fragment_list_width(
+                            to_formatted_text(get_line_prefix(lineno, 0))
+                        )
+                    else:
+                        prefix_width = 0
 
                     # Slower path: compute path when there's a line prefix.
                     height = 1
 
                     # Keep wrapping as long as the line doesn't fit.
                     # Keep adding new prefixes for every wrapped line.
-                    while text_width > width:
+                    while prefix_width + text_width > width:
                         height += 1
-                        text_width -= width
+                        if wrap_finder:
+                            # Decent guess for max breakpoint place?
+                            end = start + width - prefix_width
+                            start_end_width = get_cwidth(line[start:end])
+                            while start_end_width >= width - prefix_width:
+                                start_end_width -= get_cwidth(line[end - 1])
+                                end -= 1
+                            wrap, skip, cont = wrap_finder(lineno, start, end)
+                            start = wrap + skip
+                            text_width = get_cwidth(line[start:])
+                        else:
+                            text_width -= width
 
-                        fragments2 = to_formatted_text(
-                            get_line_prefix(lineno, height - 1)
-                        )
-                        prefix_width = get_cwidth(fragment_list_to_text(fragments2))
+                        if get_line_prefix:
+                            fragments2 = to_formatted_text(
+                                get_line_prefix(lineno, height - 1)
+                            )
+                            prefix_width = get_cwidth(fragment_list_to_text(fragments2))
 
-                        if prefix_width >= width:  # Prefix doesn't fit.
-                            height = 10**8
-                            break
-
-                        text_width += prefix_width
+                            if prefix_width >= width:  # Prefix doesn't fit.
+                                height = 10**8
+                                break
                 else:
                     # Fast path: compute height when there's no line prefix.
                     try:
@@ -354,6 +373,7 @@ class FormattedTextControl(UIControl):
         max_available_height: int,
         wrap_lines: bool,
         get_line_prefix: GetLinePrefixCallable | None,
+        wrap_finder: WrapFinderCallable | None,
     ) -> int | None:
         """
         Return the preferred height for this control.
@@ -362,7 +382,9 @@ class FormattedTextControl(UIControl):
         if wrap_lines:
             height = 0
             for i in range(content.line_count):
-                height += content.get_height_for_line(i, width, get_line_prefix)
+                height += content.get_height_for_line(
+                    i, width, get_line_prefix, wrap_finder
+                )
                 if height >= max_available_height:
                     return max_available_height
             return height
@@ -614,6 +636,7 @@ class BufferControl(UIControl):
         max_available_height: int,
         wrap_lines: bool,
         get_line_prefix: GetLinePrefixCallable | None,
+        wrap_finder: WrapFinderCallable | None,
     ) -> int | None:
         # Calculate the content height, if it was drawn on a screen with the
         # given width.
@@ -631,7 +654,9 @@ class BufferControl(UIControl):
             return max_available_height
 
         for i in range(content.line_count):
-            height += content.get_height_for_line(i, width, get_line_prefix)
+            height += content.get_height_for_line(
+                i, width, get_line_prefix, wrap_finder
+            )
 
             if height >= max_available_height:
                 return max_available_height
