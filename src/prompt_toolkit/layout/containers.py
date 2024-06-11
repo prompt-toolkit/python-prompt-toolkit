@@ -1789,6 +1789,7 @@ class Window(Container):
             has_focus=get_app().layout.current_control == self.content,
             align=align,
             get_line_prefix=self.get_line_prefix,
+            wrap_finder=self._whitespace_wrap_finder(ui_content),
         )
 
         # Remember render info. (Set before generating the margins. They need this.)
@@ -1920,6 +1921,47 @@ class Window(Container):
         # position.
         screen.visible_windows_to_write_positions[self] = write_position
 
+    def _whitespace_wrap_finder(
+        self,
+        ui_content: UIContent,
+        sep: str | re.Pattern = r'\s',
+        split: str = 'remove',
+        continuation: StyleAndTextTuples = [],
+    ) -> Callable[[int, int, int], tuple[int, int, StyleAndTextTuples]]:
+        """ Returns a function that defines where to break """
+        sep_re = sep if isinstance(sep, re.Pattern) else re.compile(sep)
+        if sep_re.groups:
+            raise ValueError(f'Pattern {sep_re.pattern!r} has capture group – use non-capturing groups instead')
+        elif split == 'after':
+            sep_re = re.compile('(?<={sep_re.pattern})()')
+        elif split == 'before':
+            sep_re = re.compile('(?={sep_re.pattern})()')
+        elif split == 'remove':
+            sep_re = re.compile(f'({sep_re.pattern})')
+        else:
+            raise ValueError(f'Unrecognized value of split paramter: {split!r}')
+
+        cont_width = fragment_list_width(text)
+
+        def wrap_finder(lineno: int, start: int, end: int) -> tuple[int, int, StyleAndTextTuples]:
+            line = explode_text_fragments(ui_content.get_line(lineno))
+            cont_reserved = 0
+            while cont_reserved < cont_width:
+                style, char, *_ = line[end - 1]
+                cont_reserved += _CHAR_CACHE[style, char].width
+                end -= 1
+
+            segment = to_plain_text(line[start:end])
+            try:
+                after, sep, before = sep_re.split(segment[::-1], maxsplit=1)
+            except ValueError:
+                return (end, 0, continuation)
+            else:
+                return (start + len(before), len(sep), continuation)
+
+        return wrap_finder
+
+
     def _copy_body(
         self,
         ui_content: UIContent,
@@ -1936,6 +1978,7 @@ class Window(Container):
         has_focus: bool = False,
         align: WindowAlign = WindowAlign.LEFT,
         get_line_prefix: Callable[[int, int], AnyFormattedText] | None = None,
+        wrap_finder: Callable[[int, int, int], tuple[int, int, AnyFormattedText] | None] | None = None,
     ) -> tuple[dict[int, tuple[int, int]], dict[tuple[int, int], tuple[int, int]]]:
         """
         Copy the UIContent into the output screen.
@@ -1956,6 +1999,42 @@ class Window(Container):
 
         # Maps (row, col) from the input to (y, x) screen coordinates.
         rowcol_to_yx: dict[tuple[int, int], tuple[int, int]] = {}
+
+        def find_next_wrap(remaining_width, is_input, lineno, fragment=0, char_pos=0):
+            if not wrap_lines:
+                return sys.maxsize, 0, []
+
+            line = ui_content.get_line(lineno)
+            style0, text0, *more = line[fragment]
+            fragment_pos = char_pos - fragment_list_len(line[:fragment])
+            line_part = [(style0, text0[char_pos:], *more), *line[fragment + 1:]]
+            line_width = [fragment_list_width([fragment]) for fragment in line_part]
+
+            orig_remaining_width = remaining_width
+            if sum(line_width) <= remaining_width:
+                return sys.maxsize, 0, []
+
+            min_wrap_pos = max_wrap_pos = char_pos
+            for next_fragment, fragment_width in zip(line_part, line_width):
+                if remaining_width < fragment_width:
+                    break
+                remaining_width -= fragment_width
+                max_wrap_pos += fragment_list_len([next_fragment])
+            else:
+                # Should never happen
+                return sys.maxsize, 0, []
+
+            style, text, *_ = next_fragment
+            for char_width in (_CHAR_CACHE[char, style].width for char in text):
+                if remaining_width < char_width:
+                    break
+                remaining_width -= char_width
+                max_wrap_pos += 1
+
+            if is_input and wrap_finder:
+                return wrap_finder(lineno, min_wrap_pos, max_wrap_pos)
+            else:
+                return max_wrap_pos, 0, []
 
         def copy_line(
             line: StyleAndTextTuples,
@@ -2003,27 +2082,46 @@ class Window(Container):
                 if line_width < width:
                     x += width - line_width
 
+            new_buffer_row = new_buffer[y + ypos]
+            wrap_start, wrap_replaced, continuation = find_next_wrap(width - x, is_input, lineno)
+
             col = 0
             wrap_count = 0
-            for style, text, *_ in line:
-                new_buffer_row = new_buffer[y + ypos]
-
+            wrap_skip = 0
+            text_end = 0
+            for fragment_count, (style, text, *_) in enumerate(line):
                 # Remember raw VT escape sequences. (E.g. FinalTerm's
                 # escape sequences.)
                 if "[ZeroWidthEscape]" in style:
                     new_screen.zero_width_escapes[y + ypos][x + xpos] += text
                     continue
 
-                for c in text:
+                text_start, text_end = text_end, text_end + len(text)
+
+                for char_count, c in enumerate(text, text_start):
                     char = _CHAR_CACHE[c, style]
                     char_width = char.width
 
                     # Wrap when the line width is exceeded.
-                    if wrap_lines and x + char_width > width:
+                    if wrap_lines and char_count == wrap_start:
+                        skipped_width = sum(
+                            _CHAR_CACHE[char, style].width
+                            for char in text[wrap_start - text_start:][:wrap_replaced]
+                        )
+                        col += wrap_replaced
                         visible_line_to_row_col[y + 1] = (
                             lineno,
-                            visible_line_to_row_col[y][1] + x,
+                            visible_line_to_row_col[y][1] + x + skipped_width,
                         )
+
+                        # Append continuation (e.g. hyphen)
+                        if continuation:
+                            x, y = copy_line(continuation, lineno, x, y, is_input=False)
+                        # Make sure to erase rest of the line
+                        for i in range(x, width):
+                            new_buffer_row[i + xpos] = empty_char
+                        wrap_skip = wrap_replaced
+
                         y += 1
                         wrap_count += 1
                         x = 0
@@ -2036,9 +2134,17 @@ class Window(Container):
                             x, y = copy_line(prompt, lineno, x, y, is_input=False)
 
                         new_buffer_row = new_buffer[y + ypos]
+                        wrap_start, wrap_replaced, continuation = find_next_wrap(
+                            width - x, is_input, lineno, fragment_count, wrap_start + wrap_replaced
+                        )
 
                         if y >= write_position.height:
                             return x, y  # Break out of all for loops.
+
+                    # Chars skipped by wrapping (e.g. whitespace)
+                    if wrap_lines and wrap_skip > 0:
+                        wrap_skip -= 1
+                        continue
 
                     # Set character in screen and shift 'x'.
                     if x >= 0 and y >= 0 and x < width:
