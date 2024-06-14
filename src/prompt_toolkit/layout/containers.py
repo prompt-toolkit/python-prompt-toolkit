@@ -1944,7 +1944,7 @@ class Window(Container):
     def _whitespace_wrap_finder(
         self,
         ui_content: UIContent,
-        sep: str | re.Pattern = r"\s",
+        sep: str | re.Pattern[str] = r"\s",
         split: str = "remove",
         continuation: StyleAndTextTuples = [],
     ) -> WrapFinderCallable:
@@ -2024,15 +2024,22 @@ class Window(Container):
         # Maps (row, col) from the input to (y, x) screen coordinates.
         rowcol_to_yx: dict[tuple[int, int], tuple[int, int]] = {}
 
-        def find_next_wrap(remaining_width, is_input, lineno, fragment=0, char_pos=0):
+        def find_next_wrap(
+            remaining_width: int,
+            is_input: bool,
+            lineno: int,
+            fragment: int = 0,
+            char_pos: int = 0,
+        ) -> tuple[int, int, AnyFormattedText]:
             if not wrap_lines:
                 return sys.maxsize, 0, []
 
             line = ui_content.get_line(lineno)
             style0, text0, *more = line[fragment]
-            char_pos - fragment_list_len(line[:fragment])
-            line_part = [(style0, text0[char_pos:], *more), *line[fragment + 1 :]]
-            line_width = [fragment_list_width([fragment]) for fragment in line_part]
+            char_pos -= fragment_list_len(line[:fragment])
+            line_part = [(style0, text0[char_pos:]), *line[fragment + 1 :]]
+            line_width = [fragment_list_width([frag]) for frag in line_part]
+            line_width = [fragment_list_width([frag]) for frag in line_part]
 
             if sum(line_width) <= remaining_width:
                 return sys.maxsize, 0, []
@@ -2054,10 +2061,15 @@ class Window(Container):
                 remaining_width -= char_width
                 max_wrap_pos += 1
 
-            if is_input and wrap_finder:
-                return wrap_finder(lineno, min_wrap_pos, max_wrap_pos)
-            else:
-                return max_wrap_pos, 0, []
+            return (
+                wrap_finder(lineno, min_wrap_pos, max_wrap_pos)
+                if is_input and wrap_finder
+                else None
+            ) or (
+                max_wrap_pos,
+                0,
+                [],
+            )
 
         def copy_line(
             line: StyleAndTextTuples,
