@@ -10,7 +10,7 @@ import sys
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from functools import partial
-from typing import TYPE_CHECKING, Callable, Sequence, Tuple, Union, cast
+from typing import TYPE_CHECKING, Callable, Sequence, Union, cast
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.cache import SimpleCache
@@ -1967,7 +1967,7 @@ class Window(Container):
 
         def wrap_finder(
             lineno: int, start: int, end: int
-        ) -> Tuple[int, int, AnyFormattedText]:
+        ) -> tuple[int, int, AnyFormattedText]:
             line = explode_text_fragments(ui_content.get_line(lineno))
             cont_reserved = 0
             while cont_reserved < cont_width:
@@ -2001,7 +2001,7 @@ class Window(Container):
         has_focus: bool = False,
         align: WindowAlign = WindowAlign.LEFT,
         get_line_prefix: Callable[[int, int], AnyFormattedText] | None = None,
-        wrap_finder: Callable[[int, int, int], Tuple[int, int, AnyFormattedText] | None]
+        wrap_finder: Callable[[int, int, int], tuple[int, int, AnyFormattedText] | None]
         | None = None,
     ) -> tuple[dict[int, tuple[int, int]], dict[tuple[int, int], tuple[int, int]]]:
         """
@@ -2030,7 +2030,7 @@ class Window(Container):
 
             line = ui_content.get_line(lineno)
             style0, text0, *more = line[fragment]
-            fragment_pos = char_pos - fragment_list_len(line[:fragment])
+            char_pos - fragment_list_len(line[:fragment])
             line_part = [(style0, text0[char_pos:], *more), *line[fragment + 1 :]]
             line_width = [fragment_list_width([fragment]) for fragment in line_part]
 

@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import time
 from abc import ABCMeta, abstractmethod
-from typing import TYPE_CHECKING, Callable, Hashable, Iterable, NamedTuple
+from typing import TYPE_CHECKING, Callable, Hashable, Iterable, NamedTuple, Tuple
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import Buffer
@@ -39,8 +39,6 @@ from .processors import (
     TransformationInput,
     merge_processors,
 )
-
-from typing import Tuple
 
 if TYPE_CHECKING:
     from prompt_toolkit.key_binding.key_bindings import (
