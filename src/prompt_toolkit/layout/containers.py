@@ -1961,7 +1961,7 @@ class Window(Container):
         elif split == "remove":
             sep_re = re.compile(f"({sep_re.pattern})")
         else:
-            raise ValueError(f"Unrecognized value of split paramter: {split!r}")
+            raise ValueError(f"Unrecognized value of split parameter: {split!r}")
 
         cont_width = fragment_list_width(continuation)
 
