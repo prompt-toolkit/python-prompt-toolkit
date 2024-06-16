@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Iterable, Mapping, Pattern
+from typing import Callable, Iterable, Mapping, Pattern, Sequence
 
 from prompt_toolkit.completion import CompleteEvent, Completer, Completion
 from prompt_toolkit.document import Document
@@ -33,7 +33,7 @@ class WordCompleter(Completer):
 
     def __init__(
         self,
-        words: list[str] | Callable[[], list[str]],
+        words: Sequence[str] | Callable[[], Sequence[str]],
         ignore_case: bool = False,
         display_dict: Mapping[str, AnyFormattedText] | None = None,
         meta_dict: Mapping[str, AnyFormattedText] | None = None,
