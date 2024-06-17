@@ -2035,7 +2035,11 @@ class Window(Container):
                 return sys.maxsize, 0, []
 
             line = ui_content.get_line(lineno)
-            style0, text0, *more = line[fragment]
+            try:
+                style0, text0, *more = line[fragment]
+            except IndexError:
+                return sys.maxsize, 0, []
+
             char_pos -= fragment_list_len(line[:fragment])
             line_part = [(style0, text0[char_pos:]), *line[fragment + 1 :]]
             line_width = [fragment_list_width([frag]) for frag in line_part]
