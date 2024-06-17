@@ -1784,7 +1784,7 @@ class Window(Container):
             ui_content, write_position.width - total_margin_width, write_position.height
         )
         wrap_finder = self.wrap_finder or (
-            self._whitespace_wrap_finder(ui_content) if self.word_wrap() else None
+            self._whitespace_wrap_finder(ui_content.get_line) if self.word_wrap() else None
         )
 
         # Erase background and fill with `char`.
@@ -1941,10 +1941,11 @@ class Window(Container):
         # position.
         screen.visible_windows_to_write_positions[self] = write_position
 
+    @classmethod
     def _whitespace_wrap_finder(
-        self,
-        ui_content: UIContent,
-        sep: str | re.Pattern[str] = r"\s",
+        cls,
+        get_line: Callable[[int], StyleAndTextTuples],
+        sep: str | re.Pattern[str] = r"[ \t]",  # Don’t include \xA0 by default (in \s)
         split: str = "remove",
         continuation: StyleAndTextTuples = [],
     ) -> WrapFinderCallable:
@@ -1968,7 +1969,7 @@ class Window(Container):
         def wrap_finder(
             lineno: int, start: int, end: int
         ) -> tuple[int, int, AnyFormattedText]:
-            line = explode_text_fragments(ui_content.get_line(lineno))
+            line = explode_text_fragments(get_line(lineno))
             cont_reserved = 0
             while cont_reserved < cont_width:
                 style, char, *_ = line[end - 1]
