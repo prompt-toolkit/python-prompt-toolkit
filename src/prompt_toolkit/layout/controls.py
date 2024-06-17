@@ -58,7 +58,7 @@ __all__ = [
 ]
 
 GetLinePrefixCallable = Callable[[int, int], AnyFormattedText]
-WrapFinderCallable = Callable[[int, int, int], Tuple[int, int, AnyFormattedText]]
+WrapFinderCallable = Callable[[int, int, int, int], Tuple[int, int, AnyFormattedText]]
 
 
 class UIControl(metaclass=ABCMeta):
@@ -233,7 +233,11 @@ class UIContent:
                             while start_end_width >= width - prefix_width:
                                 start_end_width -= get_cwidth(line[end - 1])
                                 end -= 1
-                            wrap, skip, cont = wrap_finder(lineno, start, end)
+                            wrap, skip, cont = wrap_finder(
+                                lineno, height - 1, start, end
+                            )
+                            if skip < 0:
+                                break  # Truncate line
                             start = wrap + skip
                             text_width = get_cwidth(line[start:])
                         else:

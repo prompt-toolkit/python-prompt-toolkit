@@ -1784,7 +1784,9 @@ class Window(Container):
             ui_content, write_position.width - total_margin_width, write_position.height
         )
         wrap_finder = self.wrap_finder or (
-            self._whitespace_wrap_finder(ui_content.get_line) if self.word_wrap() else None
+            self._whitespace_wrap_finder(ui_content.get_line)
+            if self.word_wrap()
+            else None
         )
 
         # Erase background and fill with `char`.
@@ -1967,13 +1969,13 @@ class Window(Container):
         cont_width = fragment_list_width(continuation)
 
         def wrap_finder(
-            lineno: int, start: int, end: int
+            lineno: int, wrap_count: int, start: int, end: int
         ) -> tuple[int, int, AnyFormattedText]:
             line = explode_text_fragments(get_line(lineno))
             cont_reserved = 0
             while cont_reserved < cont_width:
                 style, char, *_ = line[end - 1]
-                cont_reserved += _CHAR_CACHE[style, char].width
+                cont_reserved += get_cwidth(char)
                 end -= 1
 
             segment = to_plain_text(line[start:end])
@@ -2002,8 +2004,7 @@ class Window(Container):
         has_focus: bool = False,
         align: WindowAlign = WindowAlign.LEFT,
         get_line_prefix: Callable[[int, int], AnyFormattedText] | None = None,
-        wrap_finder: Callable[[int, int, int], tuple[int, int, AnyFormattedText] | None]
-        | None = None,
+        wrap_finder: WrapFinderCallable | None = None,
     ) -> tuple[dict[int, tuple[int, int]], dict[tuple[int, int], tuple[int, int]]]:
         """
         Copy the UIContent into the output screen.
@@ -2029,6 +2030,7 @@ class Window(Container):
             remaining_width: int,
             is_input: bool,
             lineno: int,
+            wrap_count: int,
             fragment: int = 0,
             char_pos: int = 0,
         ) -> tuple[int, int, AnyFormattedText]:
@@ -2060,14 +2062,14 @@ class Window(Container):
                 return sys.maxsize, 0, []
 
             style, text, *_ = next_fragment
-            for char_width in (_CHAR_CACHE[char, style].width for char in text):
+            for char_width in (get_cwidth(char) for char in text):
                 if remaining_width < char_width:
                     break
                 remaining_width -= char_width
                 max_wrap_pos += 1
 
             return (
-                wrap_finder(lineno, min_wrap_pos, max_wrap_pos)
+                wrap_finder(lineno, wrap_count, min_wrap_pos, max_wrap_pos)
                 if is_input and wrap_finder
                 else None
             ) or (
@@ -2124,7 +2126,7 @@ class Window(Container):
 
             new_buffer_row = new_buffer[y + ypos]
             wrap_start, wrap_replaced, continuation = find_next_wrap(
-                width - x, is_input, lineno
+                width - x, is_input, lineno, 0
             )
             continuation = to_formatted_text(continuation)
 
@@ -2148,7 +2150,7 @@ class Window(Container):
                     # Wrap when the line width is exceeded.
                     if wrap_lines and char_count == wrap_start:
                         skipped_width = sum(
-                            _CHAR_CACHE[char, style].width
+                            get_cwidth(char)
                             for char in text[wrap_start - text_start :][:wrap_replaced]
                         )
                         col += wrap_replaced
@@ -2163,8 +2165,11 @@ class Window(Container):
                         # Make sure to erase rest of the line
                         for i in range(x, width):
                             new_buffer_row[i + xpos] = empty_char
-                        wrap_skip = wrap_replaced
 
+                        if wrap_replaced < 0:
+                            return x, y
+
+                        wrap_skip = wrap_replaced
                         y += 1
                         wrap_count += 1
                         x = 0
@@ -2181,6 +2186,7 @@ class Window(Container):
                             width - x,
                             is_input,
                             lineno,
+                            wrap_count,
                             fragment_count,
                             wrap_start + wrap_replaced,
                         )
