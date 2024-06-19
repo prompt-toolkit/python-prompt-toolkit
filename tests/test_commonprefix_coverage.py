@@ -13,7 +13,11 @@ def print_coverage():
 
 
 # Tests
-test_cases: List[Tuple[List[str], str]] = []
+test_cases: List[Tuple[List[str], str]] = [
+    (["car", "car"], "Test 1: Same words"),
+    ([], "Test 2: Empty list"),
+    (["car", "dog"], "Test 2: Different words")
+]
 
 for strings, description in test_cases:
     print(f"\nTesting case: {description} - Input: {strings}")
