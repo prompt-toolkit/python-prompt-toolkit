@@ -12,7 +12,12 @@ def print_coverage():
 
 
 # Tests
-test_cases = []
+test_cases = [
+    (None, "Test 1: None value"),
+    (52, "Test 2: Integer value"),
+    (print_coverage, "Test 3: Regular function"),
+    ("not a dimension", "Test 4: String value (invalid dimension)")
+]
 
 for value, description in test_cases:
     print(f"\nTesting case: {description}")
