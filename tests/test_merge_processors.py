@@ -15,7 +15,9 @@ class MockProcessor(Processor):
         pass
 
 test_cases = [
-    
+    ([], "Empty list of processors (should hit Branch 1)"),
+    ([MockProcessor()], "Single processor (should hit Branch 2)"),
+    ([MockProcessor(), MockProcessor()], "Multiple processors (should hit Branch 3)")
 ]
 
 for processors, description in test_cases:
