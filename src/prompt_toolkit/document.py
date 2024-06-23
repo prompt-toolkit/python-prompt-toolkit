@@ -19,6 +19,11 @@ branch_coverage_next = {
     "find_next_2": False,
 }
 
+branch_coverage_prev = {
+    "find_prev_1": False,
+    "find_prev_2": False
+}
+
 __all__ = [
     "Document",
 ]
@@ -689,10 +694,12 @@ class Document:
 
         for index, line in enumerate(self.lines[: self.cursor_position_row][::-1]):
             if match_func(line):
+                branch_coverage_prev["find_prev_1"] = True
                 result = -1 - index
                 count -= 1
 
             if count == 0:
+                branch_coverage_prev["find_prev_2"] = True
                 break
 
         return result
