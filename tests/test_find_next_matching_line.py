@@ -9,7 +9,32 @@ def print_coverage():
         print(f"{branch} was {'hit' if hit else 'not hit'}")
     print(f"Coverage: {hit_branches}/{total_branches} branches hit ({coverage_percentage:.2f}%)\n")
 
-test_cases = []
+test_cases = [
+    {
+        "description": "Find the second next empty line",
+        "text": "line 1\n\nline 3\n\nline 5",
+        "cursor_position": 0,
+        "match_func": lambda line: line.strip() == "",
+        "count": 2,
+        "expected_result": 3
+    },
+    {
+        "description": "No match found",
+        "text": "line 1\nline 2\nline 3\nline 4",
+        "cursor_position": 0,
+        "match_func": lambda line: line.strip() == "",
+        "count": 1,
+        "expected_result": None
+    },
+    {
+        "description": "Match after cursor position",
+        "text": "line 1\nline 2\n\nline 4",
+        "cursor_position": 7, 
+        "match_func": lambda line: line.strip() == "",
+        "count": 1,
+        "expected_result": 1
+    }
+]
 
 for case in test_cases:
     document = Document(text=case["text"], cursor_position=case["cursor_position"])
