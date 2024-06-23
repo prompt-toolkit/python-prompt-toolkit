@@ -14,6 +14,11 @@ from .clipboard import ClipboardData
 from .filters import vi_mode
 from .selection import PasteMode, SelectionState, SelectionType
 
+branch_coverage_next = {
+    "find_next_1": False,
+    "find_next_2": False,
+}
+
 __all__ = [
     "Document",
 ]
@@ -663,10 +668,12 @@ class Document:
 
         for index, line in enumerate(self.lines[self.cursor_position_row + 1 :]):
             if match_func(line):
+                branch_coverage_next["find_next_1"] = True
                 result = 1 + index
                 count -= 1
 
             if count == 0:
+                branch_coverage_next["find_next_2"] = True
                 break
 
         return result
