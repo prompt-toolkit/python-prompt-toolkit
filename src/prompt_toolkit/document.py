@@ -14,12 +14,6 @@ from .clipboard import ClipboardData
 from .filters import vi_mode
 from .selection import PasteMode, SelectionState, SelectionType
 
-
-
-
-
-
-
 branch_coverage_next = {
     "find_next_1": False,
     "find_next_2": False,
@@ -29,9 +23,6 @@ branch_coverage_prev = {
     "find_prev_1": False,
     "find_prev_2": False
 }
-
-
-
 
 __all__ = [
     "Document",
@@ -672,40 +663,6 @@ class Document:
             pass
         return None
     
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
     def find_next_matching_line(
         self, match_func: Callable[[str], bool], count: int = 1
     ) -> int | None:
@@ -748,29 +705,6 @@ class Document:
 
         return result
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     def get_cursor_left_position(self, count: int = 1) -> int:
         """
         Relative position for cursor left.
