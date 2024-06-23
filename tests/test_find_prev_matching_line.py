@@ -41,4 +41,13 @@ for case in test_cases:
     result = document.find_previous_matching_line(case["match_func"], case["count"])
     assert result == case["expected_result"], f"Test failed for: {case['description']}"
 
+    print("\n")
+    print(f"Test case: {case['description']}")
+    print(f"Expected result: {case['expected_result']}")
+    print(f"Actual result: {result}")
+    print("Branches hit:")
+    for branch, hit in branch_coverage_prev.items():
+        if hit:
+            print(f"  {branch}")
+            
 print_coverage()
