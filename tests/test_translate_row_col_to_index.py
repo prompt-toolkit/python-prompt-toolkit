@@ -35,11 +35,13 @@ def print_coverage():
     )
 
 
-for (row, col), description in test_cases:
-    try:
-        result = document.translate_row_col_to_index(row, col)
-        print(f"{description}: Success, Result = {result}")
-    except Exception as e:
-        print(f"{description}: Failed with exception: {e}")
+def test(document):
+    for (row, col), description in test_cases:
+        try:
+            result = document.translate_row_col_to_index(row, col)
+            print(f"{description}: Success, Result = {result}")
+        except Exception as e:
+            print(f"{description}: Failed with exception: {e}")
+
 
 print_coverage()
