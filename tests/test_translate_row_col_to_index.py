@@ -1,13 +1,9 @@
-import pytest
-
 from prompt_toolkit.document import Document, branch_coverage_translate
 
 
-@pytest.fixture
-def document():
-    return Document(
-        "line 1\n" + "line 2\n" + "line 3\n" + "line 4\n", len("line 1\n" + "lin")
-    )
+DOC = Document(
+    "line 1\n" + "line 2\n" + "line 3\n" + "line 4\n", len("line 1\n" + "lin")
+)
 
 
 test_cases = [
@@ -44,4 +40,5 @@ def test(document):
             print(f"{description}: Failed with exception: {e}")
 
 
+test(DOC)
 print_coverage()

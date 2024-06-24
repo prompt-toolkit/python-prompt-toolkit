@@ -16,9 +16,10 @@ from .selection import PasteMode, SelectionState, SelectionType
 
 branch_coverage_translate = {
     "translate_1": False,  # Branch for successful try block execution
-    "translate_2": False,  # Branch for IndexError with row < 0
-    "translate_3": False,  # Branch for IndexError with row >= number of lines
-    "translate_4": False,  # Branch for ensuring col is within valid range
+    "translate_2": False,  # Branch for entering except block
+    "translate_3": False,  # Branch for IndexError with row < 0
+    "translate_4": False,  # Branch for IndexError with row >= number of lines
+    "translate_5": False,  # Branch for ensuring col is within valid range
 }
 
 __all__ = [
@@ -338,19 +339,21 @@ class Document:
             branch_coverage_translate["translate_1"] = True
             print("Try branch was hit!")
         except IndexError:
+            branch_coverage_translate["translate_2"] = True
+            print("Except branch was hit!")
             if row < 0:
                 result = self._line_start_indexes[0]
                 line = self.lines[0]
-                branch_coverage_translate["translate_2"] = True
+                branch_coverage_translate["translate_3"] = True
                 print("Branch 1 was hit!")
             else:
                 result = self._line_start_indexes[-1]
                 line = self.lines[-1]
-                branch_coverage_translate["translate_3"] = True
+                branch_coverage_translate["translate_4"] = True
                 print("Branch 2 was hit!")
 
         result += max(0, min(col, len(line)))
-        branch_coverage_translate["translate_4"] = True
+        branch_coverage_translate["translate_5"] = True
         print("Result was hit!")
 
         # Keep in range. (len(self.text) is included, because the cursor can be

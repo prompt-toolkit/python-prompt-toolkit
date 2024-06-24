@@ -1,13 +1,7 @@
-import pytest
-
 from prompt_toolkit.buffer import Buffer, branch_coverage_insert
 
 
-@pytest.fixture
-def _buffer():
-    buff = Buffer()
-    return buff
-
+BUF = Buffer()
 
 test_cases = [
     (True, "Test 1: Insert line above with copy_margin=True"),
@@ -35,4 +29,5 @@ def test_insert_line_above(_buffer):
             print(f"{description}: Failed with exception: {e}")
 
 
+test_insert_line_above(BUF)
 print_coverage()
