@@ -24,6 +24,14 @@ branch_coverage_prev = {
     "find_prev_2": False
 }
 
+branch_coverage_translate = {
+    "translate_1": False,  # Branch for successful try block execution
+    "translate_2": False,  # Branch for entering except block
+    "translate_3": False,  # Branch for IndexError with row < 0
+    "translate_4": False,  # Branch for IndexError with row >= number of lines
+    "translate_5": False,  # Branch for ensuring col is within valid range
+}
+
 __all__ = [
     "Document",
 ]
