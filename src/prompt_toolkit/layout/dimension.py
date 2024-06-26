@@ -182,20 +182,39 @@ AnyDimension = Union[
     Callable[[], Any],
 ]
 
+from typing import Any, Callable, Union
+
+to_dimension_coverage = {
+    "to_dimension_1": False,  
+    "to_dimension_2": False, 
+    "to_dimension_3": False,  
+    "to_dimension_4": False,  
+    "to_dimension_5": False   
+}
 
 def to_dimension(value: AnyDimension) -> Dimension:
     """
     Turn the given object into a `Dimension` object.
     """
     if value is None:
+        to_dimension_coverage["to_dimension_1"] = True
+        print("Branch 1 was hit")
         return Dimension()
     if isinstance(value, int):
+        to_dimension_coverage["to_dimension_2"] = True
+        print("Branch 2 was hit")
         return Dimension.exact(value)
     if isinstance(value, Dimension):
+        to_dimension_coverage["to_dimension_3"] = True
+        print("Branch 3 was hit")
         return value
     if callable(value):
+        to_dimension_coverage["to_dimension_4"] = True
+        print("Branch 4 was hit")
         return to_dimension(value())
 
+    to_dimension_coverage["to_dimension_5"] = True
+    print("Branch 5 was hit")
     raise ValueError("Not an integer or Dimension object.")
 
 
