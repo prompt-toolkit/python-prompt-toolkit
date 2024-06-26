@@ -14,6 +14,16 @@ from .clipboard import ClipboardData
 from .filters import vi_mode
 from .selection import PasteMode, SelectionState, SelectionType
 
+branch_coverage_next = {
+    "find_next_1": False,
+    "find_next_2": False,
+}
+
+branch_coverage_prev = {
+    "find_prev_1": False,
+    "find_prev_2": False
+}
+
 branch_coverage_translate = {
     "translate_1": False,  # Branch for successful try block execution
     "translate_2": False,  # Branch for entering except block
@@ -25,7 +35,6 @@ branch_coverage_translate = {
 __all__ = [
     "Document",
 ]
-
 
 # Regex for finding "words" in documents. (We consider a group of alnum
 # characters a word, but also a group of special characters a word, as long as
@@ -672,7 +681,7 @@ class Document:
         except StopIteration:
             pass
         return None
-
+    
     def find_next_matching_line(
         self, match_func: Callable[[str], bool], count: int = 1
     ) -> int | None:
@@ -684,10 +693,12 @@ class Document:
 
         for index, line in enumerate(self.lines[self.cursor_position_row + 1 :]):
             if match_func(line):
+                branch_coverage_next["find_next_1"] = True
                 result = 1 + index
                 count -= 1
 
             if count == 0:
+                branch_coverage_next["find_next_2"] = True
                 break
 
         return result
@@ -703,14 +714,16 @@ class Document:
 
         for index, line in enumerate(self.lines[: self.cursor_position_row][::-1]):
             if match_func(line):
+                branch_coverage_prev["find_prev_1"] = True
                 result = -1 - index
                 count -= 1
 
             if count == 0:
+                branch_coverage_prev["find_prev_2"] = True
                 break
 
         return result
-
+    
     def get_cursor_left_position(self, count: int = 1) -> int:
         """
         Relative position for cursor left.
@@ -1200,3 +1213,4 @@ class Document:
             cursor_position=self.cursor_position + len(text),
             selection=selection_state,
         )
+
