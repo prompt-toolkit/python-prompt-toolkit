@@ -182,34 +182,66 @@ AnyDimension = Union[
     Callable[[], Any],
 ]
 
+from typing import Any, Callable, Union
+
+to_dimension_coverage = {
+    "to_dimension_1": False,  
+    "to_dimension_2": False, 
+    "to_dimension_3": False,  
+    "to_dimension_4": False,  
+    "to_dimension_5": False   
+}
 
 def to_dimension(value: AnyDimension) -> Dimension:
     """
     Turn the given object into a `Dimension` object.
     """
     if value is None:
+        to_dimension_coverage["to_dimension_1"] = True
+        print("Branch 1 was hit")
         return Dimension()
     if isinstance(value, int):
+        to_dimension_coverage["to_dimension_2"] = True
+        print("Branch 2 was hit")
         return Dimension.exact(value)
     if isinstance(value, Dimension):
+        to_dimension_coverage["to_dimension_3"] = True
+        print("Branch 3 was hit")
         return value
     if callable(value):
+        to_dimension_coverage["to_dimension_4"] = True
+        print("Branch 4 was hit")
         return to_dimension(value())
 
+    to_dimension_coverage["to_dimension_5"] = True
+    print("Branch 5 was hit")
     raise ValueError("Not an integer or Dimension object.")
 
 
-def is_dimension(value: object) -> TypeGuard[AnyDimension]:
-    """
-    Test whether the given value could be a valid dimension.
-    (For usage in an assertion. It's not guaranteed in case of a callable.)
-    """
+# Initialize coverage tracking global variable
+branch_coverage = {
+    "is_dimension_1": False,  # Branch for checking if value is None
+    "is_dimension_2": False,  # Branch for checking if value is callable
+    "is_dimension_3": False,  # Branch for checking if value is int or Dimension
+    "is_dimension_4": False  # Branch for default case
+}
+
+def is_dimension(value: object) -> bool:
     if value is None:
+        branch_coverage["is_dimension_1"] = True
+        print("Branch 1 was hit")
         return True
     if callable(value):
-        return True  # Assume it's a callable that doesn't take arguments.
-    if isinstance(value, (int, Dimension)):
+        branch_coverage["is_dimension_2"] = True
+        print("Branch 2 was hit")
         return True
+    if isinstance(value, (int, Dimension)):
+        branch_coverage["is_dimension_3"] = True
+        print("Branch 3 was hit")
+        return True
+
+    branch_coverage["is_dimension_4"] = True
+    print("Branch 4 was hit")
     return False
 
 

@@ -422,17 +422,30 @@ def get_common_complete_suffix(
     return _commonprefix([get_suffix(c) for c in completions2])
 
 
+# Data structures that hold coverage information about the conditional branches
+branch_coverage = {
+    "_commonprefix_1": False,  # Branch for checking if not strings
+    "_commonprefix_2": False,  # Branch for comparing characters
+    "_commonprefix_3": False,  # Branch for when the characters do not match
+}
+
 def _commonprefix(strings: Iterable[str]) -> str:
-    # Similar to os.path.commonprefix
     if not strings:
+        branch_coverage["_commonprefix_1"] = True
+        print("Branch 1 was hit")
         return ""
 
     else:
+        branch_coverage["_commonprefix_2"] = True
+        print("Branch 2 was hit")
         s1 = min(strings)
         s2 = max(strings)
 
         for i, c in enumerate(s1):
             if c != s2[i]:
+                branch_coverage["_commonprefix_3"] = True
+                print("Branch 3 was hit")
+                print("here")
                 return s1[:i]
 
         return s1

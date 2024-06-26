@@ -943,16 +943,25 @@ class DynamicProcessor(Processor):
         return processor.apply_transformation(ti)
 
 
+merge_processors_coverage = {
+    "merge_processors_1": False,  # Branch for empty list of processors
+    "merge_processors_2": False,  # Branch for a single processor
+    "merge_processors_3": False   # Branch for multiple processors
+}
+
 def merge_processors(processors: list[Processor]) -> Processor:
     """
     Merge multiple `Processor` objects into one.
     """
     if len(processors) == 0:
+        merge_processors_coverage["merge_processors_1"] = True
         return DummyProcessor()
 
     if len(processors) == 1:
+        merge_processors_coverage["merge_processors_2"] = True
         return processors[0]  # Nothing to merge.
 
+    merge_processors_coverage["merge_processors_3"] = True
     return _MergedProcessor(processors)
 
 

@@ -39,6 +39,11 @@ from .selection import PasteMode, SelectionState, SelectionType
 from .utils import Event, to_str
 from .validation import ValidationError, Validator
 
+branch_coverage_insert = {
+    "insert_1": False,  # Branch for copy_margin = True
+    "insert_2": False,  # Branch for copy_margin = False
+}
+
 __all__ = [
     "EditReadOnlyBuffer",
     "Buffer",
@@ -1179,13 +1184,17 @@ class Buffer:
             self.insert_text("\n")
 
     def insert_line_above(self, copy_margin: bool = True) -> None:
-        """
-        Insert a new line above the current one.
-        """
+        """Insert a new line above the current one."""
+        global branch_coverage_insert
+
         if copy_margin:
             insert = self.document.leading_whitespace_in_current_line + "\n"
+            branch_coverage_insert["insert_1"] = True
+            print("Branch 1 was hit!")
         else:
             insert = "\n"
+            branch_coverage_insert["insert_2"] = True
+            print("Branch 2 was hit!")
 
         self.cursor_position += self.document.get_start_of_line_position()
         self.insert_text(insert)

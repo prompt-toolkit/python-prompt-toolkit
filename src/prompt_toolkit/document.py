@@ -340,18 +340,30 @@ class Document:
 
         Negative row/col values are turned into zero.
         """
+        global branch_coverage_translate
+
         try:
             result = self._line_start_indexes[row]
             line = self.lines[row]
+            branch_coverage_translate["translate_1"] = True
+            print("Try branch was hit!")
         except IndexError:
+            branch_coverage_translate["translate_2"] = True
+            print("Except branch was hit!")
             if row < 0:
                 result = self._line_start_indexes[0]
                 line = self.lines[0]
+                branch_coverage_translate["translate_3"] = True
+                print("Branch 1 was hit!")
             else:
                 result = self._line_start_indexes[-1]
                 line = self.lines[-1]
+                branch_coverage_translate["translate_4"] = True
+                print("Branch 2 was hit!")
 
         result += max(0, min(col, len(line)))
+        branch_coverage_translate["translate_5"] = True
+        print("Result was hit!")
 
         # Keep in range. (len(self.text) is included, because the cursor can be
         # right after the end of the text as well.)
