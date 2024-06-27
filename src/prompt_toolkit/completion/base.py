@@ -427,6 +427,7 @@ branch_coverage = {
     "_commonprefix_1": False,  # Branch for checking if not strings
     "_commonprefix_2": False,  # Branch for comparing characters
     "_commonprefix_3": False,  # Branch for when the characters do not match
+    "_commonprefix_3_else": False,  # Branch for else case of when the characters match
 }
 
 def _commonprefix(strings: Iterable[str]) -> str:
@@ -445,7 +446,9 @@ def _commonprefix(strings: Iterable[str]) -> str:
             if c != s2[i]:
                 branch_coverage["_commonprefix_3"] = True
                 print("Branch 3 was hit")
-                print("here")
                 return s1[:i]
+            else:
+                branch_coverage["_commonprefix_3_else"] = True
+                print("Branch 3 was not hit")
 
         return s1
