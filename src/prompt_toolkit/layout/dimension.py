@@ -221,8 +221,11 @@ def to_dimension(value: AnyDimension) -> Dimension:
 # Initialize coverage tracking global variable
 branch_coverage = {
     "is_dimension_1": False,  # Branch for checking if value is None
+    "is_dimension_1_else": False,  # Branch for else case of checking if value is None
     "is_dimension_2": False,  # Branch for checking if value is callable
+    "is_dimension_2_else": False,  # Branch for else case of checking if value is callable
     "is_dimension_3": False,  # Branch for checking if value is int or Dimension
+    "is_dimension_3_else": False,  # Branch for else case of checking if value is int or Dimension
     "is_dimension_4": False  # Branch for default case
 }
 
@@ -231,18 +234,30 @@ def is_dimension(value: object) -> bool:
         branch_coverage["is_dimension_1"] = True
         print("Branch 1 was hit")
         return True
+    else:
+        branch_coverage["is_dimension_1_else"] = True
+        print("Branch 1 was not hit")
+
     if callable(value):
         branch_coverage["is_dimension_2"] = True
         print("Branch 2 was hit")
         return True
+    else:
+        branch_coverage["is_dimension_2_else"] = True
+        print("Branch 2 was not hit")
+
     if isinstance(value, (int, Dimension)):
         branch_coverage["is_dimension_3"] = True
         print("Branch 3 was hit")
         return True
+    else:
+        branch_coverage["is_dimension_3_else"] = True
+        print("Branch 3 was not hit")
 
     branch_coverage["is_dimension_4"] = True
     print("Branch 4 was hit")
     return False
+
 
 
 # Common alias.
