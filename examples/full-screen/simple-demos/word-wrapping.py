@@ -87,7 +87,7 @@ body = FloatContainer(
                 if wrap_count
                 else [],
             ),
-            # Truncating (only wrap the first timle around)
+            # Truncating (only wrap the first time around)
             Window(
                 BufferControl(buffer=buff),
                 wrap_lines=True,
@@ -99,6 +99,16 @@ body = FloatContainer(
                 fallback=Window._whitespace_wrap_finder(): (end - 3, -1, "...")
                 if wrap_count > 0
                 else fallback(line, lineno, wrap_count, start, end),
+            ),
+            # Split only after vowels
+            Window(
+                BufferControl(buffer=buff),
+                wrap_lines=True,
+                wrap_finder=Window._whitespace_wrap_finder(
+                    sep="[aeiouyAEIOUY]",
+                    split="after",
+                    continuation=to_formatted_text("-"),
+                ),
             ),
         ]
     ),

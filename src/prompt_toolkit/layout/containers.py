@@ -1955,9 +1955,9 @@ class Window(Container):
                 f"Pattern {sep_re.pattern!r} has capture group – use non-capturing groups instead"
             )
         elif split == "after":
-            sep_re = re.compile("(?<={sep_re.pattern})()")
+            sep_re = re.compile(f"(?={sep_re.pattern})()")
         elif split == "before":
-            sep_re = re.compile("(?={sep_re.pattern})()")
+            sep_re = re.compile(f"(?<={sep_re.pattern})()")
         elif split == "remove":
             sep_re = re.compile(f"({sep_re.pattern})")
         else:
