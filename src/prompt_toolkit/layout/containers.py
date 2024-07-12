@@ -2163,9 +2163,6 @@ class Window(Container):
                         # Append continuation (e.g. hyphen)
                         if continuation:
                             x, y = copy_line(continuation, lineno, x, y, is_input=False)
-                        # Make sure to erase rest of the line
-                        for i in range(x, width):
-                            new_buffer_row[i + xpos] = empty_char
 
                         if wrap_replaced < 0:
                             return x, y
