@@ -1784,9 +1784,7 @@ class Window(Container):
             ui_content, write_position.width - total_margin_width, write_position.height
         )
         wrap_finder = self.wrap_finder or (
-            self._whitespace_wrap_finder(ui_content.get_line)
-            if self.word_wrap()
-            else None
+            self._whitespace_wrap_finder() if self.word_wrap() else None
         )
 
         # Erase background and fill with `char`.
@@ -1946,7 +1944,6 @@ class Window(Container):
     @classmethod
     def _whitespace_wrap_finder(
         cls,
-        get_line: Callable[[int], StyleAndTextTuples],
         sep: str | re.Pattern[str] = r"[ \t]",  # Don’t include \xA0 by default (in \s)
         split: str = "remove",
         continuation: StyleAndTextTuples = [],
@@ -1969,9 +1966,9 @@ class Window(Container):
         cont_width = fragment_list_width(continuation)
 
         def wrap_finder(
-            lineno: int, wrap_count: int, start: int, end: int
+            line: AnyFormattedText, lineno: int, wrap_count: int, start: int, end: int
         ) -> tuple[int, int, AnyFormattedText]:
-            line = explode_text_fragments(get_line(lineno))
+            line = explode_text_fragments(to_formatted_text(line))
             cont_reserved = 0
             while cont_reserved < cont_width:
                 style, char, *_ = line[end - 1]
@@ -2027,6 +2024,7 @@ class Window(Container):
         rowcol_to_yx: dict[tuple[int, int], tuple[int, int]] = {}
 
         def find_next_wrap(
+            line: StyleAndTextTuples,
             remaining_width: int,
             is_input: bool,
             lineno: int,
@@ -2037,7 +2035,6 @@ class Window(Container):
             if not wrap_lines:
                 return sys.maxsize, 0, []
 
-            line = ui_content.get_line(lineno)
             try:
                 style0, text0, *more = line[fragment]
             except IndexError:
@@ -2069,7 +2066,7 @@ class Window(Container):
                 max_wrap_pos += 1
 
             return (
-                wrap_finder(lineno, wrap_count, min_wrap_pos, max_wrap_pos)
+                wrap_finder(line, lineno, wrap_count, min_wrap_pos, max_wrap_pos)
                 if is_input and wrap_finder
                 else None
             ) or (
@@ -2126,7 +2123,11 @@ class Window(Container):
 
             new_buffer_row = new_buffer[y + ypos]
             wrap_start, wrap_replaced, continuation = find_next_wrap(
-                width - x, is_input, lineno, 0
+                line,
+                width - x,
+                is_input,
+                lineno,
+                0,
             )
             continuation = to_formatted_text(continuation)
 
@@ -2183,6 +2184,7 @@ class Window(Container):
 
                         new_buffer_row = new_buffer[y + ypos]
                         wrap_start, wrap_replaced, continuation = find_next_wrap(
+                            line,
                             width - x,
                             is_input,
                             lineno,

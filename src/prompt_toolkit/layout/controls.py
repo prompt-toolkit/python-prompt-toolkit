@@ -58,7 +58,9 @@ __all__ = [
 ]
 
 GetLinePrefixCallable = Callable[[int, int], AnyFormattedText]
-WrapFinderCallable = Callable[[int, int, int, int], Tuple[int, int, AnyFormattedText]]
+WrapFinderCallable = Callable[
+    [AnyFormattedText, int, int, int, int], Tuple[int, int, AnyFormattedText]
+]
 
 
 class UIControl(metaclass=ABCMeta):
@@ -206,9 +208,10 @@ class UIContent:
                 height = 10**8
             else:
                 # Calculate line width first.
-                line = fragment_list_to_text(self.get_line(lineno))[:slice_stop]
+                line = self.get_line(lineno)
+                line_text = fragment_list_to_text(line)[:slice_stop]
                 start = 0
-                text_width = get_cwidth(line[start:])
+                text_width = get_cwidth(line_text[start:])
 
                 if get_line_prefix or wrap_finder:
                     # Add prefix width.
@@ -229,17 +232,17 @@ class UIContent:
                         if wrap_finder:
                             # Decent guess for max breakpoint place?
                             end = start + width - prefix_width
-                            start_end_width = get_cwidth(line[start:end])
+                            start_end_width = get_cwidth(line_text[start:end])
                             while start_end_width >= width - prefix_width:
-                                start_end_width -= get_cwidth(line[end - 1])
+                                start_end_width -= get_cwidth(line_text[end - 1])
                                 end -= 1
                             wrap, skip, cont = wrap_finder(
-                                lineno, height - 1, start, end
+                                line, lineno, height - 1, start, end
                             )
                             if skip < 0:
                                 break  # Truncate line
                             start = wrap + skip
-                            text_width = get_cwidth(line[start:])
+                            text_width = get_cwidth(line_text[start:])
                         else:
                             text_width -= width
 

@@ -81,8 +81,7 @@ body = FloatContainer(
                 BufferControl(buffer=buff),
                 wrap_lines=True,
                 wrap_finder=Window._whitespace_wrap_finder(
-                    lambda n: [] if n else to_formatted_text(LIPSUM),
-                    continuation=to_formatted_text(" ⮠"),
+                    continuation=to_formatted_text(" ⮠")
                 ),
                 get_line_prefix=lambda lineno, wrap_count: to_formatted_text("    ⭢ ")
                 if wrap_count
@@ -92,15 +91,14 @@ body = FloatContainer(
             Window(
                 BufferControl(buffer=buff),
                 wrap_lines=True,
-                wrap_finder=lambda lineno,
+                wrap_finder=lambda line,
+                lineno,
                 wrap_count,
                 start,
                 end,
-                fallback=Window._whitespace_wrap_finder(
-                    lambda n: [] if n else to_formatted_text(LIPSUM),
-                ): (end - 3, -1, "...")
+                fallback=Window._whitespace_wrap_finder(): (end - 3, -1, "...")
                 if wrap_count > 0
-                else fallback(lineno, wrap_count, start, end),
+                else fallback(line, lineno, wrap_count, start, end),
             ),
         ]
     ),
