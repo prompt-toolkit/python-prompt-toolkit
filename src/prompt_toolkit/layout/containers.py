@@ -2040,8 +2040,8 @@ class Window(Container):
             except IndexError:
                 return sys.maxsize, 0, []
 
-            char_pos -= fragment_list_len(line[:fragment])
-            line_part = [(style0, text0[char_pos:]), *line[fragment + 1 :]]
+            frag_char_pos = char_pos - fragment_list_len(line[:fragment])
+            line_part = [(style0, text0[frag_char_pos:]), *line[fragment + 1 :]]
             line_width = [fragment_list_width([frag]) for frag in line_part]
             line_width = [fragment_list_width([frag]) for frag in line_part]
 
