@@ -45,7 +45,7 @@ def create_output(
     if stdout is None:
         # By default, render to stdout. If the output is piped somewhere else,
         # render to stderr.
-        stdout = sys.stdout
+        stdout = sys.__stdout__
 
         if always_prefer_tty:
             for io in [sys.stdout, sys.stderr]:
@@ -54,13 +54,6 @@ def create_output(
                     stdout = io
                     break
 
-    # If the output is still `None`, use a DummyOutput.
-    # This happens for instance on Windows, when running the application under
-    # `pythonw.exe`. In that case, there won't be a terminal Window, and
-    # stdin/stdout/stderr are `None`.
-    if stdout is None:
-        return DummyOutput()
-
     # If the patch_stdout context manager has been used, then sys.stdout is
     # replaced by this proxy. For prompt_toolkit applications, we want to use
     # the real stdout.
@@ -68,6 +61,13 @@ def create_output(
 
     while isinstance(stdout, StdoutProxy):
         stdout = stdout.original_stdout
+
+    # If the output is still `None`, use a DummyOutput.
+    # This happens for instance on Windows, when running the application under
+    # `pythonw.exe`. In that case, there won't be a terminal Window, and
+    # stdin/stdout/stderr are `None`.
+    if stdout is None:
+        return DummyOutput()
 
     if sys.platform == "win32":
         from .conemu import ConEmuOutput
