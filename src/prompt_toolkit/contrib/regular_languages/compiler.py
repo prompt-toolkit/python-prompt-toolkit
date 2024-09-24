@@ -507,9 +507,9 @@ class Variables:
     def get(self, key: str) -> str | None: ...
 
     @overload
-    def get(self, key: str, default: _T = None) -> str | _T: ...
+    def get(self, key: str, default: str | _T) -> str | _T: ...
 
-    def get(self, key: str, default: _T = None) -> str | _T:
+    def get(self, key: str, default: str | _T | None = None) -> str | _T | None:
         items = self.getall(key)
         return items[0] if items else default
 
