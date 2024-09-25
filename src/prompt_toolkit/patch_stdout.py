@@ -273,7 +273,7 @@ class StdoutProxy:
             self._flush()
 
     @property
-    def original_stdout(self) -> TextIO:
+    def original_stdout(self) -> TextIO | None:
         return self._output.stdout or sys.__stdout__
 
     # Attributes for compatibility with sys.__stdout__:
