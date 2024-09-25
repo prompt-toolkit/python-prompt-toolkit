@@ -61,6 +61,8 @@ def create_output(
     # If the patch_stdout context manager has been used, then sys.stdout is
     # replaced by this proxy. For prompt_toolkit applications, we want to use
     # the real stdout.
+    from prompt_toolkit.patch_stdout import StdoutProxy
+
     while isinstance(stdout, StdoutProxy):
         stdout = stdout.original_stdout
 
