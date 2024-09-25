@@ -1,6 +1,19 @@
 CHANGELOG
 =========
 
+3.0.48: 2024-09-25
+------------------
+
+Fixes:
+- Typing improvements:
+  * Add `@overload` to `contrib.regular_languages.compiler.Variables.get`.
+  * Use `Sequence` instead of `list` for `words` argument in completers.
+- Improve `ModalCursorShapeConfig`:
+  * Display an "underscore" cursor in Vi's "replace single" mode, like
+    "replace" mode.
+  * Display an "beam" cursor in Emacs (insert) mode.
+
+
 3.0.47: 2024-06-10
 ------------------
 
