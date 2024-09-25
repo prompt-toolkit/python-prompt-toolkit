@@ -78,7 +78,7 @@ class ModalCursorShapeConfig(CursorShapeConfig):
                 InputMode.INSERT_MULTIPLE,
             }:
                 return CursorShape.BEAM
-            if application.vi_state.input_mode == {
+            if application.vi_state.input_mode in {
                 InputMode.REPLACE,
                 InputMode.REPLACE_SINGLE,
             }:
