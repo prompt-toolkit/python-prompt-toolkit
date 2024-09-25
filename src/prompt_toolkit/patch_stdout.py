@@ -274,7 +274,7 @@ class StdoutProxy:
 
     @property
     def original_stdout(self) -> TextIO | None:
-        return None  # self._output.stdout or sys.__stdout__
+        return self._output.stdout or sys.__stdout__
 
     # Attributes for compatibility with sys.__stdout__:
 
