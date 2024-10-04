@@ -111,4 +111,7 @@ async def in_terminal(render_cli_done: bool = False) -> AsyncGenerator[None, Non
             app._request_absolute_cursor_position()
             app._redraw()
         finally:
-            new_run_in_terminal_f.set_result(None)
+            # (Check for `.done()`, because it can be that this future was
+            # cancelled.)
+            if not new_run_in_terminal_f.done():
+                new_run_in_terminal_f.set_result(None)
