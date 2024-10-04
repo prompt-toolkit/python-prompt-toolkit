@@ -257,7 +257,7 @@ def _output_screen_diff(
     # give weird artifacts on resize events.)
     reset_attributes()
 
-    if screen.show_cursor or is_done:
+    if screen.show_cursor:
         output.show_cursor()
 
     return current_pos, last_style
@@ -416,6 +416,7 @@ class Renderer:
             self._bracketed_paste_enabled = False
 
         self.output.reset_cursor_shape()
+        self.output.show_cursor()
 
         # NOTE: No need to set/reset cursor key mode here.
 
