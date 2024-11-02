@@ -54,12 +54,10 @@ def main():
         else:
             on = "on=false"
 
-        return (
-            HTML(
-                'Press <style bg="#222222" fg="#ff8888">[control-t]</style> '
-                "to swap between dark/light colors. "
-                f'<style bg="ansiblack" fg="ansiwhite">[{on}]</style>'
-            )
+        return HTML(
+            'Press <style bg="#222222" fg="#ff8888">[control-t]</style> '
+            "to swap between dark/light colors. "
+            f'<style bg="ansiblack" fg="ansiwhite">[{on}]</style>'
         )
 
     text = prompt(
