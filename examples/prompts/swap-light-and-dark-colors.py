@@ -58,9 +58,8 @@ def main():
             HTML(
                 'Press <style bg="#222222" fg="#ff8888">[control-t]</style> '
                 "to swap between dark/light colors. "
-                '<style bg="ansiblack" fg="ansiwhite">[%s]</style>'
+                f'<style bg="ansiblack" fg="ansiwhite">[{on}]</style>'
             )
-            % on
         )
 
     text = prompt(

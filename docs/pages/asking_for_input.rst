@@ -25,7 +25,7 @@ and returns the text. Just like ``(raw_)input``.
     from prompt_toolkit import prompt
 
     text = prompt('Give me some input: ')
-    print('You said: %s' % text)
+    print(f'You said: {text}')
 
 .. image:: ../images/hello-world-prompt.png
 
@@ -86,7 +86,7 @@ base class.
     from prompt_toolkit.lexers import PygmentsLexer
 
     text = prompt('Enter HTML: ', lexer=PygmentsLexer(HtmlLexer))
-    print('You said: %s' % text)
+    print(f'You said: {text}')
 
 .. image:: ../images/html-input.png
 
@@ -105,7 +105,7 @@ you can do the following:
     style = style_from_pygments_cls(get_style_by_name('monokai'))
     text = prompt('Enter HTML: ', lexer=PygmentsLexer(HtmlLexer), style=style,
                   include_default_pygments_style=False)
-    print('You said: %s' % text)
+    print(f'You said: {text}')
 
 We pass ``include_default_pygments_style=False``, because otherwise, both
 styles will be merged, possibly giving slightly different colors in the outcome
@@ -266,7 +266,7 @@ a completer that implements that interface.
 
     html_completer = WordCompleter(['<html>', '<body>', '<head>', '<title>'])
     text = prompt('Enter HTML: ', completer=html_completer)
-    print('You said: %s' % text)
+    print(f'You said: {text}')
 
 :class:`~prompt_toolkit.completion.WordCompleter` is a simple completer that
 completes the last word before the cursor with any of the given words.
@@ -310,7 +310,7 @@ levels. :class:`~prompt_toolkit.completion.NestedCompleter` solves this issue:
     })
 
     text = prompt('# ', completer=completer)
-    print('You said: %s' % text)
+    print(f'You said: {text}')
 
 Whenever there is a ``None`` value in the dictionary, it means that there is no
 further nested completion at that point. When all values of a dictionary would
@@ -476,7 +476,7 @@ takes a :class:`~prompt_toolkit.document.Document` as input and raises
                                       cursor_position=i)
 
     number = int(prompt('Give a number: ', validator=NumberValidator()))
-    print('You said: %i' % number)
+    print(f'You said: {number}')
 
 .. image:: ../images/number-validator.png
 
@@ -515,7 +515,7 @@ follows:
         move_cursor_to_end=True)
 
     number = int(prompt('Give a number: ', validator=validator))
-    print('You said: %i' % number)
+    print(f'You said: {number}')
 
 We define a function that takes a string, and tells whether it's valid input or
 not by returning a boolean.
@@ -592,7 +592,7 @@ Example:
 
     while True:
         text = session.prompt('> ', auto_suggest=AutoSuggestFromHistory())
-        print('You said: %s' % text)
+        print(f'You said: {text}')
 
 .. image:: ../images/auto-suggestion.png
 
@@ -627,7 +627,7 @@ of the foreground.
         return HTML('This is a <b><style bg="ansired">Toolbar</style></b>!')
 
     text = prompt('> ', bottom_toolbar=bottom_toolbar)
-    print('You said: %s' % text)
+    print(f'You said: {text}')
 
 .. image:: ../images/bottom-toolbar.png
 
@@ -646,7 +646,7 @@ Similar, we could use a list of style/text tuples.
     })
 
     text = prompt('> ', bottom_toolbar=bottom_toolbar, style=style)
-    print('You said: %s' % text)
+    print(f'You said: {text}')
 
 The default class name is ``bottom-toolbar`` and that will also be used to fill
 the background of the toolbar.
@@ -734,7 +734,7 @@ An example of a prompt that prints ``'hello world'`` when :kbd:`Control-T` is pr
         event.app.exit()
 
     text = prompt('> ', key_bindings=bindings)
-    print('You said: %s' % text)
+    print(f'You said: {text}')
 
 
 Note that we use
@@ -892,7 +892,7 @@ A default value can be given:
     from prompt_toolkit import prompt
     import getpass
 
-    prompt('What is your name: ', default='%s' % getpass.getuser())
+    prompt('What is your name: ', default=f"{getpass.getuser()}")
 
 
 Mouse support
@@ -990,7 +990,7 @@ returns a coroutines and is awaitable.
         while True:
             with patch_stdout():
                 result = await session.prompt_async('Say something: ')
-            print('You said: %s' % result)
+            print(f'You said: {result}')
 
 The :func:`~prompt_toolkit.patch_stdout.patch_stdout` context manager is
 optional, but it's recommended, because other coroutines could print to stdout.

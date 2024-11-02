@@ -57,7 +57,7 @@ and returns the text. Just like ``(raw_)input``.
     from prompt_toolkit import prompt
 
     text = prompt('Give me some input: ')
-    print('You said: %s' % text)
+    print(f'You said: {text}')
 
 
 Learning `prompt_toolkit`

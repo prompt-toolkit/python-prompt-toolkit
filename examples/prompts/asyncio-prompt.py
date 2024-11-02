@@ -26,7 +26,7 @@ async def print_counter():
     try:
         i = 0
         while True:
-            print("Counter: %i" % i)
+            print(f"Counter: {i}")
             i += 1
             await asyncio.sleep(3)
     except asyncio.CancelledError:

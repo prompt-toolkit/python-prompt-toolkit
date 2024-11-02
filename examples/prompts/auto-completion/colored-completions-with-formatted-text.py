@@ -97,12 +97,12 @@ class AnimalCompleter(Completer):
                     family_color = family_colors.get(family, "default")
 
                     display = HTML(
-                        "%s<b>:</b> <ansired>(<"
+                        f"{animal}<b>:</b> <ansired>(<"
                         + family_color
-                        + ">%s</"
+                        + f">{family}</"
                         + family_color
                         + ">)</ansired>"
-                    ) % (animal, family)
+                    ) 
                 else:
                     display = animal
 

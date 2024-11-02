@@ -17,8 +17,8 @@ def prompt_continuation(width, line_number, wrap_count):
     if wrap_count > 0:
         return " " * (width - 3) + "-> "
     else:
-        text = ("- %i - " % (line_number + 1)).rjust(width)
-        return HTML("<strong>%s</strong>") % text
+        text = (f"- {line_number + 1} - ").rjust(width)
+        return HTML(f"<strong>{text}</strong>")
 
 
 if __name__ == "__main__":

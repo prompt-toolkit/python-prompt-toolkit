@@ -39,7 +39,7 @@ def main():
         threads = []
 
         for i in range(160):
-            label = "Task %i" % i
+            label = f"Task {i}"
             total = random.randrange(50, 200)
             sleep_time = random.randrange(5, 20) / 100.0
 

@@ -51,9 +51,9 @@ def get_prompt() -> HTML:
         "<right-part> "
         "<branch> master<exclamation-mark>!</exclamation-mark> </branch> "
         " <env> py36 </env> "
-        " <time>%s</time> "
+        f" <time>{datetime.datetime.now().isoformat()}</time> "
         "</right-part>"
-    ) % (datetime.datetime.now().isoformat(),)
+    ) 
 
     used_width = sum(
         [
@@ -65,7 +65,7 @@ def get_prompt() -> HTML:
     total_width = get_app().output.get_size().columns
     padding_size = total_width - used_width
 
-    padding = HTML("<padding>%s</padding>") % (" " * padding_size,)
+    padding = HTML(f"<padding>{" " * padding_size}</padding>") 
 
     return merge_formatted_text([left_part, padding, right_part, "\n", "# "])
 
