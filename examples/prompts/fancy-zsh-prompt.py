@@ -65,7 +65,7 @@ def get_prompt() -> HTML:
     total_width = get_app().output.get_size().columns
     padding_size = total_width - used_width
 
-    padding = HTML(f"<padding>{" " * padding_size}</padding>") 
+    padding = HTML(f"<padding>{" " * padding_size}</padding>")
 
     return merge_formatted_text([left_part, padding, right_part, "\n", "# "])
 

@@ -102,7 +102,7 @@ class AnimalCompleter(Completer):
                         + f">{family}</"
                         + family_color
                         + ">)</ansired>"
-                    ) 
+                    )
                 else:
                     display = animal
 
