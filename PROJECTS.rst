@@ -13,7 +13,7 @@ Shells:
 - `saws <https://github.com/donnemartin/saws>`_: A Supercharged AWS Command Line Interface.
 - `cycli <https://github.com/nicolewhite/cycli>`_:  A Command Line Interface for Cypher.
 - `crash <https://github.com/crate/crash>`_:  Crate command line client.
-- `vcli <https://github.com/dbcli/vcli>`_: Vertica client.
+- `vcli <https://github.com/dbcli/vcli>`_: Vertical client.
 - `aws-shell <https://github.com/awslabs/aws-shell>`_: An integrated shell for working with the AWS CLI.
 - `softlayer-python <https://github.com/softlayer/softlayer-python>`_: A command-line interface to manage various SoftLayer products and services.
 - `ipython <http://github.com/ipython/ipython/>`_: The IPython REPL
@@ -52,7 +52,7 @@ Full screen applications:
 - `sanctuary-zero <https://github.com/t0xic0der/sanctuary-zero>`_: A secure chatroom with zero logging and total transience.
 - `Hummingbot <https://github.com/CoinAlpha/hummingbot>`_: A Cryptocurrency Algorithmic Trading Platform
 - `git-bbb <https://github.com/MrMino/git-bbb>`_: A `git blame` browser.
-- `ass <https://github.com/mlang/ass`_: An OpenAI Assistants API client.
+- `ass <https://github.com/mlang/ass>`_: An OpenAI Assistants API client.
 
 Libraries:
 
