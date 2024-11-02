@@ -53,7 +53,7 @@ def get_prompt() -> HTML:
         " <env> py36 </env> "
         f" <time>{datetime.datetime.now().isoformat()}</time> "
         "</right-part>"
-    ) 
+    )
 
     used_width = sum(
         [

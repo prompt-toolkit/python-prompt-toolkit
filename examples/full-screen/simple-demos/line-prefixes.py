@@ -33,7 +33,7 @@ quis sodales maximus."""
 
 def get_line_prefix(lineno, wrap_count):
     if wrap_count == 0:
-        return HTML(f'[{lineno}] <style bg="orange" fg="black">--&gt;</style> ') 
+        return HTML(f'[{lineno}] <style bg="orange" fg="black">--&gt;</style> ')
     text = str(lineno) + "-" + "*" * (lineno // 2) + ": "
     return HTML(f'[{lineno}.{wrap_count}] <style bg="ansigreen" fg="ansiblack">{text}</style>')
 
