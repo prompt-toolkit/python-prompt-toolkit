@@ -50,6 +50,7 @@ extend-ignore-re = [
     "ret",
     "rouble",
     "x1b\\[4m",
+    "Vertica",  # Database.
     # Deliberate spelling mistakes in autocorrection.py
     "wolrd",
     "impotr",
