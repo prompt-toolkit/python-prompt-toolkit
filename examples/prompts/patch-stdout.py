@@ -21,7 +21,7 @@ def main():
         i = 0
         while running:
             i += 1
-            print("i=%i" % i)
+            print(f"i={i}")
             time.sleep(1)
 
     t = threading.Thread(target=thread)
