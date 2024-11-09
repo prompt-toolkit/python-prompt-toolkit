@@ -24,8 +24,8 @@ and returns the text. Just like ``(raw_)input``.
 
     from prompt_toolkit import prompt
 
-    text = prompt('Give me some input: ')
-    print('You said: %s' % text)
+    text = prompt("Give me some input: ")
+    print(f"You said: {text}")
 
 .. image:: ../images/hello-world-prompt.png
 
@@ -85,8 +85,8 @@ base class.
     from prompt_toolkit.shortcuts import prompt
     from prompt_toolkit.lexers import PygmentsLexer
 
-    text = prompt('Enter HTML: ', lexer=PygmentsLexer(HtmlLexer))
-    print('You said: %s' % text)
+    text = prompt("Enter HTML: ", lexer=PygmentsLexer(HtmlLexer))
+    print(f"You said: {text}")
 
 .. image:: ../images/html-input.png
 
@@ -102,10 +102,14 @@ you can do the following:
     from prompt_toolkit.lexers import PygmentsLexer
     from prompt_toolkit.styles.pygments import style_from_pygments_cls
 
-    style = style_from_pygments_cls(get_style_by_name('monokai'))
-    text = prompt('Enter HTML: ', lexer=PygmentsLexer(HtmlLexer), style=style,
-                  include_default_pygments_style=False)
-    print('You said: %s' % text)
+    style = style_from_pygments_cls(get_style_by_name("monokai"))
+    text = prompt(
+        "Enter HTML: ",
+        lexer=PygmentsLexer(HtmlLexer),
+        style=style,
+        include_default_pygments_style=False
+    )
+    print(f"You said: {text}")
 
 We pass ``include_default_pygments_style=False``, because otherwise, both
 styles will be merged, possibly giving slightly different colors in the outcome
@@ -131,12 +135,15 @@ function:
     from prompt_toolkit.lexers import PygmentsLexer
 
     our_style = Style.from_dict({
-        'pygments.comment':   '#888888 bold',
-        'pygments.keyword':   '#ff88ff bold',
+        "pygments.comment": "#888888 bold",
+        "pygments.keyword": "#ff88ff bold",
     })
 
-    text = prompt('Enter HTML: ', lexer=PygmentsLexer(HtmlLexer),
-                  style=our_style)
+    text = prompt(
+        "Enter HTML: ",
+        lexer=PygmentsLexer(HtmlLexer),
+        style=our_style
+    )
 
 
 The style dictionary is very similar to the Pygments ``styles`` dictionary,
@@ -167,12 +174,14 @@ Suppose we'd like to use a Pygments style, for instance
     from prompt_toolkit.lexers import PygmentsLexer
     from pygments.styles.tango import TangoStyle
     from pygments.lexers.html import HtmlLexer
-    
-    tango_style = style_from_pygments_cls (TangoStyle)
-    
-    text = prompt ('Enter HTML: ', 
-      lexer=PygmentsLexer(HtmlLexer),
-      style=tango_style)
+
+    tango_style = style_from_pygments_cls(TangoStyle)
+
+    text = prompt(
+        "Enter HTML: ", 
+        lexer=PygmentsLexer(HtmlLexer),
+        style=tango_style
+    )
 
 Creating a custom style could be done like this:
 
@@ -188,13 +197,16 @@ Creating a custom style could be done like this:
     our_style = merge_styles([
         style_from_pygments_cls(TangoStyle),
         Style.from_dict({
-            'pygments.comment': '#888888 bold',
-            'pygments.keyword': '#ff88ff bold',
+            "pygments.comment": "#888888 bold",
+            "pygments.keyword": "#ff88ff bold",
         })
     ])
 
-    text = prompt('Enter HTML: ', lexer=PygmentsLexer(HtmlLexer),
-                  style=our_style)
+    text = prompt(
+        "Enter HTML: ",
+        lexer=PygmentsLexer(HtmlLexer),
+        style=our_style
+    )
 
 
 Coloring the prompt itself
@@ -212,24 +224,24 @@ names to refer to the style.
 
     style = Style.from_dict({
         # User input (default text).
-        '':          '#ff0066',
+        "":          "#ff0066",
 
         # Prompt.
-        'username': '#884444',
-        'at':       '#00aa00',
-        'colon':    '#0000aa',
-        'pound':    '#00aa00',
-        'host':     '#00ffff bg:#444400',
-        'path':     'ansicyan underline',
+        "username": "#884444",
+        "at":       "#00aa00",
+        "colon":    "#0000aa",
+        "pound":    "#00aa00",
+        "host":     "#00ffff bg:#444400",
+        "path":     "ansicyan underline",
     })
 
     message = [
-        ('class:username', 'john'),
-        ('class:at',       '@'),
-        ('class:host',     'localhost'),
-        ('class:colon',    ':'),
-        ('class:path',     '/user/john'),
-        ('class:pound',    '# '),
+        ("class:username", "john"),
+        ("class:at",       "@"),
+        ("class:host",     "localhost"),
+        ("class:colon",    ":"),
+        ("class:path",     "/user/john"),
+        ("class:pound",    "# "),
     ]
 
     text = prompt(message, style=style)
@@ -264,9 +276,9 @@ a completer that implements that interface.
     from prompt_toolkit import prompt
     from prompt_toolkit.completion import WordCompleter
 
-    html_completer = WordCompleter(['<html>', '<body>', '<head>', '<title>'])
-    text = prompt('Enter HTML: ', completer=html_completer)
-    print('You said: %s' % text)
+    html_completer = WordCompleter(["<html>", "<body>", "<head>", "<title>"])
+    text = prompt("Enter HTML: ", completer=html_completer)
+    print(f"You said: {text}")
 
 :class:`~prompt_toolkit.completion.WordCompleter` is a simple completer that
 completes the last word before the cursor with any of the given words.
@@ -299,18 +311,18 @@ levels. :class:`~prompt_toolkit.completion.NestedCompleter` solves this issue:
     from prompt_toolkit.completion import NestedCompleter
 
     completer = NestedCompleter.from_nested_dict({
-        'show': {
-            'version': None,
-            'clock': None,
-            'ip': {
-                'interface': {'brief'}
+        "show": {
+            "version": None,
+            "clock": None,
+            "ip": {
+                "interface": {"brief"}
             }
         },
-        'exit': None,
+        "exit": None,
     })
 
-    text = prompt('# ', completer=completer)
-    print('You said: %s' % text)
+    text = prompt("# ", completer=completer)
+    print(f"You said: {text}")
 
 Whenever there is a ``None`` value in the dictionary, it means that there is no
 further nested completion at that point. When all values of a dictionary would
@@ -330,9 +342,9 @@ instance:
 
     class MyCustomCompleter(Completer):
         def get_completions(self, document, complete_event):
-            yield Completion('completion', start_position=0)
+            yield Completion("completion", start_position=0)
 
-    text = prompt('> ', completer=MyCustomCompleter())
+    text = prompt("> ", completer=MyCustomCompleter())
 
 A :class:`~prompt_toolkit.completion.Completer` class has to implement a
 generator named :meth:`~prompt_toolkit.completion.Completer.get_completions`
@@ -361,16 +373,25 @@ in the completion menu or toolbar. This is possible by passing a style to each
     class MyCustomCompleter(Completer):
         def get_completions(self, document, complete_event):
             # Display this completion, black on yellow.
-            yield Completion('completion1', start_position=0,
-                             style='bg:ansiyellow fg:ansiblack')
+            yield Completion(
+                "completion1",
+                start_position=0,
+                style="bg:ansiyellow fg:ansiblack"
+            )
 
             # Underline completion.
-            yield Completion('completion2', start_position=0,
-                             style='underline')
+            yield Completion(
+                "completion2",
+                start_position=0,
+                style="underline"
+            )
 
             # Specify class name, which will be looked up in the style sheet.
-            yield Completion('completion3', start_position=0,
-                             style='class:special-completion')
+            yield Completion(
+                "completion3",
+                start_position=0,
+                style="class:special-completion"
+            )
 
 The "colorful-prompts.py" example uses completion styling:
 
@@ -390,9 +411,11 @@ can also be combined with the ``style`` attribute. For instance:
     class MyCustomCompleter(Completer):
         def get_completions(self, document, complete_event):
             yield Completion(
-                'completion1', start_position=0,
-                display=HTML('<b>completion</b><ansired>1</ansired>'),
-                style='bg:ansiyellow')
+                "completion1",
+                start_position=0,
+                display=HTML("<b>completion</b><ansired>1</ansired>"),
+                style="bg:ansiyellow"
+            )
 
 
 Fuzzy completion
@@ -419,8 +442,11 @@ option:
 
 .. code:: python
 
-    text = prompt('Enter HTML: ', completer=my_completer,
-                  complete_while_typing=True)
+    text = prompt(
+        "Enter HTML: ",
+        completer=my_completer,
+        complete_while_typing=True
+    )
 
 Notice that this setting is incompatible with the ``enable_history_search``
 option. The reason for this is that the up and down key bindings would conflict
@@ -438,7 +464,7 @@ a background thread. This is possible by wrapping the completer in a
 
 .. code:: python
 
-    text = prompt('> ', completer=MyCustomCompleter(), complete_in_thread=True)
+    text = prompt("> ", completer=MyCustomCompleter(), complete_in_thread=True)
 
 
 Input validation
@@ -472,11 +498,13 @@ takes a :class:`~prompt_toolkit.document.Document` as input and raises
                     if not c.isdigit():
                         break
 
-                raise ValidationError(message='This input contains non-numeric characters',
-                                      cursor_position=i)
+                raise ValidationError(
+                    message="This input contains non-numeric characters",
+                    cursor_position=i
+                )
 
-    number = int(prompt('Give a number: ', validator=NumberValidator()))
-    print('You said: %i' % number)
+    number = int(prompt("Give a number: ", validator=NumberValidator()))
+    print(f"You said: {number}")
 
 .. image:: ../images/number-validator.png
 
@@ -485,8 +513,11 @@ prompt_toolkit can also validate after the user presses the enter key:
 
 .. code:: python
 
-    prompt('Give a number: ', validator=NumberValidator(),
-           validate_while_typing=False)
+    prompt(
+        "Give a number: ",
+        validator=NumberValidator(),
+        validate_while_typing=False
+    )
 
 If the input validation contains some heavy CPU intensive code, but you don't
 want to block the event loop, then it's recommended to wrap the validator class
@@ -511,11 +542,12 @@ follows:
 
     validator = Validator.from_callable(
         is_number,
-        error_message='This input contains non-numeric characters',
-        move_cursor_to_end=True)
+        error_message="This input contains non-numeric characters",
+        move_cursor_to_end=True
+    )
 
-    number = int(prompt('Give a number: ', validator=validator))
-    print('You said: %i' % number)
+    number = int(prompt("Give a number: ", validator=validator))
+    print(f"You said: {number}")
 
 We define a function that takes a string, and tells whether it's valid input or
 not by returning a boolean.
@@ -556,7 +588,7 @@ passed either to a :class:`~prompt_toolkit.shortcuts.PromptSession` or to the
    from prompt_toolkit import PromptSession
    from prompt_toolkit.history import FileHistory
 
-   session = PromptSession(history=FileHistory('~/.myhistory'))
+   session = PromptSession(history=FileHistory("~/.myhistory"))
 
    while True:
        session.prompt()
@@ -591,8 +623,8 @@ Example:
     session = PromptSession()
 
     while True:
-        text = session.prompt('> ', auto_suggest=AutoSuggestFromHistory())
-        print('You said: %s' % text)
+        text = session.prompt("> ", auto_suggest=AutoSuggestFromHistory())
+        print(f"You said: {text}")
 
 .. image:: ../images/auto-suggestion.png
 
@@ -624,10 +656,10 @@ of the foreground.
     from prompt_toolkit.formatted_text import HTML
 
     def bottom_toolbar():
-        return HTML('This is a <b><style bg="ansired">Toolbar</style></b>!')
+        return HTML("This is a <b><style bg="ansired">Toolbar</style></b>!")
 
-    text = prompt('> ', bottom_toolbar=bottom_toolbar)
-    print('You said: %s' % text)
+    text = prompt("> ", bottom_toolbar=bottom_toolbar)
+    print(f"You said: {text}")
 
 .. image:: ../images/bottom-toolbar.png
 
@@ -639,14 +671,14 @@ Similar, we could use a list of style/text tuples.
     from prompt_toolkit.styles import Style
 
     def bottom_toolbar():
-        return [('class:bottom-toolbar', ' This is a toolbar. ')]
+        return [("class:bottom-toolbar", " This is a toolbar. ")]
 
     style = Style.from_dict({
-        'bottom-toolbar': '#ffffff bg:#333333',
+        "bottom-toolbar": "#ffffff bg:#333333",
     })
 
-    text = prompt('> ', bottom_toolbar=bottom_toolbar, style=style)
-    print('You said: %s' % text)
+    text = prompt("> ", bottom_toolbar=bottom_toolbar, style=style)
+    print(f"You said: {text}")
 
 The default class name is ``bottom-toolbar`` and that will also be used to fill
 the background of the toolbar.
@@ -669,13 +701,13 @@ callable which returns either.
     from prompt_toolkit.styles import Style
 
     example_style = Style.from_dict({
-        'rprompt': 'bg:#ff0066 #ffffff',
+        "rprompt": "bg:#ff0066 #ffffff",
     })
 
     def get_rprompt():
-        return '<rprompt>'
+        return "<rprompt>"
 
-    answer = prompt('> ', rprompt=get_rprompt, style=example_style)
+    answer = prompt("> ", rprompt=get_rprompt, style=example_style)
 
 .. image:: ../images/rprompt.png
 
@@ -699,7 +731,7 @@ binding are required, just pass ``vi_mode=True``.
 
     from prompt_toolkit import prompt
 
-    prompt('> ', vi_mode=True)
+    prompt("> ", vi_mode=True)
 
 
 Adding custom key bindings
@@ -711,7 +743,8 @@ usual Vi or Emacs behavior. We can extend this by passing another
 ``key_bindings`` argument of the :func:`~prompt_toolkit.shortcuts.prompt`
 function or the :class:`~prompt_toolkit.shortcuts.PromptSession` class.
 
-An example of a prompt that prints ``'hello world'`` when :kbd:`Control-T` is pressed.
+An example of a prompt that prints ``'hello world'`` when :kbd:`Control-T` is
+pressed.
 
 .. code:: python
 
@@ -721,20 +754,20 @@ An example of a prompt that prints ``'hello world'`` when :kbd:`Control-T` is pr
 
     bindings = KeyBindings()
 
-    @bindings.add('c-t')
+    @bindings.add("c-t")
     def _(event):
-        " Say 'hello' when `c-t` is pressed. "
+        " Say "hello" when `c-t` is pressed. "
         def print_hello():
-            print('hello world')
+            print("hello world")
         run_in_terminal(print_hello)
 
-    @bindings.add('c-x')
+    @bindings.add("c-x")
     def _(event):
         " Exit when `c-x` is pressed. "
         event.app.exit()
 
-    text = prompt('> ', key_bindings=bindings)
-    print('You said: %s' % text)
+    text = prompt("> ", key_bindings=bindings)
+    print(f"You said: {text}")
 
 
 Note that we use
@@ -770,12 +803,12 @@ filters <filters>`.)
         " Only activate key binding on the second half of each minute. "
         return datetime.datetime.now().second > 30
 
-    @bindings.add('c-t', filter=is_active)
+    @bindings.add("c-t", filter=is_active)
     def _(event):
         # ...
         pass
 
-    prompt('> ', key_bindings=bindings)
+    prompt("> ", key_bindings=bindings)
 
 
 Dynamically switch between Emacs and Vi mode
@@ -797,7 +830,7 @@ attribute. We can change the key bindings by changing this attribute from
         bindings = KeyBindings()
 
         # Add an additional key binding for toggling this flag.
-        @bindings.add('f4')
+        @bindings.add("f4")
         def _(event):
             " Toggle between Emacs and Vi mode. "
             app = event.app
@@ -810,12 +843,12 @@ attribute. We can change the key bindings by changing this attribute from
         # Add a toolbar at the bottom to display the current input mode.
         def bottom_toolbar():
             " Display the current input mode. "
-            text = 'Vi' if get_app().editing_mode == EditingMode.VI else 'Emacs'
+            text = "Vi" if get_app().editing_mode == EditingMode.VI else "Emacs"
             return [
-                ('class:toolbar', ' [F4] %s ' % text)
+                ("class:toolbar", " [F4] %s " % text)
             ]
 
-        prompt('> ', key_bindings=bindings, bottom_toolbar=bottom_toolbar)
+        prompt("> ", key_bindings=bindings, bottom_toolbar=bottom_toolbar)
 
     run()
 
@@ -832,7 +865,7 @@ the following key binding.
 
     kb = KeyBindings()
 
-    @kb.add('c-space')
+    @kb.add("c-space")
     def _(event):
         " Initialize autocompletion, or select the next completion. "
         buff = event.app.current_buffer
@@ -854,7 +887,7 @@ Reading multiline input is as easy as passing the ``multiline=True`` parameter.
 
     from prompt_toolkit import prompt
 
-    prompt('> ', multiline=True)
+    prompt("> ", multiline=True)
 
 A side effect of this is that the enter key will now insert a newline instead
 of accepting and returning the input. The user will now have to press
@@ -873,11 +906,14 @@ prompt.)
     from prompt_toolkit import prompt
 
     def prompt_continuation(width, line_number, is_soft_wrap):
-        return '.' * width
-        # Or: return [('', '.' * width)]
+        return "." * width
+        # Or: return [("", "." * width)]
 
-    prompt('multiline input> ', multiline=True,
-           prompt_continuation=prompt_continuation)
+    prompt(
+        "multiline input> ",
+        multiline=True,
+        prompt_continuation=prompt_continuation
+    )
 
 .. image:: ../images/multiline-input.png
 
@@ -892,7 +928,7 @@ A default value can be given:
     from prompt_toolkit import prompt
     import getpass
 
-    prompt('What is your name: ', default='%s' % getpass.getuser())
+    prompt("What is your name: ", default=f"{getpass.getuser()}")
 
 
 Mouse support
@@ -907,7 +943,7 @@ Enabling can be done by passing the ``mouse_support=True`` option.
 
     from prompt_toolkit import prompt
 
-    prompt('What is your name: ', mouse_support=True)
+    prompt("What is your name: ", mouse_support=True)
 
 
 Line wrapping
@@ -921,7 +957,7 @@ scroll horizontally.
 
     from prompt_toolkit import prompt
 
-    prompt('What is your name: ', wrap_lines=False)
+    prompt("What is your name: ", wrap_lines=False)
 
 
 Password input
@@ -934,7 +970,7 @@ asterisks (``*`` characters).
 
     from prompt_toolkit import prompt
 
-    prompt('Enter password: ', is_password=True)
+    prompt("Enter password: ", is_password=True)
 
 
 Cursor shapes
@@ -952,13 +988,13 @@ input mode.
     from prompt_toolkit.cursor_shapes import CursorShape, ModalCursorShapeConfig
 
     # Several possible values for the `cursor_shape_config` parameter:
-    prompt('>', cursor=CursorShape.BLOCK)
-    prompt('>', cursor=CursorShape.UNDERLINE)
-    prompt('>', cursor=CursorShape.BEAM)
-    prompt('>', cursor=CursorShape.BLINKING_BLOCK)
-    prompt('>', cursor=CursorShape.BLINKING_UNDERLINE)
-    prompt('>', cursor=CursorShape.BLINKING_BEAM)
-    prompt('>', cursor=ModalCursorShapeConfig())
+    prompt(">", cursor=CursorShape.BLOCK)
+    prompt(">", cursor=CursorShape.UNDERLINE)
+    prompt(">", cursor=CursorShape.BEAM)
+    prompt(">", cursor=CursorShape.BLINKING_BLOCK)
+    prompt(">", cursor=CursorShape.BLINKING_UNDERLINE)
+    prompt(">", cursor=CursorShape.BLINKING_BEAM)
+    prompt(">", cursor=ModalCursorShapeConfig())
 
 
 Prompt in an `asyncio` application
@@ -989,8 +1025,8 @@ returns a coroutines and is awaitable.
         session = PromptSession()
         while True:
             with patch_stdout():
-                result = await session.prompt_async('Say something: ')
-            print('You said: %s' % result)
+                result = await session.prompt_async("Say something: ")
+            print(f"You said: {result}")
 
 The :func:`~prompt_toolkit.patch_stdout.patch_stdout` context manager is
 optional, but it's recommended, because other coroutines could print to stdout.
