@@ -478,7 +478,7 @@ class DummyControl(UIControl):
         def get_line(i: int) -> StyleAndTextTuples:
             return []
 
-        return UIContent(get_line=get_line, line_count=100**100)  # Something very big.
+        return UIContent(get_line=get_line, line_count=1)
 
     def is_focusable(self) -> bool:
         return False
