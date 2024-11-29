@@ -22,7 +22,7 @@ lint.ignore = [
 
 
 [tool.ruff.lint.per-file-ignores]
-"examples/*" = ["T201"]  # Print allowed in examples.
+"examples/*" = ["UP031", "T201"]  # Print allowed in examples.
 "src/prompt_toolkit/application/application.py" = ["T100", "T201", "F821"]  # pdb and print allowed.
 "src/prompt_toolkit/contrib/telnet/server.py" = ["T201"]  # Print allowed.
 "src/prompt_toolkit/key_binding/bindings/named_commands.py" = ["T201"]  # Print allowed.
