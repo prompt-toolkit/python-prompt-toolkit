@@ -35,7 +35,7 @@ extensions = [
 # templates_path = ["_templates"]
 
 # The suffix of source filenames.
-source_suffix = {'.rst': 'restructuredtext'}
+source_suffix = {".rst": "restructuredtext"}
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
@@ -127,13 +127,11 @@ html_theme_options = {
     "documentation_font": "Open Sans",
     "monospace_font": "Ubuntu Mono",
     "monospace_font_size": "1.1rem",
-
     # "style" can take the following values: "blue", "indigo", "purple",
     # "pink", "red", "orange", "yellow", "green", "tail", and "default".
     "style": "blue",
     "pygments_light_style": "pastie",
     "pygments_dark_style": "dracula",
-
     # Fonts are customizable (and are not retrieved online).
     # https://sphinx-nefertiti.readthedocs.io/en/latest/users-guide/customization/fonts.html
     "logo": "logo_400px.png",
@@ -143,23 +141,15 @@ html_theme_options = {
     "repository_url": "https://github.com/prompt-toolkit/python-prompt-toolkit",
     "repository_name": "python-prompt-toolkit",
     "current_version": "latest",
-    "versions": [
-        (item, docs_fmt_url.format(release=item)) for item in releases
-    ],
+    "versions": [(item, docs_fmt_url.format(release=item)) for item in releases],
     "header_links": [
-        {
-            "text": "Getting started",
-            "link": "pages/getting_started"
-        },
+        {"text": "Getting started", "link": "pages/getting_started"},
         {
             "text": "Tutorials",
             "match": "/tutorials/*",
             "dropdown": (
-                {
-                    "text": "Build an SQLite REPL",
-                    "link": "pages/tutorials/repl"
-                },
-            )
+                {"text": "Build an SQLite REPL", "link": "pages/tutorials/repl"},
+            ),
         },
         {
             "text": "Advanced",
@@ -200,9 +190,9 @@ html_theme_options = {
                 },
                 {
                     "text": "The rendering pipeline",
-                    "link": "pages/advanced_topics/rendering_pipeline"
-                }
-            )
+                    "link": "pages/advanced_topics/rendering_pipeline",
+                },
+            ),
         },
         {
             "text": "Reference",
@@ -225,8 +215,8 @@ html_theme_options = {
         {
             "text": "Issues",
             "link": "https://github.com/prompt-toolkit/python-prompt-toolkit/issues",
-        }
-    ]
+        },
+    ],
 }
 
 
