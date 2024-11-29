@@ -61,6 +61,7 @@ locale = 'en-us'  # US English.
 
 [tool.typos.files]
 extend-exclude = [
+    "tests/test_buffer.py",
     "tests/test_cli.py",
     "tests/test_regular_languages.py",
 ]
