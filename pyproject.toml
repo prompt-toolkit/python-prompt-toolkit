@@ -20,7 +20,6 @@ lint.ignore = [
     "E741", # Ambiguous variable name.
 ]
 
-
 [tool.ruff.lint.per-file-ignores]
 "examples/*" = ["UP031", "T201"]  # Print allowed in examples.
 "src/prompt_toolkit/application/application.py" = ["T100", "T201", "F821"]  # pdb and print allowed.
@@ -31,8 +30,7 @@ lint.ignore = [
 "src/prompt_toolkit/filters/__init__.py" = ["F403", "F405"]  # Possibly undefined due to star import.
 "src/prompt_toolkit/filters/cli.py" = ["F403", "F405"]  # Possibly undefined due to star import.
 "src/prompt_toolkit/shortcuts/progress_bar/formatters.py" = ["UP031"] # %-style formatting.
-"src/*" = ["UP032"]  # f-strings instead of format calls.
-
+"src/*" = ["UP031", "UP032"]  # f-strings instead of format calls.
 
 [tool.ruff.lint.isort]
 known-first-party = ["prompt_toolkit"]
