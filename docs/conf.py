@@ -29,7 +29,6 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.graphviz",
     "sphinx_copybutton",
-    "sphinx_colorschemed_images",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
