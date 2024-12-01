@@ -301,9 +301,11 @@ Filters
 
 .. autoclass:: prompt_toolkit.filters.Filter
     :members:
+    :no-index:
 
 .. autoclass:: prompt_toolkit.filters.Condition
     :members:
+    :no-index:
 
 .. automodule:: prompt_toolkit.filters.utils
     :members:
@@ -334,7 +336,7 @@ Eventloop
 
 .. automodule:: prompt_toolkit.eventloop
     :members: run_in_executor_with_context, call_soon_threadsafe,
-        get_traceback_from_context, get_event_loop
+        get_traceback_from_context
 
 .. automodule:: prompt_toolkit.eventloop.inputhook
     :members:

@@ -143,8 +143,8 @@ def create_app_session(
     """
     Create a separate AppSession.
 
-    This is useful if there can be multiple individual `AppSession`s going on.
-    Like in the case of an Telnet/SSH server.
+    This is useful if there can be multiple individual ``AppSession``'s going
+    on. Like in the case of a Telnet/SSH server.
     """
     # If no input/output is specified, fall back to the current input/output,
     # if there was one that was set/created for the current session.

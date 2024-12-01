@@ -20,9 +20,8 @@ lint.ignore = [
     "E741", # Ambiguous variable name.
 ]
 
-
 [tool.ruff.lint.per-file-ignores]
-"examples/*" = ["T201"]  # Print allowed in examples.
+"examples/*" = ["UP031", "T201"]  # Print allowed in examples.
 "src/prompt_toolkit/application/application.py" = ["T100", "T201", "F821"]  # pdb and print allowed.
 "src/prompt_toolkit/contrib/telnet/server.py" = ["T201"]  # Print allowed.
 "src/prompt_toolkit/key_binding/bindings/named_commands.py" = ["T201"]  # Print allowed.
@@ -31,8 +30,7 @@ lint.ignore = [
 "src/prompt_toolkit/filters/__init__.py" = ["F403", "F405"]  # Possibly undefined due to star import.
 "src/prompt_toolkit/filters/cli.py" = ["F403", "F405"]  # Possibly undefined due to star import.
 "src/prompt_toolkit/shortcuts/progress_bar/formatters.py" = ["UP031"] # %-style formatting.
-"src/*" = ["UP032"]  # f-strings instead of format calls.
-
+"src/*" = ["UP031", "UP032"]  # f-strings instead of format calls.
 
 [tool.ruff.lint.isort]
 known-first-party = ["prompt_toolkit"]
@@ -63,6 +61,7 @@ locale = 'en-us'  # US English.
 
 [tool.typos.files]
 extend-exclude = [
+    "tests/test_buffer.py",
     "tests/test_cli.py",
     "tests/test_regular_languages.py",
 ]
