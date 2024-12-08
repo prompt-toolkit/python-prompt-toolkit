@@ -6,7 +6,7 @@ and terminal applications in Python.
 
 
 It can be a very advanced pure Python replacement for `GNU readline
-<http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html>`_, but it can also be
+<https://tiswww.case.edu/php/chet/readline/rltop.html>`_, but it can also be
 used for building full screen applications.
 
 .. image:: images/ptpython-2.png
