@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import re
 from abc import ABCMeta, abstractmethod
-from typing import TYPE_CHECKING, Callable, Hashable, cast
+from typing import TYPE_CHECKING, Callable, Hashable, cast, Optional
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.cache import SimpleCache
@@ -86,6 +86,9 @@ class TransformationInput:
         previous processors into account.)
     :param fragments: List of fragments that we can transform. (Received from the
         previous processor.)
+    :param get_line: Optional ; a callable that returns the fragments of another
+        line in the  current buffer; This can be used to create processors capable
+        of affecting transforms across multiple lines.
     """
 
     def __init__(
@@ -97,6 +100,7 @@ class TransformationInput:
         fragments: StyleAndTextTuples,
         width: int,
         height: int,
+        get_line: Optional[Callable[[int], StyleAndTextTuples]] = None,
     ) -> None:
         self.buffer_control = buffer_control
         self.document = document
@@ -105,6 +109,7 @@ class TransformationInput:
         self.fragments = fragments
         self.width = width
         self.height = height
+        self.get_line = get_line
 
     def unpack(
         self,
@@ -987,6 +992,7 @@ class _MergedProcessor(Processor):
                     fragments,
                     ti.width,
                     ti.height,
+                    ti.get_line,
                 )
             )
             fragments = transformation.fragments
