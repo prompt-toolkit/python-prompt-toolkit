@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import re
 from abc import ABCMeta, abstractmethod
-from typing import TYPE_CHECKING, Callable, Hashable, cast, Optional
+from typing import TYPE_CHECKING, Callable, Hashable, cast
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.cache import SimpleCache
@@ -100,7 +100,7 @@ class TransformationInput:
         fragments: StyleAndTextTuples,
         width: int,
         height: int,
-        get_line: Optional[Callable[[int], StyleAndTextTuples]] = None,
+        get_line: Callable[[int], StyleAndTextTuples] | None = None,
     ) -> None:
         self.buffer_control = buffer_control
         self.document = document
