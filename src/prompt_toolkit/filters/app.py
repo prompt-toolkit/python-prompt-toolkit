@@ -371,7 +371,7 @@ def emacs_insert_mode() -> bool:
     if (
         app.editing_mode != EditingMode.EMACS
         or app.current_buffer.selection_state
-        or app.current_buffer.read_only()
+        or app.current_buffer.read_only
     ):
         return False
     return True
