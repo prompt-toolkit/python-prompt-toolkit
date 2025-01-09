@@ -86,7 +86,7 @@ from prompt_toolkit.styles import (
 )
 from prompt_toolkit.utils import Event, in_main_thread
 
-from ._compat import asyncio_run, EventLoop
+from ._compat import EventLoop, asyncio_run
 from .current import get_app_session, set_app
 from .run_in_terminal import in_terminal, run_in_terminal
 
