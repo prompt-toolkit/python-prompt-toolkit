@@ -86,6 +86,7 @@ from prompt_toolkit.styles import (
 )
 from prompt_toolkit.utils import Event, in_main_thread
 
+from ._compat import asyncio_run, EventLoop
 from .current import get_app_session, set_app
 from .run_in_terminal import in_terminal, run_in_terminal
 
@@ -971,14 +972,7 @@ class Application(Generic[_AppResult]):
                 return False
 
         if inputhook is not None:
-            # Create new event loop with given input hook and run the app.
-            # In Python 3.12, we can use asyncio.run(loop_factory=...)
-            # For now, use `run_until_complete()`.
-            loop = new_eventloop_with_inputhook(inputhook)
-            result = loop.run_until_complete(coro)
-            loop.run_until_complete(loop.shutdown_asyncgens())
-            loop.close()
-            return result
+            return asyncio_run(coro, loop_factory=lambda: new_eventloop_with_inputhook(inputhook))
 
         elif _called_from_ipython():
             # workaround to make input hooks work for IPython until
@@ -992,14 +986,14 @@ class Application(Generic[_AppResult]):
                 loop = asyncio.get_event_loop()
             except RuntimeError:
                 # No loop installed. Run like usual.
-                return asyncio.run(coro)
+                return asyncio_run(coro, loop_factory=EventLoop)
             else:
                 # Use existing loop.
                 return loop.run_until_complete(coro)
 
         else:
             # No loop installed. Run like usual.
-            return asyncio.run(coro)
+            return asyncio_run(coro, loop_factory=EventLoop)
 
     def _handle_exception(
         self, loop: AbstractEventLoop, context: dict[str, Any]
