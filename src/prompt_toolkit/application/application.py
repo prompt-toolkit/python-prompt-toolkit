@@ -972,7 +972,9 @@ class Application(Generic[_AppResult]):
                 return False
 
         if inputhook is not None:
-            return asyncio_run(coro, loop_factory=lambda: new_eventloop_with_inputhook(inputhook))
+            return asyncio_run(
+                coro, loop_factory=lambda: new_eventloop_with_inputhook(inputhook)
+            )
 
         elif _called_from_ipython():
             # workaround to make input hooks work for IPython until
