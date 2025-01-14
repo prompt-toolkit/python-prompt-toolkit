@@ -328,6 +328,10 @@ class PromptSession(Generic[_T]):
         there is a keyboard interrupt (control-c keypress).
     :param eof_exception: The exception type that will be raised when there is
         an end-of-file/exit event (control-d keypress).
+    :param append_autosuggestion_class: The class of the `Processor` that will
+        be used to append autosuggestions to the current buffer. Default to
+        `AppendAutoSuggestion`, that can only handle single line suggestions to
+        the last line of the current buffer
     """
 
     _fields = (
@@ -416,6 +420,7 @@ class PromptSession(Generic[_T]):
         output: Output | None = None,
         interrupt_exception: type[BaseException] = KeyboardInterrupt,
         eof_exception: type[BaseException] = EOFError,
+        append_autosuggestion_class=AppendAutoSuggestion,
     ) -> None:
         history = history or InMemoryHistory()
         clipboard = clipboard or InMemoryClipboard()
@@ -472,7 +477,9 @@ class PromptSession(Generic[_T]):
         self.history = history
         self.default_buffer = self._create_default_buffer()
         self.search_buffer = self._create_search_buffer()
-        self.layout = self._create_layout()
+        self.layout = self._create_layout(
+            append_autosuggestion_class=append_autosuggestion_class
+        )
         self.app = self._create_application(editing_mode, erase_when_done)
 
     def _dyncond(self, attr_name: str) -> Condition:
@@ -533,7 +540,7 @@ class PromptSession(Generic[_T]):
     def _create_search_buffer(self) -> Buffer:
         return Buffer(name=SEARCH_BUFFER)
 
-    def _create_layout(self) -> Layout:
+    def _create_layout(self, append_autosuggestion_class) -> Layout:
         """
         Create `Layout` for this prompt.
         """
@@ -559,7 +566,7 @@ class PromptSession(Generic[_T]):
             HighlightIncrementalSearchProcessor(),
             HighlightSelectionProcessor(),
             ConditionalProcessor(
-                AppendAutoSuggestion(), has_focus(default_buffer) & ~is_done
+                append_autosuggestion_class(), has_focus(default_buffer) & ~is_done
             ),
             ConditionalProcessor(PasswordProcessor(), dyncond("is_password")),
             DisplayMultipleCursors(),
