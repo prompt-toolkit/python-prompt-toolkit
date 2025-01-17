@@ -5,14 +5,12 @@ input and check the result.
 
 from __future__ import annotations
 
-from functools import partial
 import io
-import sys
+from functools import partial
 
 import pytest
 
 from prompt_toolkit.clipboard import ClipboardData, InMemoryClipboard
-from prompt_toolkit.data_structures import Size
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.filters import ViInsertMode
 from prompt_toolkit.history import InMemoryHistory
@@ -22,7 +20,6 @@ from prompt_toolkit.key_binding.bindings.named_commands import prefix_meta
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.output import DummyOutput
 from prompt_toolkit.output.plain_text import PlainTextOutput
-from prompt_toolkit.output.vt100 import Vt100_Output
 from prompt_toolkit.shortcuts import PromptSession
 
 
@@ -106,7 +103,7 @@ def test_visible_password():
 
     # Test that the string is made up only of `*` characters
     assert actual_output == "*" * len(actual_output), actual_output
-    
+
     # Test that the string is long as much as the original password,
     # minus the needed carriage return.
     assert actual_output == "*" * len(password.strip()), actual_output
