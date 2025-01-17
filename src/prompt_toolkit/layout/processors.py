@@ -847,9 +847,9 @@ class ReverseSearchProcessor(Processor):
     def apply_transformation(self, ti: TransformationInput) -> Transformation:
         from .controls import SearchBufferControl
 
-        assert isinstance(
-            ti.buffer_control, SearchBufferControl
-        ), "`ReverseSearchProcessor` should be applied to a `SearchBufferControl` only."
+        assert isinstance(ti.buffer_control, SearchBufferControl), (
+            "`ReverseSearchProcessor` should be applied to a `SearchBufferControl` only."
+        )
 
         source_to_display: SourceToDisplay | None
         display_to_source: DisplayToSource | None

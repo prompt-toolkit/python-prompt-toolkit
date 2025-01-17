@@ -870,11 +870,11 @@ def test_vi_temp_navigation_mode():
     """
     feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI)
 
-    result, cli = feed("abcde" "\x0f" "3h" "x\r")  # c-o  # 3 times to the left.
+    result, cli = feed("abcde\x0f3hx\r")  # c-o  # 3 times to the left.
     assert result.text == "axbcde"
     assert result.cursor_position == 2
 
-    result, cli = feed("abcde" "\x0f" "b" "x\r")  # c-o  # One word backwards.
+    result, cli = feed("abcde\x0fbx\r")  # c-o  # One word backwards.
     assert result.text == "xabcde"
     assert result.cursor_position == 1
 
