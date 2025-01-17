@@ -249,6 +249,7 @@ class PromptSession(Generic[_T]):
         When True (the default), automatically wrap long lines instead of
         scrolling horizontally.
     :param is_password: Show asterisks instead of the actual typed characters.
+    :param hide_password: Hide the password, rather than showing asterisks.
     :param editing_mode: ``EditingMode.VI`` or ``EditingMode.EMACS``.
     :param vi_mode: `bool`, if True, Identical to ``editing_mode=EditingMode.VI``.
     :param complete_while_typing: `bool` or
@@ -335,10 +336,10 @@ class PromptSession(Generic[_T]):
         "lexer",
         "completer",
         "complete_in_thread",
-        "is_password",
         "editing_mode",
         "key_bindings",
         "is_password",
+        "hide_password",
         "bottom_toolbar",
         "style",
         "style_transformation",
@@ -377,6 +378,7 @@ class PromptSession(Generic[_T]):
         multiline: FilterOrBool = False,
         wrap_lines: FilterOrBool = True,
         is_password: FilterOrBool = False,
+        hide_password: bool = False,
         vi_mode: bool = False,
         editing_mode: EditingMode = EditingMode.EMACS,
         complete_while_typing: FilterOrBool = True,
@@ -435,6 +437,7 @@ class PromptSession(Generic[_T]):
         self.completer = completer
         self.complete_in_thread = complete_in_thread
         self.is_password = is_password
+        self.hide_password = hide_password
         self.key_bindings = key_bindings
         self.bottom_toolbar = bottom_toolbar
         self.style = style
@@ -555,13 +558,17 @@ class PromptSession(Generic[_T]):
         def display_placeholder() -> bool:
             return self.placeholder is not None and self.default_buffer.text == ""
 
+        password_character = "" if self.hide_password else "*"
+
         all_input_processors = [
             HighlightIncrementalSearchProcessor(),
             HighlightSelectionProcessor(),
             ConditionalProcessor(
                 AppendAutoSuggestion(), has_focus(default_buffer) & ~is_done
             ),
-            ConditionalProcessor(PasswordProcessor(), dyncond("is_password")),
+            ConditionalProcessor(
+                PasswordProcessor(char=password_character), dyncond("is_password")
+            ),
             DisplayMultipleCursors(),
             # Users can insert processors here.
             DynamicProcessor(lambda: merge_processors(self.input_processors or [])),
@@ -866,6 +873,7 @@ class PromptSession(Generic[_T]):
         completer: Completer | None = None,
         complete_in_thread: bool | None = None,
         is_password: bool | None = None,
+        hide_password: bool | None = None,
         key_bindings: KeyBindingsBase | None = None,
         bottom_toolbar: AnyFormattedText | None = None,
         style: BaseStyle | None = None,
@@ -961,6 +969,8 @@ class PromptSession(Generic[_T]):
             self.complete_in_thread = complete_in_thread
         if is_password is not None:
             self.is_password = is_password
+        if hide_password is not None:
+            self.hide_password = hide_password
         if key_bindings is not None:
             self.key_bindings = key_bindings
         if bottom_toolbar is not None:
@@ -1103,6 +1113,7 @@ class PromptSession(Generic[_T]):
         completer: Completer | None = None,
         complete_in_thread: bool | None = None,
         is_password: bool | None = None,
+        hide_password: bool | None = None,
         key_bindings: KeyBindingsBase | None = None,
         bottom_toolbar: AnyFormattedText | None = None,
         style: BaseStyle | None = None,
@@ -1155,6 +1166,8 @@ class PromptSession(Generic[_T]):
             self.complete_in_thread = complete_in_thread
         if is_password is not None:
             self.is_password = is_password
+        if hide_password is not None:
+            self.hide_password = hide_password
         if key_bindings is not None:
             self.key_bindings = key_bindings
         if bottom_toolbar is not None:
@@ -1376,6 +1389,7 @@ def prompt(
     completer: Completer | None = None,
     complete_in_thread: bool | None = None,
     is_password: bool | None = None,
+    hide_password: bool | None = None,
     key_bindings: KeyBindingsBase | None = None,
     bottom_toolbar: AnyFormattedText | None = None,
     style: BaseStyle | None = None,
@@ -1420,7 +1434,9 @@ def prompt(
     """
     # The history is the only attribute that has to be passed to the
     # `PromptSession`, it can't be passed into the `prompt()` method.
-    session: PromptSession[str] = PromptSession(history=history)
+    # The `hide_password` is needed by the layout, so must be provided
+    # in the init as well.
+    session: PromptSession[str] = PromptSession(history=history, hide_password=hide_password)
 
     return session.prompt(
         message,
@@ -1431,6 +1447,7 @@ def prompt(
         completer=completer,
         complete_in_thread=complete_in_thread,
         is_password=is_password,
+        # hide_password=hide_password,
         key_bindings=key_bindings,
         bottom_toolbar=bottom_toolbar,
         style=style,
