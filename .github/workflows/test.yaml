@@ -35,7 +35,7 @@ jobs:
           ruff check .
           ruff format --check .
       - name: Typos
-        if: ${{ matrix.python-version == '3.13'" && always() }}
+        if: ${{ matrix.python-version == '3.13' && always() }}
         run: |
           typos .
       - name: Tests
