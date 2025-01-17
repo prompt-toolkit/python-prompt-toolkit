@@ -66,12 +66,7 @@ def example_3():
     Using ANSI for the formatting.
     """
     answer = prompt(
-        ANSI(
-            "\x1b[31mjohn\x1b[0m@"
-            "\x1b[44mlocalhost\x1b[0m:"
-            "\x1b[4m/user/john\x1b[0m"
-            "# "
-        )
+        ANSI("\x1b[31mjohn\x1b[0m@\x1b[44mlocalhost\x1b[0m:\x1b[4m/user/john\x1b[0m# ")
     )
     print(f"You said: {answer}")
 

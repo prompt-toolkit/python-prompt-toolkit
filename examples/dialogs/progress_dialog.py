@@ -38,8 +38,7 @@ def worker(set_percentage, log_text):
 def main():
     progress_dialog(
         title="Progress dialog example",
-        text="As an examples, we walk through the filesystem and print "
-        "all directories",
+        text="As an examples, we walk through the filesystem and print all directories",
         run_callback=worker,
     ).run()
 

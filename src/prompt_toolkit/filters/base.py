@@ -81,8 +81,7 @@ class Filter(metaclass=ABCMeta):
         instead of for instance ``filter1 or Always()``.
         """
         raise ValueError(
-            "The truth value of a Filter is ambiguous. "
-            "Instead, call it as a function."
+            "The truth value of a Filter is ambiguous. Instead, call it as a function."
         )
 
 
