@@ -1436,7 +1436,9 @@ def prompt(
     # `PromptSession`, it can't be passed into the `prompt()` method.
     # The `hide_password` is needed by the layout, so must be provided
     # in the init as well.
-    session: PromptSession[str] = PromptSession(history=history, hide_password=hide_password)
+    session: PromptSession[str] = PromptSession(
+        history=history, hide_password=hide_password or False
+    )
 
     return session.prompt(
         message,
@@ -1447,7 +1449,6 @@ def prompt(
         completer=completer,
         complete_in_thread=complete_in_thread,
         is_password=is_password,
-        # hide_password=hide_password,
         key_bindings=key_bindings,
         bottom_toolbar=bottom_toolbar,
         style=style,
