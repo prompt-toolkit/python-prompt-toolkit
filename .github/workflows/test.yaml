@@ -30,9 +30,13 @@ jobs:
           python -m pip install . ruff typos coverage codecov mypy pytest readme_renderer types-contextvars asyncssh
           pip list
       - name: Ruff
+        if: ${{ matrix.python-version == '3.13' }}
         run: |
           ruff check .
           ruff format --check .
+      - name: Typos
+        if: ${{ matrix.python-version == '3.13'" && always() }}
+        run: |
           typos .
       - name: Tests
         run: |
