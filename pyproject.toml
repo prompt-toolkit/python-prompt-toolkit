@@ -64,4 +64,6 @@ extend-exclude = [
     "tests/test_buffer.py",
     "tests/test_cli.py",
     "tests/test_regular_languages.py",
+    # complains about some spelling in human right declaration.
+    "examples/prompts/multiline-autosuggest.py",
 ]
