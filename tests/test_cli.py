@@ -6,10 +6,13 @@ input and check the result.
 from __future__ import annotations
 
 from functools import partial
+import io
+import sys
 
 import pytest
 
 from prompt_toolkit.clipboard import ClipboardData, InMemoryClipboard
+from prompt_toolkit.data_structures import Size
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.filters import ViInsertMode
 from prompt_toolkit.history import InMemoryHistory
@@ -18,6 +21,8 @@ from prompt_toolkit.input.vt100_parser import ANSI_SEQUENCES
 from prompt_toolkit.key_binding.bindings.named_commands import prefix_meta
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.output import DummyOutput
+from prompt_toolkit.output.plain_text import PlainTextOutput
+from prompt_toolkit.output.vt100 import Vt100_Output
 from prompt_toolkit.shortcuts import PromptSession
 
 
@@ -27,6 +32,33 @@ def _history():
     h.append_string("line2 second input")
     h.append_string("line3 third input")
     return h
+
+
+def _feed_cli_with_password(text, check_line_ending=True, hide_password=False):
+    """
+    Create a Prompt, feed it with a given user input considered
+    to be a password, and then return the CLI output to the caller.
+
+    This returns an Output object.
+    """
+
+    # If the given text doesn't end with a newline, the interface won't finish.
+    if check_line_ending:
+        assert text.endswith("\r")
+
+    output = PlainTextOutput(stdout=io.StringIO())
+
+    with create_pipe_input() as inp:
+        inp.send_text(text)
+        session = PromptSession(
+            input=inp,
+            output=output,
+            is_password=True,
+            hide_password=hide_password,
+        )
+
+        _ = session.prompt()
+        return output
 
 
 def _feed_cli_with_input(
@@ -42,7 +74,7 @@ def _feed_cli_with_input(
     Create a Prompt, feed it with the given user input and return the CLI
     object.
 
-    This returns a (result, Application) tuple.
+    This returns a (Document, Application, Output) tuple.
     """
     # If the given text doesn't end with a newline, the interface won't finish.
     if check_line_ending:
@@ -62,6 +94,33 @@ def _feed_cli_with_input(
 
         _ = session.prompt()
         return session.default_buffer.document, session.app
+
+
+def test_visible_password():
+    # Both the `result` and the `cli.current_buffer` displays the password in plain-text,
+    # but that's not what the user sees on screen.
+    password = "secret-value\r"
+    output = _feed_cli_with_password(password, hide_password=False)
+    output.stdout.seek(0)  # Reset the stream pointer
+    actual_output = output.stdout.read().strip()
+
+    # Test that the string is made up only of `*` characters
+    assert actual_output == "*" * len(actual_output), actual_output
+    
+    # Test that the string is long as much as the original password,
+    # minus the needed carriage return.
+    assert actual_output == "*" * len(password.strip()), actual_output
+
+
+def test_invisible_password():
+    password = "secret-value\r"
+    output = _feed_cli_with_password(password, hide_password=True)
+    output.stdout.seek(0)  # Reset the stream pointer
+    actual_output = output.stdout.read().strip()
+
+    # Test that, if the `hide_password` flag is set to True,
+    # then then prompt won't display anything in the output.
+    assert actual_output == "", actual_output
 
 
 def test_simple_text_input():
