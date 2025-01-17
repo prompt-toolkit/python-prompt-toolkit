@@ -66,15 +66,20 @@ class Windows10_Output:
         return False  # We don't need this on Windows.
 
     def __getattr__(self, name: str) -> Any:
+        # NOTE: Now that we use "virtual terminal input" on
+        #       Windows, both input and output are done through
+        #       ANSI escape sequences on Windows. This means, we
+        #       should enable bracketed paste like on Linux, and
+        #       enable mouse support by calling the vt100_output.
         if name in (
             "get_size",
             "get_rows_below_cursor_position",
-            "enable_mouse_support",
-            "disable_mouse_support",
             "scroll_buffer_to_prompt",
             "get_win32_screen_buffer_info",
-            "enable_bracketed_paste",
-            "disable_bracketed_paste",
+            # "enable_mouse_support",
+            # "disable_mouse_support",
+            # "enable_bracketed_paste",
+            # "disable_bracketed_paste",
         ):
             return getattr(self.win32_output, name)
         else:
