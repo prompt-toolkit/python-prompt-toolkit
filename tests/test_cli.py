@@ -71,7 +71,7 @@ def _feed_cli_with_input(
     Create a Prompt, feed it with the given user input and return the CLI
     object.
 
-    This returns a (Document, Application, Output) tuple.
+    This returns a (result, Application) tuple.
     """
     # If the given text doesn't end with a newline, the interface won't finish.
     if check_line_ending:
