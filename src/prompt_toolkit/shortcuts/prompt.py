@@ -522,9 +522,11 @@ class PromptSession(Generic[_T]):
             enable_history_search=dyncond("enable_history_search"),
             validator=DynamicValidator(lambda: self.validator),
             completer=DynamicCompleter(
-                lambda: ThreadedCompleter(self.completer)
-                if self.complete_in_thread and self.completer
-                else self.completer
+                lambda: (
+                    ThreadedCompleter(self.completer)
+                    if self.complete_in_thread and self.completer
+                    else self.completer
+                )
             ),
             history=self.history,
             auto_suggest=DynamicAutoSuggest(lambda: self.auto_suggest),

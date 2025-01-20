@@ -55,7 +55,9 @@ def _feed_cli_with_password(text, check_line_ending=True, hide_password=False):
         )
 
         _ = session.prompt()
-        return output
+
+    output.stdout.seek(0)  # Reset the stream pointer
+    return output
 
 
 def _feed_cli_with_input(
@@ -98,7 +100,6 @@ def test_visible_password():
     # but that's not what the user sees on screen.
     password = "secret-value\r"
     output = _feed_cli_with_password(password, hide_password=False)
-    output.stdout.seek(0)  # Reset the stream pointer
     actual_output = output.stdout.read().strip()
 
     # Test that the string is made up only of `*` characters
@@ -112,7 +113,6 @@ def test_visible_password():
 def test_invisible_password():
     password = "secret-value\r"
     output = _feed_cli_with_password(password, hide_password=True)
-    output.stdout.seek(0)  # Reset the stream pointer
     actual_output = output.stdout.read().strip()
 
     # Test that, if the `hide_password` flag is set to True,

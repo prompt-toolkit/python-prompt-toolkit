@@ -1464,9 +1464,7 @@ class Window(Container):
         always_hide_cursor: FilterOrBool = False,
         cursorline: FilterOrBool = False,
         cursorcolumn: FilterOrBool = False,
-        colorcolumns: (
-            None | list[ColorColumn] | Callable[[], list[ColorColumn]]
-        ) = None,
+        colorcolumns: None | list[ColorColumn] | Callable[[], list[ColorColumn]] = None,
         align: WindowAlign | Callable[[], WindowAlign] = WindowAlign.LEFT,
         style: str | Callable[[], str] = "",
         char: None | str | Callable[[], str] = None,
