@@ -96,8 +96,6 @@ def _feed_cli_with_input(
 
 
 def test_visible_password():
-    # Both the `result` and the `cli.current_buffer` displays the password in plain-text,
-    # but that's not what the user sees on screen.
     password = "secret-value\r"
     output = _feed_cli_with_password(password, hide_password=False)
     actual_output = output.stdout.read().strip()
