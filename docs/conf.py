@@ -54,9 +54,9 @@ copyright = "2014-2024, Jonathan Slenders"
 # ---------------------------------------------------------------------
 # Versions.
 # The short X.Y version.
-version = "3.0.48"
+version = "3.0.49"
 # The full version, including alpha/beta/rc tags.
-release = "3.0.48"
+release = "3.0.49"
 # The URL pattern to match releases to ReadTheDocs URLs.
 docs_fmt_url = "https://python-prompt-toolkit.readthedocs.io/en/{release}/"
 # The list of releases to include in the dropdown.
