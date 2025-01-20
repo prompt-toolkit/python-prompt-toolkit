@@ -353,6 +353,11 @@ class Renderer:
         self.mouse_support = to_filter(mouse_support)
         self.cpr_not_supported_callback = cpr_not_supported_callback
 
+        # TODO: Move following state flags into `Vt100_Output`, similar to
+        #       `_cursor_shape_changed` and `_cursor_visible`. But then also
+        #       adjust the `Win32Output` to not call win32 APIs if nothing has
+        #       to be changed.
+
         self._in_alternate_screen = False
         self._mouse_support_enabled = False
         self._bracketed_paste_enabled = False
