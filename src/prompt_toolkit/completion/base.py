@@ -16,6 +16,7 @@ __all__ = [
     "ThreadedCompleter",
     "DummyCompleter",
     "DynamicCompleter",
+    "ThrottledCompleter",
     "CompleteEvent",
     "ConditionalCompleter",
     "merge_completers",
@@ -314,6 +315,46 @@ class DynamicCompleter(Completer):
 
     def __repr__(self) -> str:
         return f"DynamicCompleter({self.get_completer!r} -> {self.get_completer()!r})"
+
+
+class ThrottledCompleter(Completer):
+    """
+    Completer that throttles completion requests to prevent rapid successive calls.
+
+    :param completer: :class:`.Completer` instance.
+    :param delay: Delay in seconds between completions. Default is 0.3.
+    """
+
+    def __init__(self, completer: Completer, delay: float = 0.3):
+        self.completer = completer
+        self.delay = delay
+        self._last_completion_time = 0
+        self._semaphore = asyncio.Semaphore(1)
+
+    def get_completions(
+        self, document: Document, complete_event: CompleteEvent
+    ) -> Iterable[Completion]:
+        """Get completions without throttling."""
+        yield from self.completer.get_completions(document, complete_event)
+
+    async def get_completions_async(
+        self, document: Document, complete_event: CompleteEvent
+    ) -> AsyncGenerator[Completion, None]:
+        """Get completions asynchronously, applying throttle delay."""
+        async with self._semaphore:
+            current_time = asyncio.get_running_loop().time()
+            time_since_last_completion = current_time - self._last_completion_time
+
+            if time_since_last_completion < self.delay:
+                await asyncio.sleep(self.delay - time_since_last_completion)
+
+            self._last_completion_time = asyncio.get_running_loop().time()
+
+            async with aclosing(
+                self.completer.get_completions_async(document, complete_event)
+            ) as async_generator:
+                async for item in async_generator:
+                    yield item
 
 
 class ConditionalCompleter(Completer):
