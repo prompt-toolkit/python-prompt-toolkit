@@ -14,9 +14,10 @@ from prompt_toolkit.formatted_text import AnyFormattedText
 from prompt_toolkit.key_binding.bindings.focus import focus_next, focus_previous
 from prompt_toolkit.key_binding.defaults import load_key_bindings
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, merge_key_bindings
-from prompt_toolkit.layout import Layout
+from prompt_toolkit.layout import Layout, Float, FloatContainer
 from prompt_toolkit.layout.containers import AnyContainer, HSplit
 from prompt_toolkit.layout.dimension import Dimension as D
+from prompt_toolkit.layout.menus import CompletionsMenu
 from prompt_toolkit.styles import BaseStyle
 from prompt_toolkit.validation import Validator
 from prompt_toolkit.widgets import (
@@ -143,10 +144,28 @@ def input_dialog(
         body=HSplit(
             [
                 Label(text=text, dont_extend_height=True),
-                textfield,
-                ValidationToolbar(),
+                FloatContainer(
+                    HSplit(
+                        [
+                            textfield
+                        ],
+                    height=D(min=8, preferred=10, max=16)
+                    ),
+                    [
+                        Float(
+                            xcursor=True,
+                            ycursor=True,
+                            transparent=True,
+                            content=CompletionsMenu(
+                                max_height=16,
+                                scroll_offset=1
+                            )
+                        )
+                    ]
+                ),
+                ValidationToolbar()
             ],
-            padding=D(preferred=1, max=1),
+            padding=D(preferred=1, max=1)
         ),
         buttons=[ok_button, cancel_button],
         with_background=True,
