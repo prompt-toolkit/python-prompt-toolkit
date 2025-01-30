@@ -14,7 +14,7 @@ from prompt_toolkit.formatted_text import AnyFormattedText
 from prompt_toolkit.key_binding.bindings.focus import focus_next, focus_previous
 from prompt_toolkit.key_binding.defaults import load_key_bindings
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, merge_key_bindings
-from prompt_toolkit.layout import Layout, Float, FloatContainer
+from prompt_toolkit.layout import Float, FloatContainer, Layout
 from prompt_toolkit.layout.containers import AnyContainer, HSplit
 from prompt_toolkit.layout.dimension import Dimension as D
 from prompt_toolkit.layout.menus import CompletionsMenu
