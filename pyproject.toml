@@ -1,3 +1,30 @@
+[project]
+name = "prompt_toolkit"
+version = "3.0.50"
+description="Library for building powerful interactive command lines in Python"
+readme = "README.rst"
+authors = [{ name = "Jonathan Slenders" }]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python",
+    "Topic :: Software Development",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "wcwidth",
+]
+
 [tool.ruff]
 target-version = "py37"
 lint.select = [
@@ -67,3 +94,26 @@ extend-exclude = [
     # complains about some spelling in human right declaration.
     "examples/prompts/multiline-autosuggest.py",
 ]
+
+[tool.mypy]
+# --strict.
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+no_implicit_optional = true
+no_implicit_reexport = true
+strict_equality = true
+strict_optional = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unused_configs = true
+warn_unused_ignores = true
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
