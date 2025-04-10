@@ -69,7 +69,7 @@ class NestedCompleter(Completer):
             elif isinstance(value, dict):
                 options[key] = cls.from_nested_dict(value)
             elif isinstance(value, set):
-                options[key] = cls.from_nested_dict({item: None for item in value})
+                options[key] = cls.from_nested_dict(dict.fromkeys(value))
             else:
                 assert value is None
                 options[key] = None
