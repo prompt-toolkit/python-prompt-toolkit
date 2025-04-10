@@ -274,7 +274,7 @@ def test_split_lines_3():
     lines = list(split_lines([("class:a", "\n")]))
 
     assert lines == [
-        [],
+        [("class:a", "")],
         [("class:a", "")],
     ]
 
@@ -282,5 +282,17 @@ def test_split_lines_3():
     lines = list(split_lines([("class:a", "")]))
 
     assert lines == [
+        [("class:a", "")],
+    ]
+
+
+def test_split_lines_4():
+    "Edge cases: inputs starting and ending with newlines."
+    # -1-
+    lines = list(split_lines([("class:a", "\nline1\n")]))
+
+    assert lines == [
+        [("class:a", "")],
+        [("class:a", "line1")],
         [("class:a", "")],
     ]
