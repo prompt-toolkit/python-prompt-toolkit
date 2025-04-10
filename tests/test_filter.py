@@ -16,7 +16,7 @@ def test_always():
 
 def test_invert():
     assert not (~Always())()
-    assert ~Never()()
+    assert (~Never())()
 
     c = ~Condition(lambda: False)
     assert c()

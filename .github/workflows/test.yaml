@@ -18,40 +18,36 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
-          allow-prereleases: true
-      - name: Install Dependencies
-        run: |
-          sudo apt remove python3-pip
-          python -m pip install --upgrade pip
-          python -m pip install . ruff typos coverage codecov mypy pytest readme_renderer types-contextvars asyncssh
-          pip list
-      - name: Ruff
+      - name: Code formatting
         if: ${{ matrix.python-version == '3.13' }}
         run: |
-          ruff check .
-          ruff format --check .
+          uvx ruff check .
+          uvx ruff format --check .
       - name: Typos
         if: ${{ matrix.python-version == '3.13' }}
         run: |
-          typos .
-      - name: Tests
+          uvx typos .
+      - name: Unit test
         run: |
-          coverage run -m pytest
-      - name: Mypy
-        # Check whether the imports were sorted correctly.
-        # When this fails, please run ./tools/sort-imports.sh
+          uvx --with . --with pytest coverage run -m pytest tests/
+      - name: Type Checking
         run: |
-          mypy --strict src/prompt_toolkit --platform win32
-          mypy --strict src/prompt_toolkit --platform linux
-          mypy --strict src/prompt_toolkit --platform darwin
+          uvx --with . --with asyncssh mypy --strict src/ --platform win32
+          uvx --with . --with asyncssh mypy --strict src/ --platform linux
+          uvx --with . --with asyncssh mypy --strict src/ --platform darwin
       - name: Validate README.md
+        if: ${{ matrix.python-version == '3.13' }}
         # Ensure that the README renders correctly (required for uploading to PyPI).
         run: |
+          uv pip install readme_renderer
           python -m readme_renderer README.rst > /dev/null
       - name: Run codecov
         run: |
-          codecov
+          uvx codecov
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
