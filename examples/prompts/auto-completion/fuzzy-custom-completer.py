@@ -36,21 +36,28 @@ class ColorCompleter(Completer):
 def main():
     # Simple completion menu.
     print("(The completion menu displays colors.)")
-    prompt("Type a color: ", completer=FuzzyCompleter(ColorCompleter()))
-
-    # Multi-column menu.
-    prompt(
+    r = prompt(
         "Type a color: ",
         completer=FuzzyCompleter(ColorCompleter()),
         complete_style=CompleteStyle.MULTI_COLUMN,
     )
+    print(r)
+
+    # Multi-column menu.
+    r = prompt(
+        "Type a color: ",
+        completer=FuzzyCompleter(ColorCompleter()),
+        complete_style=CompleteStyle.MULTI_COLUMN,
+    )
+    print(r)
 
     # Readline-like
-    prompt(
+    r = prompt(
         "Type a color: ",
         completer=FuzzyCompleter(ColorCompleter()),
         complete_style=CompleteStyle.READLINE_LIKE,
     )
+    print(r)
 
 
 if __name__ == "__main__":
