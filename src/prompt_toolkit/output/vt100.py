@@ -271,12 +271,17 @@ class _EscapeCodeCache(Dict[Attrs, str]):
             fgcolor,
             bgcolor,
             bold,
+            dim,
             underline,
+            doubleunderline,
+            curvyunderline,
             strike,
             italic,
             blink,
+            blinkfast,
             reverse,
             hidden,
+            overline,
         ) = attrs
         parts: list[str] = []
 
@@ -284,18 +289,28 @@ class _EscapeCodeCache(Dict[Attrs, str]):
 
         if bold:
             parts.append("1")
+        if dim:
+            parts.append("2")
         if italic:
             parts.append("3")
-        if blink:
-            parts.append("5")
         if underline:
             parts.append("4")
+        if doubleunderline:
+            parts.append("4:2")
+        if curvyunderline:
+            parts.append("4:3")
+        if blink:
+            parts.append("5")
+        if blinkfast:
+            parts.append("6")
         if reverse:
             parts.append("7")
         if hidden:
             parts.append("8")
         if strike:
             parts.append("9")
+        if overline:
+            parts.append("53")
 
         if parts:
             result = "\x1b[0;" + ";".join(parts) + "m"

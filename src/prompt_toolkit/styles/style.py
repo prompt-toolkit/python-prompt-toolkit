@@ -82,12 +82,17 @@ _EMPTY_ATTRS = Attrs(
     color=None,
     bgcolor=None,
     bold=None,
+    dim=None,
     underline=None,
+    doubleunderline=None,
+    curvyunderline=None,
     strike=None,
     italic=None,
     blink=None,
+    blinkfast=None,
     reverse=None,
     hidden=None,
+    overline=None,
 )
 
 
@@ -143,6 +148,10 @@ def _parse_style_str(style_str: str) -> Attrs:
             attrs = attrs._replace(blink=True)
         elif part == "noblink":
             attrs = attrs._replace(blink=False)
+        elif part == "blinkfast":
+            attrs = attrs._replace(blinkfast=True)
+        elif part == "noblinkfast":
+            attrs = attrs._replace(blinkfast=False)
         elif part == "reverse":
             attrs = attrs._replace(reverse=True)
         elif part == "noreverse":
@@ -151,6 +160,22 @@ def _parse_style_str(style_str: str) -> Attrs:
             attrs = attrs._replace(hidden=True)
         elif part == "nohidden":
             attrs = attrs._replace(hidden=False)
+        elif part == "dim":
+            attrs = attrs._replace(dim=True)
+        elif part == "nodim":
+            attrs = attrs._replace(dim=False)
+        elif part == "doubleunderline":
+            attrs = attrs._replace(doubleunderline=True)
+        elif part == "nodoubleunderline":
+            attrs = attrs._replace(doubleunderline=False)
+        elif part == "curvyunderline":
+            attrs = attrs._replace(curvyunderline=True)
+        elif part == "nocurvyunderline":
+            attrs = attrs._replace(curvyunderline=False)
+        elif part == "overline":
+            attrs = attrs._replace(overline=True)
+        elif part == "nooverline":
+            attrs = attrs._replace(overline=False)
 
         # Pygments properties that we ignore.
         elif part in ("roman", "sans", "mono"):
@@ -339,12 +364,17 @@ def _merge_attrs(list_of_attrs: list[Attrs]) -> Attrs:
         color=_or("", *[a.color for a in list_of_attrs]),
         bgcolor=_or("", *[a.bgcolor for a in list_of_attrs]),
         bold=_or(False, *[a.bold for a in list_of_attrs]),
+        dim=_or(False, *[a.dim for a in list_of_attrs]),
         underline=_or(False, *[a.underline for a in list_of_attrs]),
+        doubleunderline=_or(False, *[a.doubleunderline for a in list_of_attrs]),
+        curvyunderline=_or(False, *[a.curvyunderline for a in list_of_attrs]),
         strike=_or(False, *[a.strike for a in list_of_attrs]),
         italic=_or(False, *[a.italic for a in list_of_attrs]),
         blink=_or(False, *[a.blink for a in list_of_attrs]),
+        blinkfast=_or(False, *[a.blinkfast for a in list_of_attrs]),
         reverse=_or(False, *[a.reverse for a in list_of_attrs]),
         hidden=_or(False, *[a.hidden for a in list_of_attrs]),
+        overline=_or(False, *[a.overline for a in list_of_attrs]),
     )
 
 
