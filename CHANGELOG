@@ -1,6 +1,16 @@
 CHANGELOG
 =========
 
+3.0.51: 2025-04-15
+------------------
+
+New features:
+- Use pyproject.toml instead of setup.py.
+
+Fixes:
+- Fix edge case in `formatted_text.split_lines` when the input starts with a
+  line ending.
+
 3.0.50: 2025-01-20
 ------------------
 
