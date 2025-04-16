@@ -25,6 +25,11 @@ dependencies = [
     "wcwidth",
 ]
 
+[project.urls]
+homepage = "https://github.com/prompt-toolkit/python-prompt-toolkit"
+source = "https://github.com/prompt-toolkit/python-prompt-toolkit"
+documentation = "https://python-prompt-toolkit.readthedocs.io/en/stable/"
+
 [tool.ruff]
 target-version = "py37"
 lint.select = [
