@@ -1,5 +1,6 @@
 [project]
 name = "prompt_toolkit"
+license.text = "BSD-3-Clause"
 version = "3.0.51"  # Also update in `docs/conf.py`.
 description="Library for building powerful interactive command lines in Python"
 readme = "README.rst"
@@ -7,7 +8,6 @@ authors = [{ name = "Jonathan Slenders" }]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
