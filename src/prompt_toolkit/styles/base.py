@@ -23,24 +23,34 @@ class Attrs(NamedTuple):
     color: str | None
     bgcolor: str | None
     bold: bool | None
+    dim: bool | None
     underline: bool | None
+    doubleunderline: bool | None
+    curvyunderline: bool | None
     strike: bool | None
     italic: bool | None
     blink: bool | None
+    blinkfast: bool | None
     reverse: bool | None
     hidden: bool | None
+    overline: bool | None
 
 
 """
 :param color: Hexadecimal string. E.g. '000000' or Ansi color name: e.g. 'ansiblue'
 :param bgcolor: Hexadecimal string. E.g. 'ffffff' or Ansi color name: e.g. 'ansired'
 :param bold: Boolean
+:param dim: Boolean
 :param underline: Boolean
+:param doubleunderline: Boolean
+:param curvyunderline: Boolean
 :param strike: Boolean
 :param italic: Boolean
 :param blink: Boolean
+:param blinkfast: Boolean
 :param reverse: Boolean
 :param hidden: Boolean
+:param overline: Boolean
 """
 
 #: The default `Attrs`.
@@ -48,12 +58,17 @@ DEFAULT_ATTRS = Attrs(
     color="",
     bgcolor="",
     bold=False,
+    dim=False,
     underline=False,
+    doubleunderline=False,
+    curvyunderline=False,
     strike=False,
     italic=False,
     blink=False,
+    blinkfast=False,
     reverse=False,
     hidden=False,
+    overline=False,
 )
 
 
