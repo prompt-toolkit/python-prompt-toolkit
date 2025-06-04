@@ -25,6 +25,14 @@ dependencies = [
     "wcwidth",
 ]
 
+[project.optional-dependencies]
+"llm" = [
+      # additional dependencies needed to use LLM auto-suggesters and completers
+      "langchain",
+      "langchain_core",
+      "PyEnchant"
+]
+
 [tool.ruff]
 target-version = "py37"
 lint.select = [
