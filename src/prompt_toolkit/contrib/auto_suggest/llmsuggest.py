@@ -31,12 +31,12 @@ Example usage:
 import locale
 import re
 import string
-import sys
 from typing import Callable, Optional
 
 import enchant
 from langchain.chat_models import init_chat_model
 from langchain_core.language_models import BaseChatModel
+
 from prompt_toolkit.auto_suggest import AutoSuggest, Suggestion
 from prompt_toolkit.buffer import Buffer, Document
 
@@ -82,7 +82,7 @@ class LLMSuggest(AutoSuggest):
     def __init__(self,
                  chat_model: Optional[BaseChatModel]=None,
                  persona: str=DEFAULT_PERSONA,
-                 context: str | Callable[[], str]='',
+                 context: str | Callable[[], str]="",
                  instruction: str=DEFAULT_INSTRUCTION,
                  language: Optional[str]=None,
                  debug: Optional[bool]=False,
@@ -141,7 +141,7 @@ class LLMSuggest(AutoSuggest):
         self.persona = persona
         self.dictionary = enchant.Dict(language or locale.getdefaultlocale()[0])
         self.context = context
-        self.chat_model = chat_model or init_chat_model('openai:gpt-4o', temperature=0.0)
+        self.chat_model = chat_model or init_chat_model("openai:gpt-4o", temperature=0.0)
 
     def _capfirst(self, s:str) -> str:
         return s[:1].upper() + s[1:]
@@ -171,7 +171,7 @@ class LLMSuggest(AutoSuggest):
 
     def clear_context(self) -> None:
         """Clear the additional context passed to the LLM."""
-        self.context = ''
+        self.context = ""
 
     def get_suggestion(self,
                        buffer: Buffer,
@@ -198,8 +198,8 @@ class LLMSuggest(AutoSuggest):
             suggestion = str(response.content)
 
             # Remove newlines or '...' sequences that the llm may have added
-            suggestion = suggestion.replace('\n', '')
-            suggestion = suggestion.replace('...', '')
+            suggestion = suggestion.replace("\n", "")
+            suggestion = suggestion.replace("...", "")
             suggestion = suggestion.rstrip()
 
             # If LLM echoed the original text back, then remove it
@@ -213,31 +213,30 @@ class LLMSuggest(AutoSuggest):
                 return Suggestion(suggestion.lstrip())
 
             # Adjust capitalization the beginnings of new sentences.
-            if re.search(r'[.?!:]\s*$',text):
+            if re.search(r"[.?!:]\s*$",text):
                 suggestion = self._capfirst(suggestion.lstrip())
 
             # Get the last word of the existing text and the first word of the suggestion
-            match = re.search(r'(\w+)\W*$', text)
-            last_word_of_text = match.group(1) if match else ''
+            match = re.search(r"(\w+)\W*$", text)
+            last_word_of_text = match.group(1) if match else ""
 
-            match = re.search(r'^\s*(\w+)', suggestion)
-            first_word_of_suggestion = match.group(1) if match else ''
+            match = re.search(r"^\s*(\w+)", suggestion)
+            first_word_of_suggestion = match.group(1) if match else ""
 
             # Add or remove spaces based on whether concatenation will form a word
-            if suggestion.startswith(' '):
-                suggestion = suggestion.lstrip() if text.endswith(' ') else suggestion
-            elif self.dictionary.check(last_word_of_text + first_word_of_suggestion) and not text.endswith(' '):
+            if suggestion.startswith(" "):
+                suggestion = suggestion.lstrip() if text.endswith(" ") else suggestion
+            elif self.dictionary.check(last_word_of_text + first_word_of_suggestion) and not text.endswith(" "):
                 suggestion = suggestion.lstrip()
-            elif not text.endswith(' '):
-                suggestion = ' ' + suggestion
+            elif not text.endswith(" "):
+                suggestion = " " + suggestion
 
             # Add space after commas and semicolons
-            if re.search(r'[,;]$',text):
-                suggestion = ' ' + suggestion.lstrip()
+            if re.search(r"[,;]$",text):
+                suggestion = " " + suggestion.lstrip()
 
             return Suggestion(suggestion)
 
-        except Exception as e:
-            print(e)
+        except Exception:
             pass
         return None
