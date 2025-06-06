@@ -30,6 +30,7 @@ dependencies = [
       # additional dependencies needed to use LLM auto-suggesters and completers
       "langchain",
       "langchain_core",
+      "langchain-openai",
       "PyEnchant"
 ]
 

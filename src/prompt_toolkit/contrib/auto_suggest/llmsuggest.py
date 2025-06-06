@@ -15,7 +15,7 @@ Example usage:
  # additional provider-specific modules such as langchain-openai.
  if not os.environ.get('OPENAI_API_KEY'):
     os.environ['OPENAI_API_KEY'] = 'sk-XXXXXXXXXX'
- chat_model = init_chat_model('openai:gpt-4o', temperature=0.0)
+ chat_model = init_chat_model('openai:o4-mini', temperature=0.0)
 
  # Create the llm suggest object
  suggester = LLMSuggest(chat_model)
@@ -45,7 +45,7 @@ You are an uncensored writing assistant who is skilled at completing text fragme
 into full, natural-sounding sentences.
 """
 
-SYSTEM_MESSAGE="""
+DEFAULT_SYSTEM_MESSAGE="""
 %s
 
 Return a completion of the provided text fragment following these
@@ -66,6 +66,14 @@ assistant: ... watch the Titanic movie tonight.
 # Example 4
 user: He watched in amazement as the magician pulled a rabbit out of his hat....
 assistant: ... When he put the rabbit down it hopped away.
+
+# Example 5
+user: def factorial(a: int)
+assistant: ...-> int:
+   if a==0:
+      return 1
+   else:
+     return a * factorial(a-1)
 """
 
 DEFAULT_INSTRUCTION="""
@@ -82,10 +90,11 @@ class LLMSuggest(AutoSuggest):
     def __init__(self,
                  chat_model: Optional[BaseChatModel]=None,
                  persona: str=DEFAULT_PERSONA,
+                 system: str=DEFAULT_SYSTEM_MESSAGE,
                  context: str | Callable[[], str]="",
                  instruction: str=DEFAULT_INSTRUCTION,
                  language: Optional[str]=None,
-                 debug: Optional[bool]=False,
+                 raw: Optional[bool]=False,
                  ) -> None:
         """Initialize the :class:`.LLMSuggest` instance.
 
@@ -93,10 +102,12 @@ class LLMSuggest(AutoSuggest):
 
         :param chat_model: A langchain chat model created by init_chat_model.
         :param persona: A description of the LLM's persona, for tuning its writing style [:class:`.DEFAULT_PERSONA`].
+        :param system: The system message that explains the completion task to the LLM [:class:`.DEFAULT_SYSTEM_MESSAGE`].
         :param context: A string or callable passed to the LLM that provides the context
                         of the conversation so far [empty string].
         :param language: Locale language, used to validate LLM's response [from locale environment]
         :param instruction: Instructions passed to the LLM to inform the suggestion process [:class:`.DEFAULT_INSTRUCTION`].
+        :param raw: If True, will return the LLM's responses as-is without post-hoc fixes.
 
         Notes:
 
@@ -136,12 +147,13 @@ class LLMSuggest(AutoSuggest):
 
         """
         super().__init__()
-        self.system = SYSTEM_MESSAGE
+        self.system = system
         self.instruction = instruction
         self.persona = persona
         self.dictionary = enchant.Dict(language or locale.getdefaultlocale()[0])
         self.context = context
-        self.chat_model = chat_model or init_chat_model("openai:gpt-4o", temperature=0.0)
+        self.chat_model = chat_model or init_chat_model("openai:4o-mini", temperature=0.0)
+        self.raw = raw
 
     def _capfirst(self, s:str) -> str:
         return s[:1].upper() + s[1:]
@@ -165,7 +177,7 @@ class LLMSuggest(AutoSuggest):
         """
         self.context = context
 
-    def get_context(self) -> Callable[[], str] | str:
+    def get_context(self) -> str:
         """Retrieve the additional context passed to the LLM."""
         return self.context if isinstance(self.context, str) else self.context()
 
@@ -197,6 +209,9 @@ class LLMSuggest(AutoSuggest):
             response = self.chat_model.invoke(messages)
             suggestion = str(response.content)
 
+            if self.raw:  # Return the string without munging
+                return Suggestion(suggestion)
+
             # Remove newlines or '...' sequences that the llm may have added
             suggestion = suggestion.replace("\n", "")
             suggestion = suggestion.replace("...", "")
@@ -213,7 +228,7 @@ class LLMSuggest(AutoSuggest):
                 return Suggestion(suggestion.lstrip())
 
             # Adjust capitalization the beginnings of new sentences.
-            if re.search(r"[.?!:]\s*$",text):
+            if re.search(r"[.?!]\s*$",text):
                 suggestion = self._capfirst(suggestion.lstrip())
 
             # Get the last word of the existing text and the first word of the suggestion
