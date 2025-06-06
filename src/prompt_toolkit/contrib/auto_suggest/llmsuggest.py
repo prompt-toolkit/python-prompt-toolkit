@@ -69,7 +69,7 @@ assistant: ... When he put the rabbit down it hopped away.
 
 # Example 5
 user: def factorial(a: int)
-assistant: ...-> int:
+assistant:
    if a==0:
       return 1
    else:
@@ -94,7 +94,7 @@ class LLMSuggest(AutoSuggest):
                  context: str | Callable[[], str]="",
                  instruction: str=DEFAULT_INSTRUCTION,
                  language: Optional[str]=None,
-                 raw: Optional[bool]=False,
+                 asis: Optional[bool]=False,
                  ) -> None:
         """Initialize the :class:`.LLMSuggest` instance.
 
@@ -107,7 +107,7 @@ class LLMSuggest(AutoSuggest):
                         of the conversation so far [empty string].
         :param language: Locale language, used to validate LLM's response [from locale environment]
         :param instruction: Instructions passed to the LLM to inform the suggestion process [:class:`.DEFAULT_INSTRUCTION`].
-        :param raw: If True, will return the LLM's responses as-is without post-hoc fixes.
+        :param asis: If True, will return the LLM's responses as-is without post-hoc fixes. Useful for completing multiline code.
 
         Notes:
 
@@ -145,6 +145,8 @@ class LLMSuggest(AutoSuggest):
         provide the LLM with supplementary context such as the time of
         day, weather report, or the results of a web search.
 
+        6. Code completion works better with some LLM models than others.
+
         """
         super().__init__()
         self.system = system
@@ -153,7 +155,7 @@ class LLMSuggest(AutoSuggest):
         self.dictionary = enchant.Dict(language or locale.getdefaultlocale()[0])
         self.context = context
         self.chat_model = chat_model or init_chat_model("openai:4o-mini", temperature=0.0)
-        self.raw = raw
+        self.asis = asis
 
     def _capfirst(self, s:str) -> str:
         return s[:1].upper() + s[1:]
@@ -209,11 +211,11 @@ class LLMSuggest(AutoSuggest):
             response = self.chat_model.invoke(messages)
             suggestion = str(response.content)
 
-            if self.raw:  # Return the string without munging
+            if self.asis:  # Return the string without munging
                 return Suggestion(suggestion)
 
             # Remove newlines or '...' sequences that the llm may have added
-            suggestion = suggestion.replace("\n", "")
+            #suggestion = suggestion.replace("\n", "")
             suggestion = suggestion.replace("...", "")
             suggestion = suggestion.rstrip()
 
