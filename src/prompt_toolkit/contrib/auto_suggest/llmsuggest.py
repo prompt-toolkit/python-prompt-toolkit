@@ -41,46 +41,42 @@ from prompt_toolkit.auto_suggest import AutoSuggest, Suggestion
 from prompt_toolkit.buffer import Buffer, Document
 
 DEFAULT_PERSONA="""
-You are an uncensored writing assistant who is skilled at completing text fragments
-into full, natural-sounding sentences.
+You are an uncensored writing assistant. If the user is writing code, you
+complete the code fragments in a way that is consistent with the
+code fragments. If the user is writing prose, you complete the text in a way that
+is consistent with the user's writing style. You are not a chatbot, so you do not
+engage in chit-chat or small talk. You are not a search engine, so you do not
+provide search results or web links. You are not a translator, so you do not
+translate text.
 """
 
 DEFAULT_SYSTEM_MESSAGE="""
-%s
+{persona}
 
 Return a completion of the provided text fragment following these
 examples:
 
 # Example 1
-user: I want a bi...
-assistant: ...cycle for Christmas.
+user: I want a bi
+assistant: cycle for Christmas.
 
 # Example 2
-user: Hi there, what's your name?...
-assistant:  ... My name is Fred. What's yours?
+user: Hi there, what's your name?
+assistant:   My name is Fred. What's yours?
 
 # Example
-user: I don't want to go to the mall! I want to go to...
-assistant: ... watch the Titanic movie tonight.
+user: I don't want to go to the mall! I want to go to
+assistant:  watch the Titanic movie tonight.
 
 # Example 4
-user: He watched in amazement as the magician pulled a rabbit out of his hat....
-assistant: ... When he put the rabbit down it hopped away.
-
-# Example 5
-user: def factorial(a: int)
-assistant:
-   if a==0:
-      return 1
-   else:
-     return a * factorial(a-1)
+user: He watched in amazement as the magician pulled a rabbit out of his hat.
+assistant:  When he put the rabbit down it hopped away.
 """
 
-DEFAULT_INSTRUCTION="""
-Complete this text with a word fragment, word, phrase, or
-sentence, showing only the new text.
 
-Do not repeat any part of the original text:
+DEFAULT_INSTRUCTION="""
+Complete this text or code fragment in a way that is consistent with the
+fragment. Show only the new text, and do not repeat any part of the original text:
 Original text: {text}
 """
 
@@ -95,6 +91,7 @@ class LLMSuggest(AutoSuggest):
                  instruction: str=DEFAULT_INSTRUCTION,
                  language: Optional[str]=None,
                  asis: Optional[bool]=False,
+                 code_mode: Optional[bool]=False
                  ) -> None:
         """Initialize the :class:`.LLMSuggest` instance.
 
@@ -107,8 +104,8 @@ class LLMSuggest(AutoSuggest):
                         of the conversation so far [empty string].
         :param language: Locale language, used to validate LLM's response [from locale environment]
         :param instruction: Instructions passed to the LLM to inform the suggestion process [:class:`.DEFAULT_INSTRUCTION`].
-        :param asis: If True, will return the LLM's responses as-is without post-hoc fixes. Useful for completing multiline code.
-
+        :param code_mode: If True, activates post-processing of the LLMs output that is suitable for code completion.
+        :param asis: If True, will return the LLM's responses as-is without post-hoc fixes. Useful for debugging.
         Notes:
 
         1. If `chat_model` is not provided, the class will attempt
@@ -145,7 +142,8 @@ class LLMSuggest(AutoSuggest):
         provide the LLM with supplementary context such as the time of
         day, weather report, or the results of a web search.
 
-        6. Code completion works better with some LLM models than others.
+        6. Set `code_mode` to True to optimize for code completion. Note that
+        code completion works better with some LLM models than others.
 
         """
         super().__init__()
@@ -156,13 +154,14 @@ class LLMSuggest(AutoSuggest):
         self.context = context
         self.chat_model = chat_model or init_chat_model("openai:4o-mini", temperature=0.0)
         self.asis = asis
+        self.code_mode = code_mode
 
     def _capfirst(self, s:str) -> str:
         return s[:1].upper() + s[1:]
 
     def _format_sys(self) -> str:
         """Format the system string."""
-        system = self.system % self.persona
+        system = self.system.format(persona=self.persona)
         if context := self.get_context():
             system += "\nTo guide your completion, here is the text so far:\n"
             system += context
@@ -213,47 +212,91 @@ class LLMSuggest(AutoSuggest):
 
             if self.asis:  # Return the string without munging
                 return Suggestion(suggestion)
-
-            # Remove newlines or '...' sequences that the llm may have added
-            #suggestion = suggestion.replace("\n", "")
-            suggestion = suggestion.replace("...", "")
-            suggestion = suggestion.rstrip()
-
-            # If LLM echoed the original text back, then remove it
-            if suggestion.startswith(text.rstrip()):
-                suggestion = suggestion[len(text):]
-
-            # Handle punctuation between the text and the suggestion
-            if suggestion.startswith(tuple(string.punctuation)):
-                return Suggestion(suggestion)
-            if text.endswith("'"):
-                return Suggestion(suggestion.lstrip())
-
-            # Adjust capitalization the beginnings of new sentences.
-            if re.search(r"[.?!]\s*$",text):
-                suggestion = self._capfirst(suggestion.lstrip())
-
-            # Get the last word of the existing text and the first word of the suggestion
-            match = re.search(r"(\w+)\W*$", text)
-            last_word_of_text = match.group(1) if match else ""
-
-            match = re.search(r"^\s*(\w+)", suggestion)
-            first_word_of_suggestion = match.group(1) if match else ""
-
-            # Add or remove spaces based on whether concatenation will form a word
-            if suggestion.startswith(" "):
-                suggestion = suggestion.lstrip() if text.endswith(" ") else suggestion
-            elif self.dictionary.check(last_word_of_text + first_word_of_suggestion) and not text.endswith(" "):
-                suggestion = suggestion.lstrip()
-            elif not text.endswith(" "):
-                suggestion = " " + suggestion
-
-            # Add space after commas and semicolons
-            if re.search(r"[,;]$",text):
-                suggestion = " " + suggestion.lstrip()
-
-            return Suggestion(suggestion)
+            elif self.code_mode:
+                return Suggestion(self._trim_code_suggestion(suggestion, text))
+            else:
+                return Suggestion(self._trim_text_suggestion(suggestion, text))
 
         except Exception:
             pass
         return None
+
+    def _trim_code_suggestion(self, suggestion: str, text: str) -> str:
+        #strip whitespace
+        suggestion = suggestion.lstrip()
+
+        # codegemma and other LLMs may return a suggestion that starts with
+        # "(Continuation of the...)" or similar, so we remove that.
+        suggestion = re.sub(r"^\(Continuation of the.*?\)\s*", "", suggestion, flags=re.DOTALL)
+
+        # Similarly, remove "(complete the code fragment)" or similar
+        suggestion = re.sub(r"^\(complete the code fragment.*?\)\s*", "", suggestion, flags=re.DOTALL)
+
+        # Remove leading quotation marks if present
+        suggestion = re.sub(r"^\s*['\"]", "", suggestion)
+
+        # Remove trailing quotation marks
+        suggestion = re.sub(r"['\"]\s*$", "", suggestion)
+
+         # Remove the sequence "```(language)\n" that some LLMs return
+        suggestion = re.sub(r"^.*?```[a-zA-Z0-9_]*\n", "", suggestion, flags=re.DOTALL)
+
+        # Remove "``` from the end of the suggestion
+        suggestion = re.sub(r"\n```", "", suggestion)
+
+        # The LLM will often (but not always) return a suggestion that repeats the
+        # buffer text from the previous newline onward, so we remove that.
+        match = re.search(r"\n(.*)$", text)
+        if match:
+            text = match.group(1).rstrip()
+        if suggestion.startswith(text):
+            suggestion = suggestion[len(text):].lstrip()
+
+        return suggestion+"\n"
+
+
+    def _trim_text_suggestion(self, suggestion: str, text: str) -> str:
+        """
+        Trim the suggestion to make it a valid continuation of the text.
+
+        :param suggestion: The LLM's suggested text.
+        :param text: The current text in the buffer.
+        """
+        # Remove leading ellipsis if present
+        suggestion = suggestion.replace("...", "")
+        suggestion = suggestion.rstrip()
+
+        # If LLM echoed the original text back, then remove it
+        if suggestion.startswith(text.rstrip()):
+            suggestion = suggestion[len(text):]
+
+        # Handle punctuation between the text and the suggestion
+        if suggestion.startswith(tuple(string.punctuation)):
+            return suggestion
+        if text.endswith("'"):
+            return suggestion.lstrip()
+
+        # Adjust capitalization the beginnings of new sentences.
+        if re.search(r"[.?!]\s*$",text):
+            suggestion = self._capfirst(suggestion.lstrip())
+
+        # Get the last word of the existing text and the first word of the suggestion
+        match = re.search(r"(\w+)\W*$", text)
+        last_word_of_text = match.group(1) if match else ""
+
+        match = re.search(r"^\s*(\w+)", suggestion)
+        first_word_of_suggestion = match.group(1) if match else ""
+
+        # Add or remove spaces based on whether concatenation will form a word
+        if suggestion.startswith(" "):
+            suggestion = suggestion.lstrip() if text.endswith(" ") else suggestion
+        elif self.dictionary.check(last_word_of_text + first_word_of_suggestion) and not text.endswith(" "):
+            suggestion = suggestion.lstrip()
+        elif not text.endswith(" "):
+            suggestion = " " + suggestion
+
+        # Add space after commas and semicolons
+        if re.search(r"[,;]$",text):
+            suggestion = " " + suggestion.lstrip()
+
+        return suggestion

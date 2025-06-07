@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-import pytest
 import re
+
+import pytest
+
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.document import Document
 
 try:
     from langchain_core.messages import AIMessage, BaseMessage
+
     from prompt_toolkit.contrib.auto_suggest import LLMSuggest
     module_loaded = True
 except ModuleNotFoundError:
@@ -43,7 +46,7 @@ def chat_model():
 
 @pytest.fixture
 def suggester(chat_model) -> LLMSuggest:
-    return LLMSuggest(chat_model, language='en_US')
+    return LLMSuggest(chat_model, language="en_US")
 
 @pytest.fixture
 def buffer() -> Buffer:
