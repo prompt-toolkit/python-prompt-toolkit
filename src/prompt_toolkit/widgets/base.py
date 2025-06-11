@@ -441,7 +441,7 @@ class Button:
         ) + (
             len(self.text) - get_cwidth(self.text)
         )
-        text = (f"{{:^{width}}}").format(self.text)
+        text = (f"{{:^{max(0,width)}}}").format(self.text)
 
         def handler(mouse_event: MouseEvent) -> None:
             if (
