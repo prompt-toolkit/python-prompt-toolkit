@@ -29,6 +29,7 @@ class Attrs(NamedTuple):
     blink: bool | None
     reverse: bool | None
     hidden: bool | None
+    dim: bool | None
 
 
 """
@@ -41,6 +42,7 @@ class Attrs(NamedTuple):
 :param blink: Boolean
 :param reverse: Boolean
 :param hidden: Boolean
+:param dim: Boolean
 """
 
 #: The default `Attrs`.
@@ -54,6 +56,7 @@ DEFAULT_ATTRS = Attrs(
     blink=False,
     reverse=False,
     hidden=False,
+    dim=False,
 )
 
 

@@ -22,6 +22,7 @@ def test_style_from_dict():
         blink=False,
         reverse=False,
         hidden=False,
+        dim=False,
     )
     assert style.get_attrs_for_style_str("class:a") == expected
 
@@ -36,6 +37,7 @@ def test_style_from_dict():
         blink=True,
         reverse=True,
         hidden=False,
+        dim=False,
     )
     assert style.get_attrs_for_style_str("class:b") == expected
 
@@ -50,6 +52,7 @@ def test_style_from_dict():
         blink=False,
         reverse=False,
         hidden=False,
+        dim=False,
     )
     assert style.get_attrs_for_style_str("#ff0000") == expected
 
@@ -64,6 +67,7 @@ def test_style_from_dict():
         blink=False,
         reverse=False,
         hidden=False,
+        dim=False,
     )
     assert style.get_attrs_for_style_str("class:a #00ff00") == expected
 
@@ -77,6 +81,7 @@ def test_style_from_dict():
         blink=False,
         reverse=False,
         hidden=False,
+        dim=False,
     )
     assert style.get_attrs_for_style_str("#00ff00 class:a") == expected
 
@@ -101,6 +106,7 @@ def test_class_combinations_1():
         blink=False,
         reverse=False,
         hidden=False,
+        dim=False,
     )
     assert style.get_attrs_for_style_str("class:a class:b") == expected
     assert style.get_attrs_for_style_str("class:a,b") == expected
@@ -131,6 +137,7 @@ def test_class_combinations_2():
         blink=False,
         reverse=False,
         hidden=False,
+        dim=False,
     )
     assert style.get_attrs_for_style_str("class:a class:b") == expected
     assert style.get_attrs_for_style_str("class:a,b") == expected
@@ -147,6 +154,7 @@ def test_class_combinations_2():
         blink=False,
         reverse=False,
         hidden=False,
+        dim=False,
     )
     assert style.get_attrs_for_style_str("class:b class:a") == expected
     assert style.get_attrs_for_style_str("class:b,a") == expected
@@ -173,6 +181,7 @@ def test_substyles():
         blink=False,
         reverse=False,
         hidden=False,
+        dim=False,
     )
     assert style.get_attrs_for_style_str("class:a") == expected
 
@@ -186,6 +195,7 @@ def test_substyles():
         blink=False,
         reverse=False,
         hidden=False,
+        dim=False,
     )
     assert style.get_attrs_for_style_str("class:a.b") == expected
     assert style.get_attrs_for_style_str("class:a.b.c") == expected
@@ -201,6 +211,7 @@ def test_substyles():
         blink=False,
         reverse=False,
         hidden=False,
+        dim=False,
     )
     assert style.get_attrs_for_style_str("class:b") == expected
     assert style.get_attrs_for_style_str("class:b.a") == expected
@@ -215,6 +226,7 @@ def test_substyles():
         blink=False,
         reverse=False,
         hidden=False,
+        dim=False,
     )
     assert style.get_attrs_for_style_str("class:b.c") == expected
     assert style.get_attrs_for_style_str("class:b.c.d") == expected
@@ -234,6 +246,7 @@ def test_swap_light_and_dark_style_transformation():
         blink=False,
         reverse=False,
         hidden=False,
+        dim=False,
     )
     after = Attrs(
         color="ffbbbb",
@@ -245,6 +258,7 @@ def test_swap_light_and_dark_style_transformation():
         blink=False,
         reverse=False,
         hidden=False,
+        dim=False,
     )
 
     assert transformation.transform_attrs(before) == after
@@ -260,6 +274,7 @@ def test_swap_light_and_dark_style_transformation():
         blink=False,
         reverse=False,
         hidden=False,
+        dim=False,
     )
     after = Attrs(
         color="ansibrightred",
@@ -271,6 +286,7 @@ def test_swap_light_and_dark_style_transformation():
         blink=False,
         reverse=False,
         hidden=False,
+        dim=False,
     )
 
     assert transformation.transform_attrs(before) == after
