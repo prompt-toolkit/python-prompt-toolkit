@@ -89,6 +89,46 @@ def test_ansi_formatting():
     assert isinstance(to_formatted_text(value), FormattedText)
 
 
+def test_ansi_dim():
+    # Test dim formatting
+    value = ANSI("\x1b[2mhello\x1b[0m")
+
+    assert to_formatted_text(value) == [
+        ("dim", "h"),
+        ("dim", "e"),
+        ("dim", "l"),
+        ("dim", "l"),
+        ("dim", "o"),
+    ]
+
+    # Test dim with other attributes
+    value = ANSI("\x1b[1;2;31mhello\x1b[0m")
+
+    assert to_formatted_text(value) == [
+        ("ansired bold dim", "h"),
+        ("ansired bold dim", "e"),
+        ("ansired bold dim", "l"),
+        ("ansired bold dim", "l"),
+        ("ansired bold dim", "o"),
+    ]
+
+    # Test dim reset with code 22
+    value = ANSI("\x1b[1;2mhello\x1b[22mworld\x1b[0m")
+
+    assert to_formatted_text(value) == [
+        ("bold dim", "h"),
+        ("bold dim", "e"),
+        ("bold dim", "l"),
+        ("bold dim", "l"),
+        ("bold dim", "o"),
+        ("", "w"),
+        ("", "o"),
+        ("", "r"),
+        ("", "l"),
+        ("", "d"),
+    ]
+
+
 def test_ansi_256_color():
     assert to_formatted_text(ANSI("\x1b[38;5;124mtest")) == [
         ("#af0000", "t"),

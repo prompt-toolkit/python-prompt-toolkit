@@ -257,7 +257,7 @@ _256_colors = _256ColorCache()
 class _EscapeCodeCache(Dict[Attrs, str]):
     """
     Cache for VT100 escape codes. It maps
-    (fgcolor, bgcolor, bold, underline, strike, reverse) tuples to VT100
+    (fgcolor, bgcolor, bold, underline, strike, italic, blink, reverse, hidden, dim) tuples to VT100
     escape sequences.
 
     :param true_color: When True, use 24bit colors instead of 256 colors.
@@ -277,6 +277,7 @@ class _EscapeCodeCache(Dict[Attrs, str]):
             blink,
             reverse,
             hidden,
+            dim,
         ) = attrs
         parts: list[str] = []
 
@@ -284,6 +285,8 @@ class _EscapeCodeCache(Dict[Attrs, str]):
 
         if bold:
             parts.append("1")
+        if dim:
+            parts.append("2")
         if italic:
             parts.append("3")
         if blink:

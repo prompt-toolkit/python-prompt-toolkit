@@ -91,3 +91,22 @@ def test_html_with_style():
         f.data
         == "\x1b[0m\x1b[?7h\x1b[0;32mhello\x1b[0m \x1b[0;1mworld\x1b[0m\r\n\x1b[0m"
     )
+
+
+@pytest.mark.skipif(is_windows(), reason="Doesn't run on Windows yet.")
+def test_print_formatted_text_with_dim():
+    """
+    Test that dim formatting works correctly.
+    """
+    f = _Capture()
+    style = Style.from_dict(
+        {
+            "dimtext": "dim",
+        }
+    )
+    tokens = FormattedText([("class:dimtext", "dim text")])
+
+    pt_print(tokens, style=style, file=f, color_depth=ColorDepth.DEFAULT)
+
+    # Check that the ANSI dim escape code (ESC[2m) is in the output
+    assert "\x1b[0;2m" in f.data or "\x1b[2m" in f.data
