@@ -1474,7 +1474,7 @@ prompt.__doc__ = PromptSession.prompt.__doc__
 
 
 def create_confirm_session(
-    message: str, suffix: str = " (y/n) "
+    message: AnyFormattedText, suffix: str = " (y/n) "
 ) -> PromptSession[bool]:
     """
     Create a `PromptSession` object for the 'confirm' function.
@@ -1505,7 +1505,7 @@ def create_confirm_session(
     return session
 
 
-def confirm(message: str = "Confirm?", suffix: str = " (y/n) ") -> bool:
+def confirm(message: AnyFormattedText = "Confirm?", suffix: str = " (y/n) ") -> bool:
     """
     Display a confirmation prompt that returns True/False.
     """
