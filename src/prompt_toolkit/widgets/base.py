@@ -438,8 +438,10 @@ class Button:
     def _get_text_fragments(self) -> StyleAndTextTuples:
         width = self.width - (
             get_cwidth(self.left_symbol) + get_cwidth(self.right_symbol)
+        ) + (
+            len(self.text) - get_cwidth(self.text)
         )
-        text = (f"{{:^{width}}}").format(self.text)
+        text = (f"{{:^{max(0,width)}}}").format(self.text)
 
         def handler(mouse_event: MouseEvent) -> None:
             if (
