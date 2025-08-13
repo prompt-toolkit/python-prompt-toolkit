@@ -4,7 +4,7 @@ Filters that accept a `Application` as argument.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.cache import memoized
@@ -61,7 +61,7 @@ def has_focus(value: FocusableElement) -> Condition:
     """
     from prompt_toolkit.buffer import Buffer
     from prompt_toolkit.layout import walk
-    from prompt_toolkit.layout.containers import Container, Window, to_container
+    from prompt_toolkit.layout.containers import Window, to_container
     from prompt_toolkit.layout.controls import UIControl
 
     if isinstance(value, str):
@@ -94,7 +94,7 @@ def has_focus(value: FocusableElement) -> Condition:
                 # focused.
                 current_window = get_app().layout.current_window
 
-                for c in walk(cast(Container, value)):
+                for c in walk(value):
                     if isinstance(c, Window) and c == current_window:
                         return True
                 return False

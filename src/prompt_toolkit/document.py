@@ -54,7 +54,7 @@ class _ImmutableLineList(List[str]):
     def _error(self, *a: object, **kw: object) -> NoReturn:
         raise NotImplementedError("Attempt to modify an immutable list.")
 
-    __setitem__ = _error  # type: ignore
+    __setitem__ = _error
     append = _error
     clear = _error
     extend = _error
@@ -62,7 +62,7 @@ class _ImmutableLineList(List[str]):
     pop = _error
     remove = _error
     reverse = _error
-    sort = _error  # type: ignore
+    sort = _error
 
 
 class _DocumentCache:
