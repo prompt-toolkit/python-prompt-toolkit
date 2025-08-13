@@ -4,7 +4,7 @@ The base classes for the styling.
 
 from __future__ import annotations
 
-from abc import ABCMeta, abstractmethod, abstractproperty
+from abc import ABCMeta, abstractmethod
 from typing import Callable, Hashable, NamedTuple
 
 __all__ = [
@@ -126,7 +126,8 @@ class BaseStyle(metaclass=ABCMeta):
         :param default: `Attrs` to be used if no styling was defined.
         """
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def style_rules(self) -> list[tuple[str, str]]:
         """
         The list of style rules, used to create this style.
