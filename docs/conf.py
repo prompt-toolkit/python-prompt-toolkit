@@ -124,9 +124,8 @@ autodoc_mock_imports = [
 html_theme = "sphinx_nefertiti"
 # html_theme_path = [sphinx_nefertiti.get_html_theme_path()]
 html_theme_options = {
-    "documentation_font": "Open Sans",
-    "monospace_font": "Ubuntu Mono",
-    "monospace_font_size": "1.1rem",
+    "monospace_font": "Ubuntu Sans Mono",
+    "monospace_font_size": "0.9rem",
     # "style" can take the following values: "blue", "indigo", "purple",
     # "pink", "red", "orange", "yellow", "green", "tail", and "default".
     "style": "blue",
