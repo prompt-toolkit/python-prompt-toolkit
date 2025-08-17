@@ -1,5 +1,5 @@
 """
-`Fish-style <http://fishshell.com/>`_  like auto-suggestion.
+`Fish-style <http://fishshell.com/>`_  like auto-suggestion.o
 
 While a user types input in a certain buffer, suggestions are generated
 (asynchronously.) Usually, they are displayed after the input. When the cursor
