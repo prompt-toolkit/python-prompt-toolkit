@@ -1036,6 +1036,32 @@ class Document:
         else:
             return self, ClipboardData("")
 
+    def delete_selection(self) -> Document:
+        """
+        Returns :class:`.Document` where the
+        document represents the new document when the selection is deleted.
+        """
+        if self.selection:
+            # cut_parts = []
+            remaining_parts = []
+            new_cursor_position = self.cursor_position
+
+            last_to = 0
+            for from_, to in self.selection_ranges():
+                if last_to == 0:
+                    new_cursor_position = from_
+
+                remaining_parts.append(self.text[last_to:from_])
+                last_to = to
+
+            remaining_parts.append(self.text[last_to:])
+
+            remaining_text = "".join(remaining_parts)
+
+            return Document(text=remaining_text, cursor_position=new_cursor_position)
+        else:
+            return self
+
     def paste_clipboard_data(
         self,
         data: ClipboardData,
