@@ -3,7 +3,7 @@ Python Prompt Toolkit
 
 |AppVeyor|  |PyPI|  |RTD|  |License|  |Codecov|
 
-.. image :: https://github.com/prompt-toolkit/python-prompt-toolkit/raw/master/docs/images/logo_400px.png
+.. image :: /docs/images/logo_400px.png
 
 ``prompt_toolkit`` *is a library for building powerful interactive command line applications in Python.*
 
@@ -17,7 +17,7 @@ Gallery
 `ptpython <http://github.com/prompt-toolkit/ptpython/>`_ is an interactive
 Python Shell, build on top of ``prompt_toolkit``.
 
-.. image :: https://github.com/prompt-toolkit/python-prompt-toolkit/raw/master/docs/images/ptpython.png
+.. image :: /docs/images/ptpython.png
 
 `More examples <https://python-prompt-toolkit.readthedocs.io/en/stable/pages/gallery.html>`_
 
