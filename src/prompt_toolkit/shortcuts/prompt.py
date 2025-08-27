@@ -1152,6 +1152,7 @@ class PromptSession(Generic[_T]):
         enable_open_in_editor: FilterOrBool | None = None,
         tempfile_suffix: str | Callable[[], str] | None = None,
         tempfile: str | Callable[[], str] | None = None,
+        show_frame: FilterOrBool = False,
         # Following arguments are specific to the current `prompt()` call.
         default: str | Document = "",
         accept_default: bool = False,
@@ -1233,6 +1234,8 @@ class PromptSession(Generic[_T]):
             self.tempfile_suffix = tempfile_suffix
         if tempfile is not None:
             self.tempfile = tempfile
+        if show_frame is not None:
+            self.show_frame = show_frame
 
         self._add_pre_run_callables(pre_run, accept_default)
         self.default_buffer.reset(

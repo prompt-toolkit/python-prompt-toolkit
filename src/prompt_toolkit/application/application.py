@@ -1603,7 +1603,7 @@ def _restore_sigint_from_ctypes() -> Generator[None, None, None]:
         have_ctypes_signal = False
     else:
         # GraalPy has the functions, but they don't work
-        have_ctypes_signal = sys.implementation.name != 'graalpy'
+        have_ctypes_signal = sys.implementation.name != "graalpy"
 
     if have_ctypes_signal:
         # PyOS_sighandler_t PyOS_getsig(int i)
