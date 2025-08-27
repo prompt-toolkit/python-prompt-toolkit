@@ -11,7 +11,12 @@ from prompt_toolkit.filters import (
     to_filter,
 )
 from prompt_toolkit.formatted_text import AnyFormattedText
-from prompt_toolkit.key_binding.key_bindings import KeyBindings
+from prompt_toolkit.key_binding.key_bindings import (
+    DynamicKeyBindings,
+    KeyBindings,
+    KeyBindingsBase,
+    merge_key_bindings,
+)
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.layout import (
     AnyContainer,
@@ -96,6 +101,7 @@ class ChoiceInput(Generic[_T]):
         enable_suspend: FilterOrBool = False,
         enable_interrupt: FilterOrBool = True,
         interrupt_exception: type[BaseException] = KeyboardInterrupt,
+        key_bindings: KeyBindingsBase | None = None,
     ) -> None:
         if style is None:
             style = create_default_choice_input_style()
@@ -111,6 +117,7 @@ class ChoiceInput(Generic[_T]):
         self.interrupt_exception = interrupt_exception
         self.enable_interrupt = enable_interrupt
         self.bottom_toolbar = bottom_toolbar
+        self.key_bindings = key_bindings
 
     def _create_application(self) -> Application[_T]:
         radio_list = RadioList(
@@ -225,7 +232,9 @@ class ChoiceInput(Generic[_T]):
             layout=layout,
             full_screen=False,
             mouse_support=self.mouse_support,
-            key_bindings=kb,
+            key_bindings=merge_key_bindings(
+                [kb, DynamicKeyBindings(lambda: self.key_bindings)]
+            ),
             style=self.style,
         )
 
@@ -249,6 +258,7 @@ def choice(
     enable_suspend: FilterOrBool = False,
     enable_interrupt: FilterOrBool = True,
     interrupt_exception: type[BaseException] = KeyboardInterrupt,
+    key_bindings: KeyBindingsBase | None = None,
 ) -> _T:
     """
     Choice selection prompt. Ask the user to choose among a set of options.
@@ -297,4 +307,5 @@ def choice(
         enable_suspend=enable_suspend,
         enable_interrupt=enable_interrupt,
         interrupt_exception=interrupt_exception,
+        key_bindings=key_bindings,
     ).prompt()
