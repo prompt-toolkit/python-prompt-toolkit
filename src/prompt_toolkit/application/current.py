@@ -149,7 +149,7 @@ def create_app_session(
     # If no input/output is specified, fall back to the current input/output,
     # if there was one that was set/created for the current session.
     # (Note that we check `_input`/`_output` and not `input`/`output`. This is
-    # because we don't want to accidently create a new input/output objects
+    # because we don't want to accidentally create a new input/output objects
     # here and store it in the "parent" `AppSession`. Especially, when
     # combining pytest's `capsys` fixture and `create_app_session`, sys.stdin
     # and sys.stderr are patched for every test, so we don't want to leak

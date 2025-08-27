@@ -26,7 +26,7 @@ pep440 = re.compile(
 )
 from .application import Application
 from .formatted_text import ANSI, HTML
-from .shortcuts import PromptSession, print_formatted_text, prompt
+from .shortcuts import PromptSession, choice, print_formatted_text, prompt
 
 # Don't forget to update in `docs/conf.py`!
 __version__ = metadata.version("prompt_toolkit")
@@ -42,6 +42,7 @@ __all__ = [
     "Application",
     # Shortcuts.
     "prompt",
+    "choice",
     "PromptSession",
     "print_formatted_text",
     # Formatted text.

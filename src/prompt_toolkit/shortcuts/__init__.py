@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from .choice_input import choice
 from .dialogs import (
     button_dialog,
     checkboxlist_dialog,
@@ -37,6 +38,8 @@ __all__ = [
     # Progress bars.
     "ProgressBar",
     "ProgressBarCounter",
+    # Choice selection.
+    "choice",
     # Utils.
     "clear",
     "clear_title",

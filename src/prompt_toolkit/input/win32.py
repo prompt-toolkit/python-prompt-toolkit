@@ -104,11 +104,8 @@ class Win32Input(_Win32InputBase):
     def read_keys(self) -> list[KeyPress]:
         return list(self.console_input_reader.read())
 
-    def flush_keys(self) -> None:
-        if self._use_virtual_terminal_input:
-            return self.console_input_reader.flush_keys()
-        else:
-            return []
+    def flush_keys(self) -> list[KeyPress]:
+        return self.console_input_reader.flush_keys()
 
     @property
     def closed(self) -> bool:
@@ -297,6 +294,10 @@ class ConsoleInputReader:
                     yield k
         else:
             yield from all_keys
+
+    def flush_keys(self) -> list[KeyPress]:
+        # Method only needed for structural compatibility with `Vt100ConsoleInputReader`.
+        return []
 
     def _insert_key_data(self, key_press: KeyPress) -> KeyPress:
         """
