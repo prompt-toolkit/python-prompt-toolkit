@@ -40,10 +40,19 @@ if TYPE_CHECKING:
 
         def __pt_formatted_text__(self) -> StyleAndTextTuples: ...
 
+    class RichFormattedText(Protocol):
+        """
+        Any rich text object from the rich library that implements
+        ``__rich_console__``.
+        """
+
+        def __rich_console__(self, console: Any = ..., options: Any = ...) -> Any: ...
+
 
 AnyFormattedText = Union[
     str,
     "MagicFormattedText",
+    "RichFormattedText",
     StyleAndTextTuples,
     # Callable[[], 'AnyFormattedText']  # Recursive definition not supported by mypy.
     Callable[[], Any],
@@ -78,6 +87,10 @@ def to_formatted_text(
         result = value  # StyleAndTextTuples
     elif hasattr(value, "__pt_formatted_text__"):
         result = cast("MagicFormattedText", value).__pt_formatted_text__()
+    elif hasattr(value, "__rich_console__"):
+        from .rich import Rich
+
+        result = Rich(value).__pt_formatted_text__()
     elif callable(value):
         return to_formatted_text(value(), style=style)
     elif auto_convert:
