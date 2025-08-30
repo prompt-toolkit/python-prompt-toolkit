@@ -192,7 +192,7 @@ class Application(Generic[_AppResult]):
         key_bindings: KeyBindingsBase | None = None,
         clipboard: Clipboard | None = None,
         full_screen: bool = False,
-        color_depth: (ColorDepth | Callable[[], ColorDepth | None] | None) = None,
+        color_depth: ColorDepth | Callable[[], ColorDepth | None] | None = None,
         mouse_support: FilterOrBool = False,
         enable_page_navigation_bindings: None
         | (FilterOrBool) = None,  # Can be None, True or False.
