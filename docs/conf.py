@@ -134,9 +134,10 @@ html_theme_options = {
     # Fonts are customizable (and are not retrieved online).
     # https://sphinx-nefertiti.readthedocs.io/en/latest/users-guide/customization/fonts.html
     "logo": "logo_400px.png",
+    "logo_location": "sidebar",
     "logo_alt": "python-prompt-toolkit",
-    "logo_width": "36",
-    "logo_height": "36",
+    "logo_width": "270",
+    "logo_height": "270",
     "repository_url": "https://github.com/prompt-toolkit/python-prompt-toolkit",
     "repository_name": "python-prompt-toolkit",
     "current_version": "latest",
