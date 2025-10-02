@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+import re
 
 from prompt_toolkit.document import Document
 
@@ -67,3 +68,13 @@ def test_translate_index_to_position(document):
 def test_is_cursor_at_the_end(document):
     assert Document("hello", 5).is_cursor_at_the_end
     assert not Document("hello", 4).is_cursor_at_the_end
+
+
+def test_get_word_before_cursor_with_whitespace_and_pattern():
+    text = "foobar "
+    document = Document(text=text, cursor_position=len(text))
+
+    assert document.get_word_before_cursor() == ""
+
+    _FIND_WORD_RE = re.compile(r"([a-zA-Z0-9_]+|[^a-zA-Z0-9_\s]+)")
+    assert document.get_word_before_cursor(pattern=_FIND_WORD_RE) == ""
