@@ -2,4 +2,4 @@ Sphinx>=8,<9
 wcwidth<1
 pyperclip<2
 sphinx_copybutton>=0.5.2,<1.0.0
-sphinx-nefertiti>=0.8.6
+sphinx-nefertiti>=0.8.8
