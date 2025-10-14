@@ -457,12 +457,10 @@ class Document:
     def _is_word_before_cursor_complete(
         self, WORD: bool = False, pattern: Pattern[str] | None = None
     ) -> bool:
+        if not self.text_before_cursor == "" or self.text_before_cursor[-1:].isspace():
+            return True
         if pattern:
             return self.find_start_of_previous_word(WORD=WORD, pattern=pattern) is None
-        else:
-            return (
-                self.text_before_cursor == "" or self.text_before_cursor[-1:].isspace()
-            )
 
     def find_start_of_previous_word(
         self, count: int = 1, WORD: bool = False, pattern: Pattern[str] | None = None
