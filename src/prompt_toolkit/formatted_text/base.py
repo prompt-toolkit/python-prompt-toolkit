@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Iterable, List, Tuple, Union, cast
+from typing import TYPE_CHECKING, Callable, Iterable, List, Tuple, Union, cast
 
 from prompt_toolkit.mouse_events import MouseEvent
 
@@ -45,8 +45,7 @@ AnyFormattedText = Union[
     str,
     "MagicFormattedText",
     StyleAndTextTuples,
-    # Callable[[], 'AnyFormattedText']  # Recursive definition not supported by mypy.
-    Callable[[], Any],
+    Callable[[], "AnyFormattedText"],
     None,
 ]
 
