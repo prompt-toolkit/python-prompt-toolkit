@@ -16,25 +16,55 @@ Probably, to get started, you might also want to have a look at
 
 from __future__ import annotations
 
-import re
-from importlib import metadata
+from typing import Any
 
-# note: this is a bit more lax than the actual pep 440 to allow for a/b/rc/dev without a number
-pep440 = re.compile(
-    r"^([1-9]\d*!)?(0|[1-9]\d*)(\.(0|[1-9]\d*))*((a|b|rc)(0|[1-9]\d*)?)?(\.post(0|[1-9]\d*))?(\.dev(0|[1-9]\d*)?)?$",
-    re.UNICODE,
-)
 from .application import Application
 from .formatted_text import ANSI, HTML
 from .shortcuts import PromptSession, choice, print_formatted_text, prompt
 
-# Don't forget to update in `docs/conf.py`!
-__version__ = metadata.version("prompt_toolkit")
+__version__: str
+VERSION: tuple[int, int, int]
 
-assert pep440.match(__version__)
 
-# Version tuple.
-VERSION = tuple(int(v.rstrip("abrc")) for v in __version__.split(".")[:3])
+def _load_version() -> str:
+    """
+    Load the package version from importlib.metadata and cache both __version__
+    and VERSION in the module globals.
+    """
+    import re
+    from importlib import metadata
+
+    # note: this is a bit more lax than the actual pep 440 to allow for a/b/rc/dev without a number
+    pep440_pattern = (
+        r"^([1-9]\d*!)?(0|[1-9]\d*)(\.(0|[1-9]\d*))*"
+        r"((a|b|rc)(0|[1-9]\d*)?)?(\.post(0|[1-9]\d*))?(\.dev(0|[1-9]\d*)?)?$"
+    )
+
+    version = metadata.version("prompt_toolkit")
+    assert re.fullmatch(pep440_pattern, version)
+
+    # Don't forget to update in `docs/conf.py`!
+    globals()["__version__"] = version
+    # Version tuple.
+    globals()["VERSION"] = tuple(int(v.rstrip("abrc")) for v in version.split(".")[:3])
+    return version
+
+
+def __getattr__(name: str) -> Any:
+    if name in {"__version__", "VERSION"}:
+        _load_version()
+        return globals()[name]
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__() -> list[str]:
+    return sorted(
+        {
+            *globals().keys(),
+            "__version__",
+            "VERSION",
+        }
+    )
 
 
 __all__ = [
