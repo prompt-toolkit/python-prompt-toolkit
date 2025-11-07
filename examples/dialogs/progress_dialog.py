@@ -5,6 +5,7 @@ Example of a progress bar dialog.
 
 import os
 import time
+import asyncio
 
 from prompt_toolkit.shortcuts import progress_dialog
 
@@ -35,13 +36,13 @@ def worker(set_percentage, log_text):
     time.sleep(1)
 
 
-def main():
-    progress_dialog(
+async def main():
+    await progress_dialog(
         title="Progress dialog example",
         text="As an examples, we walk through the filesystem and print all directories",
         run_callback=worker,
-    ).run()
+    ).run_async()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
