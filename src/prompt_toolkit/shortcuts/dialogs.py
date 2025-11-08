@@ -264,7 +264,6 @@ def progress_dialog(
     :param run_callback: A function that receives as input a `set_percentage`
         function and it does the work.
     """
-    loop = get_running_loop()
     progressbar = ProgressBar()
     text_area = TextArea(
         focusable=False,
@@ -291,7 +290,7 @@ def progress_dialog(
         app.invalidate()
 
     def log_text(text: str) -> None:
-        loop.call_soon_threadsafe(text_area.buffer.insert_text, text)
+        app.loop.call_soon_threadsafe(text_area.buffer.insert_text, text)
         app.invalidate()
 
     # Run the callback in the executor. When done, set a return value for the
