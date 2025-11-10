@@ -26,11 +26,13 @@ __version__: str
 VERSION: tuple[int, int, int]
 
 
-def _load_version() -> str:
+def _load_version() -> None:
     """
     Load the package version from importlib.metadata and cache both __version__
     and VERSION in the module globals.
     """
+    global __version__, VERSION
+
     import re
     from importlib import metadata
 
@@ -44,10 +46,9 @@ def _load_version() -> str:
     assert re.fullmatch(pep440_pattern, version)
 
     # Don't forget to update in `docs/conf.py`!
-    globals()["__version__"] = version
+    __version__ = version
     # Version tuple.
-    globals()["VERSION"] = tuple(int(v.rstrip("abrc")) for v in version.split(".")[:3])
-    return version
+    VERSION = tuple(int(v.rstrip("abrc")) for v in version.split(".")[:3])
 
 
 def __getattr__(name: str) -> Any:
