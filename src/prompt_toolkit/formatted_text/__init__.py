@@ -26,6 +26,7 @@ from .base import (
 )
 from .html import HTML
 from .pygments import PygmentsTokens
+from .rich import Rich
 from .utils import (
     fragment_list_len,
     fragment_list_to_text,
@@ -50,6 +51,8 @@ __all__ = [
     "ANSI",
     # Pygments.
     "PygmentsTokens",
+    # Rich.
+    "Rich",
     # Utils.
     "fragment_list_len",
     "fragment_list_width",
