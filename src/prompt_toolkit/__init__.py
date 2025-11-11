@@ -45,10 +45,12 @@ def _load_version() -> None:
     version = metadata.version("prompt_toolkit")
     assert re.fullmatch(pep440_pattern, version)
 
-    # Don't forget to update in `docs/conf.py`!
+    # Version string.
     __version__ = version
+
     # Version tuple.
-    VERSION = tuple(int(v.rstrip("abrc")) for v in version.split(".")[:3])
+    parts = [int(v.rstrip("abrc")) for v in version.split(".")]
+    VERSION = (parts[0], parts[1], parts[2])
 
 
 def __getattr__(name: str) -> Any:
