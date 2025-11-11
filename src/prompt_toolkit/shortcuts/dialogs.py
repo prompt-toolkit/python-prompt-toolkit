@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import functools
-from asyncio import get_running_loop
 from typing import Any, Callable, Sequence, TypeVar
 
 from prompt_toolkit.application import Application
@@ -290,8 +289,10 @@ def progress_dialog(
         app.invalidate()
 
     def log_text(text: str) -> None:
-        app.loop.call_soon_threadsafe(text_area.buffer.insert_text, text)
-        app.invalidate()
+        loop = app.loop
+        if loop is not None:
+            loop.call_soon_threadsafe(text_area.buffer.insert_text, text)
+            app.invalidate()
 
     # Run the callback in the executor. When done, set a return value for the
     # UI, so that it quits.
