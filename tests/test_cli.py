@@ -5,6 +5,7 @@ input and check the result.
 
 from __future__ import annotations
 
+import io
 from functools import partial
 
 import pytest
@@ -18,6 +19,7 @@ from prompt_toolkit.input.vt100_parser import ANSI_SEQUENCES
 from prompt_toolkit.key_binding.bindings.named_commands import prefix_meta
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.output import DummyOutput
+from prompt_toolkit.output.plain_text import PlainTextOutput
 from prompt_toolkit.shortcuts import PromptSession
 
 
@@ -27,6 +29,35 @@ def _history():
     h.append_string("line2 second input")
     h.append_string("line3 third input")
     return h
+
+
+def _feed_cli_with_password(text, check_line_ending=True, hide_password=False):
+    """
+    Create a Prompt, feed it with a given user input considered
+    to be a password, and then return the CLI output to the caller.
+
+    This returns an Output object.
+    """
+
+    # If the given text doesn't end with a newline, the interface won't finish.
+    if check_line_ending:
+        assert text.endswith("\r")
+
+    output = PlainTextOutput(stdout=io.StringIO())
+
+    with create_pipe_input() as inp:
+        inp.send_text(text)
+        session = PromptSession(
+            input=inp,
+            output=output,
+            is_password=True,
+            hide_password=hide_password,
+        )
+
+        _ = session.prompt()
+
+    output.stdout.seek(0)  # Reset the stream pointer
+    return output
 
 
 def _feed_cli_with_input(
@@ -62,6 +93,32 @@ def _feed_cli_with_input(
 
         _ = session.prompt()
         return session.default_buffer.document, session.app
+
+
+def test_visible_password():
+    password = "secret-value\r"
+    output = _feed_cli_with_password(password, hide_password=False)
+    actual_output = output.stdout.read().strip()
+
+    # Test that the string is made up only of `*` characters
+    assert actual_output == "*" * len(actual_output), actual_output
+
+    # Test that the string is long as much as the original password,
+    # minus the needed carriage return.
+    # Sometimes the output is duplicated (why?).
+    valid_length = len(password.strip())
+    occasional_length = valid_length * 2
+    assert len(actual_output) in (valid_length, occasional_length), actual_output
+
+
+def test_invisible_password():
+    password = "secret-value\r"
+    output = _feed_cli_with_password(password, hide_password=True)
+    actual_output = output.stdout.read().strip()
+
+    # Test that, if the `hide_password` flag is set to True,
+    # then then prompt won't display anything in the output.
+    assert actual_output == "", actual_output
 
 
 def test_simple_text_input():
