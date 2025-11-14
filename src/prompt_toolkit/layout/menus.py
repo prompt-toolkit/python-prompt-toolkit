@@ -27,7 +27,7 @@ from prompt_toolkit.mouse_events import MouseEvent, MouseEventType
 from prompt_toolkit.utils import get_cwidth
 
 from .containers import ConditionalContainer, HSplit, ScrollOffsets, Window
-from .controls import GetLinePrefixCallable, UIContent, UIControl
+from .controls import GetLinePrefixCallable, UIContent, UIControl, WrapFinderCallable
 from .dimension import Dimension
 from .margins import ScrollbarMargin
 
@@ -80,6 +80,7 @@ class CompletionsMenuControl(UIControl):
         max_available_height: int,
         wrap_lines: bool,
         get_line_prefix: GetLinePrefixCallable | None,
+        wrap_finder: WrapFinderCallable | None,
     ) -> int | None:
         complete_state = get_app().current_buffer.complete_state
         if complete_state:
@@ -378,6 +379,7 @@ class MultiColumnCompletionMenuControl(UIControl):
         max_available_height: int,
         wrap_lines: bool,
         get_line_prefix: GetLinePrefixCallable | None,
+        wrap_finder: WrapFinderCallable | None,
     ) -> int | None:
         """
         Preferred height: as much as needed in order to display all the completions.
@@ -718,6 +720,7 @@ class _SelectedCompletionMetaControl(UIControl):
         max_available_height: int,
         wrap_lines: bool,
         get_line_prefix: GetLinePrefixCallable | None,
+        wrap_finder: WrapFinderCallable | None,
     ) -> int | None:
         return 1
 
