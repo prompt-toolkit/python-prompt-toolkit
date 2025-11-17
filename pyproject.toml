@@ -22,7 +22,7 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "wcwidth",
+    "wcwidth>=0.1.4",
 ]
 
 [project.urls]
