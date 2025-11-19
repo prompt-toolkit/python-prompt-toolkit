@@ -55,6 +55,9 @@ class ViState:
         #: The Vi mode we're currently in to.
         self.__input_mode = InputMode.INSERT
 
+        #: The Vi mode that gets applied when reset() is called
+        self.default_input_mode = InputMode.INSERT
+
         #: Waiting for digraph.
         self.waiting_for_digraph = False
         self.digraph_symbol1: str | None = None  # (None or a symbol.)
@@ -96,7 +99,7 @@ class ViState:
         Reset state, go back to the given mode. INSERT by default.
         """
         # Go back to insert mode.
-        self.input_mode = InputMode.INSERT
+        self.input_mode = self.default_input_mode
 
         self.waiting_for_digraph = False
         self.operator_func = None
