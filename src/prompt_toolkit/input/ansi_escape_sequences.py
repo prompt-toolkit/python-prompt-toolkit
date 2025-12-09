@@ -126,9 +126,11 @@ ANSI_SEQUENCES: dict[str, Keys | tuple[Keys, ...]] = {
     # Ref: https://invisible-island.net/xterm/modified-keys.html
     # These are currently unsupported, so just re-map some common ones to the
     # unmodified versions
-    "\x1b[27;2;13~": Keys.ControlM,  # Shift + Enter
-    "\x1b[27;5;13~": Keys.ControlM,  # Ctrl + Enter
-    "\x1b[27;6;13~": Keys.ControlM,  # Ctrl + Shift + Enter
+    "\x1b[27;2;13~": Keys.ShiftEnter,  # Shift + Enter
+    "\x1b[27;5;13~": Keys.ControlEnter,  # Ctrl + Enter
+    "\x1b[27;6;13~": Keys.ControlShiftEnter,  # Ctrl + Shift + Enter
+    "\x1b[27;7;13~": (Keys.Escape, Keys.ControlEnter),
+    "\x1b[27;8;13~": (Keys.Escape, Keys.ControlShiftEnter),
     # --
     # Control + function keys.
     "\x1b[1;5P": Keys.ControlF1,
