@@ -362,7 +362,8 @@ class KeyBindings(KeyBindingsBase):
             self._clear_cache()
         else:
             # No key binding found for this function. Raise ValueError.
-            raise ValueError(f"Binding not found: {function!r}")
+            binding_repr = ", ".join(map(repr, args))
+            raise ValueError(f"Binding not found: {binding_repr}")
 
     # For backwards-compatibility.
     add_binding = add

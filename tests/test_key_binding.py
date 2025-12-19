@@ -77,6 +77,7 @@ def test_remove_bindings(handlers):
     with set_dummy_app():
         h = handlers.controlx_controlc
         h2 = handlers.controld
+        h3 = handlers.controla
 
         # Test passing a handler to the remove() function.
         bindings = KeyBindings()
@@ -93,6 +94,12 @@ def test_remove_bindings(handlers):
         assert len(bindings.bindings) == 2
         bindings.remove(Keys.ControlX, Keys.ControlC)
         assert len(bindings.bindings) == 1
+
+        # Test passing unbound key sequence to the remove() function
+        with pytest.raises(ValueError):
+            bindings.remove(h3)
+        with pytest.raises(ValueError):
+            bindings.remove(Keys.ControlA)
 
 
 def test_feed_simple(processor, handlers):
