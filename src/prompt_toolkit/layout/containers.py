@@ -5,6 +5,8 @@ Container for the layout.
 
 from __future__ import annotations
 
+import re
+import sys
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from functools import partial
@@ -23,8 +25,10 @@ from prompt_toolkit.formatted_text import (
     AnyFormattedText,
     StyleAndTextTuples,
     to_formatted_text,
+    to_plain_text,
 )
 from prompt_toolkit.formatted_text.utils import (
+    fragment_list_len,
     fragment_list_to_text,
     fragment_list_width,
 )
@@ -38,6 +42,7 @@ from .controls import (
     GetLinePrefixCallable,
     UIContent,
     UIControl,
+    WrapFinderCallable,
 )
 from .dimension import (
     AnyDimension,
@@ -1310,7 +1315,10 @@ class WindowRenderInfo:
         """
         if self.wrap_lines:
             return self.ui_content.get_height_for_line(
-                lineno, self.window_width, self.window.get_line_prefix
+                lineno,
+                self.window_width,
+                self.window.get_line_prefix,
+                self.window.wrap_finder,
             )
         else:
             return 1
@@ -1442,6 +1450,10 @@ class Window(Container):
         wrap_count and returns formatted text. This can be used for
         implementation of line continuations, things like Vim "breakindent" and
         so on.
+    :param wrap_finder: None or a callable that returns how to wrap a line.
+        It takes a line number, a start and an end position (ints) and returns
+        the the wrap position, a number of characters to be skipped (if any),
+        and formatted text for the continuation marker.
     """
 
     def __init__(
@@ -1459,6 +1471,7 @@ class Window(Container):
         scroll_offsets: ScrollOffsets | None = None,
         allow_scroll_beyond_bottom: FilterOrBool = False,
         wrap_lines: FilterOrBool = False,
+        word_wrap: FilterOrBool = False,
         get_vertical_scroll: Callable[[Window], int] | None = None,
         get_horizontal_scroll: Callable[[Window], int] | None = None,
         always_hide_cursor: FilterOrBool = False,
@@ -1471,10 +1484,12 @@ class Window(Container):
         style: str | Callable[[], str] = "",
         char: None | str | Callable[[], str] = None,
         get_line_prefix: GetLinePrefixCallable | None = None,
+        wrap_finder: WrapFinderCallable | None = None,
     ) -> None:
         self.allow_scroll_beyond_bottom = to_filter(allow_scroll_beyond_bottom)
         self.always_hide_cursor = to_filter(always_hide_cursor)
         self.wrap_lines = to_filter(wrap_lines)
+        self.word_wrap = to_filter(word_wrap)
         self.cursorline = to_filter(cursorline)
         self.cursorcolumn = to_filter(cursorcolumn)
 
@@ -1493,6 +1508,7 @@ class Window(Container):
         self.style = style
         self.char = char
         self.get_line_prefix = get_line_prefix
+        self.wrap_finder = wrap_finder
 
         self.width = width
         self.height = height
@@ -1601,6 +1617,7 @@ class Window(Container):
                 max_available_height,
                 wrap_lines,
                 self.get_line_prefix,
+                self.wrap_finder,
             )
 
         return self._merge_dimensions(
@@ -1766,6 +1783,9 @@ class Window(Container):
         self._scroll(
             ui_content, write_position.width - total_margin_width, write_position.height
         )
+        wrap_finder = self.wrap_finder or (
+            self._whitespace_wrap_finder() if self.word_wrap() else None
+        )
 
         # Erase background and fill with `char`.
         self._fill_bg(screen, write_position, erase_bg)
@@ -1789,6 +1809,7 @@ class Window(Container):
             has_focus=get_app().layout.current_control == self.content,
             align=align,
             get_line_prefix=self.get_line_prefix,
+            wrap_finder=wrap_finder,
         )
 
         # Remember render info. (Set before generating the margins. They need this.)
@@ -1920,6 +1941,50 @@ class Window(Container):
         # position.
         screen.visible_windows_to_write_positions[self] = write_position
 
+    @classmethod
+    def _whitespace_wrap_finder(
+        cls,
+        sep: str | re.Pattern[str] = r"[ \t]",  # Don’t include \xA0 by default (in \s)
+        split: str = "remove",
+        continuation: StyleAndTextTuples = [],
+    ) -> WrapFinderCallable:
+        """Returns a function that defines where to break"""
+        sep_re = sep if isinstance(sep, re.Pattern) else re.compile(sep)
+        if sep_re.groups:
+            raise ValueError(
+                f"Pattern {sep_re.pattern!r} has capture group – use non-capturing groups instead"
+            )
+        elif split == "after":
+            sep_re = re.compile(f"(?={sep_re.pattern})()")
+        elif split == "before":
+            sep_re = re.compile(f"(?<={sep_re.pattern})()")
+        elif split == "remove":
+            sep_re = re.compile(f"({sep_re.pattern})")
+        else:
+            raise ValueError(f"Unrecognized value of split parameter: {split!r}")
+
+        cont_width = fragment_list_width(continuation)
+
+        def wrap_finder(
+            line: AnyFormattedText, lineno: int, wrap_count: int, start: int, end: int
+        ) -> tuple[int, int, AnyFormattedText]:
+            line = explode_text_fragments(to_formatted_text(line))
+            cont_reserved = 0
+            while cont_reserved < cont_width:
+                style, char, *_ = line[end - 1]
+                cont_reserved += get_cwidth(char)
+                end -= 1
+
+            segment = to_plain_text(line[start:end])
+            try:
+                after, sep, before = sep_re.split(segment[::-1], maxsplit=1)
+            except ValueError:
+                return (end, 0, continuation)
+            else:
+                return (start + len(before), len(sep), continuation)
+
+        return wrap_finder
+
     def _copy_body(
         self,
         ui_content: UIContent,
@@ -1936,6 +2001,7 @@ class Window(Container):
         has_focus: bool = False,
         align: WindowAlign = WindowAlign.LEFT,
         get_line_prefix: Callable[[int, int], AnyFormattedText] | None = None,
+        wrap_finder: WrapFinderCallable | None = None,
     ) -> tuple[dict[int, tuple[int, int]], dict[tuple[int, int], tuple[int, int]]]:
         """
         Copy the UIContent into the output screen.
@@ -1956,6 +2022,58 @@ class Window(Container):
 
         # Maps (row, col) from the input to (y, x) screen coordinates.
         rowcol_to_yx: dict[tuple[int, int], tuple[int, int]] = {}
+
+        def find_next_wrap(
+            line: StyleAndTextTuples,
+            remaining_width: int,
+            is_input: bool,
+            lineno: int,
+            wrap_count: int,
+            fragment: int = 0,
+            char_pos: int = 0,
+        ) -> tuple[int, int, AnyFormattedText]:
+            if not wrap_lines:
+                return sys.maxsize, 0, []
+
+            try:
+                style0, text0, *more = line[fragment]
+            except IndexError:
+                return sys.maxsize, 0, []
+
+            frag_char_pos = char_pos - fragment_list_len(line[:fragment])
+            line_part = [(style0, text0[frag_char_pos:]), *line[fragment + 1 :]]
+            line_width = [fragment_list_width([frag]) for frag in line_part]
+            line_width = [fragment_list_width([frag]) for frag in line_part]
+
+            if sum(line_width) <= remaining_width:
+                return sys.maxsize, 0, []
+
+            min_wrap_pos = max_wrap_pos = char_pos
+            for next_fragment, fragment_width in zip(line_part, line_width):
+                if remaining_width < fragment_width:
+                    break
+                remaining_width -= fragment_width
+                max_wrap_pos += fragment_list_len([next_fragment])
+            else:
+                # Should never happen
+                return sys.maxsize, 0, []
+
+            style, text, *_ = next_fragment
+            for char_width in (get_cwidth(char) for char in text):
+                if remaining_width < char_width:
+                    break
+                remaining_width -= char_width
+                max_wrap_pos += 1
+
+            return (
+                wrap_finder(line, lineno, wrap_count, min_wrap_pos, max_wrap_pos)
+                if is_input and wrap_finder
+                else None
+            ) or (
+                max_wrap_pos,
+                0,
+                [],
+            )
 
         def copy_line(
             line: StyleAndTextTuples,
@@ -2003,27 +2121,53 @@ class Window(Container):
                 if line_width < width:
                     x += width - line_width
 
+            new_buffer_row = new_buffer[y + ypos]
+            wrap_start, wrap_replaced, continuation = find_next_wrap(
+                line,
+                width - x,
+                is_input,
+                lineno,
+                0,
+            )
+            continuation = to_formatted_text(continuation)
+
             col = 0
             wrap_count = 0
-            for style, text, *_ in line:
-                new_buffer_row = new_buffer[y + ypos]
-
+            wrap_skip = 0
+            text_end = 0
+            for fragment_count, (style, text, *_) in enumerate(line):
                 # Remember raw VT escape sequences. (E.g. FinalTerm's
                 # escape sequences.)
                 if "[ZeroWidthEscape]" in style:
                     new_screen.zero_width_escapes[y + ypos][x + xpos] += text
                     continue
 
-                for c in text:
+                text_start, text_end = text_end, text_end + len(text)
+
+                for char_count, c in enumerate(text, text_start):
                     char = _CHAR_CACHE[c, style]
                     char_width = char.width
 
                     # Wrap when the line width is exceeded.
-                    if wrap_lines and x + char_width > width:
+                    if wrap_lines and char_count == wrap_start:
+                        skipped_width = sum(
+                            get_cwidth(char)
+                            for char in text[wrap_start - text_start :][:wrap_replaced]
+                        )
+                        col += wrap_replaced
                         visible_line_to_row_col[y + 1] = (
                             lineno,
-                            visible_line_to_row_col[y][1] + x,
+                            visible_line_to_row_col[y][1] + x + skipped_width,
                         )
+
+                        # Append continuation (e.g. hyphen)
+                        if continuation:
+                            x, y = copy_line(continuation, lineno, x, y, is_input=False)
+
+                        if wrap_replaced < 0:
+                            return x, y
+
+                        wrap_skip = wrap_replaced
                         y += 1
                         wrap_count += 1
                         x = 0
@@ -2036,9 +2180,24 @@ class Window(Container):
                             x, y = copy_line(prompt, lineno, x, y, is_input=False)
 
                         new_buffer_row = new_buffer[y + ypos]
+                        wrap_start, wrap_replaced, continuation = find_next_wrap(
+                            line,
+                            width - x,
+                            is_input,
+                            lineno,
+                            wrap_count,
+                            fragment_count,
+                            wrap_start + wrap_replaced,
+                        )
+                        continuation = to_formatted_text(continuation)
 
                         if y >= write_position.height:
                             return x, y  # Break out of all for loops.
+
+                    # Chars skipped by wrapping (e.g. whitespace)
+                    if wrap_lines and wrap_skip > 0:
+                        wrap_skip -= 1
+                        continue
 
                     # Set character in screen and shift 'x'.
                     if x >= 0 and y >= 0 and x < width:
@@ -2329,7 +2488,9 @@ class Window(Container):
         self.horizontal_scroll = 0
 
         def get_line_height(lineno: int) -> int:
-            return ui_content.get_height_for_line(lineno, width, self.get_line_prefix)
+            return ui_content.get_height_for_line(
+                lineno, width, self.get_line_prefix, self.wrap_finder
+            )
 
         # When there is no space, reset `vertical_scroll_2` to zero and abort.
         # This can happen if the margin is bigger than the window width.
@@ -2354,6 +2515,7 @@ class Window(Container):
                 ui_content.cursor_position.y,
                 width,
                 self.get_line_prefix,
+                self.wrap_finder,
                 slice_stop=ui_content.cursor_position.x,
             )
 
