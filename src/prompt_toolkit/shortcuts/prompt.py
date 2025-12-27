@@ -208,6 +208,7 @@ class CompleteStyle(str, Enum):
 
     COLUMN = "COLUMN"
     MULTI_COLUMN = "MULTI_COLUMN"
+    INPLACE = "INPLACE"
     READLINE_LIKE = "READLINE_LIKE"
 
 
@@ -635,6 +636,10 @@ class PromptSession(Generic[_T]):
         )
 
         @Condition
+        def column_complete_style() -> bool:
+            return self.complete_style == CompleteStyle.COLUMN
+
+        @Condition
         def multi_column_complete_style() -> bool:
             return self.complete_style == CompleteStyle.MULTI_COLUMN
 
@@ -680,7 +685,7 @@ class PromptSession(Generic[_T]):
                         max_height=16,
                         scroll_offset=1,
                         extra_filter=has_focus(default_buffer)
-                        & ~multi_column_complete_style,
+                        & column_complete_style,
                     ),
                 ),
                 Float(
