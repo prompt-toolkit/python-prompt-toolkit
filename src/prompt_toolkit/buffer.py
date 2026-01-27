@@ -18,6 +18,8 @@ from enum import Enum
 from functools import wraps
 from typing import Any, Callable, Coroutine, Iterable, TypeVar, cast
 
+import wcwidth
+
 from .application.current import get_app
 from .application.run_in_terminal import run_in_terminal
 from .auto_suggest import AutoSuggest, Suggestion
@@ -764,20 +766,24 @@ class Buffer:
 
     def delete_before_cursor(self, count: int = 1) -> str:
         """
-        Delete specified number of characters before cursor and return the
-        deleted text.
+        Delete specified number of grapheme clusters before cursor and return
+        the deleted text.
         """
         assert count >= 0
         deleted = ""
 
         if self.cursor_position > 0:
-            deleted = self.text[self.cursor_position - count : self.cursor_position]
+            # Find position after deleting `count` grapheme clusters.
+            # Loop is required since grapheme clusters have variable length.
+            pos = self.cursor_position
+            for _ in range(count):
+                if pos <= 0:
+                    break
+                pos = wcwidth.grapheme_boundary_before(self.text, pos)
 
-            new_text = (
-                self.text[: self.cursor_position - count]
-                + self.text[self.cursor_position :]
-            )
-            new_cursor_position = self.cursor_position - len(deleted)
+            deleted = self.text[pos : self.cursor_position]
+            new_text = self.text[:pos] + self.text[self.cursor_position :]
+            new_cursor_position = pos
 
             # Set new Document atomically.
             self.document = Document(new_text, new_cursor_position)
@@ -786,14 +792,19 @@ class Buffer:
 
     def delete(self, count: int = 1) -> str:
         """
-        Delete specified number of characters and Return the deleted text.
+        Delete specified number of grapheme clusters and return the deleted text.
         """
         if self.cursor_position < len(self.text):
-            deleted = self.document.text_after_cursor[:count]
-            self.text = (
-                self.text[: self.cursor_position]
-                + self.text[self.cursor_position + len(deleted) :]
-            )
+            # Find position after `count` grapheme clusters.
+            text_after = self.text[self.cursor_position :]
+            pos = 0
+            for i, grapheme in enumerate(wcwidth.iter_graphemes(text_after)):
+                if i >= count:
+                    break
+                pos += len(grapheme)
+
+            deleted = text_after[:pos]
+            self.text = self.text[: self.cursor_position] + text_after[pos:]
             return deleted
         else:
             return ""

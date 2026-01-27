@@ -32,7 +32,9 @@ jobs:
           uvx typos .
       - name: Unit test
         run: |
-          uvx --with . --with pytest coverage run -m pytest tests/
+          uvx --with . --with pytest coverage[toml] run -m pytest tests/
+          uvx coverage[toml] combine
+          uvx coverage[toml] report
       - name: Type Checking
         if: ${{ matrix.python-version != '3.8' }}
         run: |

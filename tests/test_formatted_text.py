@@ -9,7 +9,7 @@ from prompt_toolkit.formatted_text import (
     merge_formatted_text,
     to_formatted_text,
 )
-from prompt_toolkit.formatted_text.utils import split_lines
+from prompt_toolkit.formatted_text.utils import fragment_list_width, split_lines
 
 
 def test_basic_html():
@@ -336,3 +336,15 @@ def test_split_lines_4():
         [("class:a", "line1")],
         [("class:a", "")],
     ]
+
+
+def test_fragment_list_width():
+    family = "\U0001f468\u200d\U0001f469\u200d\U0001f467"  # ZWJ sequence
+    heart = "\u2764\ufe0f"  # VS-16 emoji
+    assert fragment_list_width([("", "hello")]) == 5
+    assert fragment_list_width([("", family)]) == 2
+    assert fragment_list_width([("", heart)]) == 2
+
+
+def test_fragment_list_width_zero_width_escape():
+    assert fragment_list_width([("[ZeroWidthEscape]", "arbitrary")]) == 0
