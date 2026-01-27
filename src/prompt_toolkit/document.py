@@ -10,6 +10,8 @@ import string
 import weakref
 from typing import Callable, Dict, Iterable, List, NoReturn, Pattern, cast
 
+import wcwidth
+
 from .clipboard import ClipboardData
 from .filters import vi_mode
 from .selection import PasteMode, SelectionState, SelectionType
@@ -158,13 +160,49 @@ class Document:
 
     @property
     def current_char(self) -> str:
-        """Return character under cursor or an empty string."""
-        return self._get_char_relative_to_cursor(0) or ""
+        """
+        Return grapheme cluster at cursor position, or empty string at end.
+
+        Note: Returns a grapheme cluster which may contain multiple code points.
+        If cursor is inside a grapheme cluster (e.g., on a combining character),
+        returns the complete grapheme containing the cursor.
+        """
+        if self.cursor_position >= len(self.text):
+            return ""
+        grapheme_start = wcwidth.grapheme_boundary_before(
+            self.text, self.cursor_position + 1
+        )
+        for g in wcwidth.iter_graphemes(self.text[grapheme_start:]):
+            return g
+        return ""
 
     @property
     def char_before_cursor(self) -> str:
-        """Return character before the cursor or an empty string."""
-        return self._get_char_relative_to_cursor(-1) or ""
+        """
+        Return grapheme cluster before the cursor, or empty string at start.
+
+        Note: Returns a grapheme cluster which may contain multiple code points.
+        If cursor is inside a grapheme cluster (e.g., on a combining character),
+        returns the grapheme before the one containing the cursor.
+        """
+        if self.cursor_position == 0:
+            return ""
+
+        text = self.text
+        cursor = self.cursor_position
+
+        # Find reference point: cursor position or start of containing grapheme.
+        if cursor >= len(text):
+            reference = len(text)
+        else:
+            grapheme_start = wcwidth.grapheme_boundary_before(text, cursor + 1)
+            reference = grapheme_start if grapheme_start < cursor else cursor
+
+        if reference == 0:
+            return ""
+
+        prev_start = wcwidth.grapheme_boundary_before(text, reference)
+        return text[prev_start:reference]
 
     @property
     def text_before_cursor(self) -> str:
@@ -250,15 +288,6 @@ class Document:
         current_line = self.current_line
         length = len(current_line) - len(current_line.lstrip())
         return current_line[:length]
-
-    def _get_char_relative_to_cursor(self, offset: int = 0) -> str:
-        """
-        Return character relative to cursor position, or empty string
-        """
-        try:
-            return self.text[self.cursor_position + offset]
-        except IndexError:
-            return ""
 
     @property
     def on_first_line(self) -> bool:
@@ -692,21 +721,44 @@ class Document:
 
     def get_cursor_left_position(self, count: int = 1) -> int:
         """
-        Relative position for cursor left.
+        Relative position for cursor left (grapheme cluster aware).
         """
         if count < 0:
             return self.get_cursor_right_position(-count)
 
-        return -min(self.cursor_position_col, count)
+        line_before = self.current_line_before_cursor
+        if not line_before:
+            return 0
+
+        pos = len(line_before)
+        for _ in range(count):
+            if pos <= 0:
+                break
+            new_pos = wcwidth.grapheme_boundary_before(line_before, pos)
+            if new_pos == pos:
+                break
+            pos = new_pos
+
+        return pos - len(line_before)
 
     def get_cursor_right_position(self, count: int = 1) -> int:
         """
-        Relative position for cursor_right.
+        Relative position for cursor right (grapheme cluster aware).
         """
         if count < 0:
             return self.get_cursor_left_position(-count)
 
-        return min(count, len(self.current_line_after_cursor))
+        line_after = self.current_line_after_cursor
+        if not line_after:
+            return 0
+
+        pos = 0
+        for i, grapheme in enumerate(wcwidth.iter_graphemes(line_after)):
+            if i >= count:
+                break
+            pos += len(grapheme)
+
+        return pos
 
     def get_cursor_up_position(
         self, count: int = 1, preferred_column: int | None = None

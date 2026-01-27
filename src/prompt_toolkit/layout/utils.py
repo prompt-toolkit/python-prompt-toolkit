@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Iterable, List, TypeVar, cast, overload
 
+import wcwidth
+
 from prompt_toolkit.formatted_text.base import OneStyleAndTextTuple
 
 if TYPE_CHECKING:
@@ -60,7 +62,7 @@ class _ExplodedList(List[_T]):
 def explode_text_fragments(fragments: Iterable[_T]) -> _ExplodedList[_T]:
     """
     Turn a list of (style_str, text) tuples into another list where each string is
-    exactly one character.
+    exactly one grapheme cluster.
 
     It should be fine to call this function several times. Calling this on a
     list that is already exploded, is a null operation.
@@ -74,7 +76,7 @@ def explode_text_fragments(fragments: Iterable[_T]) -> _ExplodedList[_T]:
     result: list[_T] = []
 
     for style, string, *rest in fragments:
-        for c in string:
-            result.append((style, c, *rest))  # type: ignore
+        for grapheme in wcwidth.iter_graphemes(string):
+            result.append((style, grapheme, *rest))  # type: ignore
 
     return _ExplodedList(result)

@@ -22,7 +22,7 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "wcwidth>=0.1.4",
+    "wcwidth>=0.5.0",
 ]
 
 [project.urls]
@@ -86,6 +86,9 @@ extend-ignore-re = [
     # Lorem ipsum.
     "Nam",
     "varius",
+    # Partial words in grapheme clustering tests (niño, café).
+    "nin",
+    "caf",
 ]
 
 locale = 'en-us'  # US English.
@@ -117,6 +120,10 @@ warn_redundant_casts = true
 warn_return_any = true
 warn_unused_configs = true
 warn_unused_ignores = true
+
+[tool.coverage.run]
+source = ["src/prompt_toolkit"]
+parallel = true
 
 [build-system]
 requires = ["setuptools>=68"]

@@ -8,6 +8,8 @@ import time
 from abc import ABCMeta, abstractmethod
 from typing import TYPE_CHECKING, Callable, Hashable, Iterable, NamedTuple
 
+import wcwidth
+
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.cache import SimpleCache
@@ -674,19 +676,29 @@ class BufferControl(UIControl):
         ) -> _ProcessedLine:
             "Transform the fragments for a given line number."
 
-            # Get cursor position at this line.
-            def source_to_display(i: int) -> int:
-                """X position from the buffer to the x position in the
-                processed fragment list. By default, we start from the 'identity'
-                operation."""
-                return i
+            # Build code point to grapheme index mapping for cursor positioning.
+            line_text = fragment_list_to_text(fragments)
+            codepoint_to_grapheme: dict[int, int] = {}
+            grapheme_idx = 0
+            codepoint_idx = 0
+            for grapheme in wcwidth.iter_graphemes(line_text):
+                for _ in grapheme:
+                    codepoint_to_grapheme[codepoint_idx] = grapheme_idx
+                    codepoint_idx += 1
+                grapheme_idx += 1
+
+            def grapheme_source_to_display(i: int) -> int:
+                """Map code point index to grapheme index."""
+                if i >= codepoint_idx:
+                    return grapheme_idx + (i - codepoint_idx)
+                return codepoint_to_grapheme.get(i, grapheme_idx)
 
             transformation = merged_processor.apply_transformation(
                 TransformationInput(
                     self,
                     document,
                     lineno,
-                    source_to_display,
+                    grapheme_source_to_display,
                     fragments,
                     width,
                     height,
@@ -694,9 +706,15 @@ class BufferControl(UIControl):
                 )
             )
 
+            # Compose grapheme mapping with processor transformations.
+            proc_s2d = transformation.source_to_display
+
+            def final_source_to_display(i: int) -> int:
+                return proc_s2d(grapheme_source_to_display(i))
+
             return _ProcessedLine(
                 transformation.fragments,
-                transformation.source_to_display,
+                final_source_to_display,
                 transformation.display_to_source,
             )
 

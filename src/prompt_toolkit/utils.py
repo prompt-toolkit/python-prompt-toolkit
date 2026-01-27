@@ -11,16 +11,19 @@ from typing import (
     Dict,
     Generator,
     Generic,
+    Iterator,
     TypeVar,
     Union,
 )
 
-from wcwidth import wcwidth
+import wcwidth
 
 __all__ = [
     "Event",
     "DummyContext",
     "get_cwidth",
+    "iter_grapheme_clusters",
+    "grapheme_cluster_count",
     "suspend_to_background_supported",
     "is_conemu_ansi",
     "is_windows",
@@ -138,15 +141,7 @@ class _CharSizesCache(Dict[str, int]):
         self._long_strings: deque[str] = deque()
 
     def __missing__(self, string: str) -> int:
-        # Note: We use the `max(0, ...` because some non printable control
-        #       characters, like e.g. Ctrl-underscore get a -1 wcwidth value.
-        #       It can be possible that these characters end up in the input
-        #       text.
-        result: int
-        if len(string) == 1:
-            result = max(0, wcwidth(string))
-        else:
-            result = sum(self[c] for c in string)
+        result = wcwidth.width(string, control_codes="ignore")
 
         # Store in cache.
         self[string] = result
@@ -173,6 +168,20 @@ def get_cwidth(string: str) -> int:
     Return width of a string. Wrapper around ``wcwidth``.
     """
     return _CHAR_SIZES_CACHE[string]
+
+
+def iter_grapheme_clusters(text: str) -> Iterator[str]:
+    """
+    Iterate over grapheme clusters in text. Wrapper around ``wcwidth.iter_graphemes``.
+    """
+    return wcwidth.iter_graphemes(text)
+
+
+def grapheme_cluster_count(text: str) -> int:
+    """
+    Return the number of grapheme clusters in text.
+    """
+    return sum(1 for _ in wcwidth.iter_graphemes(text))
 
 
 def suspend_to_background_supported() -> bool:

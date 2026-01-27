@@ -10,6 +10,8 @@ from enum import Enum
 from functools import partial
 from typing import TYPE_CHECKING, Callable, Sequence, Union, cast
 
+import wcwidth
+
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.cache import SimpleCache
 from prompt_toolkit.data_structures import Point
@@ -2014,7 +2016,7 @@ class Window(Container):
                     new_screen.zero_width_escapes[y + ypos][x + xpos] += text
                     continue
 
-                for c in text:
+                for c in wcwidth.iter_graphemes(text):
                     char = _CHAR_CACHE[c, style]
                     char_width = char.width
 
@@ -2052,26 +2054,7 @@ class Window(Container):
                             for i in range(1, char_width):
                                 new_buffer_row[x + xpos + i] = empty_char
 
-                        # If this is a zero width characters, then it's
-                        # probably part of a decomposed unicode character.
-                        # See: https://en.wikipedia.org/wiki/Unicode_equivalence
-                        # Merge it in the previous cell.
-                        elif char_width == 0:
-                            # Handle all character widths. If the previous
-                            # character is a multiwidth character, then
-                            # merge it two positions back.
-                            for pw in [2, 1]:  # Previous character width.
-                                if (
-                                    x - pw >= 0
-                                    and new_buffer_row[x + xpos - pw].width == pw
-                                ):
-                                    prev_char = new_buffer_row[x + xpos - pw]
-                                    char2 = _CHAR_CACHE[
-                                        prev_char.char + c, prev_char.style
-                                    ]
-                                    new_buffer_row[x + xpos - pw] = char2
-
-                        # Keep track of write position for each character.
+                        # Keep track of write position for each grapheme.
                         current_rowcol_to_yx[lineno, col + skipped] = (
                             y + ypos,
                             x + xpos,
