@@ -1,6 +1,22 @@
 CHANGELOG
 =========
 
+3.0.52: 2025-08-27
+------------------
+
+New features:
+- Add `choice()` shortcut for selecting an option amongst a list of choices
+  (see documentation for examples).
+- Add support for ANSI dim text formatting.
+- Add `frame=...` option for `prompt()` and `choice()` shortcuts to allow for
+  displaying a frame around the input prompt.
+
+Fixes:
+- Fix button width when non English characters are displayed.
+- Implement flushing in Windows VT100 input.
+- Fix signal handling for GraalPy.
+- Fix handling of zero sized dimensions.
+
 3.0.51: 2025-04-15
 ------------------
 

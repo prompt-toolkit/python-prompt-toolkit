@@ -37,6 +37,7 @@ class ANSI:
         self._color: str | None = None
         self._bgcolor: str | None = None
         self._bold = False
+        self._dim = False
         self._underline = False
         self._strike = False
         self._italic = False
@@ -153,8 +154,8 @@ class ANSI:
                 self._bgcolor = _bg_colors[attr]
             elif attr == 1:
                 self._bold = True
-            # elif attr == 2:
-            #   self._faint = True
+            elif attr == 2:
+                self._dim = True
             elif attr == 3:
                 self._italic = True
             elif attr == 4:
@@ -171,6 +172,7 @@ class ANSI:
                 self._strike = True
             elif attr == 22:
                 self._bold = False  # Normal intensity
+                self._dim = False
             elif attr == 23:
                 self._italic = False
             elif attr == 24:
@@ -188,6 +190,7 @@ class ANSI:
                 self._color = None
                 self._bgcolor = None
                 self._bold = False
+                self._dim = False
                 self._underline = False
                 self._strike = False
                 self._italic = False
@@ -232,6 +235,8 @@ class ANSI:
             result.append("bg:" + self._bgcolor)
         if self._bold:
             result.append("bold")
+        if self._dim:
+            result.append("dim")
         if self._underline:
             result.append("underline")
         if self._strike:

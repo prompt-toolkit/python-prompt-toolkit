@@ -4,7 +4,7 @@ Abstraction of CLI Input.
 
 from __future__ import annotations
 
-from abc import ABCMeta, abstractmethod, abstractproperty
+from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 from typing import Callable, ContextManager, Generator
 
@@ -55,7 +55,8 @@ class Input(metaclass=ABCMeta):
         "The event loop can call this when the input has to be flushed."
         pass
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def closed(self) -> bool:
         "Should be true when the input stream is closed."
         return False

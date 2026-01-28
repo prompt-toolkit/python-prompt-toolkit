@@ -1,6 +1,6 @@
 [project]
 name = "prompt_toolkit"
-version = "3.0.51"  # Also update in `docs/conf.py`.
+version = "3.0.52"  # Also update in `docs/conf.py`.
 description="Library for building powerful interactive command lines in Python"
 readme = "README.rst"
 authors = [{ name = "Jonathan Slenders" }]
@@ -22,7 +22,7 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "wcwidth",
+    "wcwidth>=0.1.4",
 ]
 
 [project.optional-dependencies]
@@ -33,6 +33,10 @@ dependencies = [
       "langchain-openai",
       "PyEnchant"
 ]
+
+[project.urls]
+Homepage = "https://github.com/prompt-toolkit/python-prompt-toolkit"
+Documentation = "https://python-prompt-toolkit.readthedocs.io/en/stable/"
 
 [tool.ruff]
 target-version = "py37"

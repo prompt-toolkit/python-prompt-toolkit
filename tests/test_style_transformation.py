@@ -17,6 +17,7 @@ def default_attrs():
         blink=False,
         reverse=False,
         hidden=False,
+        dim=False,
     )
 
 

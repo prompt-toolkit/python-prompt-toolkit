@@ -88,6 +88,7 @@ _EMPTY_ATTRS = Attrs(
     blink=None,
     reverse=None,
     hidden=None,
+    dim=None,
 )
 
 
@@ -151,6 +152,10 @@ def _parse_style_str(style_str: str) -> Attrs:
             attrs = attrs._replace(hidden=True)
         elif part == "nohidden":
             attrs = attrs._replace(hidden=False)
+        elif part == "dim":
+            attrs = attrs._replace(dim=True)
+        elif part == "nodim":
+            attrs = attrs._replace(dim=False)
 
         # Pygments properties that we ignore.
         elif part in ("roman", "sans", "mono"):
@@ -345,6 +350,7 @@ def _merge_attrs(list_of_attrs: list[Attrs]) -> Attrs:
         blink=_or(False, *[a.blink for a in list_of_attrs]),
         reverse=_or(False, *[a.reverse for a in list_of_attrs]),
         hidden=_or(False, *[a.hidden for a in list_of_attrs]),
+        dim=_or(False, *[a.dim for a in list_of_attrs]),
     )
 
 

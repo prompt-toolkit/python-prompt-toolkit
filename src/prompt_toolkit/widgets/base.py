@@ -436,10 +436,12 @@ class Button:
         )
 
     def _get_text_fragments(self) -> StyleAndTextTuples:
-        width = self.width - (
-            get_cwidth(self.left_symbol) + get_cwidth(self.right_symbol)
+        width = (
+            self.width
+            - (get_cwidth(self.left_symbol) + get_cwidth(self.right_symbol))
+            + (len(self.text) - get_cwidth(self.text))
         )
-        text = (f"{{:^{width}}}").format(self.text)
+        text = (f"{{:^{max(0, width)}}}").format(self.text)
 
         def handler(mouse_event: MouseEvent) -> None:
             if (
@@ -533,8 +535,11 @@ class Frame:
 
         self.container = HSplit(
             [
-                ConditionalContainer(content=top_row_with_title, filter=has_title),
-                ConditionalContainer(content=top_row_without_title, filter=~has_title),
+                ConditionalContainer(
+                    content=top_row_with_title,
+                    filter=has_title,
+                    alternative_content=top_row_without_title,
+                ),
                 VSplit(
                     [
                         fill(width=1, char=Border.VERTICAL),
@@ -694,24 +699,41 @@ class _DialogList(Generic[_T]):
     Common code for `RadioList` and `CheckboxList`.
     """
 
-    open_character: str = ""
-    close_character: str = ""
-    container_style: str = ""
-    default_style: str = ""
-    selected_style: str = ""
-    checked_style: str = ""
-    multiple_selection: bool = False
-    show_scrollbar: bool = True
-
     def __init__(
         self,
         values: Sequence[tuple[_T, AnyFormattedText]],
         default_values: Sequence[_T] | None = None,
+        select_on_focus: bool = False,
+        open_character: str = "",
+        select_character: str = "*",
+        close_character: str = "",
+        container_style: str = "",
+        default_style: str = "",
+        number_style: str = "",
+        selected_style: str = "",
+        checked_style: str = "",
+        multiple_selection: bool = False,
+        show_scrollbar: bool = True,
+        show_cursor: bool = True,
+        show_numbers: bool = False,
     ) -> None:
         assert len(values) > 0
         default_values = default_values or []
 
         self.values = values
+        self.show_numbers = show_numbers
+
+        self.open_character = open_character
+        self.select_character = select_character
+        self.close_character = close_character
+        self.container_style = container_style
+        self.default_style = default_style
+        self.number_style = number_style
+        self.selected_style = selected_style
+        self.checked_style = checked_style
+        self.multiple_selection = multiple_selection
+        self.show_scrollbar = show_scrollbar
+
         # current_values will be used in multiple_selection,
         # current_value will be used otherwise.
         keys: list[_T] = [value for (value, _) in values]
@@ -734,12 +756,18 @@ class _DialogList(Generic[_T]):
         kb = KeyBindings()
 
         @kb.add("up")
+        @kb.add("k")  # Vi-like.
         def _up(event: E) -> None:
             self._selected_index = max(0, self._selected_index - 1)
+            if select_on_focus:
+                self._handle_enter()
 
         @kb.add("down")
+        @kb.add("j")  # Vi-like.
         def _down(event: E) -> None:
             self._selected_index = min(len(self.values) - 1, self._selected_index + 1)
+            if select_on_focus:
+                self._handle_enter()
 
         @kb.add("pageup")
         def _pageup(event: E) -> None:
@@ -774,9 +802,22 @@ class _DialogList(Generic[_T]):
                     self._selected_index = self.values.index(value)
                     return
 
+        numbers_visible = Condition(lambda: self.show_numbers)
+
+        for i in range(1, 10):
+
+            @kb.add(str(i), filter=numbers_visible)
+            def _select_i(event: E, index: int = i) -> None:
+                self._selected_index = min(len(self.values) - 1, index - 1)
+                if select_on_focus:
+                    self._handle_enter()
+
         # Control and window.
         self.control = FormattedTextControl(
-            self._get_text_fragments, key_bindings=kb, focusable=True
+            self._get_text_fragments,
+            key_bindings=kb,
+            focusable=True,
+            show_cursor=show_cursor,
         )
 
         self.window = Window(
@@ -831,13 +872,19 @@ class _DialogList(Generic[_T]):
                 result.append(("[SetCursorPosition]", ""))
 
             if checked:
-                result.append((style, "*"))
+                result.append((style, self.select_character))
             else:
                 result.append((style, " "))
 
             result.append((style, self.close_character))
-            result.append((self.default_style, " "))
-            result.extend(to_formatted_text(value[1], style=self.default_style))
+            result.append((f"{style} {self.default_style}", " "))
+
+            if self.show_numbers:
+                result.append((f"{style} {self.number_style}", f"{i + 1:2d}. "))
+
+            result.extend(
+                to_formatted_text(value[1], style=f"{style} {self.default_style}")
+            )
             result.append(("", "\n"))
 
         # Add mouse handler to all fragments.
@@ -858,25 +905,46 @@ class RadioList(_DialogList[_T]):
     :param values: List of (value, label) tuples.
     """
 
-    open_character = "("
-    close_character = ")"
-    container_style = "class:radio-list"
-    default_style = "class:radio"
-    selected_style = "class:radio-selected"
-    checked_style = "class:radio-checked"
-    multiple_selection = False
-
     def __init__(
         self,
         values: Sequence[tuple[_T, AnyFormattedText]],
         default: _T | None = None,
+        show_numbers: bool = False,
+        select_on_focus: bool = False,
+        open_character: str = "(",
+        select_character: str = "*",
+        close_character: str = ")",
+        container_style: str = "class:radio-list",
+        default_style: str = "class:radio",
+        selected_style: str = "class:radio-selected",
+        checked_style: str = "class:radio-checked",
+        number_style: str = "class:radio-number",
+        multiple_selection: bool = False,
+        show_cursor: bool = True,
+        show_scrollbar: bool = True,
     ) -> None:
         if default is None:
             default_values = None
         else:
             default_values = [default]
 
-        super().__init__(values, default_values=default_values)
+        super().__init__(
+            values,
+            default_values=default_values,
+            select_on_focus=select_on_focus,
+            show_numbers=show_numbers,
+            open_character=open_character,
+            select_character=select_character,
+            close_character=close_character,
+            container_style=container_style,
+            default_style=default_style,
+            selected_style=selected_style,
+            checked_style=checked_style,
+            number_style=number_style,
+            multiple_selection=False,
+            show_cursor=show_cursor,
+            show_scrollbar=show_scrollbar,
+        )
 
 
 class CheckboxList(_DialogList[_T]):
@@ -886,13 +954,30 @@ class CheckboxList(_DialogList[_T]):
     :param values: List of (value, label) tuples.
     """
 
-    open_character = "["
-    close_character = "]"
-    container_style = "class:checkbox-list"
-    default_style = "class:checkbox"
-    selected_style = "class:checkbox-selected"
-    checked_style = "class:checkbox-checked"
-    multiple_selection = True
+    def __init__(
+        self,
+        values: Sequence[tuple[_T, AnyFormattedText]],
+        default_values: Sequence[_T] | None = None,
+        open_character: str = "[",
+        select_character: str = "*",
+        close_character: str = "]",
+        container_style: str = "class:checkbox-list",
+        default_style: str = "class:checkbox",
+        selected_style: str = "class:checkbox-selected",
+        checked_style: str = "class:checkbox-checked",
+    ) -> None:
+        super().__init__(
+            values,
+            default_values=default_values,
+            open_character=open_character,
+            select_character=select_character,
+            close_character=close_character,
+            container_style=container_style,
+            default_style=default_style,
+            selected_style=selected_style,
+            checked_style=checked_style,
+            multiple_selection=True,
+        )
 
 
 class Checkbox(CheckboxList[str]):

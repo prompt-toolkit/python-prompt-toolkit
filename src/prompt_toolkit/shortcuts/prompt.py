@@ -124,6 +124,7 @@ from prompt_toolkit.utils import (
     to_str,
 )
 from prompt_toolkit.validation import DynamicValidator, Validator
+from prompt_toolkit.widgets import Frame
 from prompt_toolkit.widgets.toolbars import (
     SearchToolbar,
     SystemToolbar,
@@ -304,8 +305,8 @@ class PromptSession(Generic[_T]):
         (e.g. :class:`~prompt_toolkit.clipboard.InMemoryClipboard`)
     :param rprompt: Text or formatted text to be displayed on the right side.
         This can also be a callable that returns (formatted) text.
-    :param bottom_toolbar: Formatted text or callable which is supposed to
-        return formatted text.
+    :param bottom_toolbar: Formatted text or callable that returns formatted
+        text to be displayed at the bottom of the screen.
     :param prompt_continuation: Text that needs to be displayed for a multiline
         prompt continuation. This can either be formatted text or a callable
         that takes a `prompt_width`, `line_number` and `wrap_count` as input
@@ -319,6 +320,9 @@ class PromptSession(Generic[_T]):
         yet. Unlike the `default` parameter, this won't be returned as part of
         the output ever. This can be formatted text or a callable that returns
         formatted text.
+    :param show_frame: `bool` or
+        :class:`~prompt_toolkit.filters.Filter`. When True, surround the input
+        with a frame.
     :param refresh_interval: (number; in seconds) When given, refresh the UI
         every so many seconds.
     :param input: `Input` object. (Note that the preferred way to change the
@@ -368,6 +372,7 @@ class PromptSession(Generic[_T]):
         "reserve_space_for_menu",
         "tempfile_suffix",
         "tempfile",
+        "show_frame",
     )
 
     def __init__(
@@ -412,6 +417,7 @@ class PromptSession(Generic[_T]):
         tempfile_suffix: str | Callable[[], str] | None = ".txt",
         tempfile: str | Callable[[], str] | None = None,
         refresh_interval: float = 0,
+        show_frame: FilterOrBool = False,
         input: Input | None = None,
         output: Output | None = None,
         interrupt_exception: type[BaseException] = KeyboardInterrupt,
@@ -465,6 +471,7 @@ class PromptSession(Generic[_T]):
         self.reserve_space_for_menu = reserve_space_for_menu
         self.tempfile_suffix = tempfile_suffix
         self.tempfile = tempfile
+        self.show_frame = show_frame
         self.interrupt_exception = interrupt_exception
         self.eof_exception = eof_exception
 
@@ -502,7 +509,9 @@ class PromptSession(Generic[_T]):
         def accept(buff: Buffer) -> bool:
             """Accept the content of the default buffer. This is called when
             the validation succeeds."""
-            cast(Application[str], get_app()).exit(result=buff.document.text)
+            cast(Application[str], get_app()).exit(
+                result=buff.document.text, style="class:accepted"
+            )
             return True  # Keep text, we call 'reset' later on.
 
         return Buffer(
@@ -630,69 +639,77 @@ class PromptSession(Generic[_T]):
             return self.complete_style == CompleteStyle.MULTI_COLUMN
 
         # Build the layout.
+
+        # The main input, with completion menus floating on top of it.
+        main_input_container = FloatContainer(
+            HSplit(
+                [
+                    ConditionalContainer(
+                        Window(
+                            FormattedTextControl(get_prompt_text_1),
+                            dont_extend_height=True,
+                        ),
+                        Condition(has_before_fragments),
+                    ),
+                    ConditionalContainer(
+                        default_buffer_window,
+                        Condition(
+                            lambda: get_app().layout.current_control
+                            != search_buffer_control
+                        ),
+                    ),
+                    ConditionalContainer(
+                        Window(search_buffer_control),
+                        Condition(
+                            lambda: get_app().layout.current_control
+                            == search_buffer_control
+                        ),
+                    ),
+                ]
+            ),
+            [
+                # Completion menus.
+                # NOTE: Especially the multi-column menu needs to be
+                #       transparent, because the shape is not always
+                #       rectangular due to the meta-text below the menu.
+                Float(
+                    xcursor=True,
+                    ycursor=True,
+                    transparent=True,
+                    content=CompletionsMenu(
+                        max_height=16,
+                        scroll_offset=1,
+                        extra_filter=has_focus(default_buffer)
+                        & ~multi_column_complete_style,
+                    ),
+                ),
+                Float(
+                    xcursor=True,
+                    ycursor=True,
+                    transparent=True,
+                    content=MultiColumnCompletionsMenu(
+                        show_meta=True,
+                        extra_filter=has_focus(default_buffer)
+                        & multi_column_complete_style,
+                    ),
+                ),
+                # The right prompt.
+                Float(
+                    right=0,
+                    top=0,
+                    hide_when_covering_content=True,
+                    content=_RPrompt(lambda: self.rprompt),
+                ),
+            ],
+        )
+
         layout = HSplit(
             [
-                # The main input, with completion menus floating on top of it.
-                FloatContainer(
-                    HSplit(
-                        [
-                            ConditionalContainer(
-                                Window(
-                                    FormattedTextControl(get_prompt_text_1),
-                                    dont_extend_height=True,
-                                ),
-                                Condition(has_before_fragments),
-                            ),
-                            ConditionalContainer(
-                                default_buffer_window,
-                                Condition(
-                                    lambda: get_app().layout.current_control
-                                    != search_buffer_control
-                                ),
-                            ),
-                            ConditionalContainer(
-                                Window(search_buffer_control),
-                                Condition(
-                                    lambda: get_app().layout.current_control
-                                    == search_buffer_control
-                                ),
-                            ),
-                        ]
-                    ),
-                    [
-                        # Completion menus.
-                        # NOTE: Especially the multi-column menu needs to be
-                        #       transparent, because the shape is not always
-                        #       rectangular due to the meta-text below the menu.
-                        Float(
-                            xcursor=True,
-                            ycursor=True,
-                            transparent=True,
-                            content=CompletionsMenu(
-                                max_height=16,
-                                scroll_offset=1,
-                                extra_filter=has_focus(default_buffer)
-                                & ~multi_column_complete_style,
-                            ),
-                        ),
-                        Float(
-                            xcursor=True,
-                            ycursor=True,
-                            transparent=True,
-                            content=MultiColumnCompletionsMenu(
-                                show_meta=True,
-                                extra_filter=has_focus(default_buffer)
-                                & multi_column_complete_style,
-                            ),
-                        ),
-                        # The right prompt.
-                        Float(
-                            right=0,
-                            top=0,
-                            hide_when_covering_content=True,
-                            content=_RPrompt(lambda: self.rprompt),
-                        ),
-                    ],
+                # Wrap the main input in a frame, if requested.
+                ConditionalContainer(
+                    Frame(main_input_container),
+                    filter=dyncond("show_frame"),
+                    alternative_content=main_input_container,
                 ),
                 ConditionalContainer(ValidationToolbar(), filter=~is_done),
                 ConditionalContainer(
@@ -895,6 +912,7 @@ class PromptSession(Generic[_T]):
         enable_open_in_editor: FilterOrBool | None = None,
         tempfile_suffix: str | Callable[[], str] | None = None,
         tempfile: str | Callable[[], str] | None = None,
+        show_frame: FilterOrBool | None = None,
         # Following arguments are specific to the current `prompt()` call.
         default: str | Document = "",
         accept_default: bool = False,
@@ -1019,6 +1037,8 @@ class PromptSession(Generic[_T]):
             self.tempfile_suffix = tempfile_suffix
         if tempfile is not None:
             self.tempfile = tempfile
+        if show_frame is not None:
+            self.show_frame = show_frame
 
         self._add_pre_run_callables(pre_run, accept_default)
         self.default_buffer.reset(
@@ -1132,6 +1152,7 @@ class PromptSession(Generic[_T]):
         enable_open_in_editor: FilterOrBool | None = None,
         tempfile_suffix: str | Callable[[], str] | None = None,
         tempfile: str | Callable[[], str] | None = None,
+        show_frame: FilterOrBool = False,
         # Following arguments are specific to the current `prompt()` call.
         default: str | Document = "",
         accept_default: bool = False,
@@ -1213,6 +1234,8 @@ class PromptSession(Generic[_T]):
             self.tempfile_suffix = tempfile_suffix
         if tempfile is not None:
             self.tempfile = tempfile
+        if show_frame is not None:
+            self.show_frame = show_frame
 
         self._add_pre_run_callables(pre_run, accept_default)
         self.default_buffer.reset(
@@ -1405,6 +1428,7 @@ def prompt(
     enable_open_in_editor: FilterOrBool | None = None,
     tempfile_suffix: str | Callable[[], str] | None = None,
     tempfile: str | Callable[[], str] | None = None,
+    show_frame: FilterOrBool | None = None,
     # Following arguments are specific to the current `prompt()` call.
     default: str = "",
     accept_default: bool = False,
@@ -1460,6 +1484,7 @@ def prompt(
         enable_open_in_editor=enable_open_in_editor,
         tempfile_suffix=tempfile_suffix,
         tempfile=tempfile,
+        show_frame=show_frame,
         default=default,
         accept_default=accept_default,
         pre_run=pre_run,
@@ -1474,7 +1499,7 @@ prompt.__doc__ = PromptSession.prompt.__doc__
 
 
 def create_confirm_session(
-    message: str, suffix: str = " (y/n) "
+    message: AnyFormattedText, suffix: str = " (y/n) "
 ) -> PromptSession[bool]:
     """
     Create a `PromptSession` object for the 'confirm' function.
@@ -1505,7 +1530,7 @@ def create_confirm_session(
     return session
 
 
-def confirm(message: str = "Confirm?", suffix: str = " (y/n) ") -> bool:
+def confirm(message: AnyFormattedText = "Confirm?", suffix: str = " (y/n) ") -> bool:
     """
     Display a confirmation prompt that returns True/False.
     """

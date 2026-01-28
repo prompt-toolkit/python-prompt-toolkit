@@ -104,8 +104,8 @@ class Win32Input(_Win32InputBase):
     def read_keys(self) -> list[KeyPress]:
         return list(self.console_input_reader.read())
 
-    def flush(self) -> None:
-        pass
+    def flush_keys(self) -> list[KeyPress]:
+        return self.console_input_reader.flush_keys()
 
     @property
     def closed(self) -> bool:
@@ -294,6 +294,10 @@ class ConsoleInputReader:
                     yield k
         else:
             yield from all_keys
+
+    def flush_keys(self) -> list[KeyPress]:
+        # Method only needed for structural compatibility with `Vt100ConsoleInputReader`.
+        return []
 
     def _insert_key_data(self, key_press: KeyPress) -> KeyPress:
         """
@@ -634,6 +638,20 @@ class Vt100ConsoleInputReader:
         # whether we should consider this a paste event or not.
         for key_data in self._get_keys(read, input_records):
             self._vt100_parser.feed(key_data)
+
+        # Return result.
+        result = self._buffer
+        self._buffer = []
+        return result
+
+    def flush_keys(self) -> list[KeyPress]:
+        """
+        Flush pending keys and return them.
+        (Used for flushing the 'escape' key.)
+        """
+        # Flush all pending keys. (This is most important to flush the vt100
+        # 'Escape' key early when nothing else follows.)
+        self._vt100_parser.flush()
 
         # Return result.
         result = self._buffer

@@ -656,7 +656,7 @@ of the foreground.
     from prompt_toolkit.formatted_text import HTML
 
     def bottom_toolbar():
-        return HTML("This is a <b><style bg="ansired">Toolbar</style></b>!")
+        return HTML('This is a <b><style bg="ansired">Toolbar</style></b>!')
 
     text = prompt("> ", bottom_toolbar=bottom_toolbar)
     print(f"You said: {text}")
@@ -995,6 +995,42 @@ input mode.
     prompt(">", cursor=CursorShape.BLINKING_UNDERLINE)
     prompt(">", cursor=CursorShape.BLINKING_BEAM)
     prompt(">", cursor=ModalCursorShapeConfig())
+
+
+Adding a frame
+--------------
+
+A frame can be displayed around the input by passing ``show_frame=True`` as a
+parameter. The color of the frame can be chosen by styling the ``frame.border``
+element:
+
+.. code:: python
+
+    from prompt_toolkit import prompt
+    from prompt_toolkit.styles import Style
+
+    style = Style.from_dict(
+        {
+            "frame.border": "#884444",
+        }
+    )
+
+    answer = prompt("Say something > ", style=style, show_frame=True)
+    print(f"You said: {answer}")
+
+.. image:: ../images/prompt-with-frame.png
+
+It is also possible to pass a :ref:`filter <filters>`, for instance
+``show_frame=~is_done``, so that the frame is only displayed when asking for
+input, but hidden once the input is accepted.
+
+.. code:: python
+
+    from prompt_toolkit import prompt
+    from prompt_toolkit.filters import is_done
+
+    answer = prompt("Say something > ", show_frame=~is_done)
+    print(f"You said: {answer}")
 
 
 Prompt in an `asyncio` application

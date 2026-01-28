@@ -69,6 +69,7 @@ Table of contents
    pages/upgrading/index
    pages/printing_text
    pages/asking_for_input
+   pages/asking_for_a_choice
    pages/dialogs
    pages/progress_bars
    pages/full_screen_apps

@@ -37,7 +37,7 @@ been assigned, through the `key_binding` decorator.::
 
 from __future__ import annotations
 
-from abc import ABCMeta, abstractmethod, abstractproperty
+from abc import ABCMeta, abstractmethod
 from inspect import isawaitable
 from typing import (
     TYPE_CHECKING,
@@ -155,7 +155,8 @@ class KeyBindingsBase(metaclass=ABCMeta):
     Interface for a KeyBindings.
     """
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def _version(self) -> Hashable:
         """
         For cache invalidation. - This should increase every time that
@@ -186,7 +187,8 @@ class KeyBindingsBase(metaclass=ABCMeta):
         """
         return []
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def bindings(self) -> list[Binding]:
         """
         List of `Binding` objects.

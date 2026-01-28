@@ -1600,27 +1600,31 @@ def _restore_sigint_from_ctypes() -> Generator[None, None, None]:
     try:
         from ctypes import c_int, c_void_p, pythonapi
     except ImportError:
-        # Any of the above imports don't exist? Don't do anything here.
-        yield
-        return
+        have_ctypes_signal = False
+    else:
+        # GraalPy has the functions, but they don't work
+        have_ctypes_signal = sys.implementation.name != "graalpy"
 
-    # PyOS_sighandler_t PyOS_getsig(int i)
-    pythonapi.PyOS_getsig.restype = c_void_p
-    pythonapi.PyOS_getsig.argtypes = (c_int,)
+    if have_ctypes_signal:
+        # PyOS_sighandler_t PyOS_getsig(int i)
+        pythonapi.PyOS_getsig.restype = c_void_p
+        pythonapi.PyOS_getsig.argtypes = (c_int,)
 
-    # PyOS_sighandler_t PyOS_setsig(int i, PyOS_sighandler_t h)
-    pythonapi.PyOS_setsig.restype = c_void_p
-    pythonapi.PyOS_setsig.argtypes = (
-        c_int,
-        c_void_p,
-    )
+        # PyOS_sighandler_t PyOS_setsig(int i, PyOS_sighandler_t h)
+        pythonapi.PyOS_setsig.restype = c_void_p
+        pythonapi.PyOS_setsig.argtypes = (
+            c_int,
+            c_void_p,
+        )
 
     sigint = signal.getsignal(signal.SIGINT)
-    sigint_os = pythonapi.PyOS_getsig(signal.SIGINT)
+    if have_ctypes_signal:
+        sigint_os = pythonapi.PyOS_getsig(signal.SIGINT)
 
     try:
         yield
     finally:
         if sigint is not None:
             signal.signal(signal.SIGINT, sigint)
-        pythonapi.PyOS_setsig(signal.SIGINT, sigint_os)
+        if have_ctypes_signal:
+            pythonapi.PyOS_setsig(signal.SIGINT, sigint_os)

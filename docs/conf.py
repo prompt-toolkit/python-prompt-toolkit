@@ -54,9 +54,9 @@ copyright = "2014-2024, Jonathan Slenders"
 # ---------------------------------------------------------------------
 # Versions.
 # The short X.Y version.
-version = "3.0.51"
+version = "3.0.52"
 # The full version, including alpha/beta/rc tags.
-release = "3.0.51"
+release = "3.0.52"
 # The URL pattern to match releases to ReadTheDocs URLs.
 docs_fmt_url = "https://python-prompt-toolkit.readthedocs.io/en/{release}/"
 # The list of releases to include in the dropdown.
@@ -124,9 +124,8 @@ autodoc_mock_imports = [
 html_theme = "sphinx_nefertiti"
 # html_theme_path = [sphinx_nefertiti.get_html_theme_path()]
 html_theme_options = {
-    "documentation_font": "Open Sans",
-    "monospace_font": "Ubuntu Mono",
-    "monospace_font_size": "1.1rem",
+    "monospace_font": "Ubuntu Sans Mono",
+    "monospace_font_size": "0.9rem",
     # "style" can take the following values: "blue", "indigo", "purple",
     # "pink", "red", "orange", "yellow", "green", "tail", and "default".
     "style": "blue",
@@ -135,9 +134,10 @@ html_theme_options = {
     # Fonts are customizable (and are not retrieved online).
     # https://sphinx-nefertiti.readthedocs.io/en/latest/users-guide/customization/fonts.html
     "logo": "logo_400px.png",
+    "logo_location": "sidebar",
     "logo_alt": "python-prompt-toolkit",
-    "logo_width": "36",
-    "logo_height": "36",
+    "logo_width": "270",
+    "logo_height": "270",
     "repository_url": "https://github.com/prompt-toolkit/python-prompt-toolkit",
     "repository_name": "python-prompt-toolkit",
     "current_version": "latest",

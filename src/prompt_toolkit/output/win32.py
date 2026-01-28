@@ -293,6 +293,7 @@ class Win32Output(Output):
             blink,
             reverse,
             hidden,
+            dim,
         ) = attrs
         self._hidden = bool(hidden)
 

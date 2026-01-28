@@ -34,6 +34,7 @@ jobs:
         run: |
           uvx --with . --with pytest coverage run -m pytest tests/
       - name: Type Checking
+        if: ${{ matrix.python-version != '3.8' }}
         run: |
           uvx --with . --with asyncssh mypy --strict src/ --platform win32
           uvx --with . --with asyncssh mypy --strict src/ --platform linux

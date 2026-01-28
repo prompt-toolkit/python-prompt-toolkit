@@ -54,7 +54,7 @@ class _ImmutableLineList(List[str]):
     def _error(self, *a: object, **kw: object) -> NoReturn:
         raise NotImplementedError("Attempt to modify an immutable list.")
 
-    __setitem__ = _error  # type: ignore
+    __setitem__ = _error
     append = _error
     clear = _error
     extend = _error
@@ -62,7 +62,7 @@ class _ImmutableLineList(List[str]):
     pop = _error
     remove = _error
     reverse = _error
-    sort = _error  # type: ignore
+    sort = _error
 
 
 class _DocumentCache:
@@ -457,12 +457,11 @@ class Document:
     def _is_word_before_cursor_complete(
         self, WORD: bool = False, pattern: Pattern[str] | None = None
     ) -> bool:
+        if self.text_before_cursor == "" or self.text_before_cursor[-1:].isspace():
+            return True
         if pattern:
             return self.find_start_of_previous_word(WORD=WORD, pattern=pattern) is None
-        else:
-            return (
-                self.text_before_cursor == "" or self.text_before_cursor[-1:].isspace()
-            )
+        return False
 
     def find_start_of_previous_word(
         self, count: int = 1, WORD: bool = False, pattern: Pattern[str] | None = None

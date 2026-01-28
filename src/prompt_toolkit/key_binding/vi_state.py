@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Callable
 from prompt_toolkit.clipboard import ClipboardData
 
 if TYPE_CHECKING:
-    from .key_bindings.vi import TextObject
+    from .bindings.vi import TextObject
     from .key_processor import KeyPressEvent
 
 __all__ = [

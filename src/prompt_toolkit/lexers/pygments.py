@@ -104,7 +104,7 @@ class RegexSync(SyntaxSync):
             return lineno, 0
 
     @classmethod
-    def from_pygments_lexer_cls(cls, lexer_cls: PygmentsLexerCls) -> RegexSync:
+    def from_pygments_lexer_cls(cls, lexer_cls: type[PygmentsLexerCls]) -> RegexSync:
         """
         Create a :class:`.RegexSync` instance for this Pygments lexer class.
         """

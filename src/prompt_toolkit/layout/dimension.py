@@ -99,10 +99,6 @@ class Dimension:
         """
         return cls.exact(amount=0)
 
-    def is_zero(self) -> bool:
-        "True if this `Dimension` represents a zero size."
-        return self.preferred == 0 or self.max == 0
-
     def __repr__(self) -> str:
         fields = []
         if self.min_specified:
@@ -139,11 +135,11 @@ def max_layout_dimensions(dimensions: list[Dimension]) -> Dimension:
     # If all dimensions are size zero. Return zero.
     # (This is important for HSplit/VSplit, to report the right values to their
     # parent when all children are invisible.)
-    if all(d.is_zero() for d in dimensions):
-        return dimensions[0]
+    if all(d.preferred == 0 and d.max == 0 for d in dimensions):
+        return Dimension.zero()
 
     # Ignore empty dimensions. (They should not reduce the size of others.)
-    dimensions = [d for d in dimensions if not d.is_zero()]
+    dimensions = [d for d in dimensions if d.preferred != 0 and d.max != 0]
 
     if dimensions:
         # Take the highest minimum dimension.
