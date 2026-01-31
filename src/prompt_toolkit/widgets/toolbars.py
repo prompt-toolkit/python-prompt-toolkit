@@ -40,7 +40,7 @@ from prompt_toolkit.layout.controls import (
     UIContent,
     UIControl,
 )
-from prompt_toolkit.layout.dimension import Dimension
+from prompt_toolkit.layout.dimension import AnyDimension, Dimension
 from prompt_toolkit.layout.processors import BeforeInput
 from prompt_toolkit.lexers import SimpleLexer
 from prompt_toolkit.search import SearchDirection
@@ -342,7 +342,9 @@ class CompletionsToolbar:
 
 
 class ValidationToolbar:
-    def __init__(self, show_position: bool = False) -> None:
+    def __init__(
+        self, show_position: bool = False, height: AnyDimension = 1
+    ) -> None:
         def get_formatted_text() -> StyleAndTextTuples:
             buff = get_app().current_buffer
 
@@ -363,7 +365,7 @@ class ValidationToolbar:
         self.control = FormattedTextControl(get_formatted_text)
 
         self.container = ConditionalContainer(
-            content=Window(self.control, height=1), filter=has_validation_error
+            content=Window(self.control, height=height), filter=has_validation_error
         )
 
     def __pt_container__(self) -> Container:
