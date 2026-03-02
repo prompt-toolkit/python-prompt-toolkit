@@ -923,7 +923,7 @@ class Application(Generic[_AppResult]):
             thread, and that loop will also be closed when the background
             thread terminates. When this is used, it's especially important to
             make sure that all asyncio background tasks are managed through
-            `get_appp().create_background_task()`, so that unfinished tasks are
+            `get_app().create_background_task()`, so that unfinished tasks are
             properly cancelled before the event loop is closed. This is used
             for instance in ptpython.
         :param handle_sigint: Handle SIGINT signal. Call the key binding for
