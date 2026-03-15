@@ -25,21 +25,21 @@ jobs:
       - name: Code formatting
         if: ${{ matrix.python-version == '3.14' }}
         run: |
-          uvx ruff check .
-          uvx ruff format --check .
+          uv run ruff check .
+          uv run ruff format --check .
       - name: Typos
         if: ${{ matrix.python-version == '3.14' }}
         run: |
-          uvx typos .
+          uv run typos .
       - name: Unit test
         run: |
-          uvx --with . --with pytest coverage run -m pytest tests/
+          uv run coverage run -m pytest tests/
       - name: Type Checking
         if: ${{ matrix.python-version != '3.10' }}
         run: |
-          uvx --with . --with asyncssh mypy --strict src/ --platform win32
-          uvx --with . --with asyncssh mypy --strict src/ --platform linux
-          uvx --with . --with asyncssh mypy --strict src/ --platform darwin
+          uv run mypy --strict src/ --platform win32
+          uv run mypy --strict src/ --platform linux
+          uv run mypy --strict src/ --platform darwin
       - name: Validate README.md
         if: ${{ matrix.python-version == '3.14' }}
         # Ensure that the README renders correctly (required for uploading to PyPI).
@@ -48,7 +48,7 @@ jobs:
           python -m readme_renderer README.rst > /dev/null
       - name: Run codecov
         run: |
-          uvx codecov
+          uv run codecov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         env:

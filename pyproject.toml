@@ -36,6 +36,7 @@ docs = [
 dev = [
     "asyncssh",
     "codecov>=2.1",
+    "coverage>=7.11",
     "ipython>=8.23",
     "mypy>=1.13",
     "prek>=0.3.5",
@@ -43,6 +44,7 @@ dev = [
     "pytest-cov>=5",
     "pytest-mock>=3.14.1",
     "ruff>=0.14.10",
+    "typos",
 ]
 quality = ["prek>=0.3.5"]
 test = [
@@ -173,3 +175,6 @@ warn_unused_ignores = true
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
+
+[tool.uv]
+default-groups = ["build", "dev"]
