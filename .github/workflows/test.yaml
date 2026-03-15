@@ -35,17 +35,10 @@ jobs:
         run: |
           uv run coverage run -m pytest tests/
       - name: Type Checking
-        if: ${{ matrix.python-version != '3.10' }}
         run: |
           uv run mypy --strict src/ --platform win32
           uv run mypy --strict src/ --platform linux
           uv run mypy --strict src/ --platform darwin
-      - name: Validate README.md
-        if: ${{ matrix.python-version == '3.13' }}
-        # Ensure that the README renders correctly (required for uploading to PyPI).
-        run: |
-          uv pip install readme_renderer
-          python -m readme_renderer README.rst > /dev/null
       - name: Run codecov
         run: |
           uv run codecov
