@@ -35,6 +35,9 @@ coverage.xml
 # Translations
 *.mo
 
+# Makefile - for those who like that workflow
+Makefile
+
 # Mr Developer
 .mr.developer.cfg
 .project
