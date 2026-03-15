@@ -46,6 +46,9 @@ docs/_build
 # pycharm metadata
 .idea
 
+# uv
+uv.lock
+
 # vscode metadata
 .vscode
 
