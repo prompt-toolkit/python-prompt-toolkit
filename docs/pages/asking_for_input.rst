@@ -178,7 +178,7 @@ Suppose we'd like to use a Pygments style, for instance
     tango_style = style_from_pygments_cls(TangoStyle)
 
     text = prompt(
-        "Enter HTML: ", 
+        "Enter HTML: ",
         lexer=PygmentsLexer(HtmlLexer),
         style=tango_style
     )

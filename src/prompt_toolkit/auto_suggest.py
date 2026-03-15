@@ -15,7 +15,8 @@ then wrap the :class:`.AutoSuggest` instance into a
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import TYPE_CHECKING, Callable
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from prompt_toolkit.eventloop import run_in_executor_with_context
 

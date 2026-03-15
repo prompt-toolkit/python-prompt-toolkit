@@ -3,7 +3,7 @@ name: test
 on:
   push: # any branch
   pull_request:
-    branches: [master]
+    branches: [main]
 
 env:
   FORCE_COLOR: 1
@@ -14,7 +14,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version:
+          ["3.10", "3.11", "3.12", "3.13", "3.14", "3.14t", "3.15-dev"]
 
     steps:
       - uses: actions/checkout@v4
@@ -22,25 +23,25 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Code formatting
-        if: ${{ matrix.python-version == '3.13' }}
+        if: ${{ matrix.python-version == '3.14' }}
         run: |
           uvx ruff check .
           uvx ruff format --check .
       - name: Typos
-        if: ${{ matrix.python-version == '3.13' }}
+        if: ${{ matrix.python-version == '3.14' }}
         run: |
           uvx typos .
       - name: Unit test
         run: |
           uvx --with . --with pytest coverage run -m pytest tests/
       - name: Type Checking
-        if: ${{ matrix.python-version != '3.8' }}
+        if: ${{ matrix.python-version != '3.10' }}
         run: |
           uvx --with . --with asyncssh mypy --strict src/ --platform win32
           uvx --with . --with asyncssh mypy --strict src/ --platform linux
           uvx --with . --with asyncssh mypy --strict src/ --platform darwin
       - name: Validate README.md
-        if: ${{ matrix.python-version == '3.13' }}
+        if: ${{ matrix.python-version == '3.14' }}
         # Ensure that the README renders correctly (required for uploading to PyPI).
         run: |
           uv pip install readme_renderer

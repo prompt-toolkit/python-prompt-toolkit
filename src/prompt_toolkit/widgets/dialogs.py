@@ -4,7 +4,7 @@ Collection of reusable components for building full screen applications.
 
 from __future__ import annotations
 
-from typing import Sequence
+from collections.abc import Sequence
 
 from prompt_toolkit.filters import has_completions, has_focus
 from prompt_toolkit.formatted_text import AnyFormattedText

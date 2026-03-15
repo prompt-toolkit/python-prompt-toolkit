@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Callable, Union
+from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.key_binding.vi_state import InputMode
@@ -47,7 +48,7 @@ class CursorShapeConfig(ABC):
         """
 
 
-AnyCursorShapeConfig = Union[CursorShape, CursorShapeConfig, None]
+AnyCursorShapeConfig = CursorShape | CursorShapeConfig | None
 
 
 class SimpleCursorShapeConfig(CursorShapeConfig):

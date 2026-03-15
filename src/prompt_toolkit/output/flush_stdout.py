@@ -3,8 +3,9 @@ from __future__ import annotations
 import errno
 import os
 import sys
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import IO, Iterator, TextIO
+from typing import IO, TextIO
 
 __all__ = ["flush_stdout"]
 

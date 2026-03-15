@@ -13,8 +13,8 @@ formatting.
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
+from collections.abc import Callable, Hashable, Sequence
 from colorsys import hls_to_rgb, rgb_to_hls
-from typing import Callable, Hashable, Sequence
 
 from prompt_toolkit.cache import memoized
 from prompt_toolkit.filters import FilterOrBool, to_filter

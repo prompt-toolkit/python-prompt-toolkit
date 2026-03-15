@@ -42,8 +42,10 @@ Partial matches are possible::
 from __future__ import annotations
 
 import re
-from typing import Callable, Dict, Iterable, Iterator, Pattern, TypeVar, overload
-from typing import Match as RegexMatch
+from collections.abc import Callable, Iterable, Iterator
+from re import Match as RegexMatch
+from re import Pattern
+from typing import TypeVar, overload
 
 from .regex_parser import (
     AnyNode,
@@ -65,7 +67,7 @@ __all__ = ["compile", "Match", "Variables"]
 # expression has been matched.)
 _INVALID_TRAILING_INPUT = "invalid_trailing"
 
-EscapeFuncDict = Dict[str, Callable[[str], str]]
+EscapeFuncDict = dict[str, Callable[[str], str]]
 
 
 class _CompiledGrammar:

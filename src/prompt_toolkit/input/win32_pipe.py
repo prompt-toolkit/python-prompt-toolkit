@@ -4,10 +4,10 @@ import sys
 
 assert sys.platform == "win32"
 
-from contextlib import contextmanager
+from collections.abc import Callable, Iterator
+from contextlib import AbstractContextManager, contextmanager
 from ctypes import windll
 from ctypes.wintypes import HANDLE
-from typing import Callable, ContextManager, Iterator
 
 from prompt_toolkit.eventloop.win32 import create_win32_event
 
@@ -81,14 +81,16 @@ class Win32PipeInput(_Win32InputBase, PipeInput):
         "The handle used for registering this pipe in the event loop."
         return self._event
 
-    def attach(self, input_ready_callback: Callable[[], None]) -> ContextManager[None]:
+    def attach(
+        self, input_ready_callback: Callable[[], None]
+    ) -> AbstractContextManager[None]:
         """
         Return a context manager that makes this input active in the current
         event loop.
         """
         return attach_win32_input(self, input_ready_callback)
 
-    def detach(self) -> ContextManager[None]:
+    def detach(self) -> AbstractContextManager[None]:
         """
         Return a context manager that makes sure that this input is not active
         in the current event loop.
@@ -138,10 +140,10 @@ class Win32PipeInput(_Win32InputBase, PipeInput):
         # Set event.
         windll.kernel32.SetEvent(self._event)
 
-    def raw_mode(self) -> ContextManager[None]:
+    def raw_mode(self) -> AbstractContextManager[None]:
         return DummyContext()
 
-    def cooked_mode(self) -> ContextManager[None]:
+    def cooked_mode(self) -> AbstractContextManager[None]:
         return DummyContext()
 
     def close(self) -> None:

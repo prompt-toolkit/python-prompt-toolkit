@@ -16,7 +16,7 @@ async def main() -> None:
     done = asyncio.Event()
     input = create_input()
 
-    def keys_ready():
+    def keys_ready() -> None:
         for key_press in input.read_keys():
             print(key_press)
 

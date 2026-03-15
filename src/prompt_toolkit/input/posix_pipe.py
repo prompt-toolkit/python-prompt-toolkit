@@ -5,8 +5,9 @@ import sys
 assert sys.platform != "win32"
 
 import os
-from contextlib import contextmanager
-from typing import ContextManager, Iterator, TextIO, cast
+from collections.abc import Iterator
+from contextlib import AbstractContextManager, contextmanager
+from typing import TextIO, cast
 
 from ..utils import DummyContext
 from .base import PipeInput
@@ -97,10 +98,10 @@ class PosixPipeInput(Vt100Input, PipeInput):
         "Send text to the input."
         os.write(self.pipe.write_fd, data.encode("utf-8"))
 
-    def raw_mode(self) -> ContextManager[None]:
+    def raw_mode(self) -> AbstractContextManager[None]:
         return DummyContext()
 
-    def cooked_mode(self) -> ContextManager[None]:
+    def cooked_mode(self) -> AbstractContextManager[None]:
         return DummyContext()
 
     def close(self) -> None:

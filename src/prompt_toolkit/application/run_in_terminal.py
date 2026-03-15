@@ -5,8 +5,9 @@ Tools for running functions on the terminal above the current application or pro
 from __future__ import annotations
 
 from asyncio import Future, ensure_future
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Awaitable, Callable, TypeVar
+from typing import TypeVar
 
 from prompt_toolkit.eventloop import run_in_executor_with_context
 

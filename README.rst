@@ -141,4 +141,3 @@ Special thanks to
 
 .. |Codecov| image:: https://codecov.io/gh/prompt-toolkit/python-prompt-toolkit/branch/master/graphs/badge.svg?style=flat
     :target: https://codecov.io/gh/prompt-toolkit/python-prompt-toolkit/
-

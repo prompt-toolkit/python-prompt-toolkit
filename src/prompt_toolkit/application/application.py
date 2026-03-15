@@ -16,18 +16,13 @@ from asyncio import (
     get_running_loop,
     sleep,
 )
+from collections.abc import Callable, Coroutine, Generator, Hashable, Iterable, Iterator
 from contextlib import ExitStack, contextmanager
 from subprocess import Popen
 from traceback import format_tb
 from typing import (
     Any,
-    Callable,
-    Coroutine,
-    Generator,
     Generic,
-    Hashable,
-    Iterable,
-    Iterator,
     TypeVar,
     cast,
     overload,
@@ -731,9 +726,11 @@ class Application(Generic[_AppResult]):
                         f.set_exception(EOFError)
 
             # Enter raw mode, attach input and attach WINCH event handler.
-            with self.input.raw_mode(), self.input.attach(
-                read_from_input_in_context
-            ), attach_winch_signal_handler(self._on_resize):
+            with (
+                self.input.raw_mode(),
+                self.input.attach(read_from_input_in_context),
+                attach_winch_signal_handler(self._on_resize),
+            ):
                 # Draw UI.
                 self._request_absolute_cursor_position()
                 self._redraw()

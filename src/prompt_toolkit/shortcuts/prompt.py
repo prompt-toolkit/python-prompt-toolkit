@@ -28,10 +28,11 @@ Example::
 from __future__ import annotations
 
 from asyncio import get_running_loop
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from enum import Enum
 from functools import partial
-from typing import TYPE_CHECKING, Callable, Generic, Iterator, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Generic, TypeVar, Union, cast
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app
@@ -520,17 +521,21 @@ class PromptSession(Generic[_T]):
             # enable_history_search is enabled. (First convert to Filter,
             # to avoid doing bitwise operations on bool objects.)
             complete_while_typing=Condition(
-                lambda: is_true(self.complete_while_typing)
-                and not is_true(self.enable_history_search)
-                and not self.complete_style == CompleteStyle.READLINE_LIKE
+                lambda: (
+                    is_true(self.complete_while_typing)
+                    and not is_true(self.enable_history_search)
+                    and not self.complete_style == CompleteStyle.READLINE_LIKE
+                )
             ),
             validate_while_typing=dyncond("validate_while_typing"),
             enable_history_search=dyncond("enable_history_search"),
             validator=DynamicValidator(lambda: self.validator),
             completer=DynamicCompleter(
-                lambda: ThreadedCompleter(self.completer)
-                if self.complete_in_thread and self.completer
-                else self.completer
+                lambda: (
+                    ThreadedCompleter(self.completer)
+                    if self.complete_in_thread and self.completer
+                    else self.completer
+                )
             ),
             history=self.history,
             auto_suggest=DynamicAutoSuggest(lambda: self.auto_suggest),
@@ -654,15 +659,19 @@ class PromptSession(Generic[_T]):
                     ConditionalContainer(
                         default_buffer_window,
                         Condition(
-                            lambda: get_app().layout.current_control
-                            != search_buffer_control
+                            lambda: (
+                                get_app().layout.current_control
+                                != search_buffer_control
+                            )
                         ),
                     ),
                     ConditionalContainer(
                         Window(search_buffer_control),
                         Condition(
-                            lambda: get_app().layout.current_control
-                            == search_buffer_control
+                            lambda: (
+                                get_app().layout.current_control
+                                == search_buffer_control
+                            )
                         ),
                     ),
                 ]

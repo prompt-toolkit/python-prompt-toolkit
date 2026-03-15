@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import Callable, Hashable
 from functools import wraps
-from typing import Any, Callable, Dict, Generic, Hashable, Tuple, TypeVar, cast
+from typing import Any, Generic, TypeVar, cast
 
 __all__ = [
     "SimpleCache",
@@ -58,11 +59,11 @@ class SimpleCache(Generic[_T, _U]):
         self._keys = deque()
 
 
-_K = TypeVar("_K", bound=Tuple[Hashable, ...])
+_K = TypeVar("_K", bound=tuple[Hashable, ...])
 _V = TypeVar("_V")
 
 
-class FastDictCache(Dict[_K, _V]):
+class FastDictCache(dict[_K, _V]):
     """
     Fast, lightweight cache which keeps at most `size` items.
     It will discard the oldest items in the cache first.

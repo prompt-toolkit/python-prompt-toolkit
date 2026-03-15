@@ -12,7 +12,8 @@ from __future__ import annotations
 import io
 import os
 import sys
-from typing import Callable, Dict, Hashable, Iterable, Sequence, TextIO, Tuple
+from collections.abc import Callable, Hashable, Iterable, Sequence
+from typing import TextIO
 
 from prompt_toolkit.cursor_shapes import CursorShape
 from prompt_toolkit.data_structures import Size
@@ -139,7 +140,7 @@ def _get_closest_ansi_color(r: int, g: int, b: int, exclude: Sequence[str] = ())
     return match
 
 
-_ColorCodeAndName = Tuple[int, str]
+_ColorCodeAndName = tuple[int, str]
 
 
 class _16ColorCache:
@@ -183,7 +184,7 @@ class _16ColorCache:
         return code, match
 
 
-class _256ColorCache(Dict[Tuple[int, int, int], int]):
+class _256ColorCache(dict[tuple[int, int, int], int]):
     """
     Cache which maps (r, g, b) tuples to 256 colors.
     """
@@ -254,7 +255,7 @@ _16_bg_colors = _16ColorCache(bg=True)
 _256_colors = _256ColorCache()
 
 
-class _EscapeCodeCache(Dict[Attrs, str]):
+class _EscapeCodeCache(dict[Attrs, str]):
     """
     Cache for VT100 escape codes. It maps
     (fgcolor, bgcolor, bold, underline, strike, italic, blink, reverse, hidden, dim) tuples to VT100

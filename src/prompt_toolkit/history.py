@@ -15,7 +15,8 @@ import os
 import threading
 from abc import ABCMeta, abstractmethod
 from asyncio import get_running_loop
-from typing import AsyncGenerator, Iterable, Sequence, Union
+from collections.abc import AsyncGenerator, Iterable, Sequence
+from typing import Union
 
 __all__ = [
     "History",

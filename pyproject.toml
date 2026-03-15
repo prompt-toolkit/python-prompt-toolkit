@@ -1,7 +1,7 @@
 [project]
 name = "prompt_toolkit"
-version = "3.0.52"  # Also update in `docs/conf.py`.
-description="Library for building powerful interactive command lines in Python"
+version = "3.0.52" # Also update in `docs/conf.py`.
+description = "Library for building powerful interactive command lines in Python"
 readme = "README.rst"
 authors = [{ name = "Jonathan Slenders" }]
 classifiers = [
@@ -10,19 +10,47 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: Free Threading :: 3 - Stable",
     "Programming Language :: Python",
     "Topic :: Software Development",
 ]
-requires-python = ">=3.8"
-dependencies = [
-    "wcwidth>=0.1.4",
+requires-python = ">=3.10"
+dependencies = ["wcwidth>=0.1.4"]
+
+[dependency-groups]
+build = ["build>=1", "setuptools>=68"]
+docs = [
+    "sphinx>=8,<9",
+    "wcwidth",
+    "pyperclip",
+    "sphinx_copybutton>=0.5.2,<1.0.0",
+    "sphinx-nefertiti>=0.8.8",
+]
+dev = [
+    "asyncssh",
+    "codecov>=2.1",
+    "ipython>=8.23",
+    "mypy>=1.13",
+    "prek>=0.3.5",
+    "pytest>=8.1.1",
+    "pytest-cov>=5",
+    "pytest-mock>=3.14.1",
+    "ruff>=0.14.10",
+]
+quality = ["prek>=0.3.5"]
+test = [
+    "codecov>=2.1",
+    "coverage>=7.11",
+    "pytest>=8.1.1",
+    "pytest-cov>=5",
+    "pytest-mock>=3.14.1",
 ]
 
 [project.urls]
@@ -30,38 +58,52 @@ Homepage = "https://github.com/prompt-toolkit/python-prompt-toolkit"
 Documentation = "https://python-prompt-toolkit.readthedocs.io/en/stable/"
 
 [tool.ruff]
-target-version = "py37"
+target-version = "py310"
 lint.select = [
-    "E",  # pycodestyle errors
-    "W",  # pycodestyle warnings
-    "F",  # pyflakes
-    "C",  # flake8-comprehensions
-    "T",  # Print.
-    "I",  # isort
+    "E", # pycodestyle errors
+    "W", # pycodestyle warnings
+    "F", # pyflakes
+    "C", # flake8-comprehensions
+    "T", # Print.
+    "I", # isort
     # "B",  # flake8-bugbear
-    "UP",  # pyupgrade
-    "RUF100",  # unused-noqa
-    "Q", # quotes
+    "UP",     # pyupgrade
+    "RUF100", # unused-noqa
+    "Q",      # quotes
 ]
 lint.ignore = [
-    "E501",  # Line too long, handled by black
-    "C901",  # Too complex
-    "E731",  # Assign lambda.
+    "E501", # Line too long, handled by black
+    "C901", # Too complex
+    "E731", # Assign lambda.
     "E402", # Module level import not at the top.
     "E741", # Ambiguous variable name.
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"examples/*" = ["UP031", "T201"]  # Print allowed in examples.
-"src/prompt_toolkit/application/application.py" = ["T100", "T201", "F821"]  # pdb and print allowed.
-"src/prompt_toolkit/contrib/telnet/server.py" = ["T201"]  # Print allowed.
-"src/prompt_toolkit/key_binding/bindings/named_commands.py" = ["T201"]  # Print allowed.
-"src/prompt_toolkit/shortcuts/progress_bar/base.py" = ["T201"]  # Print allowed.
-"tools/*" = ["T201"]  # Print allowed.
-"src/prompt_toolkit/filters/__init__.py" = ["F403", "F405"]  # Possibly undefined due to star import.
-"src/prompt_toolkit/filters/cli.py" = ["F403", "F405"]  # Possibly undefined due to star import.
-"src/prompt_toolkit/shortcuts/progress_bar/formatters.py" = ["UP031"] # %-style formatting.
-"src/*" = ["UP031", "UP032"]  # f-strings instead of format calls.
+"examples/*" = ["UP031", "T201"] # Print allowed in examples.
+"src/prompt_toolkit/application/application.py" = [
+    "T100",
+    "T201",
+    "F821",
+] # pdb and print allowed.
+"src/prompt_toolkit/contrib/telnet/server.py" = ["T201"] # Print allowed.
+"src/prompt_toolkit/key_binding/bindings/named_commands.py" = [
+    "T201",
+] # Print allowed.
+"src/prompt_toolkit/shortcuts/progress_bar/base.py" = ["T201"] # Print allowed.
+"tools/*" = ["T201"] # Print allowed.
+"src/prompt_toolkit/filters/__init__.py" = [
+    "F403",
+    "F405",
+] # Possibly undefined due to star import.
+"src/prompt_toolkit/filters/cli.py" = [
+    "F403",
+    "F405",
+] # Possibly undefined due to star import.
+"src/prompt_toolkit/shortcuts/progress_bar/formatters.py" = [
+    "UP031",
+] # %-style formatting.
+"src/*" = ["UP031", "UP032"] # f-strings instead of format calls.
 
 [tool.ruff.lint.isort]
 known-first-party = ["prompt_toolkit"]
@@ -79,7 +121,7 @@ extend-ignore-re = [
     "ret",
     "rouble",
     "x1b\\[4m",
-    "Vertica",  # Database.
+    "Vertica",    # Database.
     # Deliberate spelling mistakes in autocorrection.py
     "wolrd",
     "impotr",
@@ -88,7 +130,7 @@ extend-ignore-re = [
     "varius",
 ]
 
-locale = 'en-us'  # US English.
+locale = 'en-us' # US English.
 
 [tool.typos.files]
 extend-exclude = [
@@ -108,6 +150,16 @@ disallow_subclassing_any = true
 disallow_untyped_calls = true
 disallow_untyped_decorators = true
 disallow_untyped_defs = true
+exclude = [
+    "^.git/",
+    "^.venv/",
+    "^build/",    # .build directory
+    "^docs/",     # docs directory
+    "^dist/",
+    "^examples/", # examples directory
+    "^tests/",    # tests directory
+]
+files = ['.']
 ignore_missing_imports = true
 no_implicit_optional = true
 no_implicit_reexport = true

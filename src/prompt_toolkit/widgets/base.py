@@ -15,8 +15,9 @@ container object.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from functools import partial
-from typing import Callable, Generic, Sequence, TypeVar
+from typing import Generic, TypeVar
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.auto_suggest import AutoSuggest, DynamicAutoSuggest
