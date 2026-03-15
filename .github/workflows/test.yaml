@@ -44,7 +44,7 @@ jobs:
         if: ${{ matrix.python-version == '3.14' }}
         # Ensure that the README renders correctly (required for uploading to PyPI).
         run: |
-          uv pip install readme_renderer
+          uv pip install readme-renderer
           python -m readme_renderer README.rst > /dev/null
       - name: Run codecov
         run: |
