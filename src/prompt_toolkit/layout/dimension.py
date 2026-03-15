@@ -6,7 +6,7 @@ dimensions for containers and controls.
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 __all__ = [
     "Dimension",
@@ -171,7 +171,7 @@ def max_layout_dimensions(dimensions: list[Dimension]) -> Dimension:
 
 
 # Anything that can be converted to a dimension
-AnyDimension = None | int | Dimension | Callable[[], Any]
+AnyDimension = None | int | Dimension | Callable[[], "AnyDimension"]
 
 
 def to_dimension(value: AnyDimension) -> Dimension:

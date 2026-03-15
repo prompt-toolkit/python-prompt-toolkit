@@ -14,6 +14,7 @@ def _count_prompt_session_instances() -> int:
     return len([obj for obj in objects if isinstance(obj, PromptSession)])
 
 
+# This test used to fail in GitHub CI, probably due to GC differences.
 def test_prompt_session_memory_leak() -> None:
     before_count = _count_prompt_session_instances()
 

@@ -53,9 +53,7 @@ from .screen import _CHAR_CACHE, Screen, WritePosition
 from .utils import explode_text_fragments
 
 if TYPE_CHECKING:
-    from typing import TypeGuard
-
-    from typing_extensions import Protocol
+    from typing import Protocol, TypeGuard
 
     from prompt_toolkit.key_binding.key_bindings import NotImplementedOrNone
 
