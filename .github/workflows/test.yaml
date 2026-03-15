@@ -41,10 +41,10 @@ jobs:
           uv run mypy --strict src/ --platform linux
           uv run mypy --strict src/ --platform darwin
       - name: Validate README.md
-        if: ${{ matrix.python-version == '3.14' }}
+        if: ${{ matrix.python-version == '3.13' }}
         # Ensure that the README renders correctly (required for uploading to PyPI).
         run: |
-          uv pip install readme-renderer
+          uv pip install readme_renderer
           python -m readme_renderer README.rst > /dev/null
       - name: Run codecov
         run: |
