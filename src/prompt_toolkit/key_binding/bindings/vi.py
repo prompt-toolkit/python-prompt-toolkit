@@ -776,11 +776,16 @@ def load_vi_bindings() -> KeyBindingsBase:
         """
         Paste after
         """
+        old_buffer_text = event.current_buffer.text
         event.current_buffer.paste_clipboard_data(
             event.app.clipboard.get_data(),
             count=event.arg,
             paste_mode=PasteMode.VI_AFTER,
         )
+        if not old_buffer_text and event.current_buffer.text.startswith("\n"):
+            # Special case: when pasting into an empty buffer, remove the
+            # leading newline that gets added by the VI_AFTER paste mode.
+            event.current_buffer.text = event.current_buffer.text[1:]
 
     @handle("P", filter=vi_navigation_mode)
     def _paste_before(event: E) -> None:
