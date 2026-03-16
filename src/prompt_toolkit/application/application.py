@@ -289,7 +289,7 @@ class Application(Generic[_AppResult]):
         #: after "\x1b". This little timer will consider "\x1b" to be escape if
         #: nothing did follow in this time span.
         #: This seems to work like the `ttimeoutlen` option in Vim.
-        self.ttimeoutlen = 0.5  # Seconds.
+        self.ttimeoutlen = 0.05  # Seconds.
 
         #: Like Vim's `timeoutlen` option. This can be `None` or a float.  For
         #: instance, suppose that we have a key binding AB and a second key
