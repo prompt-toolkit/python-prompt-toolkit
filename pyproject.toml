@@ -46,6 +46,15 @@ dev = [
     "typos",
 ]
 
+[project.optional-dependencies]
+"llm" = [
+      # additional dependencies needed to use LLM auto-suggesters and completers
+      "langchain",
+      "langchain_core",
+      "langchain-openai",
+      "PyEnchant"
+]
+
 [project.urls]
 Homepage = "https://github.com/prompt-toolkit/python-prompt-toolkit"
 Documentation = "https://python-prompt-toolkit.readthedocs.io/en/stable/"
