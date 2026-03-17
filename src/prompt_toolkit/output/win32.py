@@ -5,9 +5,10 @@ import sys
 assert sys.platform == "win32"
 
 import os
+from collections.abc import Callable
 from ctypes import ArgumentError, byref, c_char, c_long, c_uint, c_ulong, pointer
 from ctypes.wintypes import DWORD, HANDLE
-from typing import Callable, TextIO, TypeVar
+from typing import TextIO, TypeVar
 
 from prompt_toolkit.cursor_shapes import CursorShape
 from prompt_toolkit.data_structures import Size

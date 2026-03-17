@@ -5,7 +5,8 @@ The base classes for the styling.
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import Callable, Hashable, NamedTuple
+from collections.abc import Callable, Hashable
+from typing import NamedTuple
 
 __all__ = [
     "Attrs",

@@ -84,7 +84,7 @@ a key press), it will send that to the the appropriate handler, like for
 instance, a key binding.
 
 When :func:`~prompt_toolkit.application.Application.run()` is called, the event
-loop will run until the application is done. An application will quit when 
+loop will run until the application is done. An application will quit when
 :func:`~prompt_toolkit.application.Application.exit()` is called.
 
 
@@ -311,7 +311,7 @@ the key handler:
         Pressing Ctrl-Q will exit the user interface.
 
         Setting a return value means: quit the event loop that drives the user
-        interface and return this value from the `Application.run()` call. 
+        interface and return this value from the `Application.run()` call.
         """
         event.app.exit()
 

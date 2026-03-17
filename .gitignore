@@ -30,9 +30,13 @@ pip-log.txt
 .tox
 nosetests.xml
 .pytest_cache
+coverage.xml
 
 # Translations
 *.mo
+
+# Makefile - for those who like that workflow
+Makefile
 
 # Mr Developer
 .mr.developer.cfg
@@ -44,6 +48,9 @@ docs/_build
 
 # pycharm metadata
 .idea
+
+# uv
+uv.lock
 
 # vscode metadata
 .vscode

@@ -6,8 +6,9 @@ from __future__ import annotations
 
 import itertools
 import re
+from collections.abc import Hashable
 from enum import Enum
-from typing import Hashable, TypeVar
+from typing import TypeVar
 
 from prompt_toolkit.cache import SimpleCache
 

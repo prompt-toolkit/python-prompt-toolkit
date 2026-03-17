@@ -39,6 +39,10 @@ def set_dummy_app():
             input=pipe_input,
         )
 
+        def create_background_task(coroutine, **kw):
+            coroutine.close()
+            return None
+
         # Don't start background tasks for these tests. The `KeyProcessor`
         # wants to create a background task for flushing keys. We can ignore it
         # here for these tests.
@@ -46,7 +50,7 @@ def set_dummy_app():
         # the `Application` should pass its task group to the constructor of
         # `KeyProcessor`. That way, it doesn't have to do a lookup using
         # `get_app()`.
-        app.create_background_task = lambda *_, **kw: None
+        app.create_background_task = create_background_task
 
         with set_app(app):
             yield

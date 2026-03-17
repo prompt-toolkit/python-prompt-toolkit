@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import codecs
 import string
+from collections.abc import Callable, Iterable
 from enum import Enum
 from itertools import accumulate
-from typing import Callable, Iterable, Tuple, TypeVar
+from typing import TypeVar
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import Buffer, indent, reshape_text, unindent
@@ -422,7 +423,7 @@ def load_vi_bindings() -> KeyBindingsBase:
     # (Note: Always take the navigation bindings in read-only mode, even when
     #  ViState says different.)
 
-    TransformFunction = Tuple[Tuple[str, ...], Filter, Callable[[str], str]]
+    TransformFunction = tuple[tuple[str, ...], Filter, Callable[[str], str]]
 
     vi_transform_functions: list[TransformFunction] = [
         # Rot 13 transformation

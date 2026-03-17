@@ -3,7 +3,7 @@ name: test
 on:
   push: # any branch
   pull_request:
-    branches: [master]
+    branches: [main]
 
 env:
   FORCE_COLOR: 1
@@ -14,41 +14,35 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version:
+          ["3.10", "3.11", "3.12", "3.13", "3.14", "3.14t"]
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v6.0.2
+      - uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ matrix.python-version }}
       - name: Code formatting
-        if: ${{ matrix.python-version == '3.13' }}
+        if: ${{ matrix.python-version == '3.14' }}
         run: |
-          uvx ruff check .
-          uvx ruff format --check .
+          uv run ruff check .
+          uv run ruff format --check .
       - name: Typos
-        if: ${{ matrix.python-version == '3.13' }}
+        if: ${{ matrix.python-version == '3.14' }}
         run: |
-          uvx typos .
+          uv run typos .
       - name: Unit test
         run: |
-          uvx --with . --with pytest coverage run -m pytest tests/
+          uv run coverage run -m pytest tests/
       - name: Type Checking
-        if: ${{ matrix.python-version != '3.8' }}
         run: |
-          uvx --with . --with asyncssh mypy --strict src/ --platform win32
-          uvx --with . --with asyncssh mypy --strict src/ --platform linux
-          uvx --with . --with asyncssh mypy --strict src/ --platform darwin
-      - name: Validate README.md
-        if: ${{ matrix.python-version == '3.13' }}
-        # Ensure that the README renders correctly (required for uploading to PyPI).
-        run: |
-          uv pip install readme_renderer
-          python -m readme_renderer README.rst > /dev/null
+          uv run mypy --strict src/ --platform win32
+          uv run mypy --strict src/ --platform linux
+          uv run mypy --strict src/ --platform darwin
       - name: Run codecov
         run: |
-          uvx codecov
+          uv run codecov
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

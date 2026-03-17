@@ -8,7 +8,7 @@ Inspired by `Twisted.conch.telnet`.
 from __future__ import annotations
 
 import struct
-from typing import Callable, Generator
+from collections.abc import Callable, Generator
 
 from .log import logger
 

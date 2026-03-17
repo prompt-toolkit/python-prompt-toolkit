@@ -6,7 +6,7 @@ Input validation for a `Buffer`.
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import Callable
+from collections.abc import Callable
 
 from prompt_toolkit.eventloop import run_in_executor_with_context
 

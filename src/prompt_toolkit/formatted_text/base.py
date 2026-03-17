@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Iterable, List, Tuple, Union, cast
+from collections.abc import Callable, Iterable
+from typing import TYPE_CHECKING, Union, cast
 
 from prompt_toolkit.mouse_events import MouseEvent
 
@@ -21,16 +22,17 @@ __all__ = [
     "FormattedText",
 ]
 
-OneStyleAndTextTuple = Union[
-    Tuple[str, str], Tuple[str, str, Callable[[MouseEvent], "NotImplementedOrNone"]]
-]
+OneStyleAndTextTuple = (
+    tuple[str, str] | tuple[str, str, Callable[[MouseEvent], "NotImplementedOrNone"]]
+)
+
 
 # List of (style, text) tuples.
-StyleAndTextTuples = List[OneStyleAndTextTuple]
+StyleAndTextTuples = list[OneStyleAndTextTuple]
 
 
 if TYPE_CHECKING:
-    from typing_extensions import TypeGuard
+    from typing import TypeGuard
 
     class MagicFormattedText(Protocol):
         """
@@ -83,8 +85,7 @@ def to_formatted_text(
         result = [("", f"{value}")]
     else:
         raise ValueError(
-            "No formatted text. Expecting a unicode object, "
-            f"HTML, ANSI or a FormattedText instance. Got {value!r}"
+            f"No formatted text. Expecting a unicode object, HTML, ANSI or a FormattedText instance. Got {value!r}"
         )
 
     # Apply extra style.

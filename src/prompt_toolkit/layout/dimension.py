@@ -5,7 +5,8 @@ dimensions for containers and controls.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Union
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 __all__ = [
     "Dimension",
@@ -18,7 +19,7 @@ __all__ = [
 ]
 
 if TYPE_CHECKING:
-    from typing_extensions import TypeGuard
+    from typing import TypeGuard
 
 
 class Dimension:
@@ -169,14 +170,8 @@ def max_layout_dimensions(dimensions: list[Dimension]) -> Dimension:
         return Dimension()
 
 
-# Anything that can be converted to a dimension.
-AnyDimension = Union[
-    None,  # None is a valid dimension that will fit anything.
-    int,
-    Dimension,
-    # Callable[[], 'AnyDimension']  # Recursive definition not supported by mypy.
-    Callable[[], Any],
-]
+# Anything that can be converted to a dimension
+AnyDimension = None | int | Dimension | Callable[[], "AnyDimension"]
 
 
 def to_dimension(value: AnyDimension) -> Dimension:

@@ -5,7 +5,7 @@ Parser for VT100 input stream.
 from __future__ import annotations
 
 import re
-from typing import Callable, Dict, Generator
+from collections.abc import Callable, Generator
 
 from ..key_binding.key_processor import KeyPress
 from ..keys import Keys
@@ -39,7 +39,7 @@ class _Flush:
     pass
 
 
-class _IsPrefixOfLongerMatchCache(Dict[str, bool]):
+class _IsPrefixOfLongerMatchCache(dict[str, bool]):
     """
     Dictionary that maps input sequences to a boolean indicating whether there is
     any key that start with this characters.

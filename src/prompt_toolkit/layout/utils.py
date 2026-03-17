@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterable, List, TypeVar, cast, overload
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, TypeVar, cast, overload
 
 from prompt_toolkit.formatted_text.base import OneStyleAndTextTuple
 
@@ -14,7 +15,7 @@ __all__ = [
 _T = TypeVar("_T", bound=OneStyleAndTextTuple)
 
 
-class _ExplodedList(List[_T]):
+class _ExplodedList(list[_T]):
     """
     Wrapper around a list, that marks it as 'exploded'.
 
@@ -52,7 +53,7 @@ class _ExplodedList(List[_T]):
             int_index = index.__index__()
             index = slice(int_index, int_index + 1)
         if isinstance(value, tuple):  # In case of `OneStyleAndTextTuple`.
-            value = cast("List[_T]", [value])
+            value = cast("list[_T]", [value])
 
         super().__setitem__(index, explode_text_fragments(value))
 

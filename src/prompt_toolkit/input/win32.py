@@ -4,7 +4,7 @@ import os
 import sys
 from abc import abstractmethod
 from asyncio import get_running_loop
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 
 from ..utils import SPHINX_AUTODOC_RUNNING
 
@@ -16,9 +16,10 @@ if not SPHINX_AUTODOC_RUNNING:
     import msvcrt
     from ctypes import windll
 
+from collections.abc import Callable, Iterable, Iterator
 from ctypes import Array, byref, pointer
 from ctypes.wintypes import DWORD, HANDLE
-from typing import Callable, ContextManager, Iterable, Iterator, TextIO
+from typing import TextIO
 
 from prompt_toolkit.eventloop import run_in_executor_with_context
 from prompt_toolkit.eventloop.win32 import create_win32_event, wait_for_handles
@@ -87,14 +88,16 @@ class Win32Input(_Win32InputBase):
         else:
             self.console_input_reader = ConsoleInputReader()
 
-    def attach(self, input_ready_callback: Callable[[], None]) -> ContextManager[None]:
+    def attach(
+        self, input_ready_callback: Callable[[], None]
+    ) -> AbstractContextManager[None]:
         """
         Return a context manager that makes this input active in the current
         event loop.
         """
         return attach_win32_input(self, input_ready_callback)
 
-    def detach(self) -> ContextManager[None]:
+    def detach(self) -> AbstractContextManager[None]:
         """
         Return a context manager that makes sure that this input is not active
         in the current event loop.
@@ -111,12 +114,12 @@ class Win32Input(_Win32InputBase):
     def closed(self) -> bool:
         return False
 
-    def raw_mode(self) -> ContextManager[None]:
+    def raw_mode(self) -> AbstractContextManager[None]:
         return raw_mode(
             use_win10_virtual_terminal_input=self._use_virtual_terminal_input
         )
 
-    def cooked_mode(self) -> ContextManager[None]:
+    def cooked_mode(self) -> AbstractContextManager[None]:
         return cooked_mode()
 
     def fileno(self) -> int:

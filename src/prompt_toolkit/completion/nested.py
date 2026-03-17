@@ -4,7 +4,8 @@ Nestedcompleter for completion of hierarchical data structures.
 
 from __future__ import annotations
 
-from typing import Any, Iterable, Mapping, Set, Union
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 from prompt_toolkit.completion import CompleteEvent, Completer, Completion
 from prompt_toolkit.completion.word_completer import WordCompleter
@@ -13,7 +14,7 @@ from prompt_toolkit.document import Document
 __all__ = ["NestedCompleter"]
 
 # NestedDict = Mapping[str, Union['NestedDict', Set[str], None, Completer]]
-NestedDict = Mapping[str, Union[Any, Set[str], None, Completer]]
+NestedDict = Mapping[str, Any | set[str] | None | Completer]
 
 
 class NestedCompleter(Completer):

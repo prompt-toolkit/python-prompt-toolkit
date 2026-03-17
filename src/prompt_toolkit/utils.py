@@ -5,14 +5,11 @@ import signal
 import sys
 import threading
 from collections import deque
+from collections.abc import Callable, Generator
+from contextlib import AbstractContextManager
 from typing import (
-    Callable,
-    ContextManager,
-    Dict,
-    Generator,
     Generic,
     TypeVar,
-    Union,
 )
 
 from wcwidth import wcwidth
@@ -112,7 +109,7 @@ class Event(Generic[_Sender]):
         return self
 
 
-class DummyContext(ContextManager[None]):
+class DummyContext(AbstractContextManager[None]):
     """
     (contextlib.nested is not available on Py3)
     """
@@ -124,7 +121,7 @@ class DummyContext(ContextManager[None]):
         pass
 
 
-class _CharSizesCache(Dict[str, int]):
+class _CharSizesCache(dict[str, int]):
     """
     Cache for wcwidth sizes.
     """
@@ -303,7 +300,7 @@ def to_int(value: Callable[[], int] | int) -> int:
         return int(value)
 
 
-AnyFloat = Union[Callable[[], float], float]
+AnyFloat = Callable[[], float] | float
 
 
 def to_float(value: AnyFloat) -> float:

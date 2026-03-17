@@ -7,7 +7,8 @@ from __future__ import annotations
 import asyncio
 import traceback
 from asyncio import get_running_loop
-from typing import Any, Callable, Coroutine, TextIO, cast
+from collections.abc import Callable, Coroutine
+from typing import Any, TextIO, cast
 
 import asyncssh
 

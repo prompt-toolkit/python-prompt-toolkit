@@ -185,7 +185,7 @@ The style is determined as follows:
 
 - Then we go through this style from left to right, starting from the default
   style. Inline styling is applied directly.
-  
+
   If we come across a class name, then we generate all combinations of the
   class names that we collected so far (this one and all class names to the
   left), and for each combination which includes the new class name, we look

@@ -98,14 +98,14 @@ each providing the return value (first element) and the displayed value (second 
 
     from prompt_toolkit.shortcuts import radiolist_dialog
 
-    result = radiolist_dialog( 
-        title="RadioList dialog", 
-        text="Which breakfast would you like ?", 
-        values=[ 
-            ("breakfast1", "Eggs and beacon"), 
-            ("breakfast2", "French breakfast"), 
-            ("breakfast3", "Equestrian breakfast") 
-        ] 
+    result = radiolist_dialog(
+        title="RadioList dialog",
+        text="Which breakfast would you like ?",
+        values=[
+            ("breakfast1", "Eggs and beacon"),
+            ("breakfast2", "French breakfast"),
+            ("breakfast3", "Equestrian breakfast")
+        ]
     ).run()
 
 
@@ -118,15 +118,15 @@ The :func:`~prompt_toolkit.shortcuts.checkboxlist_dialog` has the same usage and
 
     from prompt_toolkit.shortcuts import checkboxlist_dialog
 
-    results_array = checkboxlist_dialog( 
-        title="CheckboxList dialog", 
+    results_array = checkboxlist_dialog(
+        title="CheckboxList dialog",
         text="What would you like in your breakfast ?",
-        values=[ 
+        values=[
             ("eggs", "Eggs"),
             ("bacon", "Bacon"),
             ("croissants", "20 Croissants"),
             ("daily", "The breakfast of the day")
-        ] 
+        ]
     ).run()
 
 

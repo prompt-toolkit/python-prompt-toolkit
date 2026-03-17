@@ -8,7 +8,9 @@ import bisect
 import re
 import string
 import weakref
-from typing import Callable, Dict, Iterable, List, NoReturn, Pattern, cast
+from collections.abc import Callable, Iterable
+from re import Pattern
+from typing import NoReturn, cast
 
 from .clipboard import ClipboardData
 from .filters import vi_mode
@@ -40,12 +42,12 @@ _FIND_CURRENT_BIG_WORD_INCLUDE_TRAILING_WHITESPACE_RE = re.compile(r"^([^\s]+\s*
 # `Document` is constructed with the same text, it should have the same
 # `_DocumentCache`.)
 _text_to_document_cache: dict[str, _DocumentCache] = cast(
-    Dict[str, "_DocumentCache"],
+    dict[str, "_DocumentCache"],
     weakref.WeakValueDictionary(),  # Maps document.text to DocumentCache instance.
 )
 
 
-class _ImmutableLineList(List[str]):
+class _ImmutableLineList(list[str]):
     """
     Some protection for our 'lines' list, which is assumed to be immutable in the cache.
     (Useful for detecting obvious bugs.)

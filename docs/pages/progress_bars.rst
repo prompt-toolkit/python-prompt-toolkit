@@ -4,7 +4,7 @@ Progress bars
 =============
 
 Prompt_toolkit ships with a high level API for displaying progress bars,
-inspired by `tqdm <https://github.com/tqdm/tqdm>`_ 
+inspired by `tqdm <https://github.com/tqdm/tqdm>`_
 
 .. warning::
 

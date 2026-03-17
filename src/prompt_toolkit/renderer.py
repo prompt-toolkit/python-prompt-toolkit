@@ -7,8 +7,9 @@ from __future__ import annotations
 
 from asyncio import FIRST_COMPLETED, Future, ensure_future, sleep, wait
 from collections import deque
+from collections.abc import Callable, Hashable
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Callable, Dict, Hashable
+from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.cursor_shapes import CursorShape
@@ -267,7 +268,7 @@ class HeightIsUnknownError(Exception):
     "Information unavailable. Did not yet receive the CPR response."
 
 
-class _StyleStringToAttrsCache(Dict[str, Attrs]):
+class _StyleStringToAttrsCache(dict[str, Attrs]):
     """
     A cache structure that maps style strings to :class:`.Attr`.
     (This is an important speed up.)
@@ -289,7 +290,7 @@ class _StyleStringToAttrsCache(Dict[str, Attrs]):
         return attrs
 
 
-class _StyleStringHasStyleCache(Dict[str, bool]):
+class _StyleStringHasStyleCache(dict[str, bool]):
     """
     Cache for remember which style strings don't render the default output
     style (default fg/bg, no underline and no reverse and no blink). That way

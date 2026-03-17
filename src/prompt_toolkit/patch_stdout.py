@@ -25,8 +25,9 @@ import queue
 import sys
 import threading
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Generator, TextIO, cast
+from typing import TextIO, cast
 
 from .application import get_app_session, run_in_terminal
 from .output import Output

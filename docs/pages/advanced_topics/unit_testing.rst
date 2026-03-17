@@ -36,7 +36,7 @@ these.
     structures (like text buffers) change over time.
 
 So we programmatically feed some input to the input pipe, have the key
-bindings process the input and then test what comes out of it. 
+bindings process the input and then test what comes out of it.
 
 In the following example we use a
 :class:`~prompt_toolkit.shortcuts.PromptSession`, but the same works for any

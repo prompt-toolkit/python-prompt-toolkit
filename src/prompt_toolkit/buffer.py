@@ -14,9 +14,10 @@ import shutil
 import subprocess
 import tempfile
 from collections import deque
+from collections.abc import Callable, Coroutine, Iterable
 from enum import Enum
 from functools import wraps
-from typing import Any, Callable, Coroutine, Iterable, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 from .application.current import get_app
 from .application.run_in_terminal import run_in_terminal

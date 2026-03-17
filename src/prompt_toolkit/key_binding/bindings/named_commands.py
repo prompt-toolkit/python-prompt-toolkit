@@ -6,7 +6,8 @@ See: http://www.delorie.com/gnu/docs/readline/rlman_13.html
 
 from __future__ import annotations
 
-from typing import Callable, TypeVar, Union, cast
+from collections.abc import Callable
+from typing import TypeVar, cast
 
 from prompt_toolkit.document import Document
 from prompt_toolkit.enums import EditingMode
@@ -26,7 +27,7 @@ __all__ = [
 
 # Typing.
 _Handler = Callable[[KeyPressEvent], None]
-_HandlerOrBinding = Union[_Handler, Binding]
+_HandlerOrBinding = _Handler | Binding
 _T = TypeVar("_T", bound=_HandlerOrBinding)
 E = KeyPressEvent
 

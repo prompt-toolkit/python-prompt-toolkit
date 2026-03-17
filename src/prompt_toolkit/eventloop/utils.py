@@ -5,8 +5,9 @@ import contextvars
 import sys
 import time
 from asyncio import get_running_loop
+from collections.abc import Awaitable, Callable
 from types import TracebackType
-from typing import Any, Awaitable, Callable, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 __all__ = [
     "run_in_executor_with_context",

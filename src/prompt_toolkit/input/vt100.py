@@ -9,7 +9,9 @@ import io
 import termios
 import tty
 from asyncio import AbstractEventLoop, get_running_loop
-from typing import Callable, ContextManager, Generator, TextIO
+from collections.abc import Callable, Generator
+from contextlib import AbstractContextManager
+from typing import TextIO
 
 from ..key_binding import KeyPress
 from .base import Input
@@ -74,14 +76,16 @@ class Vt100Input(Input):
             lambda key_press: self._buffer.append(key_press)
         )
 
-    def attach(self, input_ready_callback: Callable[[], None]) -> ContextManager[None]:
+    def attach(
+        self, input_ready_callback: Callable[[], None]
+    ) -> AbstractContextManager[None]:
         """
         Return a context manager that makes this input active in the current
         event loop.
         """
         return _attached_input(self, input_ready_callback)
 
-    def detach(self) -> ContextManager[None]:
+    def detach(self) -> AbstractContextManager[None]:
         """
         Return a context manager that makes sure that this input is not active
         in the current event loop.
@@ -119,10 +123,10 @@ class Vt100Input(Input):
     def closed(self) -> bool:
         return self.stdin_reader.closed
 
-    def raw_mode(self) -> ContextManager[None]:
+    def raw_mode(self) -> AbstractContextManager[None]:
         return raw_mode(self.stdin.fileno())
 
-    def cooked_mode(self) -> ContextManager[None]:
+    def cooked_mode(self) -> AbstractContextManager[None]:
         return cooked_mode(self.stdin.fileno())
 
     def fileno(self) -> int:

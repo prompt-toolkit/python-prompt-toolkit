@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import io
 import sys
-from typing import ContextManager, TextIO
+from contextlib import AbstractContextManager
+from typing import TextIO
 
 from .base import DummyInput, Input, PipeInput
 
@@ -56,7 +57,7 @@ def create_input(stdin: TextIO | None = None, always_prefer_tty: bool = False) -
         return Vt100Input(stdin)
 
 
-def create_pipe_input() -> ContextManager[PipeInput]:
+def create_pipe_input() -> AbstractContextManager[PipeInput]:
     """
     Create an input pipe.
     This is mostly useful for unit testing.

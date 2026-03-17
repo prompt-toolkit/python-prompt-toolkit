@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import Callable, Iterable, Union
+from collections.abc import Callable, Iterable
 
 __all__ = ["Filter", "Never", "Always", "Condition", "FilterOrBool"]
 
@@ -257,4 +257,4 @@ class Condition(Filter):
 
 
 # Often used as type annotation.
-FilterOrBool = Union[Filter, bool]
+FilterOrBool = Filter | bool
