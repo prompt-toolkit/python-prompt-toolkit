@@ -80,6 +80,7 @@ class ChoiceInput(Generic[_T]):
     :param show_frame: `bool` or
         :class:`~prompt_toolkit.filters.Filter`. When True, surround the input
         with a frame.
+    :param show_numbers: Whether to show the option numbers in front of each choice.
     :param enable_interrupt: `bool` or
         :class:`~prompt_toolkit.filters.Filter`. When True, raise
         the ``interrupt_exception`` (``KeyboardInterrupt`` by default) when
@@ -99,6 +100,7 @@ class ChoiceInput(Generic[_T]):
         symbol: str = ">",
         bottom_toolbar: AnyFormattedText = None,
         show_frame: FilterOrBool = False,
+        show_numbers: bool = True,
         enable_suspend: FilterOrBool = False,
         enable_interrupt: FilterOrBool = True,
         interrupt_exception: type[BaseException] = KeyboardInterrupt,
@@ -114,6 +116,7 @@ class ChoiceInput(Generic[_T]):
         self.style = style
         self.symbol = symbol
         self.show_frame = show_frame
+        self.show_numbers = show_numbers
         self.enable_suspend = enable_suspend
         self.interrupt_exception = interrupt_exception
         self.enable_interrupt = enable_interrupt
@@ -129,7 +132,7 @@ class ChoiceInput(Generic[_T]):
             select_character=self.symbol,
             close_character="",
             show_cursor=False,
-            show_numbers=True,
+            show_numbers=self.show_numbers,
             container_style="class:input-selection",
             default_style="class:option",
             selected_style="",
