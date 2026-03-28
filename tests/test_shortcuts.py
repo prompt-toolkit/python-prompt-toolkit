@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import sys
+
+import pytest
+
 from prompt_toolkit.shortcuts import print_container
 from prompt_toolkit.shortcuts.prompt import _split_multiline_prompt
 from prompt_toolkit.widgets import Frame, TextArea
@@ -55,6 +59,11 @@ def test_split_multiline_prompt():
     assert first_input_line() == [("class:testclass", "a"), ("class:testclass", "b")]
 
 
+# Test fails on Windows due to win32.NoConsoleScreenBufferError.
+@pytest.mark.skipif(
+    sys.platform.startswith("win"),
+    reason="Fails in GitHug CI due to win32.NoConsoleScreenBufferError",
+)
 def test_print_container(tmpdir):
     # Call `print_container`, render to a dummy file.
     f = tmpdir.join("output")

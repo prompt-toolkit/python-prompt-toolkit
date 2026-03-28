@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import gc
+import sys
+
+import pytest
 
 from prompt_toolkit.shortcuts.prompt import PromptSession
 
@@ -15,6 +18,11 @@ def _count_prompt_session_instances() -> int:
 
 
 # This test used to fail in GitHub CI, probably due to GC differences.
+# Still fails on Windows due to win32.NoConsoleScreenBufferError.
+@pytest.mark.skipif(
+    sys.platform.startswith("win"),
+    reason="Fails in GitHug CI due to win32.NoConsoleScreenBufferError",
+)
 def test_prompt_session_memory_leak() -> None:
     before_count = _count_prompt_session_instances()
 
