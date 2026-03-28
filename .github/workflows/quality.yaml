@@ -31,6 +31,6 @@ jobs:
         with:
           python-version: "3.14"
       - name: Install the project
-        run: uv sync --group quality
+        run: uv sync --group dev
       - name: Run prek
         run: uv run prek run -a --show-diff-on-failure
