@@ -1,6 +1,18 @@
 CHANGELOG
 =========
 
+3.0.53: 2026-0-TBD
+------------------
+
+New features:
+- Lazy loading of `__version__`
+
+Fixes:
+- Fix get_word_before_cursor behavior
+- Fix various typing issues
+- Set missing minimal requirement on `wcwidth`
+- Fix vt100 6x6x6 color cube range and missing grayscale shades (232, 254-255)
+
 3.0.52: 2025-08-27
 ------------------
 

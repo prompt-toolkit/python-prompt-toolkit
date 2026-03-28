@@ -1,0 +1,36 @@
+# For documentation on GitHub Actions Workflows, see:
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+# This workflow runs the pre-commit checks using prek on pull requests and pushes to the main branch.
+# Specifically it runs ruff autoformatting and linting, typos for spellchecking, and other
+# pre-commit hooks defined in .pre-commit-config.yaml.
+name: Quality
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0 # Needed for setuptools_scm to work correctly
+
+      - uses: actions/cache@v5
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Install uv and set the python version
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.14"
+      - name: Install the project
+        run: uv sync --group quality
+      - name: Run prek
+        run: uv run prek run -a --show-diff-on-failure

@@ -1,48 +1,37 @@
-name: test
+# This workflow runs pytest unit tests and code coverage reporting on push and pull requests to the main branch.
+# It tests against multiple Python versions and operating systemsto ensure compatibility. The workflow uses Codecov
+# for coverage  reporting, and the results are uploaded to Codecov using a secret token.
+name: Test
 
 on:
-  push: # any branch
-  pull_request:
+  pull_request: # any branch
+    types: [opened, synchronize, reopened]
+  push:
     branches: [main]
 
 env:
   FORCE_COLOR: 1
 
 jobs:
-  test-ubuntu:
-    runs-on: ubuntu-latest
+  test:
     strategy:
       fail-fast: false
       matrix:
-        python-version:
-          ["3.10", "3.11", "3.12", "3.13", "3.14", "3.14t"]
-
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.14t", "3.15-dev"]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Code formatting
-        if: ${{ matrix.python-version == '3.14' }}
-        run: |
-          uv run ruff check .
-          uv run ruff format --check .
-      - name: Typos
-        if: ${{ matrix.python-version == '3.14' }}
-        run: |
-          uv run typos .
       - name: Unit test
         run: |
           uv run coverage run -m pytest tests/
-      - name: Type Checking
-        run: |
-          uv run mypy --strict src/ --platform win32
-          uv run mypy --strict src/ --platform linux
-          uv run mypy --strict src/ --platform darwin
       - name: Run codecov
         run: |
           uv run codecov
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
