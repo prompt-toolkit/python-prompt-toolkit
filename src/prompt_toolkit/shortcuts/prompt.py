@@ -1508,7 +1508,7 @@ prompt.__doc__ = PromptSession.prompt.__doc__
 
 
 def create_confirm_session(
-    message: AnyFormattedText, suffix: str = " (y/n) "
+    message: AnyFormattedText, suffix: str = " (y/n) ", default: bool = False
 ) -> PromptSession[bool]:
     """
     Create a `PromptSession` object for the 'confirm' function.
@@ -1527,6 +1527,11 @@ def create_confirm_session(
         session.default_buffer.text = "n"
         event.app.exit(result=False)
 
+    @bindings.add(Keys.Enter)
+    def newline(event: E) -> None:
+        session.default_buffer.text = "y" if default else "n"
+        event.app.exit(result=default)
+
     @bindings.add(Keys.Any)
     def _(event: E) -> None:
         "Disallow inserting other text."
@@ -1539,9 +1544,13 @@ def create_confirm_session(
     return session
 
 
-def confirm(message: AnyFormattedText = "Confirm?", suffix: str = " (y/n) ") -> bool:
+def confirm(
+    message: AnyFormattedText = "Confirm?",
+    suffix: str = " (y/n) ",
+    default: bool = False,
+) -> bool:
     """
     Display a confirmation prompt that returns True/False.
     """
-    session = create_confirm_session(message, suffix)
+    session = create_confirm_session(message, suffix, default)
     return session.prompt()
