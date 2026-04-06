@@ -300,7 +300,7 @@ class FileHistory(History):
         with open(self.filename, "ab") as f:
 
             def write(t: str) -> None:
-                f.write(t.encode("utf-8"))
+                f.write(t.encode("utf-8", errors="replace"))
 
             write(f"\n# {datetime.datetime.now()}\n")
             for line in string.split("\n"):
