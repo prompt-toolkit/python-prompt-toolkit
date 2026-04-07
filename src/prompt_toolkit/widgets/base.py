@@ -208,7 +208,7 @@ class TextArea:
         if input_processors is None:
             input_processors = []
 
-        # Writeable attributes.
+        # Writable attributes.
         self.completer = completer
         self.complete_while_typing = complete_while_typing
         self.lexer = lexer
