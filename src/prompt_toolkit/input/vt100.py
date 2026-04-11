@@ -167,12 +167,14 @@ def _attached_input(
 
     try:
         loop.add_reader(fd, callback_wrapper)
-    except PermissionError:
+    except (PermissionError, OSError):
         # For `EPollSelector`, adding /dev/null to the event loop will raise
         # `PermissionError` (that doesn't happen for `SelectSelector`
-        # apparently). Whenever we get a `PermissionError`, we can raise
-        # `EOFError`, because there's not more to be read anyway. `EOFError` is
-        # an exception that people expect in
+        # apparently). On macOS `KqueueSelector`, an unpollable stdin fd
+        # (e.g. detached parent, /dev/null, or otherwise non-TTY) raises
+        # `OSError [Errno 22] Invalid argument` instead. Both mean "nothing
+        # more to read here", so we surface them as `EOFError`, which is an
+        # exception people expect in
         # `prompt_toolkit.application.Application.run()`.
         # To reproduce, do: `ptpython 0< /dev/null 1< /dev/null`
         raise EOFError
