@@ -122,13 +122,16 @@ ANSI_SEQUENCES: dict[str, Keys | tuple[Keys, ...]] = {
     "\x1b[23;2~": Keys.F23,
     "\x1b[24;2~": Keys.F24,
     # --
-    # CSI 27 disambiguated modified "other" keys (xterm)
+    # CSI 27 disambiguated modified "other" keys (xterm modifyOtherKeys).
     # Ref: https://invisible-island.net/xterm/modified-keys.html
-    # These are currently unsupported, so just re-map some common ones to the
-    # unmodified versions
+    # prompt_toolkit enables this protocol at startup (see renderer.py), so
+    # terminals that support it will send these sequences for modified Enter.
+    # Shift-Enter is deliberately mapped back to plain Enter: terminals
+    # disagree about whether to escape it, so we treat both variants the
+    # same to get consistent behavior across terminals.
     "\x1b[27;2;13~": Keys.ControlM,  # Shift + Enter
-    "\x1b[27;5;13~": Keys.ControlM,  # Ctrl + Enter
-    "\x1b[27;6;13~": Keys.ControlM,  # Ctrl + Shift + Enter
+    "\x1b[27;5;13~": Keys.ControlEnter,  # Ctrl + Enter
+    "\x1b[27;6;13~": Keys.ControlShiftEnter,  # Ctrl + Shift + Enter
     # --
     # Control + function keys.
     "\x1b[1;5P": Keys.ControlF1,
