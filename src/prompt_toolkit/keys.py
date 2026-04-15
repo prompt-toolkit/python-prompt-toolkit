@@ -122,6 +122,20 @@ class Keys(str, Enum):
     ControlShiftPageDown = "c-s-pagedown"
 
     BackTab = "s-tab"  # shift + tab
+    ControlTab = "c-tab"
+    ControlShiftTab = "c-s-tab"
+
+    ControlEscape = "c-escape"
+    ControlShiftEscape = "c-s-escape"
+
+    # Modified Enter keys. Only distinguishable from plain Enter under
+    # the Kitty keyboard protocol (which prompt_toolkit pushes on
+    # startup). On terminals that don't implement Kitty, all three fold
+    # back to plain Enter so a bound shortcut there doesn't "do nothing"
+    # — it at least submits the form.
+    ControlEnter = "c-enter"
+    ControlShiftEnter = "c-s-enter"
+    ShiftEnter = "s-enter"
 
     F1 = "f1"
     F2 = "f2"
@@ -181,6 +195,7 @@ class Keys(str, Enum):
     ScrollDown = "<scroll-down>"
 
     CPRResponse = "<cursor-position-response>"
+    KittyKeyboardResponse = "<kitty-keyboard-response>"
     Vt100MouseEvent = "<vt100-mouse-event>"
     WindowsMouseEvent = "<windows-mouse-event>"
     BracketedPaste = "<bracketed-paste>"

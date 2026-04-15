@@ -8,6 +8,7 @@ from __future__ import annotations
 from asyncio import FIRST_COMPLETED, Future, ensure_future, sleep, wait
 from collections import deque
 from collections.abc import Callable, Hashable
+from contextlib import ExitStack
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
@@ -25,6 +26,8 @@ from prompt_toolkit.styles import (
     DummyStyleTransformation,
     StyleTransformation,
 )
+
+from .output.kitty_keyboard import KITTY_QUERY, kitty_keyboard_protocol
 
 if TYPE_CHECKING:
     from prompt_toolkit.application import Application
@@ -327,6 +330,14 @@ class CPR_Support(Enum):
     UNKNOWN = "UNKNOWN"
 
 
+class KittySupport(Enum):
+    "Enum: whether or not the Kitty keyboard protocol is supported."
+
+    SUPPORTED = "SUPPORTED"
+    NOT_SUPPORTED = "NOT_SUPPORTED"
+    UNKNOWN = "UNKNOWN"
+
+
 class Renderer:
     """
     Typical usage:
@@ -362,6 +373,15 @@ class Renderer:
         self._in_alternate_screen = False
         self._mouse_support_enabled = False
         self._bracketed_paste_enabled = False
+        # ExitStack holding the active kitty_keyboard_protocol context (or
+        # empty if the protocol isn't currently pushed). Using a stack
+        # instead of a manual __enter__/__exit__ pair means `close()` is
+        # a no-op when nothing is registered — no null-check needed — and
+        # an exception during `__enter__` is surfaced by the stack itself
+        # rather than leaving a half-entered CM on the renderer.
+        self._kitty_keyboard_stack: ExitStack = ExitStack()
+        self._kitty_keyboard_pushed = False
+        self.kitty_support = KittySupport.UNKNOWN
         self._cursor_key_mode_reset = False
 
         # Future set when we are waiting for a CPR flag.
@@ -420,6 +440,18 @@ class Renderer:
         if self._bracketed_paste_enabled:
             self.output.disable_bracketed_paste()
             self._bracketed_paste_enabled = False
+
+        # Pop the kitty protocol push if one is active. The ExitStack
+        # call is a no-op when the stack is empty — we don't guard here.
+        # `kitty_support` is deliberately NOT reset: tmux attach/detach
+        # (the one scenario where the underlying terminal could actually
+        # change capability) is invisible to the inner process — no
+        # signal fires, no `reset()` gets called at that boundary — so
+        # re-querying on every reset just burns a round-trip and opens a
+        # window where a confirmed-supporting terminal reads as UNKNOWN.
+        # Same pattern as `cpr_support`, which is also sticky.
+        self._kitty_keyboard_stack.close()
+        self._kitty_keyboard_pushed = False
 
         self.output.reset_cursor_shape()
         self.output.show_cursor()
@@ -609,6 +641,37 @@ class Renderer:
             self.output.enable_bracketed_paste()
             self._bracketed_paste_enabled = True
 
+        # Enable Kitty keyboard disambiguate mode and (only when we don't
+        # already know the answer) probe for support. Terminals that
+        # don't implement the protocol silently ignore both the query
+        # and the push, leaving `kitty_support` at UNKNOWN.
+        if not self._kitty_keyboard_pushed:
+            # Query first, then push. The response to `CSI ? u` reports
+            # the currently-active flags, so emitting it before the push
+            # keeps the response reflective of the terminal's pre-push
+            # state (a future version that reads the response's flags to
+            # decide whether to push at all needs this ordering). Skip
+            # the query when we already know the answer — re-asking on
+            # every render burns a round-trip and has no value: the
+            # underlying terminal doesn't change capability under us.
+            if self.kitty_support is KittySupport.UNKNOWN:
+                self.output.write_raw(KITTY_QUERY)
+            # ExitStack.enter_context takes care of the tricky part: if
+            # __enter__ raises, nothing is registered with the stack, so
+            # the later `.close()` from reset() won't try to pop a CM
+            # that was never fully pushed (which would decrement the
+            # Output's depth counter below zero and permanently corrupt
+            # it for this Output's remaining lifetime).
+            self._kitty_keyboard_stack.enter_context(
+                kitty_keyboard_protocol(self.output)
+            )
+            self._kitty_keyboard_pushed = True
+            # Flush so the query and push reach the terminal before any
+            # input arrives — otherwise the response can race the screen
+            # render's flush further down and a fast user keystroke can
+            # be processed while `kitty_support` still reads UNKNOWN.
+            self.output.flush()
+
         # Reset cursor key mode.
         if not self._cursor_key_mode_reset:
             self.output.reset_cursor_key_mode()
@@ -731,6 +794,14 @@ class Renderer:
 
         if is_done:
             self.reset()
+
+    def report_kitty_keyboard_response(self) -> None:
+        """
+        Called from the input side when a `CSI ? <flags> u` response is
+        decoded. The arrival of any response is enough to confirm the
+        protocol is implemented.
+        """
+        self.kitty_support = KittySupport.SUPPORTED
 
     def erase(self, leave_alternate_screen: bool = True) -> None:
         """

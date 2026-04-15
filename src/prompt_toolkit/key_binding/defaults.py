@@ -15,6 +15,9 @@ from prompt_toolkit.key_binding.bindings.emacs import (
     load_emacs_search_bindings,
     load_emacs_shift_selection_bindings,
 )
+from prompt_toolkit.key_binding.bindings.kitty_keyboard import (
+    load_kitty_keyboard_bindings,
+)
 from prompt_toolkit.key_binding.bindings.mouse import load_mouse_bindings
 from prompt_toolkit.key_binding.bindings.vi import (
     load_vi_bindings,
@@ -59,5 +62,6 @@ def load_key_bindings() -> KeyBindingsBase:
             # Active, even when no buffer has been focused.
             load_mouse_bindings(),
             load_cpr_bindings(),
+            load_kitty_keyboard_bindings(),
         ]
     )
