@@ -42,24 +42,22 @@ from prompt_toolkit.styles import Style
         ("\x1b[127;5u", Keys.ControlBackspace),
         ("\x1b[127;6u", Keys.ControlShiftBackspace),
         # NOTE: arrow keys, navigation block (Insert / Delete / Home /
-        # End / PageUp / PageDown), and F1–F4 intentionally do *not*
+        # End / PageUp / PageDown), and F1–F12 intentionally do *not*
         # appear here. Under flag 1 (disambiguate) — the only flag
         # prompt_toolkit pushes — the Kitty spec keeps these keys in
         # their legacy `CSI <n> ~` / `CSI <letter>` / `SS3 <letter>`
         # encoding even when modified. They travel through
         # `ANSI_SEQUENCES` (see `test_parser_routes_legacy_modified_arrow`
-        # below), not through the CSI u decoder. Codepoints 57348–57363
-        # are only ever emitted under flag 8 (report-all-as-escape);
-        # adding them back belongs with any flag-8 work, not here.
+        # below), not through the CSI u decoder. Their functional
+        # codepoints (57345–57375) would only appear under flag 8
+        # (report-all-as-escape); adding handling for them belongs
+        # with any flag-8 work, not here.
         # Ctrl + letter.
         ("\x1b[97;5u", Keys.ControlA),
         ("\x1b[111;5u", Keys.ControlO),
         ("\x1b[122;5u", Keys.ControlZ),
         # Ctrl + digit.
         ("\x1b[49;5u", Keys.Control1),
-        # F-keys.
-        ("\x1b[57364u", Keys.F1),
-        ("\x1b[57364;5u", Keys.ControlF1),
         # Ctrl + Shift + digit.
         ("\x1b[49;6u", Keys.ControlShift1),
     ],

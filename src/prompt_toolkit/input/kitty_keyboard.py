@@ -61,32 +61,27 @@ _NUMLOCK = 128
 _IGNORED_MODS = _CAPSLOCK | _NUMLOCK
 
 
-# Functional-key codes from the Kitty spec, mapped to the nearest
-# existing prompt_toolkit `Keys` value. Only keys likely to appear under
-# `disambiguate` (flag 1) are included.
+# Functional-key codes from the Kitty spec that can reach this decoder
+# under flag 1 ("disambiguate escape codes"), mapped to the nearest
+# existing prompt_toolkit `Keys` value. Everything else listed in the
+# spec's functional-key table keeps its legacy encoding under flag 1
+# and travels through `ANSI_SEQUENCES` instead:
+#
+# - Arrow keys and the navigation block (Home / End / PageUp /
+#   PageDown / Insert / Delete): legacy `CSI <letter>` / `CSI <n>~`.
+# - F1-F12: legacy `SS3 <letter>` (F1-F4) / `CSI <n>~` (F5-F12).
+# - CapsLock / ScrollLock / NumLock / PrintScreen / Pause / Menu: no
+#   legacy encoding and no matching `Keys` enum, so out of scope here.
+#
+# What remains are the four keys whose single-byte legacy encoding
+# collides with a Ctrl+letter (Enter=\r=C-m, Tab=\t=C-i, Esc=\x1b=C-[,
+# Backspace=\x7f/C-h) — those are the only gestures flag 1 actually
+# re-encodes as `CSI u`.
 _FUNCTIONAL: dict[int, Keys] = {
     13: Keys.ControlM,  # Enter
     9: Keys.ControlI,  # Tab
     27: Keys.Escape,
     127: Keys.ControlH,  # Backspace
-    # 57358 = CapsLock,
-    # 57359 = ScrollLock,
-    # 57360 = NumLock,
-    # 57361 = PrintScreen,
-    # 57362 = Pause,
-    # 57363 = Menu — no corresponding `Keys` enum, so left out of the table.
-    57364: Keys.F1,
-    57365: Keys.F2,
-    57366: Keys.F3,
-    57367: Keys.F4,
-    57368: Keys.F5,
-    57369: Keys.F6,
-    57370: Keys.F7,
-    57371: Keys.F8,
-    57372: Keys.F9,
-    57373: Keys.F10,
-    57374: Keys.F11,
-    57375: Keys.F12,
 }
 
 
@@ -214,16 +209,11 @@ def _apply_modifiers(base: Keys, ctrl: bool, shift: bool) -> Keys:
     Promote a plain functional `Keys` value to its richer Ctrl / Shift /
     Ctrl-Shift variant when prompt_toolkit has an enum for it.
 
-    `base` is one of the unmodified functional keys from `_FUNCTIONAL`
-    (Enter, Tab, Escape, arrows, navigation block, F1–F12). `ctrl` and
-    `shift` are booleans decoded from the modifier mask; the Alt bit is
-    handled one level up in `decode_csi_u`, so it is intentionally not a
+    `base` is one of the four unmodified functional keys from
+    `_FUNCTIONAL` — Enter, Tab, Escape, Backspace. `ctrl` and `shift`
+    are booleans decoded from the modifier mask; the Alt bit is handled
+    one level up in `decode_csi_u`, so it is intentionally not a
     parameter here.
-
-    When no matching richer enum exists (e.g. plain Shift-Enter,
-    Shift-Fn, Shift-Backspace), the base key is returned unchanged. The
-    caller should treat those as "modifier silently folded away" rather
-    than "decode failure".
     """
     if base is Keys.ControlM:  # Enter
         if ctrl and shift:
@@ -260,15 +250,5 @@ def _apply_modifiers(base: Keys, ctrl: bool, shift: bool) -> Keys:
         if shift:
             return Keys.ShiftBackspace
         return Keys.ControlH
-
-    # F1..F24 — Ctrl+ is a distinct enum; Shift+ is mapped to FN+12 in
-    # prompt_toolkit's existing convention (F1 → F13 etc.), but we don't
-    # emulate that here; Shift+Fn just returns Fn for now.
-    if base.value.startswith("f") and base.value[1:].isdigit():
-        if ctrl:
-            ctrl_key: Keys | None = getattr(Keys, "Control" + base.name, None)
-            if ctrl_key is not None:
-                return ctrl_key
-        return base
 
     return base

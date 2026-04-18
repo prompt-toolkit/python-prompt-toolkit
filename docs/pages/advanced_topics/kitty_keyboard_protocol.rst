@@ -57,16 +57,20 @@ Input
 ``src/prompt_toolkit/input/kitty_keyboard.py`` owns the ``CSI u``
 decoder. Covered:
 
-- Functional keys from the Kitty spec: :kbd:`enter`, :kbd:`tab`,
-  :kbd:`escape`, :kbd:`backspace`, :kbd:`f1`–:kbd:`f12`. Mapped to the
-  nearest existing ``Keys`` value with Shift / Ctrl / Ctrl-Shift
-  promotion where an enum exists. Arrow keys and the navigation block
-  (:kbd:`home` / :kbd:`end` / :kbd:`pageup` / :kbd:`pagedown` /
-  :kbd:`insert` / :kbd:`delete`) are **not** handled here — under
-  flag 1 the Kitty spec keeps them in their legacy
-  ``CSI <n> ~`` / ``CSI <letter>`` / ``SS3 <letter>`` encoding even
-  when modified, so they continue to travel through
-  ``ANSI_SEQUENCES`` (which already has the full modifier matrix).
+- The four functional keys whose single-byte legacy encoding collides
+  with a ``Ctrl+letter``: :kbd:`enter` (=``\r``=:kbd:`c-m`),
+  :kbd:`tab` (=``\t``=:kbd:`c-i`), :kbd:`escape`
+  (=``\x1b``=:kbd:`c-[`), :kbd:`backspace` (=``\x7f``/:kbd:`c-h`).
+  These are the only keys flag 1 actually re-encodes as ``CSI u``.
+  Mapped to the nearest existing ``Keys`` value with Shift / Ctrl /
+  Ctrl-Shift promotion where an enum exists. Arrow keys, the
+  navigation block (:kbd:`home` / :kbd:`end` / :kbd:`pageup` /
+  :kbd:`pagedown` / :kbd:`insert` / :kbd:`delete`), and
+  :kbd:`f1`–:kbd:`f12` are **not** handled here — under flag 1 the
+  Kitty spec keeps them in their legacy ``CSI <n> ~`` /
+  ``CSI <letter>`` / ``SS3 <letter>`` encoding even when modified, so
+  they continue to travel through ``ANSI_SEQUENCES`` (which already
+  has the full modifier matrix).
 - Printable Unicode keys with Ctrl (mapped to ``Keys.ControlX``) and
   Ctrl+Shift digits (mapped to ``Keys.ControlShift1`` …).
 - Alt as a meta prefix: emitted as ``(Keys.Escape, base_key)`` to match
