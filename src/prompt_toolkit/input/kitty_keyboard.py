@@ -90,26 +90,6 @@ _FUNCTIONAL: dict[int, Keys] = {
 }
 
 
-# Navigation keys that have distinct `Keys` values for every
-# (Shift, Ctrl, Ctrl-Shift) variant. Tuple order: (shift, ctrl, ctrl+shift).
-_NAV_MAP: dict[Keys, tuple[Keys, Keys, Keys]] = {
-    Keys.Up: (Keys.ShiftUp, Keys.ControlUp, Keys.ControlShiftUp),
-    Keys.Down: (Keys.ShiftDown, Keys.ControlDown, Keys.ControlShiftDown),
-    Keys.Left: (Keys.ShiftLeft, Keys.ControlLeft, Keys.ControlShiftLeft),
-    Keys.Right: (Keys.ShiftRight, Keys.ControlRight, Keys.ControlShiftRight),
-    Keys.Home: (Keys.ShiftHome, Keys.ControlHome, Keys.ControlShiftHome),
-    Keys.End: (Keys.ShiftEnd, Keys.ControlEnd, Keys.ControlShiftEnd),
-    Keys.PageUp: (Keys.ShiftPageUp, Keys.ControlPageUp, Keys.ControlShiftPageUp),
-    Keys.PageDown: (
-        Keys.ShiftPageDown,
-        Keys.ControlPageDown,
-        Keys.ControlShiftPageDown,
-    ),
-    Keys.Insert: (Keys.ShiftInsert, Keys.ControlInsert, Keys.ControlShiftInsert),
-    Keys.Delete: (Keys.ShiftDelete, Keys.ControlDelete, Keys.ControlShiftDelete),
-}
-
-
 _DecodeResult = Keys | str | tuple[Keys | str, ...] | None
 
 
@@ -271,16 +251,15 @@ def _apply_modifiers(base: Keys, ctrl: bool, shift: bool) -> Keys:
         if shift:
             return Keys.ShiftEscape
         return Keys.Escape
-    _ctrl_key: Keys | None
-    if base in _NAV_MAP:
-        shift_key, _ctrl_key, ctrl_shift_key = _NAV_MAP[base]
+
+    if base is Keys.ControlH:  # Backspace (keycode 127)
         if ctrl and shift:
-            return ctrl_shift_key
+            return Keys.ControlShiftBackspace
         if ctrl:
-            return _ctrl_key
+            return Keys.ControlBackspace
         if shift:
-            return shift_key
-        return base
+            return Keys.ShiftBackspace
+        return Keys.ControlH
 
     # F1..F24 — Ctrl+ is a distinct enum; Shift+ is mapped to FN+12 in
     # prompt_toolkit's existing convention (F1 → F13 etc.), but we don't

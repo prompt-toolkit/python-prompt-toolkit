@@ -37,6 +37,10 @@ from prompt_toolkit.styles import Style
         ("\x1b[27;2u", Keys.ShiftEscape),
         ("\x1b[27;5u", Keys.ControlEscape),
         ("\x1b[27;6u", Keys.ControlShiftEscape),
+        ("\x1b[127u", Keys.ControlH),  # plain Backspace
+        ("\x1b[127;2u", Keys.ShiftBackspace),
+        ("\x1b[127;5u", Keys.ControlBackspace),
+        ("\x1b[127;6u", Keys.ControlShiftBackspace),
         # NOTE: arrow keys, navigation block (Insert / Delete / Home /
         # End / PageUp / PageDown), and F1–F4 intentionally do *not*
         # appear here. Under flag 1 (disambiguate) — the only flag

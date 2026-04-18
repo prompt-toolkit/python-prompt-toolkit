@@ -662,10 +662,17 @@ class Renderer:
             # that was never fully pushed (which would decrement the
             # Output's depth counter below zero and permanently corrupt
             # it for this Output's remaining lifetime).
+            #
+            # Mark as pushed *before* entering so a raise from
+            # `kitty_keyboard_protocol` (e.g. nested flags mismatch) does
+            # not put us in an infinite retry loop — the guard at line
+            # 648 would otherwise keep re-firing the same exception on
+            # every render. The stack stays empty in that case, so the
+            # matching `close()` in `reset()` remains a no-op.
+            self._kitty_keyboard_pushed = True
             self._kitty_keyboard_stack.enter_context(
                 kitty_keyboard_protocol(self.output)
             )
-            self._kitty_keyboard_pushed = True
             # Flush so the query and push reach the terminal before any
             # input arrives — otherwise the response can race the screen
             # render's flush further down and a fast user keystroke can

@@ -58,11 +58,15 @@ Input
 decoder. Covered:
 
 - Functional keys from the Kitty spec: :kbd:`enter`, :kbd:`tab`,
-  :kbd:`escape`, :kbd:`backspace`, arrows, navigation block
-  (:kbd:`home` / :kbd:`end` / :kbd:`pageup` / :kbd:`pagedown` /
-  :kbd:`insert` / :kbd:`delete`), :kbd:`f1`–:kbd:`f12`. Mapped to the
+  :kbd:`escape`, :kbd:`backspace`, :kbd:`f1`–:kbd:`f12`. Mapped to the
   nearest existing ``Keys`` value with Shift / Ctrl / Ctrl-Shift
-  promotion where an enum exists.
+  promotion where an enum exists. Arrow keys and the navigation block
+  (:kbd:`home` / :kbd:`end` / :kbd:`pageup` / :kbd:`pagedown` /
+  :kbd:`insert` / :kbd:`delete`) are **not** handled here — under
+  flag 1 the Kitty spec keeps them in their legacy
+  ``CSI <n> ~`` / ``CSI <letter>`` / ``SS3 <letter>`` encoding even
+  when modified, so they continue to travel through
+  ``ANSI_SEQUENCES`` (which already has the full modifier matrix).
 - Printable Unicode keys with Ctrl (mapped to ``Keys.ControlX``) and
   Ctrl+Shift digits (mapped to ``Keys.ControlShift1`` …).
 - Alt as a meta prefix: emitted as ``(Keys.Escape, base_key)`` to match
@@ -120,14 +124,15 @@ New ``Keys`` values
 - ``Keys.ControlEscape``, ``Keys.ControlShiftEscape`` — Kitty-only
   modifier+Escape distinctions, alongside the pre-existing
   ``Keys.ShiftEscape``. Same non-Kitty fallback behavior.
+- ``Keys.ControlBackspace``, ``Keys.ShiftBackspace``,
+  ``Keys.ControlShiftBackspace`` — Kitty-only modifier+Backspace
+  distinctions. Unlike modified Enter, there is no safe legacy
+  fallback: on most non-Kitty terminals Ctrl-Backspace is
+  indistinguishable from plain Backspace or from Ctrl-H, so we do
+  not fold these down — a binding on one of them will simply not
+  fire on non-Kitty terminals.
 - ``Keys.KittyKeyboardResponse`` — internal sentinel for the query
   response parser-to-binding dispatch.
-
-Backspace (:kbd:`backspace`) is decoded from the Kitty functional-key
-code 127, but prompt_toolkit has no distinct ``Keys`` values for
-:kbd:`c-backspace` / :kbd:`s-backspace`, so modified Backspace silently
-folds back to plain Backspace (``Keys.ControlH``) — same behavior as on
-legacy terminals.
 
 
 What could be done in the future

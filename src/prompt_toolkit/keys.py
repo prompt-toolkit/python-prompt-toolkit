@@ -137,6 +137,17 @@ class Keys(str, Enum):
     ControlShiftEnter = "c-s-enter"
     ShiftEnter = "s-enter"
 
+    # Modified Backspace keys. Only distinguishable from plain Backspace
+    # under the Kitty keyboard protocol. On terminals that don't
+    # implement Kitty, these don't fire at all — a bound shortcut is
+    # silently inert there. Unlike modified Enter, there is no safe
+    # legacy fallback: Ctrl-Backspace on most legacy terminals is
+    # indistinguishable from plain Backspace or from Ctrl-H, so we
+    # don't fold it down to either.
+    ControlBackspace = "c-backspace"
+    ShiftBackspace = "s-backspace"
+    ControlShiftBackspace = "c-s-backspace"
+
     F1 = "f1"
     F2 = "f2"
     F3 = "f3"
