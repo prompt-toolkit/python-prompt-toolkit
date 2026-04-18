@@ -122,10 +122,17 @@ ANSI_SEQUENCES: dict[str, Keys | tuple[Keys, ...]] = {
     "\x1b[23;2~": Keys.F23,
     "\x1b[24;2~": Keys.F24,
     # --
-    # CSI 27 disambiguated modified "other" keys (xterm)
+    # xterm `modifyOtherKeys` CSI 27 disambiguated modified Enter.
+    # prompt_toolkit does not implement xterm's modifyOtherKeys protocol
+    # itself
     # Ref: https://invisible-island.net/xterm/modified-keys.html
-    # These are currently unsupported, so just re-map some common ones to the
-    # unmodified versions
+    # (we disambiguate via the Kitty keyboard protocol instead),
+    # but a user whose terminal or tmux has it enabled independently
+    # will still send these sequences. Map them all to plain Enter so
+    # modifier+Enter at least submits the form, rather than doing
+    # nothing at all. Users who want a distinct Ctrl-Enter / Shift-Enter
+    # binding need a Kitty-capable terminal, where the `CSI u` decoder
+    # produces the richer Keys.
     "\x1b[27;2;13~": Keys.ControlM,  # Shift + Enter
     "\x1b[27;5;13~": Keys.ControlM,  # Ctrl + Enter
     "\x1b[27;6;13~": Keys.ControlM,  # Ctrl + Shift + Enter

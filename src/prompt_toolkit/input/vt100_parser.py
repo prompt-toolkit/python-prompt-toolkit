@@ -10,6 +10,13 @@ from collections.abc import Callable, Generator
 from ..key_binding.key_processor import KeyPress
 from ..keys import Keys
 from .ansi_escape_sequences import ANSI_SEQUENCES
+from .kitty_keyboard import (
+    KITTY_CSI_U_PREFIX_RE,
+    KITTY_CSI_U_RE,
+    KITTY_QUERY_RESPONSE_PREFIX_RE,
+    KITTY_QUERY_RESPONSE_RE,
+    decode_csi_u,
+)
 
 __all__ = [
     "Vt100Parser",
@@ -46,10 +53,14 @@ class _IsPrefixOfLongerMatchCache(dict[str, bool]):
     """
 
     def __missing__(self, prefix: str) -> bool:
-        # (hard coded) If this could be a prefix of a CPR response, return
-        # True.
-        if _cpr_response_prefix_re.match(prefix) or _mouse_event_prefix_re.match(
-            prefix
+        # (hard coded) If this could be a prefix of a CPR response, a
+        # mouse event, or a Kitty-keyboard CSI u sequence, return True so
+        # the parser keeps reading bytes.
+        if (
+            _cpr_response_prefix_re.match(prefix)
+            or _mouse_event_prefix_re.match(prefix)
+            or KITTY_CSI_U_PREFIX_RE.match(prefix)
+            or KITTY_QUERY_RESPONSE_PREFIX_RE.match(prefix)
         ):
             result = True
         else:
@@ -101,9 +112,16 @@ class Vt100Parser:
         self._input_parser = self._input_parser_generator()
         self._input_parser.send(None)  # type: ignore
 
-    def _get_match(self, prefix: str) -> None | Keys | tuple[Keys, ...]:
+    def _get_match(
+        self, prefix: str
+    ) -> None | Keys | str | tuple[Keys | str, ...]:
         """
         Return the key (or keys) that maps to this prefix.
+
+        A single `Keys` is the common case; a `str` appears when we pass
+        through a raw character (e.g. Alt+letter decodes to the letter,
+        with `Keys.Escape` prepended by the caller); a tuple is used for
+        meta-prefixed or multi-key sequences.
         """
         # (hard coded) If we match a CPR response, return Keys.CPRResponse.
         # (This one doesn't fit in the ANSI_SEQUENCES, because it contains
@@ -114,11 +132,27 @@ class Vt100Parser:
         elif _mouse_event_re.match(prefix):
             return Keys.Vt100MouseEvent
 
+        elif KITTY_QUERY_RESPONSE_RE.match(prefix):
+            return Keys.KittyKeyboardResponse
+
         # Otherwise, use the mappings.
         try:
             return ANSI_SEQUENCES[prefix]
         except KeyError:
-            return None
+            pass
+
+        # Kitty keyboard protocol CSI u. Checked after ANSI_SEQUENCES so
+        # pre-existing static entries keep winning over the generic
+        # decoder — notably mintty's `CSI 1 ; 5 <letter>` encoding for
+        # Ctrl+digit (`\x1b[1;5u` = Ctrl-5), documented at
+        # https://github.com/mintty/mintty/wiki/Keycodes and mapped in
+        # `ansi_escape_sequences.py`.
+        if KITTY_CSI_U_RE.match(prefix):
+            decoded = decode_csi_u(prefix)
+            if decoded is not None:
+                return decoded
+
+        return None
 
     def _input_parser_generator(self) -> Generator[None, str | _Flush, None]:
         """
@@ -171,7 +205,7 @@ class Vt100Parser:
                         prefix = prefix[1:]
 
     def _call_handler(
-        self, key: str | Keys | tuple[Keys, ...], insert_text: str
+        self, key: str | Keys | tuple[Keys | str, ...], insert_text: str
     ) -> None:
         """
         Callback to handler.
