@@ -34,11 +34,13 @@ class PromptToolkitSSHSession(asyncssh.SSHServerSession):  # type: ignore
         self.app_session: AppSession | None = None
 
         # PipInput object, for sending input in the CLI.
-        # (This is something that we can use in the prompt_toolkit event loop, but still write data in manually.)
+        # (This is something that we can use in the prompt_toolkit event loop,
+        # but still write date in manually.)
         self._input: PipeInput | None = None
         self._output: Vt100_Output | None = None
 
-        # Output object. Don't render to the real stdout, but write everything in the SSH channel.
+        # Output object. Don't render to the real stdout, but write everything
+        # in the SSH channel.
         class Stdout:
             def write(s, data: str) -> None:
                 try:
@@ -85,7 +87,8 @@ class PromptToolkitSSHSession(asyncssh.SSHServerSession):  # type: ignore
             raise Exception("`_interact` called before `connection_made`.")
 
         if hasattr(self._chan, "set_line_mode") and self._chan._editor is not None:
-            # Disable the line editing provided by asyncssh. Prompt_toolkit provides the line editing.
+            # Disable the line editing provided by asyncssh. Prompt_toolkit
+            # provides the line editing.
             self._chan.set_line_mode(False)
 
         term = self._chan.get_terminal_type()
@@ -106,16 +109,12 @@ class PromptToolkitSSHSession(asyncssh.SSHServerSession):  # type: ignore
                     pass
 
                 except Exception:
-                    # Unexpected application error.
                     traceback.print_exc()
 
                 finally:
                     # Close the connection.
-                    if self._chan is not None:
-                        self._chan.close()
-
-                    if self._input is not None:
-                        self._input.close()
+                    self._chan.close()
+                    self._input.close()
 
     def terminal_size_changed(
         self, width: int, height: int, pixwidth: object, pixheight: object
@@ -184,8 +183,4 @@ class PromptToolkitSSHServer(asyncssh.SSHServer):
         return False
 
     def session_requested(self) -> PromptToolkitSSHSession:
-        return PromptToolkitSSHSession(
-            self.interact,
-            enable_cpr=self.enable_cpr,
-        )
-    
+        return PromptToolkitSSHSession(self.interact, enable_cpr=self.enable_cpr)
