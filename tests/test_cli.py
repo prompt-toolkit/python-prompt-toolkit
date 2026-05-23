@@ -5,6 +5,7 @@ input and check the result.
 
 from __future__ import annotations
 
+import sys
 from functools import partial
 
 import pytest
@@ -318,6 +319,10 @@ def test_controlx_controlx():
     assert result.text == "hello worldX"
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith("win"),
+    reason="emacs history bindings don't work on Windows",
+)
 def test_emacs_history_bindings():
     # Adding a new item to the history.
     history = _history()
@@ -348,6 +353,10 @@ def test_emacs_history_bindings():
     assert result.text == "line2 second input"
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith("win"),
+    reason="emacs history bindings don't work on Windows",
+)
 def test_emacs_reverse_search():
     history = _history()
 
