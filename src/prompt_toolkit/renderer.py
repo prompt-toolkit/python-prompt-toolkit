@@ -8,6 +8,7 @@ from __future__ import annotations
 from asyncio import FIRST_COMPLETED, Future, ensure_future, sleep, wait
 from collections import deque
 from collections.abc import Callable, Hashable
+from contextlib import AbstractContextManager, nullcontext
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
@@ -362,6 +363,8 @@ class Renderer:
         self._in_alternate_screen = False
         self._mouse_support_enabled = False
         self._bracketed_paste_enabled = False
+        self._modify_other_keys_enabled = False
+        self._modify_other_keys_cm: AbstractContextManager[None] = nullcontext()
         self._cursor_key_mode_reset = False
 
         # Future set when we are waiting for a CPR flag.
@@ -420,6 +423,14 @@ class Renderer:
         if self._bracketed_paste_enabled:
             self.output.disable_bracketed_paste()
             self._bracketed_paste_enabled = False
+
+        # Disable modifyOtherKeys, so that the terminal returns to its
+        # default Enter/Tab/Backspace behavior for the next program. Safe
+        # to call unconditionally: the initial cm is a nullcontext whose
+        # __exit__ is a no-op.
+        self._modify_other_keys_cm.__exit__(None, None, None)
+        self._modify_other_keys_cm = nullcontext()
+        self._modify_other_keys_enabled = False
 
         self.output.reset_cursor_shape()
         self.output.show_cursor()
@@ -608,6 +619,16 @@ class Renderer:
         if not self._bracketed_paste_enabled:
             self.output.enable_bracketed_paste()
             self._bracketed_paste_enabled = True
+
+        # Enable xterm modifyOtherKeys so modified keys like Ctrl-Enter are
+        # sent as distinct CSI 27 sequences. The context manager is held on
+        # the renderer and released in reset(), so the terminal is restored
+        # even on a crash path that goes through reset(). Terminals that
+        # don't support this silently ignore the request.
+        if not self._modify_other_keys_enabled:
+            self._modify_other_keys_cm = self.output.modify_other_keys()
+            self._modify_other_keys_cm.__enter__()
+            self._modify_other_keys_enabled = True
 
         # Reset cursor key mode.
         if not self._cursor_key_mode_reset:

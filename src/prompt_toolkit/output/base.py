@@ -5,7 +5,8 @@ Interface for an output.
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import TextIO
+from contextlib import contextmanager
+from typing import Iterator, TextIO
 
 from prompt_toolkit.cursor_shapes import CursorShape
 from prompt_toolkit.data_structures import Size
@@ -186,6 +187,16 @@ class Output(metaclass=ABCMeta):
 
     def disable_bracketed_paste(self) -> None:
         "For vt100 only."
+
+    @contextmanager
+    def modify_other_keys(self) -> Iterator[None]:
+        """
+        For vt100 only. Context manager that enables xterm's
+        "modifyOtherKeys" protocol (mode 2) for the duration of the block,
+        so the terminal disambiguates modified keys like Ctrl-Enter from
+        their unmodified counterparts, and restores the default on exit.
+        """
+        yield
 
     def reset_cursor_key_mode(self) -> None:
         """

@@ -1,6 +1,20 @@
 CHANGELOG
 =========
 
+Unreleased
+----------
+
+New features:
+- Distinguish Ctrl-Enter and Ctrl-Shift-Enter from plain Enter on terminals
+  that support xterm's `modifyOtherKeys` protocol. The protocol is enabled
+  automatically at startup and disabled on exit. New `Keys.ControlEnter`
+  and `Keys.ControlShiftEnter` values can be used in key bindings (e.g.
+  `@bindings.add("c-enter")`). Terminals that don't implement the protocol
+  silently keep the previous behavior of submitting on any Enter variant.
+  Shift-Enter alone is intentionally not exposed: terminals disagree about
+  whether to escape it, so it continues to behave like plain Enter for
+  consistency.
+
 3.0.52: 2025-08-27
 ------------------
 

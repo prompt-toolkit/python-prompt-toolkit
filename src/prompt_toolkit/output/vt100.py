@@ -12,7 +12,8 @@ from __future__ import annotations
 import io
 import os
 import sys
-from collections.abc import Callable, Hashable, Iterable, Sequence
+from collections.abc import Callable, Hashable, Iterable, Iterator, Sequence
+from contextlib import contextmanager
 from typing import TextIO
 
 from prompt_toolkit.cursor_shapes import CursorShape
@@ -27,6 +28,27 @@ from .flush_stdout import flush_stdout
 __all__ = [
     "Vt100_Output",
 ]
+
+
+# xterm "modifyOtherKeys" (XTMODKEYS) control sequences.
+# Ref: https://invisible-island.net/xterm/modified-keys.html
+#
+# Format: CSI > Pp ; Pv m
+#   Pp = 4 selects the `modifyOtherKeys` resource.
+#   Pv = 2 sets the resource to level 2 ("disambiguate every modifiable
+#          key"), so the terminal emits CSI 27 sequences for keys like
+#          Ctrl-Enter that would otherwise collide with control chars.
+#
+# The reset form drops the Pv parameter (`CSI > 4 m`), which asks xterm
+# to *restore* the resource to its startup value — it is NOT a force-to-0.
+# This respects a user who already configured modifyOtherKeys non-zero
+# via xterm resources or terminal preferences. (To force state 0 we
+# would write `\x1b[>4;0m` instead; we deliberately don't.)
+#
+# xterm exposes no push/pop for this resource; "reset-to-original" via
+# the Pv-less form is the closest equivalent and is what we emit on exit.
+_MODIFY_OTHER_KEYS_LEVEL_2 = "\x1b[>4;2m"
+_MODIFY_OTHER_KEYS_RESET = "\x1b[>4m"
 
 
 FG_ANSI_COLORS = {
@@ -445,6 +467,11 @@ class Vt100_Output(Output):
         # not.)
         self._cursor_visible: bool | None = None
 
+        # Reference count for `modify_other_keys`. We only emit the enable
+        # sequence on 0 -> 1 and the disable sequence on 1 -> 0, so nested
+        # or concurrent callers compose correctly.
+        self._modify_other_keys_depth = 0
+
     @classmethod
     def from_pty(
         cls,
@@ -610,6 +637,25 @@ class Vt100_Output(Output):
 
     def disable_bracketed_paste(self) -> None:
         self.write_raw("\x1b[?2004l")
+
+    @contextmanager
+    def modify_other_keys(self) -> Iterator[None]:
+        # Reference-counted: the enable sequence is emitted only on the
+        # outermost enter and the reset sequence only on the outermost
+        # exit, so nested `with` blocks (or multiple independent holders)
+        # don't fight over the terminal state. See the module-level
+        # comment on `_MODIFY_OTHER_KEYS_LEVEL_2` / `_MODIFY_OTHER_KEYS_RESET`
+        # for what the sequences mean and why "reset" is used for cleanup
+        # rather than a force-to-0.
+        if self._modify_other_keys_depth == 0:
+            self.write_raw(_MODIFY_OTHER_KEYS_LEVEL_2)
+        self._modify_other_keys_depth += 1
+        try:
+            yield
+        finally:
+            self._modify_other_keys_depth -= 1
+            if self._modify_other_keys_depth == 0:
+                self.write_raw(_MODIFY_OTHER_KEYS_RESET)
 
     def reset_cursor_key_mode(self) -> None:
         """
