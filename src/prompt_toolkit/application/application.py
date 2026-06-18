@@ -169,7 +169,7 @@ class Application(Generic[_AppResult]):
     :param output: :class:`~prompt_toolkit.output.Output` instance. (Probably
                    Vt100_Output or Win32Output.)
 
-    Usage:
+    Usage::
 
         app = Application(...)
         app.run()

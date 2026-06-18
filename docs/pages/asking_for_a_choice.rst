@@ -1,4 +1,4 @@
-.. _asking_for_input:
+.. _asking_for_a_choice:
 
 Asking for a choice
 ===================
