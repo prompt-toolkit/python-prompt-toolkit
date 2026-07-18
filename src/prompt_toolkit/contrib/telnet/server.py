@@ -177,23 +177,33 @@ class TelnetConnection:
         self.parser = TelnetProtocolParser(data_received, size_received, ttype_received)
         self.context: contextvars.Context | None = None
 
+    def _handle_incoming_data(self) -> None:
+        """Read and process data that is ready on the client socket."""
+        try:
+            data = self.conn.recv(1024)
+        except OSError as e:
+            # A reset or another socket error means that the client disconnected.
+            logger.info(
+                "Connection closed by client. {!r} {!r}: {}".format(*self.addr, e)
+            )
+            self.close()
+            return
+
+        if data:
+            self.feed(data)
+        else:
+            # Connection closed by client.
+            logger.info("Connection closed by client. {!r} {!r}".format(*self.addr))
+            self.close()
+
     async def run_application(self) -> None:
         """
         Run application.
         """
 
-        def handle_incoming_data() -> None:
-            data = self.conn.recv(1024)
-            if data:
-                self.feed(data)
-            else:
-                # Connection closed by client.
-                logger.info("Connection closed by client. {!r} {!r}".format(*self.addr))
-                self.close()
-
         # Add reader.
         loop = get_running_loop()
-        loop.add_reader(self.conn, handle_incoming_data)
+        loop.add_reader(self.conn, self._handle_incoming_data)
 
         try:
             # Wait for v100_output to be properly instantiated
