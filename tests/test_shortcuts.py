@@ -1,7 +1,14 @@
 from __future__ import annotations
 
-from prompt_toolkit.shortcuts import print_container
-from prompt_toolkit.shortcuts.prompt import _split_multiline_prompt
+from functools import partial
+from unittest.mock import patch
+
+import pytest
+
+from prompt_toolkit.input import create_pipe_input
+from prompt_toolkit.output import DummyOutput
+from prompt_toolkit.shortcuts import confirm, print_container
+from prompt_toolkit.shortcuts.prompt import PromptSession, _split_multiline_prompt
 from prompt_toolkit.widgets import Frame, TextArea
 
 
@@ -66,3 +73,18 @@ def test_print_container(tmpdir):
         text = fd.read()
         assert "Hello world" in text
         assert "Title" in text
+
+
+@pytest.mark.parametrize(
+    ("answer", "expected"),
+    [("y", True), ("Y", True), ("n", False), ("N", False)],
+)
+def test_confirm_ignores_enter_without_answer(answer, expected):
+    with create_pipe_input() as input:
+        input.send_text(f"\r{answer}")
+        session = partial(PromptSession, input=input, output=DummyOutput())
+
+        with patch("prompt_toolkit.shortcuts.prompt.PromptSession", session):
+            result = confirm()
+
+    assert result is expected
