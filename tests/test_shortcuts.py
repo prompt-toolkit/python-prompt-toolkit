@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import partial
+from importlib import import_module
 from unittest.mock import patch
 
 import pytest
@@ -83,8 +84,9 @@ def test_confirm_ignores_enter_without_answer(answer, expected):
     with create_pipe_input() as input:
         input.send_text(f"\r{answer}")
         session = partial(PromptSession, input=input, output=DummyOutput())
+        prompt_module = import_module("prompt_toolkit.shortcuts.prompt")
 
-        with patch("prompt_toolkit.shortcuts.prompt.PromptSession", session):
+        with patch.object(prompt_module, "PromptSession", session):
             result = confirm()
 
     assert result is expected
