@@ -1055,8 +1055,6 @@ class Application(Generic[_AppResult]):
         import pdb
         from types import FrameType
 
-        TraceDispatch = Callable[[FrameType, str, Any], Any]
-
         @contextmanager
         def hide_app_from_eventloop_thread() -> Generator[None, None, None]:
             """Stop application if `__breakpointhook__` is called from within
@@ -1110,9 +1108,7 @@ class Application(Generic[_AppResult]):
                 done.set()
 
         class CustomPdb(pdb.Pdb):
-            def trace_dispatch(
-                self, frame: FrameType, event: str, arg: Any
-            ) -> TraceDispatch:
+            def trace_dispatch(self, frame: FrameType, event: str, arg: Any) -> Any:
                 if app._loop_thread is None:
                     return super().trace_dispatch(frame, event, arg)
 
