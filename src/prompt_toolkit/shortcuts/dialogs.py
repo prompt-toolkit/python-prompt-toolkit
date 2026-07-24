@@ -113,7 +113,7 @@ def input_dialog(
     password: FilterOrBool = False,
     style: BaseStyle | None = None,
     default: str = "",
-) -> Application[str]:
+) -> Application[str | None]:
     """
     Display a text input box.
     Return the given text, or None when cancelled.
@@ -182,7 +182,7 @@ def radiolist_dialog(
     values: Sequence[tuple[_T, AnyFormattedText]] | None = None,
     default: _T | None = None,
     style: BaseStyle | None = None,
-) -> Application[_T]:
+) -> Application[_T | None]:
     """
     Display a simple list of element the user can choose amongst.
 
@@ -221,7 +221,7 @@ def checkboxlist_dialog(
     values: Sequence[tuple[_T, AnyFormattedText]] | None = None,
     default_values: Sequence[_T] | None = None,
     style: BaseStyle | None = None,
-) -> Application[list[_T]]:
+) -> Application[list[_T] | None]:
     """
     Display a simple list of element the user can choose multiple values amongst.
 
