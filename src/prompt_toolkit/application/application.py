@@ -416,7 +416,8 @@ class Application(Generic[_AppResult]):
 
         self._background_tasks: set[Task[None]] = set()
 
-        self.renderer.reset()
+        if self.renderer.has_rendered:
+            self.renderer.reset()
         self.key_processor.reset()
         self.layout.reset()
         self.vi_state.reset()
@@ -750,7 +751,8 @@ class Application(Generic[_AppResult]):
                         # _redraw has a good chance to fail if it calls widgets
                         # with bad code. Make sure to reset the renderer
                         # anyway.
-                        self.renderer.reset()
+                        if self.renderer.has_rendered:
+                            self.renderer.reset()
 
                         # Unset `is_running`, this ensures that possibly
                         # scheduled draws won't paint during the following
