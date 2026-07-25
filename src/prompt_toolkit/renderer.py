@@ -429,7 +429,7 @@ class Renderer:
 
         # Flush output. `disable_mouse_support` needs to write to stdout.
         self.output.flush()
-        self._has_rendered = False
+        self._has_rendered = self._in_alternate_screen
 
     @property
     def last_rendered_screen(self) -> Screen | None:
