@@ -68,10 +68,10 @@ I/O objects
 Every :class:`~prompt_toolkit.application.Application` instance requires an I/O
 object for input and output:
 
-    - An :class:`~prompt_toolkit.input.Input` instance, which is an abstraction
-      of the input stream (stdin).
-    - An :class:`~prompt_toolkit.output.Output` instance, which is an
-      abstraction of the output stream, and is called by the renderer.
+- An :class:`~prompt_toolkit.input.Input` instance, which is an abstraction
+  of the input stream (stdin).
+- An :class:`~prompt_toolkit.output.Output` instance, which is an
+  abstraction of the output stream, and is called by the renderer.
 
 Both are optional and normally not needed to pass explicitly. Usually, the
 default works fine.
