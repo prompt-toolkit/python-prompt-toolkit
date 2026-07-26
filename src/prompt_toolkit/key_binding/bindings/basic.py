@@ -132,6 +132,19 @@ def load_basic_bindings() -> KeyBindings:
     @handle("insert")
     @handle("s-insert")
     @handle("c-insert")
+    # Kitty keyboard protocol keys. When the terminal speaks the protocol,
+    # modified Enter/Tab/Escape arrive as distinct `Keys` values rather than
+    # their legacy-byte-equivalent. Without swallowing them here, an unbound
+    # c-enter / s-enter / ... would fall through to the `Keys.Any` handler
+    # below and be inserted verbatim as `"c-enter"` into the buffer.
+    @handle("c-enter")
+    @handle("s-enter")
+    @handle("c-s-enter")
+    @handle("c-tab")
+    @handle("c-s-tab")
+    @handle("c-escape")
+    @handle("s-escape")
+    @handle("c-s-escape")
     @handle("<sigint>")
     @handle(Keys.Ignore)
     def _ignore(event: E) -> None:

@@ -8,6 +8,7 @@ Advanced topics
     :maxdepth: 1
 
     key_bindings
+    kitty_keyboard_protocol
     styling
     filters
     rendering_flow

@@ -1,6 +1,22 @@
 CHANGELOG
 =========
 
+Unreleased
+----------
+
+New features:
+- Support the Kitty keyboard protocol (flag 1, "disambiguate") on
+  terminals that implement it — kitty, ghostty, wezterm, foot,
+  Alacritty, iTerm2 (with "Report modifiers using CSI u" enabled in
+  Preferences → Profiles → Keys), and others. The renderer pushes the
+  protocol on startup and pops it on exit, so modified keys like
+  Ctrl-Enter, Shift-Enter, Ctrl-Shift-Enter, and Alt-letter arrive as
+  distinct `CSI u` sequences. New key values `Keys.ControlEnter`,
+  `Keys.ControlShiftEnter`, and `Keys.ShiftEnter` can be used in
+  bindings (e.g. `@bindings.add("c-enter")`). Terminals that don't
+  implement the protocol silently ignore the push — no regression,
+  plain Enter continues to submit.
+
 3.0.52: 2025-08-27
 ------------------
 
