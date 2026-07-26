@@ -23,6 +23,7 @@ from traceback import format_tb
 from typing import (
     Any,
     Generic,
+    Literal,
     TypeVar,
     cast,
     overload,
@@ -1055,7 +1056,10 @@ class Application(Generic[_AppResult]):
         import pdb
         from types import FrameType
 
-        TraceDispatch = Callable[[FrameType, str, Any], Any]
+        TraceDispatch = Callable[
+            [FrameType, Literal["call", "line", "return", "exception", "opcode"], Any],
+            Any,
+        ]
 
         @contextmanager
         def hide_app_from_eventloop_thread() -> Generator[None, None, None]:
