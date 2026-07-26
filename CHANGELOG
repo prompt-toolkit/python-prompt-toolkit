@@ -1,6 +1,25 @@
 CHANGELOG
 =========
 
+3.0.53: 2026-07-26
+------------------
+
+Fixes:
+- Fix get_word_before_cursor behavior.
+- Fix vt100 6x6x6 color cube range and missing grayscale shades (232, 254-255).
+- Treat OSError on add_reader as EOFError (macOS kqueue).
+- Handle surrogate pairs in FileHistory.store_string.
+- Fix FuzzyWordCompleter meta_dict type hint to match WordCompleter.
+- Handle ascii decode errors in terminal type decoding of telnet protocol.
+- Update return types of dialog shortcuts to include None when cancelled.
+- Set missing minimal requirement on wcwidth.
+
+New features:
+- Lazy load `__version__`.
+- Allow to specify `show_numbers` in `ChoiceInput`.
+
+Added support for Python 3.14, 3.15, and set minimum Python version to 3.10.
+
 3.0.52: 2025-08-27
 ------------------
 
