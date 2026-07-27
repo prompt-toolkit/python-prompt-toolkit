@@ -53,6 +53,7 @@ Full screen applications:
 - `Hummingbot <https://github.com/CoinAlpha/hummingbot>`_: A Cryptocurrency Algorithmic Trading Platform
 - `git-bbb <https://github.com/MrMino/git-bbb>`_: A `git blame` browser.
 - `ass <https://github.com/mlang/ass>`_: An OpenAI Assistants API client.
+- `affe <https://affe.sh>`_: A user-friendly text editor with syntax highlighting and git integration.
 
 Libraries:
 
