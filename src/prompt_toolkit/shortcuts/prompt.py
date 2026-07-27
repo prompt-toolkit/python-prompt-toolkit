@@ -90,7 +90,7 @@ from prompt_toolkit.layout.controls import (
     FormattedTextControl,
     SearchBufferControl,
 )
-from prompt_toolkit.layout.dimension import Dimension
+from prompt_toolkit.layout.dimension import AnyDimension, Dimension
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.layout.menus import CompletionsMenu, MultiColumnCompletionsMenu
 from prompt_toolkit.layout.processors import (
@@ -308,6 +308,10 @@ class PromptSession(Generic[_T]):
         This can also be a callable that returns (formatted) text.
     :param bottom_toolbar: Formatted text or callable that returns formatted
         text to be displayed at the bottom of the screen.
+    :param bottom_toolbar_height: Height of the bottom toolbar. Can be an
+        integer, a :class:`~prompt_toolkit.layout.Dimension`, or `None` for
+        dynamic height (useful for multiline content). Defaults to
+        ``Dimension(min=1)``.
     :param prompt_continuation: Text that needs to be displayed for a multiline
         prompt continuation. This can either be formatted text or a callable
         that takes a `prompt_width`, `line_number` and `wrap_count` as input
@@ -324,6 +328,10 @@ class PromptSession(Generic[_T]):
     :param show_frame: `bool` or
         :class:`~prompt_toolkit.filters.Filter`. When True, surround the input
         with a frame.
+    :param validation_toolbar_height: Height of the validation toolbar. Can be
+        an integer, a :class:`~prompt_toolkit.layout.Dimension`, or `None` for
+        dynamic height (useful for multiline validation error messages).
+        Defaults to 1.
     :param refresh_interval: (number; in seconds) When given, refresh the UI
         every so many seconds.
     :param input: `Input` object. (Note that the preferred way to change the
@@ -374,6 +382,8 @@ class PromptSession(Generic[_T]):
         "tempfile_suffix",
         "tempfile",
         "show_frame",
+        "validation_toolbar_height",
+        "bottom_toolbar_height",
     )
 
     def __init__(
@@ -410,6 +420,7 @@ class PromptSession(Generic[_T]):
         prompt_continuation: PromptContinuationText | None = None,
         rprompt: AnyFormattedText = None,
         bottom_toolbar: AnyFormattedText = None,
+        bottom_toolbar_height: AnyDimension = Dimension(min=1),
         mouse_support: FilterOrBool = False,
         input_processors: list[Processor] | None = None,
         placeholder: AnyFormattedText | None = None,
@@ -419,6 +430,7 @@ class PromptSession(Generic[_T]):
         tempfile: str | Callable[[], str] | None = None,
         refresh_interval: float = 0,
         show_frame: FilterOrBool = False,
+        validation_toolbar_height: AnyDimension = 1,
         input: Input | None = None,
         output: Output | None = None,
         interrupt_exception: type[BaseException] = KeyboardInterrupt,
@@ -444,6 +456,7 @@ class PromptSession(Generic[_T]):
         self.is_password = is_password
         self.key_bindings = key_bindings
         self.bottom_toolbar = bottom_toolbar
+        self.bottom_toolbar_height = bottom_toolbar_height
         self.style = style
         self.style_transformation = style_transformation
         self.swap_light_and_dark_colors = swap_light_and_dark_colors
@@ -473,6 +486,7 @@ class PromptSession(Generic[_T]):
         self.tempfile_suffix = tempfile_suffix
         self.tempfile = tempfile
         self.show_frame = show_frame
+        self.validation_toolbar_height = validation_toolbar_height
         self.interrupt_exception = interrupt_exception
         self.eof_exception = eof_exception
 
@@ -593,7 +607,7 @@ class PromptSession(Generic[_T]):
                 ),
                 style="class:bottom-toolbar",
                 dont_extend_height=True,
-                height=Dimension(min=1),
+                height=self.bottom_toolbar_height,
             ),
             filter=Condition(lambda: self.bottom_toolbar is not None)
             & ~is_done
@@ -720,7 +734,10 @@ class PromptSession(Generic[_T]):
                     filter=dyncond("show_frame"),
                     alternative_content=main_input_container,
                 ),
-                ConditionalContainer(ValidationToolbar(), filter=~is_done),
+                ConditionalContainer(
+                    ValidationToolbar(height=self.validation_toolbar_height),
+                    filter=~is_done,
+                ),
                 ConditionalContainer(
                     system_toolbar, dyncond("enable_system_prompt") & ~is_done
                 ),
@@ -894,6 +911,7 @@ class PromptSession(Generic[_T]):
         is_password: bool | None = None,
         key_bindings: KeyBindingsBase | None = None,
         bottom_toolbar: AnyFormattedText | None = None,
+        bottom_toolbar_height: AnyDimension | None = None,
         style: BaseStyle | None = None,
         color_depth: ColorDepth | None = None,
         cursor: AnyCursorShapeConfig | None = None,
@@ -922,6 +940,7 @@ class PromptSession(Generic[_T]):
         tempfile_suffix: str | Callable[[], str] | None = None,
         tempfile: str | Callable[[], str] | None = None,
         show_frame: FilterOrBool | None = None,
+        validation_toolbar_height: AnyDimension | None = None,
         # Following arguments are specific to the current `prompt()` call.
         default: str | Document = "",
         accept_default: bool = False,
@@ -1048,6 +1067,10 @@ class PromptSession(Generic[_T]):
             self.tempfile = tempfile
         if show_frame is not None:
             self.show_frame = show_frame
+        if validation_toolbar_height is not None:
+            self.validation_toolbar_height = validation_toolbar_height
+        if bottom_toolbar_height is not None:
+            self.bottom_toolbar_height = bottom_toolbar_height
 
         self._add_pre_run_callables(pre_run, accept_default)
         self.default_buffer.reset(
@@ -1134,6 +1157,7 @@ class PromptSession(Generic[_T]):
         is_password: bool | None = None,
         key_bindings: KeyBindingsBase | None = None,
         bottom_toolbar: AnyFormattedText | None = None,
+        bottom_toolbar_height: AnyDimension | None = None,
         style: BaseStyle | None = None,
         color_depth: ColorDepth | None = None,
         cursor: CursorShapeConfig | None = None,
@@ -1162,6 +1186,7 @@ class PromptSession(Generic[_T]):
         tempfile_suffix: str | Callable[[], str] | None = None,
         tempfile: str | Callable[[], str] | None = None,
         show_frame: FilterOrBool = False,
+        validation_toolbar_height: AnyDimension | None = None,
         # Following arguments are specific to the current `prompt()` call.
         default: str | Document = "",
         accept_default: bool = False,
@@ -1245,6 +1270,10 @@ class PromptSession(Generic[_T]):
             self.tempfile = tempfile
         if show_frame is not None:
             self.show_frame = show_frame
+        if validation_toolbar_height is not None:
+            self.validation_toolbar_height = validation_toolbar_height
+        if bottom_toolbar_height is not None:
+            self.bottom_toolbar_height = bottom_toolbar_height
 
         self._add_pre_run_callables(pre_run, accept_default)
         self.default_buffer.reset(
@@ -1410,6 +1439,7 @@ def prompt(
     is_password: bool | None = None,
     key_bindings: KeyBindingsBase | None = None,
     bottom_toolbar: AnyFormattedText | None = None,
+    bottom_toolbar_height: AnyDimension | None = None,
     style: BaseStyle | None = None,
     color_depth: ColorDepth | None = None,
     cursor: AnyCursorShapeConfig = None,
@@ -1438,6 +1468,7 @@ def prompt(
     tempfile_suffix: str | Callable[[], str] | None = None,
     tempfile: str | Callable[[], str] | None = None,
     show_frame: FilterOrBool | None = None,
+    validation_toolbar_height: AnyDimension | None = None,
     # Following arguments are specific to the current `prompt()` call.
     default: str = "",
     accept_default: bool = False,
@@ -1466,6 +1497,7 @@ def prompt(
         is_password=is_password,
         key_bindings=key_bindings,
         bottom_toolbar=bottom_toolbar,
+        bottom_toolbar_height=bottom_toolbar_height,
         style=style,
         color_depth=color_depth,
         cursor=cursor,
@@ -1494,6 +1526,7 @@ def prompt(
         tempfile_suffix=tempfile_suffix,
         tempfile=tempfile,
         show_frame=show_frame,
+        validation_toolbar_height=validation_toolbar_height,
         default=default,
         accept_default=accept_default,
         pre_run=pre_run,
