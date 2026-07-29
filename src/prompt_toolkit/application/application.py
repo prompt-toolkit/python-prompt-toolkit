@@ -23,6 +23,7 @@ from traceback import format_tb
 from typing import (
     Any,
     Generic,
+    Literal,
     TypeVar,
     cast,
     overload,
@@ -169,7 +170,7 @@ class Application(Generic[_AppResult]):
     :param output: :class:`~prompt_toolkit.output.Output` instance. (Probably
                    Vt100_Output or Win32Output.)
 
-    Usage:
+    Usage::
 
         app = Application(...)
         app.run()
@@ -1055,6 +1056,11 @@ class Application(Generic[_AppResult]):
         import pdb
         from types import FrameType
 
+        TraceDispatch = Callable[
+            [FrameType, Literal["call", "line", "return", "exception", "opcode"], Any],
+            Any,
+        ]
+
         @contextmanager
         def hide_app_from_eventloop_thread() -> Generator[None, None, None]:
             """Stop application if `__breakpointhook__` is called from within
@@ -1108,7 +1114,9 @@ class Application(Generic[_AppResult]):
                 done.set()
 
         class CustomPdb(pdb.Pdb):
-            def trace_dispatch(self, frame: FrameType, event: str, arg: Any) -> Any:
+            def trace_dispatch(
+                self, frame: FrameType, event: str, arg: Any
+            ) -> TraceDispatch:
                 if app._loop_thread is None:
                     return super().trace_dispatch(frame, event, arg)
 

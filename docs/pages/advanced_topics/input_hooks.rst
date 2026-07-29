@@ -14,7 +14,7 @@ As a consequence, we will "trampoline" back and forth between two event loops.
 
 .. note::
 
-    This will use a :class:`~asyncio.SelectorEventLoop`, not the :class:
+    This will use a :class:`~asyncio.SelectorEventLoop`, not the
     :class:`~asyncio.ProactorEventLoop` (on Windows) due to the way the
     implementation works (contributions are welcome to make that work).
 

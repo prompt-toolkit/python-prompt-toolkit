@@ -94,7 +94,7 @@ def set_eventloop_with_inputhook(
 
 class InputHookSelector(BaseSelector):
     """
-    Usage:
+    Usage::
 
         selector = selectors.SelectSelector()
         loop = asyncio.SelectorEventLoop(InputHookSelector(selector, inputhook))
