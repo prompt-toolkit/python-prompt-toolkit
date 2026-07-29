@@ -22,6 +22,9 @@ class Keys(str, Enum):
     ShiftEscape = "s-escape"
 
     ControlAt = "c-@"  # Also Control-Space.
+    ControlEnter = "c-enter"
+    ControlShiftEnter = "c-s-enter"
+    ShiftEnter = "s-enter"
 
     ControlA = "c-a"
     ControlB = "c-b"
