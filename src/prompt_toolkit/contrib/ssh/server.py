@@ -100,10 +100,17 @@ class PromptToolkitSSHSession(asyncssh.SSHServerSession):  # type: ignore
         with create_pipe_input() as self._input:
             with create_app_session(input=self._input, output=self._output) as session:
                 self.app_session = session
+
                 try:
                     await self.interact(self)
-                except BaseException:
+
+                except asyncio.CancelledError:
+                    # Expected during disconnect/shutdown.
+                    pass
+
+                except Exception:
                     traceback.print_exc()
+
                 finally:
                     # Close the connection.
                     self._chan.close()
