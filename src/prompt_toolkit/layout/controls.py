@@ -218,7 +218,14 @@ class UIContent:
 
                     # Keep wrapping as long as the line doesn't fit.
                     # Keep adding new prefixes for every wrapped line.
-                    while text_width > width:
+                    # `slice_stop` measures text *before* the cursor. If that
+                    # text fills the width exactly, the cursor sits on the next
+                    # visual row (for example a wrapped space).
+                    while text_width > width or (
+                        slice_stop is not None
+                        and text_width > 0
+                        and text_width % width == 0
+                    ):
                         height += 1
                         text_width -= width
 
@@ -241,6 +248,9 @@ class UIContent:
                     else:
                         if remainder:
                             quotient += 1  # Like math.ceil.
+                        elif slice_stop is not None and text_width > 0:
+                            # Exact multiple: cursor is on the next visual row.
+                            quotient += 1
                         height = max(1, quotient)
 
             # Cache and return
