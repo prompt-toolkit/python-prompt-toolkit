@@ -201,6 +201,16 @@ def _output_screen_diff(
         new_max_line_len = min(width - 1, get_max_column_index(new_row))
         previous_max_line_len = min(width - 1, get_max_column_index(previous_row))
 
+        # Whether this row has any real (non-blank) content at all. A row
+        # with nothing in it still gets a max index of 0 from
+        # `get_max_column_index`, same as a row whose only visible
+        # character happens to sit at column 0, so that can't be used here
+        # to tell the two apart.
+        new_row_has_content = any(
+            cell.char != " " or style_string_has_style[cell.style]
+            for cell in new_row.values()
+        )
+
         # Loop over the columns.
         c = 0  # Column counter.
         while c <= new_max_line_len:
@@ -218,7 +228,12 @@ def _output_screen_diff(
                 if c in zero_width_escapes_row:
                     write_raw(zero_width_escapes_row[c])
 
-                output_char(new_char)
+                # Don't bother drawing a blank row just because its style
+                # differs from whatever was there before (this is what
+                # happens the first time an otherwise-empty line renders).
+                # There's nothing worth repainting.
+                if new_row_has_content:
+                    output_char(new_char)
                 current_pos = Point(x=current_pos.x + char_width, y=current_pos.y)
 
             c += char_width
