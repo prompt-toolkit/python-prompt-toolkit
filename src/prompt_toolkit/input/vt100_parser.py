@@ -188,6 +188,12 @@ class Vt100Parser:
                 self._in_bracketed_paste = True
                 self._paste_buffer = ""
             else:
+                # For character-valued ANSI_SEQUENCES entries (plain characters
+                # that are not Keys members), use the character as insert_text
+                # instead of the raw escape sequence so that self-insert
+                # bindings work correctly.
+                if not isinstance(key, Keys):
+                    insert_text = key
                 self.feed_key_callback(KeyPress(key, insert_text))
 
     def feed(self, data: str) -> None:

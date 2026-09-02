@@ -139,3 +139,26 @@ def test_cpr_response_2(processor, stream):
     assert len(processor.keys) == 2
     assert processor.keys[0].key == Keys.CPRResponse
     assert processor.keys[1].key == Keys.ControlJ
+
+
+def test_character_valued_ansi_sequence(processor, stream):
+    """Character-valued ANSI_SEQUENCES entries should use the character as data.
+
+    Regression test for: https://github.com/prompt-toolkit/python-prompt-toolkit/issues/2086
+    When a character-valued entry is added to ANSI_SEQUENCES (e.g., for xterm
+    modifyOtherKeys support), the KeyPress data should be the character, not the
+    raw escape sequence.
+    """
+    from prompt_toolkit.input.ansi_escape_sequences import ANSI_SEQUENCES
+
+    SEQ = "\x1b[27;2;78~"  # Shift+N via xterm modifyOtherKeys=2
+    ANSI_SEQUENCES[SEQ] = "N"
+
+    try:
+        stream.feed(SEQ)
+        assert len(processor.keys) == 1
+        assert processor.keys[0].key == "N"
+        # data should be the character, not the raw escape sequence
+        assert processor.keys[0].data == "N"
+    finally:
+        del ANSI_SEQUENCES[SEQ]
