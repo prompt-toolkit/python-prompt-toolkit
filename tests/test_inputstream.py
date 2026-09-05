@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+from prompt_toolkit.input.ansi_escape_sequences import ANSI_SEQUENCES
 from prompt_toolkit.input.vt100_parser import Vt100Parser
 from prompt_toolkit.keys import Keys
 
@@ -123,6 +124,20 @@ def test_invalid(processor, stream):
     assert processor.keys[0].key == Keys.Escape
     assert processor.keys[1].key == "["
     assert processor.keys[2].key == "*"
+
+
+def test_character_valued_sequence(processor, stream, monkeypatch):
+    # A sequence can be mapped to a plain character instead of a `Keys`. What
+    # gets inserted is the character, not the sequence that produced it.
+    sequence = "\x1b[27;2;78~"
+    monkeypatch.setitem(ANSI_SEQUENCES, sequence, "N")
+
+    stream.feed(sequence)
+    stream.flush()
+
+    assert len(processor.keys) == 1
+    assert processor.keys[0].key == "N"
+    assert processor.keys[0].data == "N"
 
 
 def test_cpr_response(processor, stream):
