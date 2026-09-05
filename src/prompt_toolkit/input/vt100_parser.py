@@ -187,8 +187,14 @@ class Vt100Parser:
             if key == Keys.BracketedPaste:
                 self._in_bracketed_paste = True
                 self._paste_buffer = ""
-            else:
+            elif isinstance(key, Keys):
                 self.feed_key_callback(KeyPress(key, insert_text))
+            else:
+                # An `ANSI_SEQUENCES` entry can map a sequence to a plain
+                # character instead of a `Keys`. For those, `KeyPress` data is
+                # the character itself (that's what `self-insert` inserts);
+                # passing `insert_text` would type the escape sequence.
+                self.feed_key_callback(KeyPress(key))
 
     def feed(self, data: str) -> None:
         """
