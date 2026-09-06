@@ -185,10 +185,10 @@ ANSI_SEQUENCES: dict[str, Keys | tuple[Keys, ...]] = {
     "\x1b[5;6~": Keys.ControlShiftPageUp,
     "\x1b[6;6~": Keys.ControlShiftPageDown,
     "\x1b[2;7~": (Keys.Escape, Keys.ControlInsert),
-    "\x1b[5;7~": (Keys.Escape, Keys.ControlPageDown),
+    "\x1b[5;7~": (Keys.Escape, Keys.ControlPageUp),
     "\x1b[6;7~": (Keys.Escape, Keys.ControlPageDown),
     "\x1b[2;8~": (Keys.Escape, Keys.ControlShiftInsert),
-    "\x1b[5;8~": (Keys.Escape, Keys.ControlShiftPageDown),
+    "\x1b[5;8~": (Keys.Escape, Keys.ControlShiftPageUp),
     "\x1b[6;8~": (Keys.Escape, Keys.ControlShiftPageDown),
     # --
     # Arrows.
@@ -232,8 +232,8 @@ ANSI_SEQUENCES: dict[str, Keys | tuple[Keys, ...]] = {
     "\x1b[1;3F": (Keys.Escape, Keys.End),
     "\x1b[1;3H": (Keys.Escape, Keys.Home),
     # Alt+shift+number.
-    "\x1b[1;4A": (Keys.Escape, Keys.ShiftDown),
-    "\x1b[1;4B": (Keys.Escape, Keys.ShiftUp),
+    "\x1b[1;4A": (Keys.Escape, Keys.ShiftUp),
+    "\x1b[1;4B": (Keys.Escape, Keys.ShiftDown),
     "\x1b[1;4C": (Keys.Escape, Keys.ShiftRight),
     "\x1b[1;4D": (Keys.Escape, Keys.ShiftLeft),
     "\x1b[1;4F": (Keys.Escape, Keys.ShiftEnd),
@@ -255,22 +255,22 @@ ANSI_SEQUENCES: dict[str, Keys | tuple[Keys, ...]] = {
     "\x1bOc": Keys.ControlRight,  # rxvt
     "\x1bOd": Keys.ControlLeft,  # rxvt
     # Control + shift + arrows.
-    "\x1b[1;6A": Keys.ControlShiftDown,
-    "\x1b[1;6B": Keys.ControlShiftUp,
+    "\x1b[1;6A": Keys.ControlShiftUp,
+    "\x1b[1;6B": Keys.ControlShiftDown,
     "\x1b[1;6C": Keys.ControlShiftRight,
     "\x1b[1;6D": Keys.ControlShiftLeft,
     "\x1b[1;6F": Keys.ControlShiftEnd,
     "\x1b[1;6H": Keys.ControlShiftHome,
     # Control + Meta + arrows.
-    "\x1b[1;7A": (Keys.Escape, Keys.ControlDown),
-    "\x1b[1;7B": (Keys.Escape, Keys.ControlUp),
+    "\x1b[1;7A": (Keys.Escape, Keys.ControlUp),
+    "\x1b[1;7B": (Keys.Escape, Keys.ControlDown),
     "\x1b[1;7C": (Keys.Escape, Keys.ControlRight),
     "\x1b[1;7D": (Keys.Escape, Keys.ControlLeft),
     "\x1b[1;7F": (Keys.Escape, Keys.ControlEnd),
     "\x1b[1;7H": (Keys.Escape, Keys.ControlHome),
     # Meta + Shift + arrows.
-    "\x1b[1;8A": (Keys.Escape, Keys.ControlShiftDown),
-    "\x1b[1;8B": (Keys.Escape, Keys.ControlShiftUp),
+    "\x1b[1;8A": (Keys.Escape, Keys.ControlShiftUp),
+    "\x1b[1;8B": (Keys.Escape, Keys.ControlShiftDown),
     "\x1b[1;8C": (Keys.Escape, Keys.ControlShiftRight),
     "\x1b[1;8D": (Keys.Escape, Keys.ControlShiftLeft),
     "\x1b[1;8F": (Keys.Escape, Keys.ControlShiftEnd),
