@@ -966,6 +966,10 @@ class CheckboxList(_DialogList[_T]):
         default_style: str = "class:checkbox",
         selected_style: str = "class:checkbox-selected",
         checked_style: str = "class:checkbox-checked",
+        number_style: str = "class:checkbox-number",
+        show_numbers: bool = False,
+        show_cursor: bool = True,
+        show_scrollbar: bool = True,
     ) -> None:
         super().__init__(
             values,
@@ -978,6 +982,10 @@ class CheckboxList(_DialogList[_T]):
             selected_style=selected_style,
             checked_style=checked_style,
             multiple_selection=True,
+            number_style=number_style,
+            show_numbers=show_numbers,
+            show_cursor=show_cursor,
+            show_scrollbar=show_scrollbar,
         )
 
 
