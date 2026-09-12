@@ -257,8 +257,11 @@ class Document:
         """
         Return character relative to cursor position, or empty string
         """
+        index = self.cursor_position + offset
+        if index < 0:
+            return ""
         try:
-            return self.text[self.cursor_position + offset]
+            return self.text[index]
         except IndexError:
             return ""
 
