@@ -66,6 +66,26 @@ def test_translate_index_to_position(document):
     assert pos == (0, 0)
 
 
+@pytest.mark.parametrize(
+    ("text", "row", "col", "expected"),
+    [
+        ("one\ntwo\nthree", -1, 0, 0),
+        ("one\ntwo\nthree", -2, 1, 1),
+        ("one\ntwo\nthree", -1, -1, 0),
+        ("one\ntwo\nthree", -1, 10, 3),
+        ("one\ntwo\nthree", -3, 1, 1),
+        ("one\ntwo\nthree", -4, 1, 1),
+        ("one\ntwo\nthree", 0, 1, 1),
+        ("one\ntwo\nthree", 1, 1, 5),
+        ("one\ntwo\nthree", 3, 10, 13),
+        ("one\ntwo\n", -1, 1, 1),
+        ("", -1, 1, 0),
+    ],
+)
+def test_translate_row_col_to_index(text, row, col, expected):
+    assert Document(text).translate_row_col_to_index(row, col) == expected
+
+
 def test_is_cursor_at_the_end(document):
     assert Document("hello", 5).is_cursor_at_the_end
     assert not Document("hello", 4).is_cursor_at_the_end
