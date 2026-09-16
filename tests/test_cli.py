@@ -5,10 +5,12 @@ input and check the result.
 
 from __future__ import annotations
 
+import asyncio
 from functools import partial
 
 import pytest
 
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.clipboard import ClipboardData, InMemoryClipboard
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.filters import ViInsertMode
@@ -37,6 +39,7 @@ def _feed_cli_with_input(
     multiline=False,
     check_line_ending=True,
     key_bindings=None,
+    auto_suggest=None,
 ):
     """
     Create a Prompt, feed it with the given user input and return the CLI
@@ -58,6 +61,7 @@ def _feed_cli_with_input(
             multiline=multiline,
             clipboard=clipboard,
             key_bindings=key_bindings,
+            auto_suggest=auto_suggest,
         )
 
         _ = session.prompt()
@@ -605,6 +609,47 @@ def test_vi_cursor_movements():
     # Esc 2h rX \r
     result, cli = feed("hello\x1b2hrX\r")
     assert result.text == "heXlo"
+
+
+def test_vi_accept_suggestion_with_l():
+    """
+    In Vi navigation mode, 'l' should accept an available auto-suggestion,
+    the same way the right arrow key already does (fish-shell style).
+
+    This can't use `_feed_cli_with_input`: auto-suggestions are computed by
+    a background asyncio task scheduled on text changes, so the key(s) that
+    accept the suggestion have to be sent as a separate write, after
+    yielding to the event loop, or the suggestion never gets computed in
+    time.
+    """
+
+    async def run(after_escape):
+        history = InMemoryHistory()
+        history.append_string("hello world")
+
+        with create_pipe_input() as inp:
+            session = PromptSession(
+                input=inp,
+                output=DummyOutput(),
+                editing_mode=EditingMode.VI,
+                history=history,
+                auto_suggest=AutoSuggestFromHistory(),
+            )
+            task = asyncio.ensure_future(session.app.run_async())
+            inp.send_text("hello")
+            await asyncio.sleep(0.05)  # Let the suggestion get computed.
+            inp.send_text("\x1b" + after_escape + "\r")
+            return await asyncio.wait_for(task, timeout=2)
+
+    # In navigation mode, the cursor sits *on* the last character (unlike
+    # insert mode), so a single "l" both counts as "at the end" and accepts
+    # the suggestion.
+    assert asyncio.run(run("l")) == "hello world"
+
+    # Away from the last character (here, moved to the start with "0"),
+    # "l" keeps its normal meaning of moving the cursor one position right,
+    # even though a suggestion is available.
+    assert asyncio.run(run("0l")) == "hello"
 
 
 def test_vi_operators():
