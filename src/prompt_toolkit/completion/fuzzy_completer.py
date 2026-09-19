@@ -130,6 +130,7 @@ class FuzzyCompleter(Completer):
                 display_meta=match.completion._display_meta,
                 display=self._get_display(match, word_before_cursor),
                 style=match.completion.style,
+                selected_style=match.completion.selected_style,
             )
 
     def _get_display(
