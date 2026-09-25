@@ -14,9 +14,10 @@ from prompt_toolkit.formatted_text import AnyFormattedText
 from prompt_toolkit.key_binding.bindings.focus import focus_next, focus_previous
 from prompt_toolkit.key_binding.defaults import load_key_bindings
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, merge_key_bindings
-from prompt_toolkit.layout import Layout
+from prompt_toolkit.layout import Float, FloatContainer, Layout
 from prompt_toolkit.layout.containers import AnyContainer, HSplit
 from prompt_toolkit.layout.dimension import Dimension as D
+from prompt_toolkit.layout.menus import CompletionsMenu, MultiColumnCompletionsMenu
 from prompt_toolkit.styles import BaseStyle
 from prompt_toolkit.validation import Validator
 from prompt_toolkit.widgets import (
@@ -318,7 +319,22 @@ def _create_app(dialog: AnyContainer, style: BaseStyle | None) -> Application[An
     bindings.add("s-tab")(focus_previous)
 
     return Application(
-        layout=Layout(dialog),
+        layout=Layout(
+            FloatContainer(
+                content=dialog,
+                floats=[
+                    Float(
+                        xcursor=True,
+                        ycursor=True,
+                        transparent=True,
+                        content=CompletionsMenu(
+                            max_height=16,
+                            scroll_offset=1,
+                        ),
+                    ),
+                ],
+            )
+        ),
         key_bindings=merge_key_bindings([load_key_bindings(), bindings]),
         mouse_support=True,
         style=style,
