@@ -56,6 +56,9 @@ class ConEmuOutput:
             "get_win32_screen_buffer_info",
             "enable_bracketed_paste",
             "disable_bracketed_paste",
+            "supports_focus_reporting",
+            "enable_focus_reporting",
+            "disable_focus_reporting",
         ):
             return getattr(self.win32_output, name)
         else:

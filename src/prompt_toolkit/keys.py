@@ -182,6 +182,8 @@ class Keys(str, Enum):
 
     CPRResponse = "<cursor-position-response>"
     Vt100MouseEvent = "<vt100-mouse-event>"
+    FocusIn = "<focus-in>"
+    FocusOut = "<focus-out>"
     WindowsMouseEvent = "<windows-mouse-event>"
     BracketedPaste = "<bracketed-paste>"
 
