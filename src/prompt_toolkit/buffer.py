@@ -197,6 +197,8 @@ class Buffer:
     :param complete_while_typing: :class:`~prompt_toolkit.filters.Filter`
         or `bool`. Decide whether or not to do asynchronous autocompleting while
         typing.
+    :param filter_noop_completions: :class:`~prompt_toolkit.filters.Filter` or
+        `bool`. Ignore a single completion that would not change the input.
     :param validate_while_typing: :class:`~prompt_toolkit.filters.Filter`
         or `bool`. Decide whether or not to do asynchronous validation while
         typing.
@@ -235,10 +237,12 @@ class Buffer:
         on_cursor_position_changed: BufferEventHandler | None = None,
         on_completions_changed: BufferEventHandler | None = None,
         on_suggestion_set: BufferEventHandler | None = None,
+        filter_noop_completions: FilterOrBool = True,
     ) -> None:
         # Accept both filters and booleans as input.
         enable_history_search = to_filter(enable_history_search)
         complete_while_typing = to_filter(complete_while_typing)
+        filter_noop_completions = to_filter(filter_noop_completions)
         validate_while_typing = to_filter(validate_while_typing)
         read_only = to_filter(read_only)
         multiline = to_filter(multiline)
@@ -253,6 +257,7 @@ class Buffer:
 
         # Filters. (Usually, used by the key bindings to drive the buffer.)
         self.complete_while_typing = complete_while_typing
+        self.filter_noop_completions = filter_noop_completions
         self.validate_while_typing = validate_while_typing
         self.enable_history_search = enable_history_search
         self.read_only = read_only
@@ -1761,8 +1766,10 @@ class Buffer:
             completions = complete_state.completions
 
             # When there is only one completion, which has nothing to add, ignore it.
-            if len(completions) == 1 and completion_does_nothing(
-                document, completions[0]
+            if (
+                self.filter_noop_completions()
+                and len(completions) == 1
+                and completion_does_nothing(document, completions[0])
             ):
                 del completions[:]
 
