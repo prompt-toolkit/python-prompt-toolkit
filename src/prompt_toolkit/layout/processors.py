@@ -16,7 +16,12 @@ from typing import TYPE_CHECKING, cast
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.cache import SimpleCache
 from prompt_toolkit.document import Document
-from prompt_toolkit.filters import FilterOrBool, to_filter, vi_insert_multiple_mode
+from prompt_toolkit.filters import (
+    FilterOrBool,
+    to_filter,
+    vi_insert_multiple_mode,
+    vi_navigation_mode,
+)
 from prompt_toolkit.formatted_text import (
     AnyFormattedText,
     StyleAndTextTuples,
@@ -591,7 +596,13 @@ class AppendAutoSuggestion(Processor):
         if ti.lineno == ti.document.line_count - 1:
             buffer = ti.buffer_control.buffer
 
-            if buffer.suggestion and ti.document.is_cursor_at_the_end:
+            at_end = ti.document.is_cursor_at_the_end or (
+                vi_navigation_mode()
+                and ti.document.cursor_position_row == ti.document.line_count - 1
+                and ti.document.cursor_position_col == len(ti.document.current_line) - 1
+            )
+
+            if buffer.suggestion and at_end:
                 suggestion = buffer.suggestion.text
             else:
                 suggestion = ""
