@@ -36,7 +36,7 @@ from typing import TYPE_CHECKING, Generic, TypeVar, Union, cast
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app
-from prompt_toolkit.auto_suggest import AutoSuggest, DynamicAutoSuggest
+from prompt_toolkit.auto_suggest import AutoSuggest, DynamicAutoSuggest, Suggestion
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.clipboard import Clipboard, DynamicClipboard, InMemoryClipboard
 from prompt_toolkit.completion import Completer, DynamicCompleter, ThreadedCompleter
@@ -910,6 +910,7 @@ class PromptSession(Generic[_T]):
         validate_while_typing: FilterOrBool | None = None,
         complete_style: CompleteStyle | None = None,
         auto_suggest: AutoSuggest | None = None,
+        suggestion: Suggestion | None = None,
         validator: Validator | None = None,
         clipboard: Clipboard | None = None,
         mouse_support: FilterOrBool | None = None,
@@ -949,6 +950,9 @@ class PromptSession(Generic[_T]):
 
         :param default: The default input text to be shown. (This can be edited
             by the user).
+        :param suggestion: A :class:`~prompt_toolkit.auto_suggest.Suggestion`
+            to show after the input. It is only included in the result when
+            accepted by the user.
         :param accept_default: When `True`, automatically accept the default
             value without allowing the user to edit the input.
         :param pre_run: Callable, called at the start of `Application.run`.
@@ -1053,6 +1057,8 @@ class PromptSession(Generic[_T]):
         self.default_buffer.reset(
             default if isinstance(default, Document) else Document(default)
         )
+        if suggestion is not None:
+            self.default_buffer.suggestion = suggestion
         self.app.refresh_interval = self.refresh_interval  # This is not reactive.
 
         # If we are using the default output, and have a dumb terminal. Use the
@@ -1150,6 +1156,7 @@ class PromptSession(Generic[_T]):
         validate_while_typing: FilterOrBool | None = None,
         complete_style: CompleteStyle | None = None,
         auto_suggest: AutoSuggest | None = None,
+        suggestion: Suggestion | None = None,
         validator: Validator | None = None,
         clipboard: Clipboard | None = None,
         mouse_support: FilterOrBool | None = None,
@@ -1250,6 +1257,8 @@ class PromptSession(Generic[_T]):
         self.default_buffer.reset(
             default if isinstance(default, Document) else Document(default)
         )
+        if suggestion is not None:
+            self.default_buffer.suggestion = suggestion
         self.app.refresh_interval = self.refresh_interval  # This is not reactive.
 
         # If we are using the default output, and have a dumb terminal. Use the
@@ -1426,6 +1435,7 @@ def prompt(
     validate_while_typing: FilterOrBool | None = None,
     complete_style: CompleteStyle | None = None,
     auto_suggest: AutoSuggest | None = None,
+    suggestion: Suggestion | None = None,
     validator: Validator | None = None,
     clipboard: Clipboard | None = None,
     mouse_support: FilterOrBool | None = None,
@@ -1482,6 +1492,7 @@ def prompt(
         validate_while_typing=validate_while_typing,
         complete_style=complete_style,
         auto_suggest=auto_suggest,
+        suggestion=suggestion,
         validator=validator,
         clipboard=clipboard,
         mouse_support=mouse_support,

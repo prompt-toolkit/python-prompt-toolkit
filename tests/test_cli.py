@@ -5,10 +5,14 @@ input and check the result.
 
 from __future__ import annotations
 
+import asyncio
 from functools import partial
+from unittest.mock import patch
 
 import pytest
 
+from prompt_toolkit.application.current import create_app_session
+from prompt_toolkit.auto_suggest import Suggestion
 from prompt_toolkit.clipboard import ClipboardData, InMemoryClipboard
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.filters import ViInsertMode
@@ -18,7 +22,7 @@ from prompt_toolkit.input.vt100_parser import ANSI_SEQUENCES
 from prompt_toolkit.key_binding.bindings.named_commands import prefix_meta
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.output import DummyOutput
-from prompt_toolkit.shortcuts import PromptSession
+from prompt_toolkit.shortcuts import PromptSession, prompt
 
 
 def _history():
@@ -69,6 +73,38 @@ def test_simple_text_input():
     result, cli = _feed_cli_with_input("hello\r")
     assert result.text == "hello"
     assert cli.current_buffer.text == "hello"
+
+
+def test_suggestion_argument():
+    with create_pipe_input() as inp:
+        inp.send_text("\x1b[C\r")
+        session = PromptSession(input=inp, output=DummyOutput())
+        result = session.prompt(suggestion=Suggestion("hello"))
+
+    assert result == "hello"
+
+
+def test_prompt_forwards_suggestion():
+    suggestion = Suggestion("hello")
+
+    with create_pipe_input() as inp:
+        with create_app_session(input=inp, output=DummyOutput()):
+            with patch.object(
+                PromptSession, "prompt", return_value="hello"
+            ) as prompt_method:
+                result = prompt(suggestion=suggestion)
+
+    assert result == "hello"
+    assert prompt_method.call_args.kwargs["suggestion"] is suggestion
+
+
+def test_suggestion_argument_async():
+    with create_pipe_input() as inp:
+        inp.send_text("\x1b[C\r")
+        session = PromptSession(input=inp, output=DummyOutput())
+        result = asyncio.run(session.prompt_async(suggestion=Suggestion("hello")))
+
+    assert result == "hello"
 
 
 def test_emacs_cursor_movements():
