@@ -27,9 +27,7 @@ from __future__ import annotations
 
 import asyncio
 import os
-import select
 import selectors
-import sys
 import threading
 from asyncio import AbstractEventLoop, get_running_loop
 from collections.abc import Callable, Mapping
@@ -151,21 +149,11 @@ class InputHookSelector(BaseSelector):
         # own loop, or by checking the `input_is_ready` function regularly.
         self.inputhook(InputHookContext(self._r, input_is_ready))
 
-        # Flush the read end of the pipe.
+        # Wait for the real selector to be done before reading from the pipe.
+        # The selector thread writes to the pipe before setting `ready`.
+        th.join()
+
         try:
-            # Before calling 'os.read', call select.select. This is required
-            # when the gevent monkey patch has been applied. 'os.read' is never
-            # monkey patched and won't be cooperative, so that would block all
-            # other select() calls otherwise.
-            # See: http://www.gevent.org/gevent.os.html
-
-            # Note: On Windows, this is apparently not an issue.
-            #       However, if we would ever want to add a select call, it
-            #       should use `windll.kernel32.WaitForMultipleObjects`,
-            #       because `select.select` can't wait for a pipe on Windows.
-            if sys.platform != "win32":
-                select.select([self._r], [], [], None)
-
             os.read(self._r, 1024)
         except OSError:
             # This happens when the window resizes and a SIGWINCH was received.
@@ -173,8 +161,6 @@ class InputHookSelector(BaseSelector):
             # Just ignore.
             pass
 
-        # Wait for the real selector to be done.
-        th.join()
         assert result is not None
         return result
 
@@ -182,7 +168,7 @@ class InputHookSelector(BaseSelector):
         """
         Clean up resources.
         """
-        if self._r:
+        if self._r >= 0:
             os.close(self._r)
             os.close(self._w)
 

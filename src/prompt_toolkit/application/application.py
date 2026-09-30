@@ -973,10 +973,13 @@ class Application(Generic[_AppResult]):
             # In Python 3.12, we can use asyncio.run(loop_factory=...)
             # For now, use `run_until_complete()`.
             loop = new_eventloop_with_inputhook(inputhook)
-            result = loop.run_until_complete(coro)
-            loop.run_until_complete(loop.shutdown_asyncgens())
-            loop.close()
-            return result
+            try:
+                return loop.run_until_complete(coro)
+            finally:
+                try:
+                    loop.run_until_complete(loop.shutdown_asyncgens())
+                finally:
+                    loop.close()
 
         elif _called_from_ipython():
             # workaround to make input hooks work for IPython until
