@@ -291,7 +291,8 @@ def ansi_escape(text: object) -> str:
     """
     Replace characters with a special meaning.
     """
-    return str(text).replace("\x1b", "?").replace("\b", "?")
+    # \x9b is the C1 form of ESC [. Leaving it lets format() set a color.
+    return str(text).replace("\x1b", "?").replace("\x9b", "?").replace("\b", "?")
 
 
 class ANSIFormatter(Formatter):

@@ -210,6 +210,38 @@ def test_ansi_interpolation():
     ]
 
 
+def test_ansi_c1_interpolation():
+    # A C1 CSI in an argument must not set a color. The template still can.
+    value = ANSI("\x9b32mOK")
+    assert to_formatted_text(value) == [
+        ("ansigreen", "O"),
+        ("ansigreen", "K"),
+    ]
+
+    value = ANSI("x{}").format("\x9b31mRED")
+    assert to_formatted_text(value) == [
+        ("", "x"),
+        ("", "?"),
+        ("", "3"),
+        ("", "1"),
+        ("", "m"),
+        ("", "R"),
+        ("", "E"),
+        ("", "D"),
+    ]
+
+    value = ANSI("%s") % "\x9b31mRED"
+    assert to_formatted_text(value) == [
+        ("", "?"),
+        ("", "3"),
+        ("", "1"),
+        ("", "m"),
+        ("", "R"),
+        ("", "E"),
+        ("", "D"),
+    ]
+
+
 def test_interpolation():
     value = Template(" {} ").format(HTML("<b>hello</b>"))
 

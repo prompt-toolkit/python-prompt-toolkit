@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+Unreleased
+----------
+
+Fixes:
+- Escape a C1 CSI in ``ANSI.format`` so an argument cannot set a color (#2113).
+
 3.0.53: 2026-07-26
 ------------------
 
