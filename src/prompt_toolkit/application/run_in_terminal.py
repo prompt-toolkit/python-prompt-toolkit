@@ -107,10 +107,22 @@ async def in_terminal(render_cli_done: bool = False) -> AsyncGenerator[None, Non
     finally:
         # Redraw interface again.
         try:
-            app._running_in_terminal = False
-            app.renderer.reset()
-            app._request_absolute_cursor_position()
-            app._redraw()
+            try:
+                app.renderer.reset()
+                app._request_absolute_cursor_position()
+
+                # Wait for the CPR response before redrawing (rendering is
+                # still disabled). Otherwise, the first paint doesn't know how
+                # much space is available below the cursor and gets the
+                # layout's preferred height, right below the new output. Once
+                # the response arrives, the layout would be painted again,
+                # extended to the bottom of the terminal, which looks like a
+                # jump.
+                if app.output.responds_to_cpr:
+                    await app.renderer.wait_for_cpr_responses()
+            finally:
+                app._running_in_terminal = False
+                app._redraw()
         finally:
             # (Check for `.done()`, because it can be that this future was
             # cancelled.)
