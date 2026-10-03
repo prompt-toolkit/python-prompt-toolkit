@@ -5,9 +5,13 @@ import re
 import shutil
 import tempfile
 from contextlib import contextmanager
+from pathlib import Path
+
+import pytest
 
 from prompt_toolkit.completion import (
     CompleteEvent,
+    ExecutableCompleter,
     FuzzyWordCompleter,
     NestedCompleter,
     PathCompleter,
@@ -467,3 +471,69 @@ def test_deduplicate_completer():
         )
     )
     assert len(completions) == 5
+
+
+@pytest.mark.parametrize("unreadable_first", [True, False])
+@pytest.mark.parametrize("executable", [True, False])
+def test_pathcompleter_skips_unreadable_directory(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    unreadable_first: bool,
+    executable: bool,
+) -> None:
+    unreadable = tmp_path / "unreadable"
+    readable = tmp_path / "readable"
+    unreadable.mkdir()
+    readable.mkdir()
+    (readable / "python-demo").touch()
+    paths = [str(unreadable), str(readable)]
+    if not unreadable_first:
+        paths.reverse()
+    (readable / "python-demo").chmod(0o755)
+    unreadable.chmod(0)
+    try:
+        try:
+            os.listdir(unreadable)
+        except PermissionError:
+            pass
+        else:
+            pytest.skip("Directory permissions are not enforced for this user")
+        if executable:
+            monkeypatch.setenv("PATH", os.pathsep.join(paths))
+            completer = ExecutableCompleter()
+        else:
+            completer = PathCompleter(get_paths=lambda: paths)
+        completions = list(
+            completer.get_completions(Document("python-"), CompleteEvent())
+        )
+        assert [completion.text for completion in completions] == ["demo"]
+    finally:
+        unreadable.chmod(0o700)
+
+
+@pytest.mark.parametrize("missing_first", [True, False])
+def test_pathcompleter_skips_missing_directory(
+    tmp_path: Path, missing_first: bool
+) -> None:
+    readable = tmp_path / "readable"
+    readable.mkdir()
+    (readable / "python-demo").touch()
+    paths = [str(tmp_path / "missing"), str(readable)]
+    if not missing_first:
+        paths.reverse()
+    completer = PathCompleter(get_paths=lambda: paths)
+    completions = list(completer.get_completions(Document("python-"), CompleteEvent()))
+    assert [completion.text for completion in completions] == ["demo"]
+
+
+def test_pathcompleter_propagates_file_filter_errors(tmp_path: Path) -> None:
+    (tmp_path / "python-demo").touch()
+
+    def file_filter(path: str) -> bool:
+        raise ValueError("filter failed")
+
+    completer = PathCompleter(
+        get_paths=lambda: [str(tmp_path)], file_filter=file_filter
+    )
+    with pytest.raises(ValueError, match="filter failed"):
+        list(completer.get_completions(Document("python-"), CompleteEvent()))
