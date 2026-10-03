@@ -70,6 +70,8 @@ class WordCompleter(Completer):
                 WORD=self.WORD, pattern=self.pattern
             )
 
+        # Lowercasing can change the number of characters in the prefix.
+        start_position = -len(word_before_cursor)
         if self.ignore_case:
             word_before_cursor = word_before_cursor.lower()
 
@@ -89,7 +91,7 @@ class WordCompleter(Completer):
                 display_meta = self.meta_dict.get(a, "")
                 yield Completion(
                     text=a,
-                    start_position=-len(word_before_cursor),
+                    start_position=start_position,
                     display=display,
                     display_meta=display_meta,
                 )
