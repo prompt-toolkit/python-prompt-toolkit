@@ -325,16 +325,16 @@ class Document:
 
         Negative row/col values are turned into zero.
         """
+        # Clamp before indexing. A negative row is a valid list index and
+        # would otherwise select a line from the end of the document.
+        if row < 0:
+            row = 0
         try:
             result = self._line_start_indexes[row]
             line = self.lines[row]
         except IndexError:
-            if row < 0:
-                result = self._line_start_indexes[0]
-                line = self.lines[0]
-            else:
-                result = self._line_start_indexes[-1]
-                line = self.lines[-1]
+            result = self._line_start_indexes[-1]
+            line = self.lines[-1]
 
         result += max(0, min(col, len(line)))
 

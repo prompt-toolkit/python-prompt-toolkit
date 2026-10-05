@@ -66,6 +66,15 @@ def test_translate_index_to_position(document):
     assert pos == (0, 0)
 
 
+def test_translate_row_col_to_index_clamps_negative_row():
+    # Negative rows are documented to become zero. List indexing would
+    # otherwise select lines from the end of the document.
+    document = Document("one\ntwo\nthree")
+    for row in (-1, -2, -3, -4):
+        assert document.translate_row_col_to_index(row, 0) == 0
+    assert document.translate_row_col_to_index(-1, 1) == 1
+
+
 def test_is_cursor_at_the_end(document):
     assert Document("hello", 5).is_cursor_at_the_end
     assert not Document("hello", 4).is_cursor_at_the_end
