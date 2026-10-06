@@ -164,7 +164,12 @@ class InputHookSelector(BaseSelector):
             #       should use `windll.kernel32.WaitForMultipleObjects`,
             #       because `select.select` can't wait for a pipe on Windows.
             if sys.platform != "win32":
-                select.select([self._r], [], [], None)
+                if hasattr(select, "poll"):
+                    poller = select.poll()
+                    poller.register(self._r, select.POLLIN)
+                    poller.poll()
+                else:
+                    select.select([self._r], [], [], None)
 
             os.read(self._r, 1024)
         except OSError:
@@ -182,7 +187,7 @@ class InputHookSelector(BaseSelector):
         """
         Clean up resources.
         """
-        if self._r:
+        if self._r >= 0:
             os.close(self._r)
             os.close(self._w)
 
