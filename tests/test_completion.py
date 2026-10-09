@@ -4,10 +4,16 @@ import os
 import re
 import shutil
 import tempfile
+from asyncio import run, sleep
 from contextlib import contextmanager
+
+import pytest
 
 from prompt_toolkit.completion import (
     CompleteEvent,
+    Completer,
+    Completion,
+    DynamicCompleter,
     FuzzyWordCompleter,
     NestedCompleter,
     PathCompleter,
@@ -15,6 +21,73 @@ from prompt_toolkit.completion import (
     merge_completers,
 )
 from prompt_toolkit.document import Document
+
+
+@pytest.mark.parametrize("throw", [False, True])
+def test_dynamic_completer_closes_async_generator(throw):
+    class ResourceCompleter(Completer):
+        def __init__(self):
+            self.closed = False
+            self.generator = None
+
+        def get_completions(self, document, complete_event):
+            raise AssertionError("The asynchronous implementation should be used.")
+
+        def get_completions_async(self, document, complete_event):
+            async def generate():
+                try:
+                    yield Completion("first")
+                    yield Completion("second")
+                finally:
+                    await sleep(0)
+                    self.closed = True
+
+            # Retain the generator so garbage collection cannot close it for us.
+            self.generator = generate()
+            return self.generator
+
+    async def check():
+        inner = ResourceCompleter()
+        outer = DynamicCompleter(lambda: inner).get_completions_async(
+            Document(""), CompleteEvent()
+        )
+        try:
+            assert (await anext(outer)).text == "first"
+            assert not inner.closed
+            if throw:
+                with pytest.raises(RuntimeError, match="stop completion"):
+                    await outer.athrow(RuntimeError("stop completion"))
+            else:
+                await outer.aclose()
+            assert inner.closed
+        finally:
+            await outer.aclose()
+            if inner.generator is not None:
+                await inner.generator.aclose()
+
+    run(check())
+
+
+def test_dynamic_completer_async_switching():
+    async def check():
+        current = WordCompleter(["first", "second"])
+        completer = DynamicCompleter(lambda: current)
+
+        async def complete():
+            return [
+                item.text
+                async for item in completer.get_completions_async(
+                    Document(""), CompleteEvent()
+                )
+            ]
+
+        assert await complete() == ["first", "second"]
+        current = WordCompleter(["third"])
+        assert await complete() == ["third"]
+        current = None
+        assert await complete() == []
+
+    run(check())
 
 
 @contextmanager
