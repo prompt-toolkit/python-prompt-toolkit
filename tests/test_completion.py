@@ -6,8 +6,11 @@ import shutil
 import tempfile
 from contextlib import contextmanager
 
+import pytest
+
 from prompt_toolkit.completion import (
     CompleteEvent,
+    ExecutableCompleter,
     FuzzyWordCompleter,
     NestedCompleter,
     PathCompleter,
@@ -467,3 +470,57 @@ def test_deduplicate_completer():
         )
     )
     assert len(completions) == 5
+
+
+@pytest.mark.parametrize(
+    "path_entries, expected",
+    [
+        ([""], ["local"]),
+        (["", "bin"], ["external", "local"]),
+        (["bin", ""], ["external", "local"]),
+        (["bin", "", "other"], ["external", "local"]),
+        (["."], ["local"]),
+        (["bin"], ["external"]),
+    ],
+)
+def test_executablecompleter_empty_path_entries(
+    tmp_path, monkeypatch, path_entries, expected
+):
+    (tmp_path / "bin").mkdir()
+    (tmp_path / "other").mkdir()
+    for name in ("tool-local", "bin/tool-external"):
+        executable = tmp_path / name
+        executable.write_text("#!/bin/sh\nexit 0\n")
+        executable.chmod(0o755)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("PATH", os.pathsep.join(path_entries))
+
+    completions = list(
+        ExecutableCompleter().get_completions(Document("tool-"), CompleteEvent())
+    )
+
+    assert [c.text for c in completions] == expected
+    assert [c.display_text for c in completions] == ["tool-" + e for e in expected]
+    assert all(c.start_position == 0 for c in completions)
+
+
+@pytest.mark.parametrize("prefix", ["plain", "relative", "absolute", "home"])
+def test_executablecompleter_missing_path(tmp_path, monkeypatch, prefix):
+    executable = tmp_path / "tool-local"
+    executable.write_text("#!/bin/sh\nexit 0\n")
+    executable.chmod(0o755)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("PATH", raising=False)
+
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
+    text = {
+        "plain": "tool-",
+        "relative": "./tool-",
+        "absolute": str(tmp_path / "tool-"),
+        "home": "~/tool-",
+    }[prefix]
+    completions = list(
+        ExecutableCompleter().get_completions(Document(text), CompleteEvent())
+    )
+    assert [c.text for c in completions] == ([] if prefix == "plain" else ["local"])
