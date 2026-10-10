@@ -8,6 +8,7 @@ from contextlib import contextmanager
 
 from prompt_toolkit.completion import (
     CompleteEvent,
+    Completion,
     FuzzyWordCompleter,
     NestedCompleter,
     PathCompleter,
@@ -467,3 +468,23 @@ def test_deduplicate_completer():
         )
     )
     assert len(completions) == 5
+
+
+def test_completion_from_position_preserves_styles():
+    completion = Completion(
+        "hello",
+        start_position=-2,
+        display=[("bold", "Hello")],
+        display_meta=lambda: "greeting",
+        style="fg:ansired",
+        selected_style="bg:ansigreen",
+    )
+
+    suffix = completion.new_completion_from_position(1)
+
+    assert suffix.text == "lo"
+    assert suffix.start_position == 0
+    assert suffix.display == completion.display
+    assert suffix._display_meta is completion._display_meta
+    assert suffix.style == completion.style
+    assert suffix.selected_style == completion.selected_style

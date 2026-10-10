@@ -117,6 +117,8 @@ class Completion:
             text=self.text[position - self.start_position :],
             display=self.display,
             display_meta=self._display_meta,
+            style=self.style,
+            selected_style=self.selected_style,
         )
 
 

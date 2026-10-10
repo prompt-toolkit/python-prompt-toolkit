@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 
 from prompt_toolkit.buffer import Buffer
+from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.document import Document
 
 
 @pytest.fixture
@@ -110,3 +114,33 @@ def test_swap_characters_before_cursor(_buffer):
     _buffer.swap_characters_before_cursor()
 
     assert _buffer.text == "hello wrold"
+
+
+def test_common_completion_preserves_styles():
+    class StyledCompleter(Completer):
+        def get_completions(self, document, complete_event):
+            for text, style, selected_style in (
+                ("hello", "fg:ansired", "bg:ansigreen"),
+                ("help", "fg:ansiblue", "bg:ansiyellow"),
+            ):
+                yield Completion(
+                    text,
+                    start_position=-2,
+                    style=style,
+                    selected_style=selected_style,
+                )
+
+    buffer = Buffer(completer=StyledCompleter(), document=Document("he", 2))
+    asyncio.run(buffer._async_completer(insert_common_part=True))
+
+    assert buffer.text == "hel"
+    assert buffer.complete_state is not None
+    completions = buffer.complete_state.completions
+    assert [(c.text, c.style, c.selected_style) for c in completions] == [
+        ("lo", "fg:ansired", "bg:ansigreen"),
+        ("p", "fg:ansiblue", "bg:ansiyellow"),
+    ]
+    buffer.go_to_completion(0)
+    assert buffer.text == "hello"
+    buffer.go_to_completion(1)
+    assert buffer.text == "help"
