@@ -6,6 +6,8 @@ import shutil
 import tempfile
 from contextlib import contextmanager
 
+import pytest
+
 from prompt_toolkit.completion import (
     CompleteEvent,
     FuzzyWordCompleter,
@@ -442,6 +444,53 @@ def test_nested_completer():
         Document("show ip interface br"), CompleteEvent()
     )
     assert {c.text for c in completions} == {"brief"}
+
+
+@pytest.mark.parametrize(
+    "separator", [" ", "\t", "\n", "\r", "\v", "\f", "\u00a0", "\u2003"]
+)
+@pytest.mark.parametrize("word", ["", "ve"])
+def test_nested_completer_whitespace_separators(separator, word):
+    completer = NestedCompleter.from_nested_dict({"show": {"version": None}})
+    before_cursor = " \tshow" + separator + word
+    document = Document(before_cursor + " suffix", cursor_position=len(before_cursor))
+
+    completions = completer.get_completions(document, CompleteEvent())
+
+    assert [(c.text, c.start_position) for c in completions] == [
+        ("version", -len(word))
+    ]
+
+
+@pytest.mark.parametrize("command", ["exit", "unknown"])
+@pytest.mark.parametrize("separator", [" ", "\t", "\n", "\u2003"])
+def test_nested_completer_whitespace_terminal_and_unknown(command, separator):
+    completer = NestedCompleter.from_nested_dict(
+        {"show": {"version": None}, "exit": None}
+    )
+
+    completions = completer.get_completions(
+        Document(command + separator), CompleteEvent()
+    )
+
+    assert list(completions) == []
+
+
+def test_nested_completer_mixed_whitespace_multiple_levels():
+    completer = NestedCompleter.from_nested_dict({"show": {"ip": {"route": None}}})
+
+    completions = completer.get_completions(Document("show\tip\nro"), CompleteEvent())
+
+    assert [(c.text, c.start_position) for c in completions] == [("route", -2)]
+
+
+@pytest.mark.parametrize("text", ["", " \t\n", "sh", "\tsh"])
+def test_nested_completer_whitespace_root_controls(text):
+    completer = NestedCompleter.from_nested_dict({"show": {"version": None}})
+
+    completions = completer.get_completions(Document(text), CompleteEvent())
+
+    assert [c.text for c in completions] == ["show"]
 
 
 def test_deduplicate_completer():
