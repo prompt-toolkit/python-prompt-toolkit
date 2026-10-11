@@ -5,6 +5,7 @@ import pytest
 from prompt_toolkit.layout import InvalidLayoutError, Layout
 from prompt_toolkit.layout.containers import HSplit, VSplit, Window
 from prompt_toolkit.layout.controls import BufferControl
+from prompt_toolkit.layout.dimension import Dimension, max_layout_dimensions
 
 
 def test_layout_class():
@@ -51,3 +52,30 @@ def test_layout_class():
 def test_create_invalid_layout():
     with pytest.raises(InvalidLayoutError):
         Layout(HSplit([]))
+
+
+@pytest.mark.parametrize(
+    "dimensions, expected",
+    [
+        ([Dimension(max=10)], (0, 10, 0)),
+        ([Dimension(max=10, preferred=0)], (0, 10, 0)),
+        ([Dimension.zero(), Dimension(max=10)], (0, 10, 0)),
+        ([Dimension(), Dimension(max=10)], (0, 10, 0)),
+        ([Dimension(max=10), Dimension(max=20)], (0, 10, 0)),
+        ([Dimension(max=10), Dimension(max=20, preferred=5)], (0, 10, 5)),
+        ([Dimension(max=10), Dimension(max=20, preferred=12)], (0, 12, 12)),
+        ([], (0, 0, 0)),
+        ([Dimension.zero()], (0, 0, 0)),
+        ([Dimension.zero(), Dimension.exact(8)], (8, 8, 8)),
+    ],
+)
+def test_max_layout_dimensions_preserves_zero_preferred_max(dimensions, expected):
+    dimension = max_layout_dimensions(dimensions)
+    assert (dimension.min, dimension.max, dimension.preferred) == expected
+
+
+def test_nested_split_preserves_zero_preferred_width_limit():
+    child = HSplit([Window(width=Dimension(max=10, preferred=0))])
+
+    assert child.preferred_width(80).max == 10
+    assert VSplit([child, Window()])._divide_widths(80) == [10, 0, 70]

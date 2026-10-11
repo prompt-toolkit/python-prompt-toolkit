@@ -140,7 +140,7 @@ def max_layout_dimensions(dimensions: list[Dimension]) -> Dimension:
         return Dimension.zero()
 
     # Ignore empty dimensions. (They should not reduce the size of others.)
-    dimensions = [d for d in dimensions if d.preferred != 0 and d.max != 0]
+    dimensions = [d for d in dimensions if d.max != 0]
 
     if dimensions:
         # Take the highest minimum dimension.
