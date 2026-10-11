@@ -57,19 +57,16 @@ class GrammarCompleter(Completer):
             completer = self.completers.get(varname)
 
             if completer:
+                # Match.end_nodes() has already unescaped this value.
                 text = match_variable.value
 
-                # Unwrap text.
-                unwrapped_text = self.compiled_grammar.unescape(varname, text)
-
                 # Create a document, for the completions API (text/cursor_position)
-                document = Document(unwrapped_text, len(unwrapped_text))
+                document = Document(text, len(text))
 
                 # Call completer
                 for completion in completer.get_completions(document, complete_event):
                     new_text = (
-                        unwrapped_text[: len(text) + completion.start_position]
-                        + completion.text
+                        text[: len(text) + completion.start_position] + completion.text
                     )
 
                     # Wrap again.
