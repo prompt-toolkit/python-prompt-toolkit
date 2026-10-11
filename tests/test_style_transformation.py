@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from prompt_toolkit.styles import AdjustBrightnessStyleTransformation, Attrs
+from prompt_toolkit.styles import AdjustBrightnessStyleTransformation, Attrs, Style
 
 
 @pytest.fixture
@@ -50,3 +50,24 @@ def test_adjust_brightness_style_transformation(default_attrs):
 
     attrs = tr2.transform_attrs(default_attrs._replace(color="00ffaa"))
     assert attrs.color == "00ffaa"
+
+
+@pytest.mark.parametrize("color", [None, "", "default", "ansidefault"])
+@pytest.mark.parametrize("brightness", [(0.5, 1.0), (0.0, 0.5)])
+def test_adjust_brightness_preserves_default_foreground(
+    default_attrs, color, brightness
+):
+    attrs = default_attrs._replace(color=color, bold=True)
+    tr = AdjustBrightnessStyleTransformation(*brightness)
+
+    assert tr.transform_attrs(attrs) == attrs
+
+
+@pytest.mark.parametrize("style_string", ["fg:default", "fg:default bg:default"])
+def test_adjust_brightness_preserves_explicit_default_style(style_string):
+    style = Style.from_dict({"text": style_string})
+    attrs = style.get_attrs_for_style_str("class:text")
+    tr = AdjustBrightnessStyleTransformation(0.5, 1.0)
+
+    assert attrs.color == "default"
+    assert tr.transform_attrs(attrs) == attrs
