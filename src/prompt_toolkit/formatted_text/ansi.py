@@ -119,7 +119,8 @@ class ANSI:
 
                         # Check and evaluate cursor forward
                         elif char == "C":
-                            for i in range(params[0]):
+                            # A missing or zero count defaults to one column.
+                            for i in range(params[0] or 1):
                                 # add <SPACE> using current style
                                 formatted_text.append((style, " "))
                             break

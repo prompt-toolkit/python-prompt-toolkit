@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from prompt_toolkit.formatted_text import (
     ANSI,
     HTML,
@@ -143,6 +145,19 @@ def test_ansi_true_color():
         ("#90ee90", "$"),
         ("ansidefault bg:ansidefault", " "),
     ]
+
+
+@pytest.mark.parametrize("csi", ["\x1b[", "\x9b"])
+@pytest.mark.parametrize(
+    "parameter, count", [("", 1), ("0", 1), ("00", 1), ("1", 1), ("3", 3)]
+)
+@pytest.mark.parametrize("color, style", [("", ""), ("31", "ansired")])
+def test_ansi_cursor_forward_defaults(csi, parameter, count, color, style):
+    value = ANSI(f"{csi}{color}ma{csi}{parameter}Cb{csi}0mc")
+
+    assert to_formatted_text(value) == (
+        [(style, "a")] + [(style, " ")] * count + [(style, "b"), ("", "c")]
+    )
 
 
 def test_ansi_interpolation():
