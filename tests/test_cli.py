@@ -864,6 +864,19 @@ def test_vi_character_paste():
     assert result.cursor_position == 2
 
 
+@pytest.mark.parametrize("paste", ["P", "3P"])
+def test_vi_paste_before_with_empty_clipboard(paste):
+    feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI)
+
+    result, cli = feed(f"abcd\x1b{paste}\r")
+    assert result.text == "abcd"
+    assert result.cursor_position == 3
+
+    # A subsequent command should still act on the original character.
+    result, cli = feed(f"abcd\x1b{paste}x\r")
+    assert result.text == "abc"
+
+
 def test_vi_temp_navigation_mode():
     """
     Test c-o binding: go for one action into navigation mode.

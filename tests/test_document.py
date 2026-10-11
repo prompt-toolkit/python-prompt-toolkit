@@ -4,7 +4,9 @@ import re
 
 import pytest
 
+from prompt_toolkit.clipboard import ClipboardData
 from prompt_toolkit.document import Document
+from prompt_toolkit.selection import PasteMode, SelectionType
 
 
 @pytest.fixture
@@ -79,3 +81,31 @@ def test_get_word_before_cursor_with_whitespace_and_pattern():
 
     _FIND_WORD_RE = re.compile(r"([a-zA-Z0-9_]+|[^a-zA-Z0-9_\s]+)")
     assert document.get_word_before_cursor(pattern=_FIND_WORD_RE) == ""
+
+
+@pytest.mark.parametrize(
+    "text,cursor_position", [("", 0), ("abcd", 0), ("abcd", 2), ("abcd", 4)]
+)
+@pytest.mark.parametrize(
+    "paste_mode", [PasteMode.EMACS, PasteMode.VI_BEFORE, PasteMode.VI_AFTER]
+)
+def test_paste_empty_character_data(text, cursor_position, paste_mode):
+    document = Document(text, cursor_position)
+
+    result = document.paste_clipboard_data(ClipboardData(), paste_mode=paste_mode)
+
+    assert result.text == text
+    assert result.cursor_position == cursor_position
+
+
+@pytest.mark.parametrize(
+    "paste_mode,text,cursor_position",
+    [(PasteMode.VI_BEFORE, "\nabc", 0), (PasteMode.VI_AFTER, "abc\n", 4)],
+)
+def test_paste_empty_line_data(paste_mode, text, cursor_position):
+    result = Document("abc", 1).paste_clipboard_data(
+        ClipboardData("", SelectionType.LINES), paste_mode=paste_mode
+    )
+
+    assert result.text == text
+    assert result.cursor_position == cursor_position
