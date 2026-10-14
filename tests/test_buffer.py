@@ -1,8 +1,16 @@
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 
+from prompt_toolkit.application import Application
+from prompt_toolkit.application.current import set_app
+from prompt_toolkit.auto_suggest import AutoSuggest, Suggestion
 from prompt_toolkit.buffer import Buffer
+from prompt_toolkit.document import Document
+from prompt_toolkit.input import DummyInput
+from prompt_toolkit.output import DummyOutput
 
 
 @pytest.fixture
@@ -110,3 +118,45 @@ def test_swap_characters_before_cursor(_buffer):
     _buffer.swap_characters_before_cursor()
 
     assert _buffer.text == "hello wrold"
+
+
+class _AlwaysSuggest(AutoSuggest):
+    """Auto suggester that records the documents it was called with."""
+
+    def __init__(self) -> None:
+        self.documents: list[Document] = []
+
+    def get_suggestion(self, buffer: Buffer, document: Document) -> Suggestion:
+        self.documents.append(document)
+        return Suggestion(" suggestion")
+
+
+def test_auto_suggest_after_delete():
+    """
+    A suggestion should be generated after deleting text as well, not only
+    after inserting text.
+    """
+
+    async def run() -> None:
+        suggester = _AlwaysSuggest()
+        buff = Buffer(auto_suggest=suggester)
+        app = Application(input=DummyInput(), output=DummyOutput())
+
+        with set_app(app):
+            # Typing generates a suggestion.
+            buff.insert_text("hello")
+            await asyncio.sleep(0.1)
+            assert buff.suggestion is not None
+            assert buff.suggestion.text == " suggestion"
+            assert [d.text for d in suggester.documents] == ["hello"]
+
+            # Deleting a character clears the suggestion, but a new one
+            # should be generated for the remaining text.
+            buff.delete_before_cursor()
+            await asyncio.sleep(0.1)
+            assert buff.text == "hell"
+            assert buff.suggestion is not None
+            assert buff.suggestion.text == " suggestion"
+            assert suggester.documents[-1].text == "hell"
+
+    asyncio.run(run())
