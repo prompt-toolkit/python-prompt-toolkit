@@ -250,7 +250,7 @@ class KeyBindings(KeyBindingsBase):
         filter: FilterOrBool = True,
         eager: FilterOrBool = False,
         is_global: FilterOrBool = False,
-        save_before: Callable[[KeyPressEvent], bool] = (lambda e: True),
+        save_before: Callable[[KeyPressEvent], bool] | None = None,
         record_in_macro: FilterOrBool = True,
     ) -> Callable[[T], T]:
         """
@@ -267,7 +267,10 @@ class KeyBindings(KeyBindingsBase):
             `Control`, make it a global (always active) binding.
         :param save_before: Callable that takes an `Event` and returns True if
             we should save the current buffer, before handling the event.
-            (That's the default.)
+            When omitted (or `None`), a plain handler saves the buffer before
+            every event, and an existing :class:`Binding` keeps its own
+            `save_before` callable. An explicit callable is used in both
+            cases, also when adding an existing :class:`Binding`.
         :param record_in_macro: Record these key bindings when a macro is
             being recorded. (True by default.)
         """
@@ -294,7 +297,9 @@ class KeyBindings(KeyBindingsBase):
                             filter=func.filter & to_filter(filter),
                             eager=to_filter(eager) | func.eager,
                             is_global=to_filter(is_global) | func.is_global,
-                            save_before=func.save_before,
+                            save_before=(
+                                func.save_before if save_before is None else save_before
+                            ),
                             record_in_macro=func.record_in_macro,
                         )
                     )
@@ -306,7 +311,9 @@ class KeyBindings(KeyBindingsBase):
                             filter=filter,
                             eager=eager,
                             is_global=is_global,
-                            save_before=save_before,
+                            save_before=(
+                                (lambda e: True) if save_before is None else save_before
+                            ),
                             record_in_macro=record_in_macro,
                         )
                     )

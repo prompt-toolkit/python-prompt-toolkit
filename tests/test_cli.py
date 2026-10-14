@@ -927,6 +927,34 @@ def test_vi_macros():
     assert result.text == "helloworld"
 
 
+def test_vi_undo_removes_whole_insert():
+    feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI)
+
+    # Insert "asdf", Escape, then undo.
+    result, cli = feed("asdf\x1bu\r")
+    assert result.text == ""
+
+    # An earlier insert stays when the later insert is undone.
+    result, cli = feed("x \x1bAasdf\x1bu\r")
+    assert result.text == "x "
+
+
+def test_emacs_undo_removes_whole_insert():
+    # Insert "asdf", then ControlUnderscore (undo).
+    result, cli = _feed_cli_with_input("asdf\x1f\r")
+    assert result.text == ""
+
+
+def test_emacs_undo_repeated_backspace():
+    # Repeated backspaces are undone as one group.
+    result, cli = _feed_cli_with_input("abc\x7f\x7f\x1f\r")
+    assert result.text == "abc"
+
+    # The second undo removes the insert.
+    result, cli = _feed_cli_with_input("abcd\x7f\x7f\x1f\x1f\r")
+    assert result.text == ""
+
+
 def test_accept_default():
     """
     Test `prompt(accept_default=True)`.

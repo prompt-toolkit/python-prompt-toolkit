@@ -6,8 +6,9 @@ import pytest
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import set_app
+from prompt_toolkit.filters import Condition
 from prompt_toolkit.input.defaults import create_pipe_input
-from prompt_toolkit.key_binding.key_bindings import KeyBindings
+from prompt_toolkit.key_binding.key_bindings import Binding, KeyBindings
 from prompt_toolkit.key_binding.key_processor import KeyPress, KeyProcessor
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout import Layout, Window
@@ -202,3 +203,131 @@ def test_previous_key_sequence(processor):
         assert events[1].previous_key_sequence[0].data == "a"
         assert events[1].previous_key_sequence[1].key == "a"
         assert events[1].previous_key_sequence[1].data == "a"
+
+
+def _save_true(event):
+    return True
+
+
+def _save_false(event):
+    return False
+
+
+class _FalsyCallable:
+    """A save_before callable that is itself falsy."""
+
+    def __bool__(self):
+        return False
+
+    def __call__(self, event):
+        return False
+
+
+def _source_binding(save_before, **kwargs):
+    def handler(event):
+        pass
+
+    source_bindings = KeyBindings()
+    source_bindings.add("a", save_before=save_before, **kwargs)(handler)
+    return source_bindings.bindings[0]
+
+
+def _add_binding(binding, **kwargs):
+    kb = KeyBindings()
+    result = kb.add("b", **kwargs)(binding)
+    assert result is binding
+    assert len(kb.bindings) == 1
+    return kb.bindings[0]
+
+
+@pytest.mark.parametrize("source_save_before", [_save_true, _save_false])
+def test_add_binding_inherits_save_before_when_omitted(source_save_before):
+    source = _source_binding(source_save_before)
+
+    assert _add_binding(source).save_before is source_save_before
+    assert _add_binding(source, save_before=None).save_before is source_save_before
+
+
+@pytest.mark.parametrize(
+    "source_save_before, explicit_save_before",
+    [(_save_true, _save_false), (_save_false, _save_true)],
+)
+def test_add_binding_explicit_save_before_overrides(
+    source_save_before, explicit_save_before
+):
+    source = _source_binding(source_save_before)
+
+    added = _add_binding(source, save_before=explicit_save_before)
+
+    assert added.save_before is explicit_save_before
+    assert added.save_before(None) is explicit_save_before(None)
+    # The source binding is not modified.
+    assert source.save_before is source_save_before
+
+
+def test_add_binding_falsy_save_before_callable_overrides():
+    source = _source_binding(_save_true)
+    falsy = _FalsyCallable()
+
+    added = _add_binding(source, save_before=falsy)
+
+    assert added.save_before is falsy
+    assert source.save_before is _save_true
+
+
+def test_add_binding_override_keeps_other_attributes():
+    source_flag = [True]
+    caller_flag = [True]
+    source = _source_binding(
+        _save_true,
+        filter=Condition(lambda: source_flag[0]),
+        record_in_macro=False,
+    )
+
+    added = _add_binding(
+        source,
+        save_before=_save_false,
+        filter=Condition(lambda: caller_flag[0]),
+        eager=True,
+        is_global=True,
+        record_in_macro=True,
+    )
+
+    assert added.handler is source.handler
+    assert added.keys == ("b",)
+    assert added.save_before is _save_false
+    # Filters are still combined with "&".
+    assert added.filter()
+    source_flag[0] = False
+    assert not added.filter()
+    source_flag[0] = True
+    caller_flag[0] = False
+    assert not added.filter()
+    # Eager and is_global are still combined with "|".
+    assert added.eager()
+    assert added.is_global()
+    # record_in_macro is still inherited from the source binding.
+    assert not added.record_in_macro()
+
+
+def test_add_binding_twice_keeps_explicit_save_before():
+    source = _source_binding(_save_true)
+    first = _add_binding(source, save_before=_save_false)
+
+    assert _add_binding(first).save_before is _save_false
+
+
+def test_add_handler_save_before_defaults():
+    def handler(event):
+        pass
+
+    kb = KeyBindings()
+    assert kb.add("a")(handler) is handler
+    kb.add("b", save_before=None)(handler)
+    kb.add("c", save_before=_save_false)(handler)
+    omitted, explicit_none, explicit = kb.bindings
+
+    assert isinstance(omitted, Binding)
+    assert omitted.save_before(None) is True
+    assert explicit_none.save_before(None) is True
+    assert explicit.save_before is _save_false
