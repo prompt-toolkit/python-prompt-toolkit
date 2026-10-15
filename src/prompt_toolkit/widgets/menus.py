@@ -147,7 +147,7 @@ class MenuContainer:
         def _click(event: E) -> None:
             "Click the selected menu item."
             item = self._get_menu(len(self.selected_menu) - 1)
-            if item.handler:
+            if item.handler and not item.disabled:
                 event.app.layout.focus_last()
                 item.handler()
 
