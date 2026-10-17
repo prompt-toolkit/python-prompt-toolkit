@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import AsyncGenerator, Callable, Iterable, Mapping, Sequence
+from contextlib import aclosing
 from typing import NamedTuple
 
 from prompt_toolkit.document import Document
@@ -76,23 +77,49 @@ class FuzzyCompleter(Completer):
             return r"[^\s]+"
         return "^[a-zA-Z0-9_]*"
 
-    def _get_fuzzy_completions(
+    async def get_completions_async(
         self, document: Document, complete_event: CompleteEvent
-    ) -> Iterable[Completion]:
+    ) -> AsyncGenerator[Completion, None]:
+        if self.enable_fuzzy():
+            word_before_cursor, document2 = self._get_fuzzy_document(document)
+            async with aclosing(
+                self.completer.get_completions_async(document2, complete_event)
+            ) as generator:
+                inner_completions = [completion async for completion in generator]
+
+            for completion in self._fuzzy_completions(
+                word_before_cursor, inner_completions
+            ):
+                yield completion
+        else:
+            async with aclosing(
+                self.completer.get_completions_async(document, complete_event)
+            ) as generator:
+                async for completion in generator:
+                    yield completion
+
+    def _get_fuzzy_document(self, document: Document) -> tuple[str, Document]:
         word_before_cursor = document.get_word_before_cursor(
             pattern=re.compile(self._get_pattern())
         )
-
-        # Get completions
         document2 = Document(
             text=document.text[: document.cursor_position - len(word_before_cursor)],
             cursor_position=document.cursor_position - len(word_before_cursor),
         )
+        return word_before_cursor, document2
 
-        inner_completions = list(
-            self.completer.get_completions(document2, complete_event)
+    def _get_fuzzy_completions(
+        self, document: Document, complete_event: CompleteEvent
+    ) -> Iterable[Completion]:
+        word_before_cursor, document2 = self._get_fuzzy_document(document)
+        yield from self._fuzzy_completions(
+            word_before_cursor,
+            list(self.completer.get_completions(document2, complete_event)),
         )
 
+    def _fuzzy_completions(
+        self, word_before_cursor: str, inner_completions: Iterable[Completion]
+    ) -> Iterable[Completion]:
         fuzzy_matches: list[_FuzzyMatch] = []
 
         if word_before_cursor == "":
