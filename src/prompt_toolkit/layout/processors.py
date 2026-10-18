@@ -420,11 +420,15 @@ class HighlightMatchingBracketProcessor(Processor):
         if positions:
             for row, col in positions:
                 if row == lineno:
+                    on_cursor = (
+                        row == document.cursor_position_row
+                        and col == document.cursor_position_col
+                    )
                     col = source_to_display(col)
                     fragments = explode_text_fragments(fragments)
                     style, text, *_ = fragments[col]
 
-                    if col == document.cursor_position_col:
+                    if on_cursor:
                         style += " class:matching-bracket.cursor "
                     else:
                         style += " class:matching-bracket.other "
