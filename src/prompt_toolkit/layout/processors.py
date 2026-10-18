@@ -26,6 +26,7 @@ from prompt_toolkit.formatted_text.utils import fragment_list_len, fragment_list
 from prompt_toolkit.search import SearchDirection
 from prompt_toolkit.utils import to_int, to_str
 
+from .screen import _CHAR_CACHE
 from .utils import explode_text_fragments
 
 if TYPE_CHECKING:
@@ -716,13 +717,19 @@ class TabsProcessor(Processor):
         position_mappings = {}
         result_fragments: StyleAndTextTuples = []
         pos = 0
+        column = 0
+        source_pos = 0
 
-        for i, fragment_and_text in enumerate(fragments):
-            position_mappings[i] = pos
+        for fragment_and_text in fragments:
+            if "[ZeroWidthEscape]" in fragment_and_text[0]:
+                result_fragments.append(fragment_and_text)
+                continue
+
+            position_mappings[source_pos] = pos
 
             if fragment_and_text[1] == "\t":
                 # Calculate how many characters we have to insert.
-                count = tabstop - (pos % tabstop)
+                count = tabstop - (column % tabstop)
                 if count == 0:
                     count = tabstop
 
@@ -730,14 +737,18 @@ class TabsProcessor(Processor):
                 result_fragments.append((style, separator1))
                 result_fragments.append((style, separator2 * (count - 1)))
                 pos += count
+                column += count
             else:
                 result_fragments.append(fragment_and_text)
                 pos += 1
+                column += _CHAR_CACHE[fragment_and_text[1], fragment_and_text[0]].width
 
-        position_mappings[len(fragments)] = pos
+            source_pos += 1
+
+        position_mappings[source_pos] = pos
         # Add `pos+1` to mapping, because the cursor can be right after the
         # line as well.
-        position_mappings[len(fragments) + 1] = pos + 1
+        position_mappings[source_pos + 1] = pos + 1
 
         def source_to_display(from_position: int) -> int:
             "Maps original cursor position to the new one."
