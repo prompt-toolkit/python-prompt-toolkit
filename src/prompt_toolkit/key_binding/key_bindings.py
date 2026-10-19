@@ -337,7 +337,7 @@ class KeyBindings(KeyBindingsBase):
             function = args[0]
 
             # Remove the given function.
-            for b in self.bindings:
+            for b in self.bindings[:]:
                 if b.handler == function:
                     self.bindings.remove(b)
                     found = True
@@ -349,7 +349,7 @@ class KeyBindings(KeyBindingsBase):
             # Remove this sequence of key bindings.
             keys = tuple(_parse_key(k) for k in args)
 
-            for b in self.bindings:
+            for b in self.bindings[:]:
                 if b.keys == keys:
                     self.bindings.remove(b)
                     found = True

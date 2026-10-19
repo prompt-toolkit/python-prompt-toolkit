@@ -202,3 +202,80 @@ def test_previous_key_sequence(processor):
         assert events[1].previous_key_sequence[0].data == "a"
         assert events[1].previous_key_sequence[1].key == "a"
         assert events[1].previous_key_sequence[1].data == "a"
+
+
+@pytest.mark.parametrize("remove_by_handler", [False, True])
+@pytest.mark.parametrize("match_count", [2, 3, 4])
+@pytest.mark.parametrize("adjacent", [False, True])
+def test_remove_all_matching_bindings(
+    handlers, remove_by_handler, match_count, adjacent
+):
+    from prompt_toolkit.key_binding.key_bindings import merge_key_bindings
+
+    bindings = KeyBindings()
+    removed = handlers.removed
+    retained = handlers.retained
+    bindings.add("b")(retained)
+    for _ in range(match_count):
+        bindings.add("a", "a")(removed)
+        if not adjacent:
+            bindings.add("b")(retained)
+    bindings.add("c")(retained)
+
+    original_list = bindings.bindings
+    expected = [b for b in original_list if b.handler == retained]
+    merged = merge_key_bindings([bindings])
+    # Populate both lookup caches in the original registry and its proxy.
+    for registry in (bindings, merged):
+        assert len(registry.get_bindings_for_keys(("a", "a"))) == match_count
+        assert len(registry.get_bindings_starting_with_keys(("a",))) == match_count
+    version = bindings._version
+
+    if remove_by_handler:
+        bindings.remove(removed)
+    else:
+        bindings.remove("a", "a")
+
+    assert bindings.bindings is original_list
+    assert bindings.bindings == expected
+    assert bindings._version != version
+    for registry in (bindings, merged):
+        assert registry.get_bindings_for_keys(("a", "a")) == []
+        assert registry.get_bindings_starting_with_keys(("a",)) == []
+        assert registry.bindings == expected
+
+    with set_dummy_app():
+        processor = KeyProcessor(merged)
+        processor.feed_multiple([KeyPress("a"), KeyPress("a"), KeyPress("c")])
+        processor.process_keys()
+    assert handlers.called == ["retained"]
+
+
+def test_remove_missing_handler_keeps_registry(handlers):
+    bindings = KeyBindings()
+    handler = handlers.retained
+    bindings.add("a")(handler)
+    expected = bindings.bindings[:]
+    version = bindings._version
+    with pytest.raises(ValueError, match="Binding not found"):
+        bindings.remove(handlers.missing)
+    assert bindings.bindings == expected
+    assert bindings._version == version
+
+
+def test_remove_handler_with_multiple_keys(handlers):
+    bindings = KeyBindings()
+    handler = handlers.removed
+    bindings.add("a")(handler)
+    bindings.add("b")(handler)
+    bindings.add("c")(handler)
+    bindings.remove(handler)
+    assert bindings.bindings == []
+
+
+def test_remove_duplicate_key_aliases(handlers):
+    bindings = KeyBindings()
+    bindings.add("enter")(handlers.first)
+    bindings.add("c-m")(handlers.second)
+    bindings.remove("enter")
+    assert bindings.bindings == []
