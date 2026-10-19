@@ -336,3 +336,51 @@ def test_split_lines_4():
         [("class:a", "line1")],
         [("class:a", "")],
     ]
+
+
+def test_ansi_adjacent_zero_width_escapes():
+    from prompt_toolkit.formatted_text.utils import (
+        fragment_list_len,
+        fragment_list_to_text,
+        fragment_list_width,
+    )
+
+    # Adjacent shell-integration sequences must both remain raw and zero-width.
+    first = "\x1b]133;A\x07"
+    second = "\x1b]133;B\x07"
+    value = ANSI(f"\x1b[32m>\001{first}\002\001{second}\002X")
+    fragments = to_formatted_text(value)
+    assert fragments == [
+        ("ansigreen", ">"),
+        ("[ZeroWidthEscape]", first),
+        ("[ZeroWidthEscape]", second),
+        ("ansigreen", "X"),
+    ]
+    assert fragment_list_to_text(fragments) == ">X"
+    assert fragment_list_len(fragments) == 2
+    assert fragment_list_width(fragments) == 2
+
+
+def test_ansi_empty_adjacent_zero_width_escapes():
+    for count in (1, 2, 3, 4):
+        for suffix in ("", "X", "\x1b[31mX"):
+            value = ANSI("\001\002" * count + suffix)
+            expected = [("[ZeroWidthEscape]", "")] * count
+            if suffix:
+                expected.append(("ansired" if suffix.startswith("\x1b") else "", "X"))
+            assert to_formatted_text(value) == expected
+
+
+def test_ansi_adjacent_escapes_preserve_raw_content():
+    raw = "\x1b[31m\x9b32m\n\t"
+    value = ANSI(f"\001{raw}\002\001{raw}\002\x1b[1mX")
+    assert to_formatted_text(value) == [
+        ("[ZeroWidthEscape]", raw),
+        ("[ZeroWidthEscape]", raw),
+        ("bold", "X"),
+    ]
+
+
+def test_ansi_adjacent_unterminated_zero_width_escape():
+    value = ANSI("X\001first\002\001unfinished")
+    assert to_formatted_text(value) == [("", "X"), ("[ZeroWidthEscape]", "first")]
