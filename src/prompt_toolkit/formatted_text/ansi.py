@@ -291,7 +291,16 @@ def ansi_escape(text: object) -> str:
     """
     Replace characters with a special meaning.
     """
-    return str(text).replace("\x1b", "?").replace("\b", "?")
+    # Besides ESC, the parser also treats \x9b as the start of a control
+    # sequence, and everything between \001 and \002 as raw output.
+    return (
+        str(text)
+        .replace("\x1b", "?")
+        .replace("\x9b", "?")
+        .replace("\x01", "?")
+        .replace("\x02", "?")
+        .replace("\b", "?")
+    )
 
 
 class ANSIFormatter(Formatter):

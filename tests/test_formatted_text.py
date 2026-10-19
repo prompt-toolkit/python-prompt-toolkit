@@ -209,6 +209,26 @@ def test_ansi_interpolation():
         ("ansigreen bg:ansimagenta", "2"),
     ]
 
+    # 8-bit CSI (\x9b) and the \001..\002 raw escape markers can't be
+    # injected through interpolated values either.
+    value = ANSI("{}").format("\x9b31mhi")
+    assert to_formatted_text(value) == [
+        ("", "?"),
+        ("", "3"),
+        ("", "1"),
+        ("", "m"),
+        ("", "h"),
+        ("", "i"),
+    ]
+
+    value = ANSI("%s") % "\x01x\x02y"
+    assert to_formatted_text(value) == [
+        ("", "?"),
+        ("", "x"),
+        ("", "?"),
+        ("", "y"),
+    ]
+
 
 def test_interpolation():
     value = Template(" {} ").format(HTML("<b>hello</b>"))
@@ -250,6 +270,13 @@ def test_html_interpolation():
 
     value = HTML("<b>{:02d}</b><u>{:.3f}</u>").format(3, 3.14159)
     assert to_formatted_text(value) == [("class:b", "03"), ("class:u", "3.142")]
+
+    # Quotes inside attribute values.
+    value = HTML("<style fg='{}'>x</style>").format("a'bg='b")
+    assert to_formatted_text(value) == [("fg:a'bg='b", "x")]
+
+    value = HTML('<style fg="%s">x</style>') % 'a"bg="b'
+    assert to_formatted_text(value) == [('fg:a"bg="b', "x")]
 
 
 def test_merge_formatted_text():
