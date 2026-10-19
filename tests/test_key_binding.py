@@ -202,3 +202,98 @@ def test_previous_key_sequence(processor):
         assert events[1].previous_key_sequence[0].data == "a"
         assert events[1].previous_key_sequence[1].key == "a"
         assert events[1].previous_key_sequence[1].data == "a"
+
+
+@pytest.mark.parametrize("initial_global", [False, True])
+@pytest.mark.parametrize("wrap_merged", [False, True])
+def test_global_bindings_evaluate_filters_dynamically(
+    handlers, initial_global, wrap_merged
+):
+    from prompt_toolkit.filters import Condition
+    from prompt_toolkit.key_binding.key_bindings import (
+        GlobalOnlyKeyBindings,
+        merge_key_bindings,
+    )
+
+    global_enabled = initial_global
+    binding_enabled = True
+    bindings = KeyBindings()
+    handler = handlers.dynamic
+    bindings.add(
+        "a",
+        "b",
+        filter=Condition(lambda: binding_enabled),
+        is_global=Condition(lambda: global_enabled),
+    )(handler)
+    global_bindings = GlobalOnlyKeyBindings(bindings)
+    registry = merge_key_bindings([global_bindings]) if wrap_merged else global_bindings
+
+    def active_handlers(prefix=False):
+        if prefix:
+            matches = registry.get_bindings_starting_with_keys(("a",))
+        else:
+            matches = registry.get_bindings_for_keys(("a", "b"))
+        return [binding.handler for binding in matches if binding.filter()]
+
+    for global_enabled, binding_enabled in [
+        (initial_global, True),
+        (not initial_global, True),
+        (True, False),
+        (True, True),
+        (False, True),
+    ]:
+        expected = [handler] if global_enabled and binding_enabled else []
+        assert active_handlers() == expected
+        assert active_handlers(prefix=True) == expected
+
+
+def test_global_binding_preserves_attributes(handlers):
+    from prompt_toolkit.filters import Condition
+    from prompt_toolkit.key_binding.key_bindings import GlobalOnlyKeyBindings
+
+    bindings = KeyBindings()
+    condition = Condition(lambda: True)
+    save_before = lambda event: False
+    bindings.add(
+        "a",
+        is_global=condition,
+        eager=True,
+        save_before=save_before,
+        record_in_macro=False,
+    )(handlers.global_handler)
+    original = bindings.bindings[0]
+    copied = GlobalOnlyKeyBindings(bindings).bindings[0]
+    assert copied.keys == original.keys
+    assert copied.handler is original.handler
+    assert copied.is_global is condition
+    assert copied.eager is original.eager
+    assert copied.save_before is save_before
+    assert copied.record_in_macro is original.record_in_macro
+    assert copied.filter()
+
+
+def test_global_binding_filter_changes_in_application(handlers):
+    from prompt_toolkit.filters import Condition
+    from prompt_toolkit.layout import FormattedTextControl, HSplit
+
+    enabled = False
+    bindings = KeyBindings()
+    bindings.add("x", is_global=Condition(lambda: enabled))(handlers.global_handler)
+    focused = Window(FormattedTextControl("focused", focusable=True))
+    unfocused = Window(
+        FormattedTextControl("unfocused", focusable=True, key_bindings=bindings)
+    )
+    with create_pipe_input() as pipe_input:
+        app = Application(
+            layout=Layout(HSplit([focused, unfocused]), focused_element=focused),
+            output=DummyOutput(),
+            input=pipe_input,
+        )
+        app.layout.update_parents_relations()
+        app.create_background_task = lambda coroutine, **kw: coroutine.close()
+        with set_app(app):
+            for enabled in (False, True, False, True):
+                before = len(handlers.called)
+                app.key_processor.feed(KeyPress("x", "x"))
+                app.key_processor.process_keys()
+                assert len(handlers.called) == before + int(enabled)

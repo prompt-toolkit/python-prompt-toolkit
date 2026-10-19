@@ -661,8 +661,18 @@ class GlobalOnlyKeyBindings(_Proxy):
             bindings2 = KeyBindings()
 
             for b in self.key_bindings.bindings:
-                if b.is_global():
-                    bindings2.bindings.append(b)
+                if not isinstance(b.is_global, Never):
+                    bindings2.bindings.append(
+                        Binding(
+                            keys=b.keys,
+                            handler=b.handler,
+                            filter=b.filter & b.is_global,
+                            eager=b.eager,
+                            is_global=b.is_global,
+                            save_before=b.save_before,
+                            record_in_macro=b.record_in_macro,
+                        )
+                    )
 
             self._bindings2 = bindings2
             self._last_version = expected_version
