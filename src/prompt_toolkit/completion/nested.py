@@ -84,9 +84,9 @@ class NestedCompleter(Completer):
         text = document.text_before_cursor.lstrip()
         stripped_len = len(document.text_before_cursor) - len(text)
 
-        # If there is a space, check for the first term, and use a
+        # If there is whitespace, check for the first term, and use a
         # subcompleter.
-        if " " in text:
+        if any(c.isspace() for c in text):
             first_term = text.split()[0]
             completer = self.options.get(first_term)
 
@@ -102,7 +102,7 @@ class NestedCompleter(Completer):
 
                 yield from completer.get_completions(new_document, complete_event)
 
-        # No space in the input: behave exactly like `WordCompleter`.
+        # No whitespace in the input: behave exactly like `WordCompleter`.
         else:
             completer = WordCompleter(
                 list(self.options.keys()), ignore_case=self.ignore_case
