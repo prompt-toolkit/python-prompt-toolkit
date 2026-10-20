@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import io
 import os
+import re
 import sys
 from collections.abc import Callable, Hashable, Iterable, Sequence
 from typing import TextIO
@@ -253,6 +254,10 @@ class _256ColorCache(dict[tuple[int, int, int], int]):
 _16_fg_colors = _16ColorCache(bg=False)
 _16_bg_colors = _16ColorCache(bg=True)
 _256_colors = _256ColorCache()
+
+# 8-bit C1 control characters. Terminals in UTF-8 mode can interpret these
+# like their 7-bit "ESC x" equivalents (e.g. "\x9b" is CSI).
+_C1_CONTROLS_RE = re.compile("[\x80-\x9f]")
 
 
 class _EscapeCodeCache(dict[Attrs, str]):
@@ -520,7 +525,10 @@ class Vt100_Output(Output):
         Write text to output.
         (Removes vt100 escape codes. -- used for safely writing text.)
         """
-        self._buffer.append(data.replace("\x1b", "?"))
+        data = data.replace("\x1b", "?")
+        if not data.isascii():
+            data = _C1_CONTROLS_RE.sub("?", data)
+        self._buffer.append(data)
 
     def set_title(self, title: str) -> None:
         """
@@ -530,6 +538,7 @@ class Vt100_Output(Output):
             "linux",
             "eterm-color",
         ):  # Not supported by the Linux console.
+            title = _C1_CONTROLS_RE.sub("", title)
             self.write_raw(
                 "\x1b]2;{}\x07".format(title.replace("\x1b", "").replace("\x07", ""))
             )
