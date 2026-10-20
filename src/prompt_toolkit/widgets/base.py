@@ -127,7 +127,8 @@ class TextArea:
     Buffer attributes:
 
     :param text: The initial text.
-    :param multiline: If True, allow multiline input.
+    :param multiline: A bool or :class:`~prompt_toolkit.filters.Filter`
+        controlling whether multiline input is allowed.
     :param completer: :class:`~prompt_toolkit.completion.Completer` instance
         for auto completion.
     :param complete_while_typing: Boolean.
@@ -252,19 +253,16 @@ class TextArea:
             focus_on_click=focus_on_click,
         )
 
-        if multiline:
-            if scrollbar:
-                right_margins = [ScrollbarMargin(display_arrows=True)]
-            else:
-                right_margins = []
-            if line_numbers:
-                left_margins = [NumberedMargin()]
-            else:
-                left_margins = []
+        if scrollbar:
+            right_margins = [
+                ConditionalMargin(ScrollbarMargin(display_arrows=True), multiline)
+            ]
         else:
-            height = D.exact(1)
-            left_margins = []
             right_margins = []
+        if line_numbers:
+            left_margins = [ConditionalMargin(NumberedMargin(), multiline)]
+        else:
+            left_margins = []
 
         style = "class:text-area " + style
 
@@ -273,7 +271,7 @@ class TextArea:
             height = D(min=1)
 
         self.window = Window(
-            height=height,
+            height=lambda: height if is_true(multiline) else D.exact(1),
             width=width,
             dont_extend_height=dont_extend_height,
             dont_extend_width=dont_extend_width,
