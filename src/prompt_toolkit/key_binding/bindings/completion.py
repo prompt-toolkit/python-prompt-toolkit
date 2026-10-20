@@ -105,7 +105,8 @@ def _display_completions_like_readline(
         term_width, max(get_cwidth(c.display_text) for c in completions) + 1
     )
     column_count = max(1, term_width // max_compl_width)
-    completions_per_page = column_count * (term_height - 1)
+    # Keep at least one row when the terminal has no room for the pager.
+    completions_per_page = column_count * max(1, term_height - 1)
     page_count = int(math.ceil(len(completions) / float(completions_per_page)))
     # Note: math.ceil can return float on Python2.
 
