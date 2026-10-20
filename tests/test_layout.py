@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from asyncio import run
+
 import pytest
 
+from prompt_toolkit.buffer import Buffer
+from prompt_toolkit.document import Document
 from prompt_toolkit.layout import InvalidLayoutError, Layout
 from prompt_toolkit.layout.containers import HSplit, VSplit, Window
 from prompt_toolkit.layout.controls import BufferControl
+from prompt_toolkit.lexers import DynamicLexer, Lexer, SimpleLexer
 
 
 def test_layout_class():
@@ -51,3 +56,77 @@ def test_layout_class():
 def test_create_invalid_layout():
     with pytest.raises(InvalidLayoutError):
         Layout(HSplit([]))
+
+
+@pytest.mark.parametrize("depth", [1, 2, 3])
+def test_nested_dynamic_lexer_invalidation(depth):
+    async def check():
+        current = None
+        lexer = DynamicLexer(lambda: current)
+        for _ in range(depth - 1):
+            inner = lexer
+            lexer = DynamicLexer(lambda inner=inner: inner)
+
+        control = BufferControl(buffer=Buffer(document=Document("text")), lexer=lexer)
+        for style in [None, "class:first", "class:second", None]:
+            current = SimpleLexer(style) if style is not None else None
+            fragments = control.create_content(80, 24).get_line(0)
+            assert fragments == [(style or "", "text"), ("", " ")]
+
+    run(check())
+
+
+def test_dynamic_lexer_preserves_custom_invalidation():
+    class ChangingLexer(Lexer):
+        style = "class:first"
+        calls = 0
+
+        def lex_document(self, document):
+            self.calls += 1
+            style = self.style
+            return lambda lineno: [(style, document.lines[lineno])]
+
+        def invalidation_hash(self):
+            return self.style
+
+    async def check():
+        inner = ChangingLexer()
+        lexer = DynamicLexer(lambda: inner)
+        control = BufferControl(buffer=Buffer(document=Document("text")), lexer=lexer)
+
+        for style, expected_calls in [
+            ("class:first", 1),
+            ("class:first", 1),
+            ("class:second", 2),
+            ("class:second", 2),
+            ("class:first", 2),
+        ]:
+            inner.style = style
+            fragments = control.create_content(80, 24).get_line(0)
+            assert fragments == [(style, "text"), ("", " ")]
+            assert inner.calls == expected_calls
+
+    run(check())
+
+
+def test_dynamic_lexer_invalidates_when_identity_changes():
+    class RevisionLexer(SimpleLexer):
+        def invalidation_hash(self):
+            return 0
+
+    async def check():
+        current = RevisionLexer("class:first")
+        lexer = DynamicLexer(lambda: current)
+        control = BufferControl(buffer=Buffer(document=Document("text")), lexer=lexer)
+        assert control.create_content(80, 24).get_line(0) == [
+            ("class:first", "text"),
+            ("", " "),
+        ]
+
+        current = RevisionLexer("class:second")
+        assert control.create_content(80, 24).get_line(0) == [
+            ("class:second", "text"),
+            ("", " "),
+        ]
+
+    run(check())
