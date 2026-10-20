@@ -5,6 +5,7 @@ import pytest
 from prompt_toolkit.layout import InvalidLayoutError, Layout
 from prompt_toolkit.layout.containers import HSplit, VSplit, Window
 from prompt_toolkit.layout.controls import BufferControl
+from prompt_toolkit.layout.utils import explode_text_fragments
 
 
 def test_layout_class():
@@ -51,3 +52,37 @@ def test_layout_class():
 def test_create_invalid_layout():
     with pytest.raises(InvalidLayoutError):
         Layout(HSplit([]))
+
+
+@pytest.mark.parametrize("index", [-3, -2, -1, 0, 1, 2])
+@pytest.mark.parametrize("text", ["", "X", "YZ"])
+def test_exploded_list_assign_item(index, text):
+    fragments = explode_text_fragments([("", "abc")])
+    fragments[index] = ("bold", text)
+
+    normalized_index = index % 3
+    expected = [("", char) for char in "abc"]
+    expected[normalized_index : normalized_index + 1] = [
+        ("bold", char) for char in text
+    ]
+    assert fragments == expected
+
+
+@pytest.mark.parametrize("text, index", [("abc", -4), ("abc", 3), ("", -1), ("", 0)])
+def test_exploded_list_assign_item_out_of_range(text, index):
+    fragments = explode_text_fragments([("", text)])
+    original = fragments[:]
+
+    with pytest.raises(IndexError):
+        fragments[index] = ("bold", "X")
+    assert fragments == original
+
+
+def test_exploded_list_assign_index_object():
+    class LastIndex:
+        def __index__(self):
+            return -1
+
+    fragments = explode_text_fragments([("", "abc")])
+    fragments[LastIndex()] = ("bold", "XY")
+    assert fragments == [("", "a"), ("", "b"), ("bold", "X"), ("bold", "Y")]

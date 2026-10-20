@@ -51,6 +51,10 @@ class _ExplodedList(list[_T]):
         """
         if not isinstance(index, slice):
             int_index = index.__index__()
+            if int_index < 0:
+                int_index += len(self)
+            if not 0 <= int_index < len(self):
+                raise IndexError("list assignment index out of range")
             index = slice(int_index, int_index + 1)
         if isinstance(value, tuple):  # In case of `OneStyleAndTextTuple`.
             value = cast("list[_T]", [value])
