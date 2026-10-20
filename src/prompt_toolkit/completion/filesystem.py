@@ -112,7 +112,11 @@ class ExecutableCompleter(PathCompleter):
         super().__init__(
             only_directories=False,
             min_input_len=1,
-            get_paths=lambda: os.environ.get("PATH", "").split(os.pathsep),
+            get_paths=lambda: (
+                [p or os.curdir for p in os.environ["PATH"].split(os.pathsep)]
+                if "PATH" in os.environ
+                else [""]
+            ),
             file_filter=lambda name: os.access(name, os.X_OK),
             expanduser=True,
         )
