@@ -1,20 +1,29 @@
 from __future__ import annotations
 
+import asyncio
 import os
 import re
 import shutil
 import tempfile
+import threading
 from contextlib import contextmanager
+
+import pytest
 
 from prompt_toolkit.completion import (
     CompleteEvent,
+    Completer,
+    Completion,
+    DeduplicateCompleter,
     FuzzyWordCompleter,
     NestedCompleter,
     PathCompleter,
+    ThreadedCompleter,
     WordCompleter,
     merge_completers,
 )
 from prompt_toolkit.document import Document
+from prompt_toolkit.eventloop import aclosing
 
 
 @contextmanager
@@ -467,3 +476,241 @@ def test_deduplicate_completer():
         )
     )
     assert len(completions) == 5
+
+
+@pytest.fixture(params=["direct", "merged"])
+def deduplicate_completer(request):
+    def wrap(completer):
+        if request.param == "direct":
+            return DeduplicateCompleter(completer)
+        return merge_completers([completer], deduplicate=True)
+
+    return wrap
+
+
+def test_deduplicate_completer_async(deduplicate_completer):
+    document = Document("say ab after", cursor_position=6)
+    event = CompleteEvent(completion_requested=True)
+    first = Completion("abc", start_position=-2, display_meta="first")
+    second = Completion("abcde", start_position=-2)
+    completions = [
+        Completion("ab", start_position=-2),  # No effect.
+        first,
+        Completion("c"),  # Same resulting text as the first completion.
+        Completion(""),  # Another completion without an effect.
+        second,
+        Completion("abc", start_position=-2, display_meta="duplicate"),
+    ]
+
+    class AsyncCompleter(Completer):
+        def get_completions(self, document, complete_event):
+            return []
+
+        async def get_completions_async(self, received_document, received_event):
+            assert received_document is document
+            assert received_event is event
+            for completion in completions:
+                yield completion
+
+    completer = deduplicate_completer(AsyncCompleter())
+
+    async def get_completions():
+        return [c async for c in completer.get_completions_async(document, event)]
+
+    async def run():
+        # Each invocation has its own deduplication state, including concurrent ones.
+        results = await asyncio.gather(get_completions(), get_completions())
+        results.append(await get_completions())
+        for result in results:
+            assert len(result) == 2
+            assert result[0] is first
+            assert result[1] is second
+
+    asyncio.run(run())
+
+
+def test_deduplicate_completer_async_sync_fallback(deduplicate_completer):
+    completer = deduplicate_completer(WordCompleter(["abc", "abc", "abcde", "ab"]))
+    document = Document("ab")
+    event = CompleteEvent()
+    expected = list(completer.get_completions(document, event))
+    assert [c.text for c in expected] == ["abc", "abcde"]
+
+    async def run():
+        assert [
+            c async for c in completer.get_completions_async(document, event)
+        ] == expected
+
+    asyncio.run(run())
+
+
+def test_deduplicate_completer_async_threaded(deduplicate_completer):
+    threads = []
+
+    class BlockingCompleter(Completer):
+        def get_completions(self, document, complete_event):
+            threads.append(threading.get_ident())
+            yield Completion("abc")
+            yield Completion("abc")
+            yield Completion("abcde")
+
+    completer = deduplicate_completer(ThreadedCompleter(BlockingCompleter()))
+
+    async def run():
+        assert [
+            c.text
+            async for c in completer.get_completions_async(
+                Document(""), CompleteEvent()
+            )
+        ] == ["abc", "abcde"]
+        assert len(threads) == 1
+        assert threads[0] != threading.get_ident()
+
+    asyncio.run(run())
+
+
+def test_deduplicate_completer_async_closes_stream(deduplicate_completer):
+    activity = []
+    first = Completion("abc")
+
+    class AsyncCompleter(Completer):
+        def get_completions(self, document, complete_event):
+            return []
+
+        async def get_completions_async(self, document, complete_event):
+            try:
+                activity.append("first")
+                yield first
+                activity.append("second")
+                yield Completion("abcde")
+            finally:
+                activity.append("closed")
+
+    completer = deduplicate_completer(AsyncCompleter())
+
+    async def run():
+        async with aclosing(
+            completer.get_completions_async(Document(""), CompleteEvent())
+        ) as completions:
+            assert await anext(completions) is first
+            # Do not consume the rest of the stream to yield its first unique result.
+            assert activity == ["first"]
+        assert activity == ["first", "closed"]
+
+    asyncio.run(run())
+
+
+def test_deduplicate_completer_async_exception(deduplicate_completer):
+    error = ValueError("completion failed")
+    closed = []
+
+    class AsyncCompleter(Completer):
+        def get_completions(self, document, complete_event):
+            return []
+
+        async def get_completions_async(self, document, complete_event):
+            try:
+                yield Completion("abc")
+                yield Completion("abc")
+                raise error
+            finally:
+                closed.append(True)
+
+    completer = deduplicate_completer(AsyncCompleter())
+
+    async def run():
+        results = []
+        with pytest.raises(ValueError) as exc_info:
+            async for completion in completer.get_completions_async(
+                Document(""), CompleteEvent()
+            ):
+                results.append(completion.text)
+        assert exc_info.value is error
+        assert results == ["abc"]
+        assert closed == [True]
+
+    asyncio.run(run())
+
+
+def test_deduplicate_completer_async_cancel(deduplicate_completer):
+    closed = []
+
+    async def run():
+        started = asyncio.Event()
+
+        class AsyncCompleter(Completer):
+            def get_completions(self, document, complete_event):
+                return []
+
+            async def get_completions_async(self, document, complete_event):
+                try:
+                    started.set()
+                    await asyncio.Future()
+                    yield Completion("abc")
+                finally:
+                    closed.append(True)
+
+        completer = deduplicate_completer(AsyncCompleter())
+        completions = completer.get_completions_async(Document(""), CompleteEvent())
+        task = asyncio.create_task(anext(completions))
+        try:
+            await asyncio.wait_for(started.wait(), timeout=1)
+            task.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await task
+            assert closed == [True]
+        finally:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            await completions.aclose()
+
+    asyncio.run(run())
+
+
+def test_merge_completers_async_deduplication_across_sources():
+    class AsyncCompleter(Completer):
+        def get_completions(self, document, complete_event):
+            return []
+
+        async def get_completions_async(self, document, complete_event):
+            yield Completion("b", start_position=0)
+            yield Completion("ac", start_position=-1, display_meta="async")
+
+    completer = merge_completers(
+        [WordCompleter(["ab"]), AsyncCompleter(), WordCompleter(["ac", "ad"])],
+        deduplicate=True,
+    )
+
+    async def run():
+        result = [
+            (c.text, c.start_position, c.display_meta_text)
+            async for c in completer.get_completions_async(
+                Document("a"), CompleteEvent()
+            )
+        ]
+        assert result == [("ab", -1, ""), ("ac", -1, "async"), ("ad", -1, "")]
+
+    asyncio.run(run())
+
+
+def test_deduplicate_completer_async_closes_threaded_producer(deduplicate_completer):
+    closed = threading.Event()
+
+    class BlockingCompleter(Completer):
+        def get_completions(self, document, complete_event):
+            try:
+                for index in range(10000):
+                    yield Completion(str(index))
+            finally:
+                closed.set()
+
+    completer = deduplicate_completer(ThreadedCompleter(BlockingCompleter()))
+
+    async def run():
+        async with aclosing(
+            completer.get_completions_async(Document(""), CompleteEvent())
+        ) as completions:
+            assert (await anext(completions)).text == "0"
+        assert closed.is_set()
+
+    asyncio.run(run())

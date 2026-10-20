@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import AsyncGenerator, Callable, Iterable
 
 from prompt_toolkit.document import Document
+from prompt_toolkit.eventloop import aclosing
 
 from .base import CompleteEvent, Completer, Completion
 
@@ -24,22 +25,41 @@ class DeduplicateCompleter(Completer):
     def get_completions(
         self, document: Document, complete_event: CompleteEvent
     ) -> Iterable[Completion]:
-        # Keep track of the document strings we'd get after applying any completion.
-        found_so_far: set[str] = set()
+        is_unique = _get_deduplicate_filter(document)
 
         for completion in self.completer.get_completions(document, complete_event):
-            text_if_applied = (
-                document.text[: document.cursor_position + completion.start_position]
-                + completion.text
-                + document.text[document.cursor_position :]
-            )
+            if is_unique(completion):
+                yield completion
 
-            if text_if_applied == document.text:
-                # Don't include completions that don't have any effect at all.
-                continue
+    async def get_completions_async(
+        self, document: Document, complete_event: CompleteEvent
+    ) -> AsyncGenerator[Completion, None]:
+        is_unique = _get_deduplicate_filter(document)
 
-            if text_if_applied in found_so_far:
-                continue
+        async with aclosing(
+            self.completer.get_completions_async(document, complete_event)
+        ) as completions:
+            async for completion in completions:
+                if is_unique(completion):
+                    yield completion
 
-            found_so_far.add(text_if_applied)
-            yield completion
+
+def _get_deduplicate_filter(document: Document) -> Callable[[Completion], bool]:
+    # Keep track of the document strings we'd get after applying any completion.
+    # Include the original text to exclude completions that have no effect.
+    found_so_far = {document.text}
+
+    def is_unique(completion: Completion) -> bool:
+        text_if_applied = (
+            document.text[: document.cursor_position + completion.start_position]
+            + completion.text
+            + document.text[document.cursor_position :]
+        )
+
+        if text_if_applied in found_so_far:
+            return False
+
+        found_so_far.add(text_if_applied)
+        return True
+
+    return is_unique
