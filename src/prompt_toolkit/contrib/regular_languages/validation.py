@@ -41,11 +41,9 @@ class GrammarValidator(Validator):
                 validator = self.validators.get(v.varname)
 
                 if validator:
-                    # Unescape text.
-                    unwrapped_text = self.compiled_grammar.unescape(v.varname, v.value)
-
+                    # Match.variables() has already unescaped this value.
                     # Create a document, for the completions API (text/cursor_position)
-                    inner_document = Document(unwrapped_text, len(unwrapped_text))
+                    inner_document = Document(v.value, len(v.value))
 
                     try:
                         validator.validate(inner_document)

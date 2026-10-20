@@ -1,10 +1,21 @@
 from __future__ import annotations
 
-from prompt_toolkit.completion import CompleteEvent, Completer, Completion
+import re
+
+import pytest
+
+from prompt_toolkit.completion import (
+    CompleteEvent,
+    Completer,
+    Completion,
+    WordCompleter,
+)
 from prompt_toolkit.contrib.regular_languages import compile
 from prompt_toolkit.contrib.regular_languages.compiler import Match, Variables
 from prompt_toolkit.contrib.regular_languages.completion import GrammarCompleter
+from prompt_toolkit.contrib.regular_languages.validation import GrammarValidator
 from prompt_toolkit.document import Document
+from prompt_toolkit.validation import Validator
 
 
 def test_simple_match():
@@ -100,3 +111,52 @@ def test_completer():
     assert completions[0].start_position == -3
     assert completions[1].text == "before2-def-after2-B"
     assert completions[1].start_position == -3
+
+
+def _escape_argument(text):
+    return re.sub(r"([\\ ])", r"\\\1", text)
+
+
+def _unescape_argument(text):
+    return re.sub(r"\\(.)", r"\1", text)
+
+
+@pytest.mark.parametrize("text", [r"foo\b", r"foo\ b", r"foo\\b", "foo b", "foo"])
+@pytest.mark.parametrize("suffix", ["", " trailing"])
+def test_completer_unescapes_once(text, suffix):
+    grammar = compile(
+        r"cmd\s+(?P<arg>.*)",
+        escape_funcs={"arg": _escape_argument},
+        unescape_funcs={"arg": _unescape_argument},
+    )
+    target = text + "ar"
+    completer = GrammarCompleter(
+        grammar, {"arg": WordCompleter([target], sentence=True)}
+    )
+    escaped = _escape_argument(text)
+    before_cursor = "cmd " + escaped
+    document = Document(before_cursor + suffix, len(before_cursor))
+
+    completions = list(completer.get_completions(document, CompleteEvent()))
+
+    assert len(completions) == 1
+    assert completions[0].text == _escape_argument(target)
+    assert completions[0].start_position == -len(escaped)
+
+
+@pytest.mark.parametrize("text", [r"foo\b", r"foo\ b", r"foo\\b", "foo b", "foo"])
+def test_validator_unescapes_once(text):
+    received = []
+
+    class RecordingValidator(Validator):
+        def validate(self, document):
+            received.append((document.text, document.cursor_position))
+
+    grammar = compile(
+        r"cmd\s+(?P<arg>.*)",
+        unescape_funcs={"arg": _unescape_argument},
+    )
+    validator = GrammarValidator(grammar, {"arg": RecordingValidator()})
+    validator.validate(Document("cmd " + _escape_argument(text)))
+
+    assert received == [(text, len(text))]
