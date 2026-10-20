@@ -1066,7 +1066,7 @@ class Document:
                 )
 
             new_cursor_position = self.cursor_position + len(data.text) * count
-            if before:
+            if before and data.text:
                 new_cursor_position -= 1
 
         elif data.type == SelectionType.LINES:
