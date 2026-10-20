@@ -544,12 +544,21 @@ def load_vi_bindings() -> KeyBindingsBase:
             b.start_completion(select_last=True)
 
     @handle("c-g", filter=vi_insert_mode)
-    @handle("c-y", filter=vi_insert_mode)
     def _accept_completion(event: E) -> None:
         """
         Accept current completion.
         """
         event.current_buffer.complete_state = None
+
+    @handle("c-y", filter=vi_insert_mode)
+    def _accept_completion_or_yank(event: E) -> None:
+        """
+        Accept current completion, or yank when no completion is active.
+        """
+        if event.current_buffer.complete_state is None:
+            get_by_name("yank").handler(event)
+        else:
+            event.current_buffer.complete_state = None
 
     @handle("c-e", filter=vi_insert_mode)
     def _cancel_completion(event: E) -> None:
