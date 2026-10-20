@@ -73,10 +73,10 @@ class ANSI:
                     c = yield
                     if c == "\002":
                         formatted_text.append(("[ZeroWidthEscape]", escaped_text))
-                        c = yield
                         break
                     else:
                         escaped_text += c
+                continue
 
             # Check for CSI
             if c == "\x1b":
