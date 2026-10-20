@@ -172,6 +172,10 @@ class ConditionalValidator(Validator):
         if self.filter():
             self.validator.validate(document)
 
+    async def validate_async(self, document: Document) -> None:
+        if self.filter():
+            await self.validator.validate_async(document)
+
 
 class DynamicValidator(Validator):
     """

@@ -156,6 +156,14 @@ class ConditionalAutoSuggest(AutoSuggest):
 
         return None
 
+    async def get_suggestion_async(
+        self, buff: Buffer, document: Document
+    ) -> Suggestion | None:
+        if self.filter():
+            return await self.auto_suggest.get_suggestion_async(buff, document)
+
+        return None
+
 
 class DynamicAutoSuggest(AutoSuggest):
     """
