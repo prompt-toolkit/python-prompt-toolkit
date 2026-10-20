@@ -89,6 +89,13 @@ class NestedCompleter(Completer):
         if " " in text:
             first_term = text.split()[0]
             completer = self.options.get(first_term)
+            if self.ignore_case and first_term not in self.options:
+                # Prefer exact keys, otherwise use the first case-insensitive match.
+                first_term_lower = first_term.lower()
+                for key, value in self.options.items():
+                    if key.lower() == first_term_lower:
+                        completer = value
+                        break
 
             # If we have a sub completer, use this for the completions.
             if completer is not None:

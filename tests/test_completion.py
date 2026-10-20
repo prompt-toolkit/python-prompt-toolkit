@@ -6,6 +6,8 @@ import shutil
 import tempfile
 from contextlib import contextmanager
 
+import pytest
+
 from prompt_toolkit.completion import (
     CompleteEvent,
     FuzzyWordCompleter,
@@ -442,6 +444,93 @@ def test_nested_completer():
         Document("show ip interface br"), CompleteEvent()
     )
     assert {c.text for c in completions} == {"brief"}
+
+
+@pytest.mark.parametrize(
+    "command, text, start_position",
+    [
+        ("show", "SHOW ", 0),
+        ("SHOW", "show v", -1),
+        ("ShOw", "sHoW v", -1),
+        ("show", "  SHOW   v", -1),
+        ("\u0130", "i\u0307 v", -1),
+        ("i\u0307", "\u0130 v", -1),
+    ],
+)
+def test_nested_completer_ignore_case(command, text, start_position):
+    completer = NestedCompleter.from_nested_dict({command: {"version": None}})
+
+    completions = list(completer.get_completions(Document(text), CompleteEvent()))
+    assert [(c.text, c.start_position) for c in completions] == [
+        ("version", start_position)
+    ]
+
+
+def test_nested_completer_ignore_case_multiple_levels():
+    completer = NestedCompleter.from_nested_dict(
+        {"Show": {"IP": {"Interface": {"brief"}}}}
+    )
+
+    completions = completer.get_completions(
+        Document("SHOW ip INTERFACE b"), CompleteEvent()
+    )
+    assert [(c.text, c.start_position) for c in completions] == [("brief", -1)]
+
+
+@pytest.mark.parametrize("ignore_case", [False, True])
+@pytest.mark.parametrize("command", ["show", "SHOW"])
+def test_nested_completer_prefers_exact_match(ignore_case, command):
+    completer = NestedCompleter(
+        {"show": WordCompleter(["version"]), "SHOW": None},
+        ignore_case=ignore_case,
+    )
+
+    completions = completer.get_completions(Document(command + " "), CompleteEvent())
+    assert [c.text for c in completions] == (["version"] if command == "show" else [])
+
+
+def test_nested_completer_case_sensitive():
+    completer = NestedCompleter({"show": WordCompleter(["version"])}, ignore_case=False)
+
+    completions = completer.get_completions(Document("SHOW "), CompleteEvent())
+    assert list(completions) == []
+
+
+@pytest.mark.parametrize("terminal", [False, True])
+def test_nested_completer_case_insensitive_collision(terminal):
+    completer = NestedCompleter(
+        {
+            "Show": None if terminal else WordCompleter(["version"]),
+            "SHOW": WordCompleter(["clock"]),
+        }
+    )
+
+    completions = completer.get_completions(Document("show "), CompleteEvent())
+    assert [c.text for c in completions] == ([] if terminal else ["version"])
+
+
+def test_nested_completer_preserves_child_case_sensitivity():
+    completer = NestedCompleter({"show": WordCompleter(["version"], ignore_case=False)})
+
+    completions = completer.get_completions(Document("SHOW V"), CompleteEvent())
+    assert list(completions) == []
+
+
+def test_nested_completer_ignore_case_before_cursor():
+    completer = NestedCompleter.from_nested_dict({"show": {"version": None}})
+    document = Document("SHOW v suffix", cursor_position=6)
+
+    completions = completer.get_completions(document, CompleteEvent())
+    assert [(c.text, c.start_position) for c in completions] == [("version", -1)]
+
+
+def test_nested_completer_case_insensitive_options_update():
+    options = {"show": WordCompleter(["version"])}
+    completer = NestedCompleter(options)
+    options["show"] = WordCompleter(["clock"])
+
+    completions = completer.get_completions(Document("SHOW "), CompleteEvent())
+    assert [c.text for c in completions] == ["clock"]
 
 
 def test_deduplicate_completer():
