@@ -173,7 +173,7 @@ class AdjustBrightnessStyleTransformation(StyleTransformation):
 
         # If a foreground color is given without a background color.
         no_background = not attrs.bgcolor or attrs.bgcolor == "default"
-        has_fgcolor = attrs.color and attrs.color != "ansidefault"
+        has_fgcolor = attrs.color and attrs.color not in ("default", "ansidefault")
 
         if has_fgcolor and no_background:
             # Calculate new RGB values.
