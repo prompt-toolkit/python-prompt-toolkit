@@ -54,9 +54,9 @@ class HTML:
         def process_node(node: Any) -> None:
             "Process node recursively."
             for child in node.childNodes:
-                if child.nodeType == child.TEXT_NODE:
+                if child.nodeType in (child.TEXT_NODE, child.CDATA_SECTION_NODE):
                     result.append((get_current_style(), child.data))
-                else:
+                elif child.nodeType == child.ELEMENT_NODE:
                     add_to_name_stack = child.nodeName not in (
                         "#document",
                         "html-root",
