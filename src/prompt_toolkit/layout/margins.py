@@ -102,7 +102,8 @@ class NumberedMargin(Margin):
         result: StyleAndTextTuples = []
         last_lineno = None
 
-        for y, lineno in enumerate(window_render_info.displayed_lines):
+        displayed_lines = window_render_info.displayed_lines
+        for lineno in displayed_lines:
             # Only display line number if this line is not a continuation of the previous line.
             if lineno != last_lineno:
                 if lineno is None:
@@ -128,9 +129,8 @@ class NumberedMargin(Margin):
 
         # Fill with tildes.
         if self.display_tildes():
-            while y < window_render_info.window_height:
+            for _ in range(window_render_info.window_height - len(displayed_lines)):
                 result.append(("class:tilde", "~\n"))
-                y += 1
 
         return result
 
