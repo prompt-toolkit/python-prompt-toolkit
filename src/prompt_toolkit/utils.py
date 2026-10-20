@@ -71,7 +71,7 @@ class Event(Generic[_Sender]):
 
     def __call__(self) -> None:
         "Fire event."
-        for handler in self._handlers:
+        for handler in self._handlers[:]:
             handler(self.sender)
 
     def fire(self) -> None:
