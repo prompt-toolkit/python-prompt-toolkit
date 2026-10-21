@@ -6,8 +6,13 @@ import shutil
 import tempfile
 from contextlib import contextmanager
 
+import pytest
+
 from prompt_toolkit.completion import (
     CompleteEvent,
+    Completer,
+    Completion,
+    FuzzyCompleter,
     FuzzyWordCompleter,
     NestedCompleter,
     PathCompleter,
@@ -398,6 +403,19 @@ def test_fuzzy_completer():
     # Multiple words. (Check last only.)
     completions = completer.get_completions(Document("test txt"), CompleteEvent())
     assert [c.text for c in completions] == ["users.txt", "accounts.txt"]
+
+
+@pytest.mark.parametrize("text", ["", "rd"])
+def test_fuzzy_completer_preserves_styles(text):
+    class StyledCompleter(Completer):
+        def get_completions(self, document, complete_event):
+            yield Completion("red", style="fg:red", selected_style="fg:white bg:red")
+
+    completer = FuzzyCompleter(StyledCompleter())
+    completions = list(completer.get_completions(Document(text), CompleteEvent()))
+    assert len(completions) == 1
+    assert completions[0].style == "fg:red"
+    assert completions[0].selected_style == "fg:white bg:red"
 
 
 def test_nested_completer():
