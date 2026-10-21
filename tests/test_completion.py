@@ -8,6 +8,7 @@ from contextlib import contextmanager
 
 from prompt_toolkit.completion import (
     CompleteEvent,
+    Completion,
     FuzzyWordCompleter,
     NestedCompleter,
     PathCompleter,
@@ -467,3 +468,39 @@ def test_deduplicate_completer():
         )
     )
     assert len(completions) == 5
+
+
+def test_completion_hash_default_display():
+    first = Completion("example", start_position=-2)
+    equal = Completion("example", start_position=-2)
+    different = Completion("other", start_position=-2)
+    assert first == equal
+    assert hash(first) == hash(equal)
+    assert {first, equal, different} == {first, different}
+    assert {first: "cached"}[equal] == "cached"
+
+
+def test_completion_hash_formatted_display_and_metadata():
+    first = Completion(
+        "example", display=[("class:name", "Example")], display_meta=[("", "meta")]
+    )
+    equal = Completion(
+        "example", display=[("class:name", "Example")], display_meta=[("", "meta")]
+    )
+    different = Completion(
+        "example", display=[("class:name", "Other")], display_meta=[("", "meta")]
+    )
+    assert first == equal
+    assert hash(first) == hash(equal)
+    assert len({first, equal, different}) == 2
+
+
+def test_completion_hash_does_not_evaluate_lazy_metadata():
+    def metadata():
+        raise AssertionError("Metadata should remain lazy")
+
+    first = Completion("example", display_meta=metadata)
+    equal = Completion("example", display_meta=metadata)
+    assert first == equal
+    assert hash(first) == hash(equal)
+    assert len({first, equal}) == 1

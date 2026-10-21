@@ -81,7 +81,9 @@ class Completion:
         )
 
     def __hash__(self) -> int:
-        return hash((self.text, self.start_position, self.display, self._display_meta))
+        # Display and metadata may contain unhashable formatted text. These
+        # two fields alone still guarantee equal completions have equal hashes.
+        return hash((self.text, self.start_position))
 
     @property
     def display_text(self) -> str:
