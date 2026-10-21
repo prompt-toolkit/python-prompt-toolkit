@@ -71,7 +71,11 @@ class PathCompleter(Completer):
             for directory in directories:
                 # Look for matches in this directory.
                 if os.path.isdir(directory):
-                    for filename in os.listdir(directory):
+                    try:
+                        directory_filenames = os.listdir(directory)
+                    except OSError:
+                        continue
+                    for filename in directory_filenames:
                         if filename.startswith(prefix):
                             filenames.append((directory, filename))
 
