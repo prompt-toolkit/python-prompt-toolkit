@@ -19,6 +19,27 @@ def test_current_char(document):
     assert document.char_before_cursor == "n"
 
 
+@pytest.mark.parametrize(
+    "text, cursor_position, current_char, char_before_cursor",
+    [
+        ("", 0, "", ""),
+        ("abc", 0, "a", ""),
+        ("abc", 1, "b", "a"),
+        ("abc", 3, "", "c"),
+        ("a\n", 0, "a", ""),
+        ("a\n", 2, "", "\n"),
+        ("\u03bb", 0, "\u03bb", ""),
+        ("\u03bb", 1, "", "\u03bb"),
+    ],
+)
+def test_characters_at_document_boundaries(
+    text, cursor_position, current_char, char_before_cursor
+):
+    document = Document(text, cursor_position)
+    assert document.current_char == current_char
+    assert document.char_before_cursor == char_before_cursor
+
+
 def test_text_before_cursor(document):
     assert document.text_before_cursor == "line 1\nlin"
 
