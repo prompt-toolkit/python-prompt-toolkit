@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+import os
+import stat
+import sys
 from asyncio import run
+
+import pytest
 
 from prompt_toolkit.history import FileHistory, InMemoryHistory, ThreadedHistory
 
@@ -58,6 +63,18 @@ def test_file_history(tmpdir):
     # Create another history instance pointing to the same file.
     history2 = FileHistory(histfile)
     assert _call_history_load(history2) == ["test3", "world", "hello"]
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX file modes")
+def test_file_history_permissions(tmpdir):
+    histfile = tmpdir.join("history")
+    old_umask = os.umask(0o022)
+    try:
+        FileHistory(histfile).append_string("hello")
+    finally:
+        os.umask(old_umask)
+
+    assert stat.S_IMODE(os.stat(histfile).st_mode) == 0o600
 
 
 def test_threaded_file_history(tmpdir):
