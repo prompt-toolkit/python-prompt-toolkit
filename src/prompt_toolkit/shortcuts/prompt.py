@@ -32,7 +32,7 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from enum import Enum
 from functools import partial
-from typing import TYPE_CHECKING, Generic, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, Union, cast
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import get_app
@@ -50,6 +50,7 @@ from prompt_toolkit.enums import DEFAULT_BUFFER, SEARCH_BUFFER, EditingMode
 from prompt_toolkit.eventloop import InputHook
 from prompt_toolkit.filters import (
     Condition,
+    Filter,
     FilterOrBool,
     has_arg,
     has_focus,
@@ -198,6 +199,21 @@ class _RPrompt(Window):
             align=WindowAlign.RIGHT,
             style="class:rprompt",
         )
+
+
+class _PromptBuffer(Buffer):
+    """
+    The default buffer of a `PromptSession`. Input that is accepted while
+    `is_password` is active is not appended to the history.
+    """
+
+    def __init__(self, is_password: Filter, **kwargs: Any) -> None:
+        self._is_password = is_password
+        super().__init__(**kwargs)
+
+    def append_to_history(self) -> None:
+        if not self._is_password():
+            super().append_to_history()
 
 
 class CompleteStyle(str, Enum):
@@ -515,7 +531,8 @@ class PromptSession(Generic[_T]):
             )
             return True  # Keep text, we call 'reset' later on.
 
-        return Buffer(
+        return _PromptBuffer(
+            is_password=dyncond("is_password"),
             name=DEFAULT_BUFFER,
             # Make sure that complete_while_typing is disabled when
             # enable_history_search is enabled. (First convert to Filter,

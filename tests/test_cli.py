@@ -940,3 +940,21 @@ def test_accept_default():
         # prompt reset between calls happened at the wrong time, breaking this.)
         result = session.prompt(default="world", accept_default=True)
         assert result == "world"
+
+
+def test_password_input_not_added_to_history():
+    history = InMemoryHistory()
+
+    with create_pipe_input() as inp:
+        session = PromptSession(input=inp, output=DummyOutput(), history=history)
+
+        inp.send_text("alice\r")
+        assert session.prompt() == "alice"
+
+        inp.send_text("hunter2\r")
+        assert session.prompt(is_password=True) == "hunter2"
+
+        inp.send_text("ls\r")
+        assert session.prompt(is_password=False) == "ls"
+
+    assert list(history.get_strings()) == ["alice", "ls"]
