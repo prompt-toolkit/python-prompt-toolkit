@@ -22,6 +22,39 @@ def test_insert_text(_buffer):
     assert _buffer.cursor_position == len("some_text")
 
 
+def test_undo_redo_with_default_binding_snapshots(_buffer):
+    for char in "abc":
+        _buffer.save_to_undo_stack()
+        _buffer.insert_text(char)
+
+    for expected in ("ab", "a"):
+        _buffer.save_to_undo_stack()
+        _buffer.undo()
+        assert _buffer.text == expected
+
+    for expected in ("ab", "abc"):
+        _buffer.save_to_undo_stack()
+        _buffer.redo()
+        assert _buffer.text == expected
+
+
+def test_edit_after_undo_clears_redo_stack(_buffer):
+    for char in "abc":
+        _buffer.save_to_undo_stack()
+        _buffer.insert_text(char)
+
+    _buffer.save_to_undo_stack()
+    _buffer.undo()
+    assert _buffer.text == "ab"
+
+    _buffer.save_to_undo_stack()
+    _buffer.insert_text("x")
+    _buffer.save_to_undo_stack()
+    _buffer.redo()
+
+    assert _buffer.text == "abx"
+
+
 def test_cursor_movement(_buffer):
     _buffer.insert_text("some_text")
     _buffer.cursor_left()

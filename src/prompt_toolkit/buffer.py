@@ -351,6 +351,7 @@ class Buffer:
         # Undo/redo stacks (stack of `(text, cursor_position)`).
         self._undo_stack: list[tuple[str, int]] = []
         self._redo_stack: list[tuple[str, int]] = []
+        self._clear_redo_stack_on_text_change = False
 
         # Cancel history loader. If history loading was still ongoing.
         # Cancel the `_load_history_task`, so that next repaint of the
@@ -516,6 +517,10 @@ class Buffer:
             self._text_changed()
 
     def _text_changed(self) -> None:
+        if self._clear_redo_stack_on_text_change:
+            self._redo_stack = []
+            self._clear_redo_stack_on_text_change = False
+
         # Remove any validation errors and complete state.
         self.validation_error = None
         self.validation_state = ValidationState.UNKNOWN
@@ -619,8 +624,12 @@ class Buffer:
 
     def save_to_undo_stack(self, clear_redo_stack: bool = True) -> None:
         """
-        Safe current state (input text and cursor position), so that we can
+        Save current state (input text and cursor position), so that we can
         restore it by calling undo.
+
+        When ``clear_redo_stack`` is true, clear the redo stack on the next
+        text change. This allows key bindings to save the current state before
+        non-editing actions like undo and redo without discarding redo history.
         """
         # Safe if the text is different from the text at the top of the stack
         # is different. If the text is the same, just update the cursor position.
@@ -629,9 +638,7 @@ class Buffer:
         else:
             self._undo_stack.append((self.text, self.cursor_position))
 
-        # Saving anything to the undo stack, clears the redo stack.
-        if clear_redo_stack:
-            self._redo_stack = []
+        self._clear_redo_stack_on_text_change = clear_redo_stack
 
     def transform_lines(
         self,
@@ -1257,6 +1264,8 @@ class Buffer:
                 get_app().create_background_task(self._async_suggester())
 
     def undo(self) -> None:
+        self._clear_redo_stack_on_text_change = False
+
         # Pop from the undo-stack until we find a text that if different from
         # the current text. (The current logic of `save_to_undo_stack` will
         # cause that the top of the undo stack is usually the same as the
@@ -1273,6 +1282,8 @@ class Buffer:
                 break
 
     def redo(self) -> None:
+        self._clear_redo_stack_on_text_change = False
+
         if self._redo_stack:
             # Copy current state on undo stack.
             self.save_to_undo_stack(clear_redo_stack=False)
