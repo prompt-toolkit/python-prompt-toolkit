@@ -639,7 +639,13 @@ class Vt100ConsoleInputReader:
 
         # First, get all the keys from the input buffer, in order to determine
         # whether we should consider this a paste event or not.
-        for key_data in self._get_keys(read, input_records):
+        # Non-BMP characters are passed as separate surrogate codes; combine
+        # paired surrogates into a single character.
+        data = "".join(self._get_keys(read, input_records))
+        data = data.encode("utf-16-le", "surrogatepass").decode(
+            "utf-16-le", "surrogatepass"
+        )
+        for key_data in data:
             self._vt100_parser.feed(key_data)
 
         # Return result.
