@@ -448,13 +448,20 @@ class HSplit(_Split):
 
         i = next(child_generator)
 
+        # The height handed out so far, carried rather than re-added.
+        # These loops run once per unit handed out, and `sum(sizes)`
+        # walked the whole list on every turn to learn what the turn
+        # before it already knew.
+        taken = sum(sizes)
+
         # Increase until we meet at least the 'preferred' size.
         preferred_stop = min(height, sum_dimensions.preferred)
         preferred_dimensions = [d.preferred for d in dimensions]
 
-        while sum(sizes) < preferred_stop:
+        while taken < preferred_stop:
             if sizes[i] < preferred_dimensions[i]:
                 sizes[i] += 1
+                taken += 1
             i = next(child_generator)
 
         # Increase until we use all the available space. (or until "max")
@@ -462,9 +469,10 @@ class HSplit(_Split):
             max_stop = min(height, sum_dimensions.max)
             max_dimensions = [d.max for d in dimensions]
 
-            while sum(sizes) < max_stop:
+            while taken < max_stop:
                 if sizes[i] < max_dimensions[i]:
                     sizes[i] += 1
+                    taken += 1
                 i = next(child_generator)
 
         return sizes
@@ -643,21 +651,30 @@ class VSplit(_Split):
 
         i = next(child_generator)
 
+        # The width handed out so far, carried rather than re-added.
+        # These loops run about once per column, and `sum(sizes)` walked
+        # the whole list on every turn to learn what the turn before it
+        # already knew.
+        taken = sum(sizes)
+
         # Increase until we meet at least the 'preferred' size.
         preferred_stop = min(width, sum_dimensions.preferred)
+        preferred_dimensions = [d.preferred for d in dimensions]
 
-        while sum(sizes) < preferred_stop:
+        while taken < preferred_stop:
             if sizes[i] < preferred_dimensions[i]:
                 sizes[i] += 1
+                taken += 1
             i = next(child_generator)
 
         # Increase until we use all the available space.
         max_dimensions = [d.max for d in dimensions]
         max_stop = min(width, sum_dimensions.max)
 
-        while sum(sizes) < max_stop:
+        while taken < max_stop:
             if sizes[i] < max_dimensions[i]:
                 sizes[i] += 1
+                taken += 1
             i = next(child_generator)
 
         return sizes
