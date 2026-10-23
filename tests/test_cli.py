@@ -9,6 +9,7 @@ from functools import partial
 
 import pytest
 
+from prompt_toolkit.auto_suggest import Suggestion
 from prompt_toolkit.clipboard import ClipboardData, InMemoryClipboard
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.filters import ViInsertMode
@@ -17,6 +18,8 @@ from prompt_toolkit.input.defaults import create_pipe_input
 from prompt_toolkit.input.vt100_parser import ANSI_SEQUENCES
 from prompt_toolkit.key_binding.bindings.named_commands import prefix_meta
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
+from prompt_toolkit.key_binding.vi_state import InputMode
+from prompt_toolkit.layout.processors import AppendAutoSuggestion, TransformationInput
 from prompt_toolkit.output import DummyOutput
 from prompt_toolkit.shortcuts import PromptSession
 
@@ -891,6 +894,41 @@ def test_vi_temp_navigation_mode():
     )
     assert result.text == "a78d9f"
     assert result.cursor_position == 5
+
+
+@pytest.mark.parametrize("accept_key", ["l", "\x1b[C"])
+def test_vi_navigation_keeps_and_accepts_suggestion(accept_key):
+    with create_pipe_input() as inp:
+        inp.send_text(accept_key + "\r")
+        session = PromptSession(
+            input=inp,
+            output=DummyOutput(),
+            editing_mode=EditingMode.VI,
+        )
+
+        displayed = []
+
+        def pre_run():
+            buffer = session.default_buffer
+            buffer.suggestion = Suggestion(" hello")
+            buffer.cursor_position = len(buffer.text) - 1
+            session.app.vi_state.input_mode = InputMode.NAVIGATION
+
+            transformation = AppendAutoSuggestion().apply_transformation(
+                TransformationInput(
+                    session.app.layout.current_control,
+                    buffer.document,
+                    0,
+                    lambda i: i,
+                    [("", buffer.text)],
+                    80,
+                    24,
+                )
+            )
+            displayed.extend(text for _, text in transformation.fragments)
+
+        assert session.prompt(default="echo", pre_run=pre_run) == "echo hello"
+        assert "".join(displayed) == "echo hello"
 
 
 def test_vi_macros():
