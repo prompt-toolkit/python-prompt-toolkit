@@ -363,6 +363,7 @@ class Renderer:
         self._mouse_support_enabled = False
         self._bracketed_paste_enabled = False
         self._cursor_key_mode_reset = False
+        self._has_rendered = False
 
         # Future set when we are waiting for a CPR flag.
         self._waiting_for_cpr_futures: deque[Future[None]] = deque()
@@ -428,6 +429,7 @@ class Renderer:
 
         # Flush output. `disable_mouse_support` needs to write to stdout.
         self.output.flush()
+        self._has_rendered = self._in_alternate_screen
 
     @property
     def last_rendered_screen(self) -> Screen | None:
@@ -436,6 +438,11 @@ class Renderer:
         This can be `None`.
         """
         return self._last_screen
+
+    @property
+    def has_rendered(self) -> bool:
+        """Whether the renderer currently has terminal state to reset."""
+        return self._has_rendered
 
     @property
     def height_is_known(self) -> bool:
@@ -598,6 +605,7 @@ class Renderer:
                 won't print any changes to this part.
         """
         output = self.output
+        self._has_rendered = True
 
         # Enter alternate screen.
         if self.full_screen and not self._in_alternate_screen:
