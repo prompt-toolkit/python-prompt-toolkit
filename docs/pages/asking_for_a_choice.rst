@@ -26,6 +26,70 @@ from a list of options:
 .. image:: ../images/choice-input.png
 
 
+Selecting multiple options
+--------------------------
+
+Pass ``multiple_selection=True`` to return a list instead of a single value.
+Use the arrow keys, ``j``/``k``, or the displayed option numbers to move focus.
+Press space to check or uncheck the focused option, and enter to accept the
+selection. Moving focus and pressing enter do not check an option. Mouse clicks
+also toggle options when ``mouse_support=True``.
+
+.. code:: python
+
+    from prompt_toolkit.shortcuts import choice
+
+    dishes = choice(
+        message="Please choose your dishes:",
+        options=[
+            ("pizza", "Pizza with mushrooms"),
+            ("salad", "Salad with tomatoes"),
+            ("sushi", "Sushi"),
+        ],
+        multiple_selection=True,
+        default_values=["salad"],
+    )
+
+The result contains selected values in the order they appear in ``options``,
+not the order in which they were checked. Equal values occur only once, and
+values do not need to be hashable. Accepting without checking anything returns
+``[]``.
+
+``default_values`` specifies initially checked options. Unknown values are
+ignored and duplicates are removed. When ``default_values`` is omitted,
+``default`` is checked if supplied; otherwise nothing is checked. An explicit
+``default_values=[]`` checks nothing, even when ``default`` is set. Passing
+``default_values`` without multiple selection raises ``ValueError``.
+
+Checked options use ``symbol`` and the ``selected-option`` style. The focused
+option has reverse highlighting, independently of whether it is checked. The
+``focused-option`` style can override this, for example with
+``"underline noreverse"``. Frames, toolbars, custom key bindings, and interrupt
+handling work in both selection modes.
+
+For a reusable or asynchronous prompt, use
+:class:`~prompt_toolkit.shortcuts.choice_input.ChoiceInput` and pass the selection
+arguments to its ``prompt()`` or ``prompt_async()`` method:
+
+.. code:: python
+
+    from prompt_toolkit.shortcuts.choice_input import ChoiceInput
+
+    selection = ChoiceInput(
+        message="Please choose your dishes:",
+        options=[("pizza", "Pizza"), ("salad", "Salad")],
+    )
+
+    async def choose_dishes():
+        return await selection.prompt_async(
+            multiple_selection=True, default_values=["salad"]
+        )
+
+Each invocation starts from its configured defaults; selections are not carried
+over from a previous invocation. Without ``multiple_selection=True``, existing
+single-choice behavior and return types are unchanged.
+
+
 Coloring the options
 --------------------
 
