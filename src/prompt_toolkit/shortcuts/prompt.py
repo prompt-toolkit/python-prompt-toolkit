@@ -1527,6 +1527,11 @@ def create_confirm_session(
         session.default_buffer.text = "n"
         event.app.exit(result=False)
 
+    @bindings.add("enter")
+    def _(event: E) -> None:
+        "Disallow submitting without an answer."
+        pass
+
     @bindings.add(Keys.Any)
     def _(event: E) -> None:
         "Disallow inserting other text."
