@@ -163,6 +163,48 @@ def _output_screen_diff(
         )
         return max(numbers, default=0)
 
+    def get_trailing_fill(
+        row: dict[int, Char], zero_width_escapes_row: dict[int, str], max_column: int
+    ) -> tuple[int, str, Attrs] | None:
+        """Return a safe, same-style background fill at the end of a row."""
+        if width == 0 or max_column != width - 1:
+            return None
+
+        last_cell = row[width - 1]
+        if last_cell.char != " ":
+            return None
+
+        fill_style = last_cell.style
+        fill_attrs = attrs_for_style_string[fill_style]
+        # Erase-to-EOL uses the current background color. Other attributes can
+        # change how blank cells render, so keep emitting those cells normally.
+        if (
+            not fill_attrs.bgcolor
+            or fill_attrs.color
+            or fill_attrs.bold
+            or fill_attrs.underline
+            or fill_attrs.strike
+            or fill_attrs.italic
+            or fill_attrs.blink
+            or fill_attrs.reverse
+            or fill_attrs.hidden
+            or fill_attrs.dim
+        ):
+            return None
+
+        fill_start = width - 1
+        while fill_start > 0:
+            cell = row[fill_start - 1]
+            if cell.char != " " or cell.style != fill_style:
+                break
+            fill_start -= 1
+
+        # Erase-to-EOL would discard injected zero-width sequences.
+        if any(column >= fill_start for column in zero_width_escapes_row):
+            return None
+
+        return fill_start, fill_style, fill_attrs
+
     # Render for the first time: reset styling.
     if not previous_screen:
         reset_attributes()
@@ -201,9 +243,31 @@ def _output_screen_diff(
         new_max_line_len = min(width - 1, get_max_column_index(new_row))
         previous_max_line_len = min(width - 1, get_max_column_index(previous_row))
 
+        trailing_fill = get_trailing_fill(
+            new_row, zero_width_escapes_row, new_max_line_len
+        )
+        if trailing_fill:
+            fill_start, fill_style, fill_attrs = trailing_fill
+            # If this same fill was already present, there is no need to erase
+            # it again. A longer previous fill is also sufficient.
+            previous_fill_start = width - 1
+            while previous_fill_start >= fill_start:
+                cell = previous_row[previous_fill_start]
+                if cell.char != " " or cell.style != fill_style:
+                    break
+                previous_fill_start -= 1
+            previous_fill_matches = previous_fill_start < fill_start
+            render_max_line_len = fill_start - 1
+        else:
+            fill_start = 0
+            fill_style = ""
+            fill_attrs = None
+            previous_fill_matches = False
+            render_max_line_len = new_max_line_len
+
         # Loop over the columns.
         c = 0  # Column counter.
-        while c <= new_max_line_len:
+        while c <= render_max_line_len:
             new_char = new_row[c]
             old_char = previous_row[c]
             char_width = new_char.width or 1
@@ -222,6 +286,15 @@ def _output_screen_diff(
                 current_pos = Point(x=current_pos.x + char_width, y=current_pos.y)
 
             c += char_width
+
+        if trailing_fill and not previous_fill_matches:
+            current_pos = move_cursor(Point(x=fill_start, y=y))
+            assert fill_attrs is not None
+            if last_style != fill_style:
+                if not last_style or fill_attrs != attrs_for_style_string[last_style]:
+                    _output_set_attributes(fill_attrs, color_depth)
+                last_style = fill_style
+            output.erase_end_of_line()
 
         # If the new line is shorter, trim it.
         if previous_screen and new_max_line_len < previous_max_line_len:
