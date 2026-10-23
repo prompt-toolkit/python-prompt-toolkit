@@ -110,3 +110,39 @@ def test_swap_characters_before_cursor(_buffer):
     _buffer.swap_characters_before_cursor()
 
     assert _buffer.text == "hello wrold"
+
+
+def test_accept_handler_keep_text_history():
+    import asyncio
+
+    from prompt_toolkit.application.current import set_app
+    from prompt_toolkit.application.dummy import DummyApplication
+    from prompt_toolkit.history import InMemoryHistory
+
+    async def run_test():
+        app = DummyApplication()
+        set_app(app)
+
+        history = InMemoryHistory()
+        buff = Buffer(history=history, accept_handler=lambda b: True)
+
+        buff.insert_text("first")
+        buff.validate_and_handle()
+        assert buff.text == "first"
+        buff.load_history_if_not_yet_loaded()
+        if buff._load_history_task:
+            await buff._load_history_task
+
+        buff.insert_text(" second")
+        buff.validate_and_handle()
+        assert buff.text == "first second"
+        buff.load_history_if_not_yet_loaded()
+        if buff._load_history_task:
+            await buff._load_history_task
+
+        buff.history_backward()
+        assert buff.text == "first"
+        buff.history_forward()
+        assert buff.text == "first second"
+
+    asyncio.run(run_test())

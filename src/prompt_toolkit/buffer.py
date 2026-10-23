@@ -391,7 +391,16 @@ class Buffer:
         if self._load_history_task is None:
 
             async def load_history() -> None:
+                first = True
                 async for item in self.history.load():
+                    if (
+                        first
+                        and len(self._working_lines) == 1
+                        and self._working_lines[0] == item
+                    ):
+                        first = False
+                        continue
+                    first = False
                     self._working_lines.appendleft(item)
                     self.__working_index += 1
 
@@ -1891,7 +1900,9 @@ class Buffer:
 
             self.append_to_history()
 
-            if not keep_text:
+            if keep_text:
+                self.reset(document=Document(self.text, self.cursor_position))
+            else:
                 self.reset()
 
 
