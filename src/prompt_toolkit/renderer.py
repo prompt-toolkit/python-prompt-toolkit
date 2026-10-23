@@ -362,6 +362,7 @@ class Renderer:
         self._in_alternate_screen = False
         self._mouse_support_enabled = False
         self._bracketed_paste_enabled = False
+        self._focus_reporting_enabled = False
         self._cursor_key_mode_reset = False
 
         # Future set when we are waiting for a CPR flag.
@@ -420,6 +421,10 @@ class Renderer:
         if self._bracketed_paste_enabled:
             self.output.disable_bracketed_paste()
             self._bracketed_paste_enabled = False
+
+        if self._focus_reporting_enabled:
+            self.output.disable_focus_reporting()
+            self._focus_reporting_enabled = False
 
         self.output.reset_cursor_shape()
         self.output.show_cursor()
@@ -608,6 +613,11 @@ class Renderer:
         if not self._bracketed_paste_enabled:
             self.output.enable_bracketed_paste()
             self._bracketed_paste_enabled = True
+
+        # Enable focus event reporting on terminals that support it.
+        if not self._focus_reporting_enabled and output.supports_focus_reporting:
+            output.enable_focus_reporting()
+            self._focus_reporting_enabled = True
 
         # Reset cursor key mode.
         if not self._cursor_key_mode_reset:

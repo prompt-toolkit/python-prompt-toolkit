@@ -139,3 +139,10 @@ def test_cpr_response_2(processor, stream):
     assert len(processor.keys) == 2
     assert processor.keys[0].key == Keys.CPRResponse
     assert processor.keys[1].key == Keys.ControlJ
+
+
+def test_focus_events(processor, stream):
+    stream.feed("\x1b[I\x1b[O")
+
+    assert [key.key for key in processor.keys] == [Keys.FocusIn, Keys.FocusOut]
+    assert [key.data for key in processor.keys] == ["\x1b[I", "\x1b[O"]

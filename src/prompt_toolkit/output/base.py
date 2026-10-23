@@ -187,6 +187,17 @@ class Output(metaclass=ABCMeta):
     def disable_bracketed_paste(self) -> None:
         "For vt100 only."
 
+    @property
+    def supports_focus_reporting(self) -> bool:
+        "True if this output can receive terminal focus events."
+        return False
+
+    def enable_focus_reporting(self) -> None:
+        "For vt100 only."
+
+    def disable_focus_reporting(self) -> None:
+        "For vt100 only."
+
     def reset_cursor_key_mode(self) -> None:
         """
         For vt100 only.

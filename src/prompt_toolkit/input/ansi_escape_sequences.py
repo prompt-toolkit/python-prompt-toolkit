@@ -77,6 +77,8 @@ ANSI_SEQUENCES: dict[str, Keys | tuple[Keys, ...]] = {
     "\x1b[Z": Keys.BackTab,  # shift + tab
     "\x1b\x09": Keys.BackTab,  # Linux console
     "\x1b[~": Keys.BackTab,  # Windows console
+    "\x1b[I": Keys.FocusIn,
+    "\x1b[O": Keys.FocusOut,
     # --
     # Function keys.
     "\x1bOP": Keys.F1,

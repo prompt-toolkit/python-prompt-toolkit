@@ -611,6 +611,22 @@ class Vt100_Output(Output):
     def disable_bracketed_paste(self) -> None:
         self.write_raw("\x1b[?2004l")
 
+    @property
+    def supports_focus_reporting(self) -> bool:
+        if is_dumb_terminal(self.term):
+            return False
+
+        try:
+            return self.stdout.isatty()
+        except ValueError:
+            return False
+
+    def enable_focus_reporting(self) -> None:
+        self.write_raw("\x1b[?1004h")
+
+    def disable_focus_reporting(self) -> None:
+        self.write_raw("\x1b[?1004l")
+
     def reset_cursor_key_mode(self) -> None:
         """
         For vt100 only.
