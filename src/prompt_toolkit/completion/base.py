@@ -307,10 +307,11 @@ class DynamicCompleter(Completer):
     ) -> AsyncGenerator[Completion, None]:
         completer = self.get_completer() or DummyCompleter()
 
-        async for completion in completer.get_completions_async(
-            document, complete_event
-        ):
-            yield completion
+        async with aclosing(
+            completer.get_completions_async(document, complete_event)
+        ) as async_generator:
+            async for completion in async_generator:
+                yield completion
 
     def __repr__(self) -> str:
         return f"DynamicCompleter({self.get_completer!r} -> {self.get_completer()!r})"
