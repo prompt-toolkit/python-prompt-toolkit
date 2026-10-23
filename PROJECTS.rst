@@ -40,6 +40,7 @@ Shells:
 - `starterTree <https://github.com/thomas10-10/starterTree>`_: A command launcher organized in a tree structure with fuzzy autocompletion
 - `git-delete-merged-branches <https://github.com/hartwork/git-delete-merged-branches>`_: Command-line tool to delete merged Git branches
 - `radian <https://github.com/randy3k/radian>`_: A 21 century R console
+- `CSharp Console <https://github.com/niqibiao/unity-csharpconsole>`_: An interactive C# REPL for Unity Editor and runtime Players.
 
 Full screen applications:
 
