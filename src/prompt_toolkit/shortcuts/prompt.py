@@ -314,7 +314,9 @@ class PromptSession(Generic[_T]):
         and returns formatted text. When this is `None` (the default), then
         `prompt_width` spaces will be used.
     :param complete_style: ``CompleteStyle.COLUMN``,
-        ``CompleteStyle.MULTI_COLUMN`` or ``CompleteStyle.READLINE_LIKE``.
+        ``CompleteStyle.MULTI_COLUMN``, ``CompleteStyle.READLINE_LIKE`` or a
+        callable that returns a ``CompleteStyle``. The callable is evaluated
+        dynamically.
     :param mouse_support: `bool` or :class:`~prompt_toolkit.filters.Filter`
         to enable mouse support.
     :param placeholder: Text to be displayed when no input has been given
@@ -397,7 +399,9 @@ class PromptSession(Generic[_T]):
         completer: Completer | None = None,
         complete_in_thread: bool = False,
         reserve_space_for_menu: int = 8,
-        complete_style: CompleteStyle = CompleteStyle.COLUMN,
+        complete_style: CompleteStyle | Callable[[], CompleteStyle] = (
+            CompleteStyle.COLUMN
+        ),
         auto_suggest: AutoSuggest | None = None,
         style: BaseStyle | None = None,
         style_transformation: StyleTransformation | None = None,
@@ -524,7 +528,7 @@ class PromptSession(Generic[_T]):
                 lambda: (
                     is_true(self.complete_while_typing)
                     and not is_true(self.enable_history_search)
-                    and not self.complete_style == CompleteStyle.READLINE_LIKE
+                    and not self._get_complete_style() == CompleteStyle.READLINE_LIKE
                 )
             ),
             validate_while_typing=dyncond("validate_while_typing"),
@@ -641,7 +645,7 @@ class PromptSession(Generic[_T]):
 
         @Condition
         def multi_column_complete_style() -> bool:
-            return self.complete_style == CompleteStyle.MULTI_COLUMN
+            return self._get_complete_style() == CompleteStyle.MULTI_COLUMN
 
         # Build the layout.
 
@@ -834,7 +838,7 @@ class PromptSession(Generic[_T]):
 
         @Condition
         def readline_complete_style() -> bool:
-            return self.complete_style == CompleteStyle.READLINE_LIKE
+            return self._get_complete_style() == CompleteStyle.READLINE_LIKE
 
         @handle("tab", filter=readline_complete_style & default_focused)
         def _complete_like_readline(event: E) -> None:
@@ -908,7 +912,7 @@ class PromptSession(Generic[_T]):
         search_ignore_case: FilterOrBool | None = None,
         complete_while_typing: FilterOrBool | None = None,
         validate_while_typing: FilterOrBool | None = None,
-        complete_style: CompleteStyle | None = None,
+        complete_style: CompleteStyle | Callable[[], CompleteStyle] | None = None,
         auto_suggest: AutoSuggest | None = None,
         validator: Validator | None = None,
         clipboard: Clipboard | None = None,
@@ -1148,7 +1152,7 @@ class PromptSession(Generic[_T]):
         search_ignore_case: FilterOrBool | None = None,
         complete_while_typing: FilterOrBool | None = None,
         validate_while_typing: FilterOrBool | None = None,
-        complete_style: CompleteStyle | None = None,
+        complete_style: CompleteStyle | Callable[[], CompleteStyle] | None = None,
         auto_suggest: AutoSuggest | None = None,
         validator: Validator | None = None,
         clipboard: Clipboard | None = None,
@@ -1291,7 +1295,7 @@ class PromptSession(Generic[_T]):
         # layout has at least a minimal height in order to display it.
         if (
             self.completer is not None
-            and self.complete_style != CompleteStyle.READLINE_LIKE
+            and self._get_complete_style() != CompleteStyle.READLINE_LIKE
         ):
             space = self.reserve_space_for_menu
         else:
@@ -1307,6 +1311,16 @@ class PromptSession(Generic[_T]):
                 return Dimension(min=space)
 
         return Dimension()
+
+    def _get_complete_style(self) -> CompleteStyle:
+        complete_style = self.complete_style
+
+        if callable(complete_style):
+            style: CompleteStyle = complete_style()
+        else:
+            style = complete_style
+
+        return style
 
     def _get_prompt(self) -> StyleAndTextTuples:
         return to_formatted_text(self.message, style="class:prompt")
@@ -1424,7 +1438,7 @@ def prompt(
     search_ignore_case: FilterOrBool | None = None,
     complete_while_typing: FilterOrBool | None = None,
     validate_while_typing: FilterOrBool | None = None,
-    complete_style: CompleteStyle | None = None,
+    complete_style: CompleteStyle | Callable[[], CompleteStyle] | None = None,
     auto_suggest: AutoSuggest | None = None,
     validator: Validator | None = None,
     clipboard: Clipboard | None = None,
