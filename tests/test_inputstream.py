@@ -139,3 +139,48 @@ def test_cpr_response_2(processor, stream):
     assert len(processor.keys) == 2
     assert processor.keys[0].key == Keys.CPRResponse
     assert processor.keys[1].key == Keys.ControlJ
+
+
+def _key_names(value):
+    "Flatten an ANSI_SEQUENCES value into the key names it resolves to."
+    if isinstance(value, tuple):
+        return [k.name for k in value]
+    return [value.name if hasattr(value, "name") else str(value)]
+
+
+@pytest.mark.parametrize(
+    "final,direction",
+    [("A", "Up"), ("B", "Down"), ("C", "Right"), ("D", "Left")],
+)
+def test_modified_cursor_keys_keep_their_direction(final, direction):
+    """CSI 1 ; <modifier> A is cursor-up at every modifier level, and so on for B/C/D.
+
+    Regression test for https://github.com/prompt-toolkit/python-prompt-toolkit/issues/2092
+    where A and B were transposed at modifiers 4, 6, 7 and 8 but correct at 2, 3, 5 and 9,
+    so Ctrl+Shift+Up moved the cursor down.
+    """
+    from prompt_toolkit.input.ansi_escape_sequences import ANSI_SEQUENCES
+
+    for modifier in range(2, 17):
+        value = ANSI_SEQUENCES.get(f"\x1b[1;{modifier}{final}")
+        if value is None:
+            continue
+        names = _key_names(value)
+        assert any(direction in name for name in names), (
+            f"\\x1b[1;{modifier}{final} should name {direction}, got {names}"
+        )
+
+
+@pytest.mark.parametrize("number,direction", [(5, "PageUp"), (6, "PageDown")])
+def test_modified_page_keys_keep_their_direction(number, direction):
+    """CSI 5 ; <modifier> ~ is PageUp and CSI 6 ; <modifier> ~ is PageDown, at every level."""
+    from prompt_toolkit.input.ansi_escape_sequences import ANSI_SEQUENCES
+
+    for modifier in range(2, 17):
+        value = ANSI_SEQUENCES.get(f"\x1b[{number};{modifier}~")
+        if value is None:
+            continue
+        names = _key_names(value)
+        assert any(direction in name for name in names), (
+            f"\\x1b[{number};{modifier}~ should name {direction}, got {names}"
+        )
