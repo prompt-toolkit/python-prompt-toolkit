@@ -1,8 +1,14 @@
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 
 from prompt_toolkit.buffer import Buffer
+from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.input import DummyInput
+from prompt_toolkit.output import DummyOutput
+from prompt_toolkit.shortcuts import PromptSession
 
 
 @pytest.fixture
@@ -14,6 +20,31 @@ def _buffer():
 def test_initial(_buffer):
     assert _buffer.text == ""
     assert _buffer.cursor_position == 0
+
+
+@pytest.mark.parametrize(
+    ("filter_noop_completions", "has_completions"),
+    [(True, False), (False, True)],
+)
+def test_filter_noop_completions(filter_noop_completions, has_completions):
+    buffer = Buffer(
+        completer=WordCompleter(["show"]),
+        filter_noop_completions=filter_noop_completions,
+    )
+    buffer.text = "show"
+    buffer.cursor_position = len(buffer.text)
+
+    asyncio.run(buffer._create_completer_coroutine()())
+
+    assert (buffer.complete_state is not None) is has_completions
+
+
+def test_prompt_session_filter_noop_completions():
+    session = PromptSession(
+        input=DummyInput(), output=DummyOutput(), filter_noop_completions=False
+    )
+
+    assert not session.default_buffer.filter_noop_completions()
 
 
 def test_insert_text(_buffer):

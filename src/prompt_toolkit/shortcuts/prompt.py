@@ -256,6 +256,9 @@ class PromptSession(Generic[_T]):
     :param complete_while_typing: `bool` or
         :class:`~prompt_toolkit.filters.Filter`. Enable autocompletion while
         typing.
+    :param filter_noop_completions: `bool` or
+        :class:`~prompt_toolkit.filters.Filter`. Ignore a single completion
+        that would not change the input.
     :param validate_while_typing: `bool` or
         :class:`~prompt_toolkit.filters.Filter`. Enable input validation while
         typing.
@@ -358,6 +361,7 @@ class PromptSession(Generic[_T]):
         "enable_history_search",
         "search_ignore_case",
         "complete_while_typing",
+        "filter_noop_completions",
         "validate_while_typing",
         "complete_style",
         "mouse_support",
@@ -386,6 +390,7 @@ class PromptSession(Generic[_T]):
         vi_mode: bool = False,
         editing_mode: EditingMode = EditingMode.EMACS,
         complete_while_typing: FilterOrBool = True,
+        filter_noop_completions: FilterOrBool = True,
         validate_while_typing: FilterOrBool = True,
         enable_history_search: FilterOrBool = False,
         search_ignore_case: FilterOrBool = False,
@@ -457,6 +462,7 @@ class PromptSession(Generic[_T]):
         self.enable_history_search = enable_history_search
         self.search_ignore_case = search_ignore_case
         self.complete_while_typing = complete_while_typing
+        self.filter_noop_completions = filter_noop_completions
         self.validate_while_typing = validate_while_typing
         self.complete_style = complete_style
         self.mouse_support = mouse_support
@@ -527,6 +533,7 @@ class PromptSession(Generic[_T]):
                     and not self.complete_style == CompleteStyle.READLINE_LIKE
                 )
             ),
+            filter_noop_completions=dyncond("filter_noop_completions"),
             validate_while_typing=dyncond("validate_while_typing"),
             enable_history_search=dyncond("enable_history_search"),
             validator=DynamicValidator(lambda: self.validator),
@@ -907,6 +914,7 @@ class PromptSession(Generic[_T]):
         enable_history_search: FilterOrBool | None = None,
         search_ignore_case: FilterOrBool | None = None,
         complete_while_typing: FilterOrBool | None = None,
+        filter_noop_completions: FilterOrBool | None = None,
         validate_while_typing: FilterOrBool | None = None,
         complete_style: CompleteStyle | None = None,
         auto_suggest: AutoSuggest | None = None,
@@ -1018,6 +1026,8 @@ class PromptSession(Generic[_T]):
             self.search_ignore_case = search_ignore_case
         if complete_while_typing is not None:
             self.complete_while_typing = complete_while_typing
+        if filter_noop_completions is not None:
+            self.filter_noop_completions = filter_noop_completions
         if validate_while_typing is not None:
             self.validate_while_typing = validate_while_typing
         if complete_style is not None:
@@ -1147,6 +1157,7 @@ class PromptSession(Generic[_T]):
         enable_history_search: FilterOrBool | None = None,
         search_ignore_case: FilterOrBool | None = None,
         complete_while_typing: FilterOrBool | None = None,
+        filter_noop_completions: FilterOrBool | None = None,
         validate_while_typing: FilterOrBool | None = None,
         complete_style: CompleteStyle | None = None,
         auto_suggest: AutoSuggest | None = None,
@@ -1215,6 +1226,8 @@ class PromptSession(Generic[_T]):
             self.search_ignore_case = search_ignore_case
         if complete_while_typing is not None:
             self.complete_while_typing = complete_while_typing
+        if filter_noop_completions is not None:
+            self.filter_noop_completions = filter_noop_completions
         if validate_while_typing is not None:
             self.validate_while_typing = validate_while_typing
         if complete_style is not None:
@@ -1423,6 +1436,7 @@ def prompt(
     enable_history_search: FilterOrBool | None = None,
     search_ignore_case: FilterOrBool | None = None,
     complete_while_typing: FilterOrBool | None = None,
+    filter_noop_completions: FilterOrBool | None = None,
     validate_while_typing: FilterOrBool | None = None,
     complete_style: CompleteStyle | None = None,
     auto_suggest: AutoSuggest | None = None,
@@ -1479,6 +1493,7 @@ def prompt(
         enable_history_search=enable_history_search,
         search_ignore_case=search_ignore_case,
         complete_while_typing=complete_while_typing,
+        filter_noop_completions=filter_noop_completions,
         validate_while_typing=validate_while_typing,
         complete_style=complete_style,
         auto_suggest=auto_suggest,
