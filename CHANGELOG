@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+Unreleased
+----------
+
+Fixes:
+- Preserve preceding text when case-insensitive word completion lowercases
+  characters into multiple code points.
+
 3.0.53: 2026-07-26
 ------------------
 

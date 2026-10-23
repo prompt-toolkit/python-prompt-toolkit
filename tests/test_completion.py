@@ -6,6 +6,9 @@ import shutil
 import tempfile
 from contextlib import contextmanager
 
+import pytest
+
+from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.completion import (
     CompleteEvent,
     FuzzyWordCompleter,
@@ -293,6 +296,31 @@ def test_word_completer_match_middle():
     completer = WordCompleter(["abc", "def", "abca"], match_middle=True)
     completions = completer.get_completions(Document("bc"), CompleteEvent())
     assert [c.text for c in completions] == ["abc", "abca"]
+
+
+@pytest.mark.parametrize(
+    "word, candidate",
+    [("İ", "İstanbul"), ("İİ", "İİstanbul"), ("I", "Istanbul"), ("i", "istanbul")],
+)
+@pytest.mark.parametrize("ignore_case", [False, True])
+@pytest.mark.parametrize("match_middle", [False, True])
+@pytest.mark.parametrize("WORD", [False, True])
+def test_word_completer_preserves_text_before_case_expanding_word(
+    word, candidate, ignore_case, match_middle, WORD
+):
+    if match_middle:
+        candidate = "city" + candidate
+    completer = WordCompleter(
+        [candidate], ignore_case=ignore_case, match_middle=match_middle, WORD=WORD
+    )
+    buffer = Buffer(document=Document("before " + word))
+    (completion,) = completer.get_completions(buffer.document, CompleteEvent())
+
+    buffer.apply_completion(completion)
+
+    assert buffer.text == "before " + candidate
+    assert buffer.cursor_position == len(buffer.text)
+    assert completion.start_position == -len(word)
 
 
 def test_word_completer_sentence():
