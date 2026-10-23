@@ -296,8 +296,14 @@ class FileHistory(History):
         return reversed(strings)
 
     def store_string(self, string: str) -> None:
-        # Save to file.
-        with open(self.filename, "ab") as f:
+        # Save to file. The history can contain anything the user typed, so
+        # create the file readable by the owner only (like readline does).
+        fd = os.open(
+            self.filename,
+            os.O_WRONLY | os.O_APPEND | os.O_CREAT | getattr(os, "O_BINARY", 0),
+            0o600,
+        )
+        with open(fd, "ab") as f:
 
             def write(t: str) -> None:
                 f.write(t.encode("utf-8", errors="replace"))
