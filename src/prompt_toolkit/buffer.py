@@ -535,6 +535,15 @@ class Buffer:
         if self.validator and self.validate_while_typing():
             get_app().create_background_task(self._async_validator())
 
+        # Auto suggestion.
+        # (This also happens on all change events, also when deleting text.
+        # Suggestions have just been cleared above, so ask the auto suggester
+        # for a new one for the current text. When the text was changed by
+        # `insert_text`, this can schedule the suggester a second time, but
+        # that is harmless: it is guarded to run only one at a time.)
+        if self.auto_suggest:
+            get_app().create_background_task(self._async_suggester())
+
     def _cursor_position_changed(self) -> None:
         # Remove any complete state.
         # (Input validation should only be undone when the cursor position
