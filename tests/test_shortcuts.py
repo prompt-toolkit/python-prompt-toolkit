@@ -1,8 +1,46 @@
 from __future__ import annotations
 
-from prompt_toolkit.shortcuts import print_container
+import pytest
+
+from prompt_toolkit import renderer
+from prompt_toolkit.formatted_text import ANSI
+from prompt_toolkit.input.defaults import create_pipe_input
+from prompt_toolkit.output import DummyOutput
+from prompt_toolkit.shortcuts import PromptSession, print_container
 from prompt_toolkit.shortcuts.prompt import _split_multiline_prompt
 from prompt_toolkit.widgets import Frame, TextArea
+
+
+@pytest.mark.parametrize(
+    "placeholder", ["Type a value", ANSI("\x1b[90mType a value\x1b[0m")]
+)
+@pytest.mark.parametrize("text", ["", "hello"])
+def test_placeholder_is_hidden_after_accepting_input(mocker, placeholder, text):
+    draw = mocker.spy(renderer, "_output_screen_diff")
+    with create_pipe_input() as inp:
+        session = PromptSession(
+            "Question: ",
+            placeholder=placeholder,
+            input=inp,
+            output=DummyOutput(),
+        )
+        inp.send_text(text + "\r")
+        assert session.prompt() == text
+
+    # Inspect the actual screens sent to the output, including the final redraw.
+    screens = []
+    for call in draw.call_args_list:
+        screen, is_done = call.args[2], call.args[7]
+        content = "\n".join(
+            "".join(char.char for _, char in sorted(row.items())).rstrip()
+            for _, row in sorted(screen.data_buffer.items())
+        ).rstrip()
+        screens.append((is_done, content))
+
+    assert any("Type a value" in content for is_done, content in screens if not is_done)
+    assert [content for is_done, content in screens if is_done] == [
+        ("Question: " + text).rstrip()
+    ]
 
 
 def test_split_multiline_prompt():

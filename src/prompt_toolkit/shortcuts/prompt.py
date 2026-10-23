@@ -581,7 +581,7 @@ class PromptSession(Generic[_T]):
             DynamicProcessor(lambda: merge_processors(self.input_processors or [])),
             ConditionalProcessor(
                 AfterInput(lambda: self.placeholder),
-                filter=display_placeholder,
+                filter=display_placeholder & ~is_done,
             ),
         ]
 
