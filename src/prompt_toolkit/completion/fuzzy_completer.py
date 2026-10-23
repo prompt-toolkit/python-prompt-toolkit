@@ -56,9 +56,10 @@ class FuzzyCompleter(Completer):
         assert pattern is None or pattern.startswith("^")
 
         self.completer = completer
-        self.pattern = pattern
         self.WORD = WORD
-        self.pattern = pattern
+        self.pattern = re.compile(
+            pattern or (r"[^\s]+" if WORD else "^[a-zA-Z0-9_]*"),
+        )
         self.enable_fuzzy = to_filter(enable_fuzzy)
 
     def get_completions(
@@ -69,19 +70,10 @@ class FuzzyCompleter(Completer):
         else:
             return self.completer.get_completions(document, complete_event)
 
-    def _get_pattern(self) -> str:
-        if self.pattern:
-            return self.pattern
-        if self.WORD:
-            return r"[^\s]+"
-        return "^[a-zA-Z0-9_]*"
-
     def _get_fuzzy_completions(
         self, document: Document, complete_event: CompleteEvent
     ) -> Iterable[Completion]:
-        word_before_cursor = document.get_word_before_cursor(
-            pattern=re.compile(self._get_pattern())
-        )
+        word_before_cursor = document.get_word_before_cursor(pattern=self.pattern)
 
         # Get completions
         document2 = Document(
