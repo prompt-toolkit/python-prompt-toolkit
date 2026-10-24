@@ -74,7 +74,7 @@ PROMPT_TOOLKIT_STYLE = [
     ("completion-menu.completion fuzzymatch.outside", "fg:#444444"),
     ("completion-menu.completion fuzzymatch.inside", "bold"),
     ("completion-menu.completion fuzzymatch.inside.character", "underline"),
-    ("completion-menu.completion.current fuzzymatch.outside", "fg:default"),
+    ("completion-menu.completion.current fuzzymatch.outside", "fg:#444444"),
     ("completion-menu.completion.current fuzzymatch.inside", "nobold"),
     # Styling of readline-like completions.
     ("readline-like-completions", ""),
