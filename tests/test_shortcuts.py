@@ -1,6 +1,13 @@
 from __future__ import annotations
 
-from prompt_toolkit.shortcuts import print_container
+import asyncio
+
+import pytest
+
+from prompt_toolkit.filters import Condition
+from prompt_toolkit.input.defaults import create_pipe_input
+from prompt_toolkit.output import DummyOutput
+from prompt_toolkit.shortcuts import PromptSession, print_container
 from prompt_toolkit.shortcuts.prompt import _split_multiline_prompt
 from prompt_toolkit.widgets import Frame, TextArea
 
@@ -66,3 +73,53 @@ def test_print_container(tmpdir):
         text = fd.read()
         assert "Hello world" in text
         assert "Title" in text
+
+
+@pytest.mark.parametrize("show_frame", [True, Condition(lambda: True)])
+def test_prompt_async_preserves_session_frame(show_frame):
+    async def run():
+        with create_pipe_input() as pipe_input:
+            session = PromptSession(
+                show_frame=show_frame, input=pipe_input, output=DummyOutput()
+            )
+            rendered_corners = []
+
+            def after_render(app):
+                screen = app.renderer.last_rendered_screen
+                if screen is not None:
+                    rendered_corners.append(screen.data_buffer[0][0].char)
+
+            session.app.after_render += after_render
+            pipe_input.send_text("hello\r")
+            assert await session.prompt_async() == "hello"
+            assert rendered_corners[0] == "┌"
+            assert session.show_frame is show_frame
+
+    asyncio.run(run())
+
+
+def test_prompt_async_frame_override_persists():
+    async def run():
+        with create_pipe_input() as pipe_input:
+            session = PromptSession(input=pipe_input, output=DummyOutput())
+            rendered_corners = []
+
+            def after_render(app):
+                screen = app.renderer.last_rendered_screen
+                if screen is not None:
+                    rendered_corners.append(screen.data_buffer[0][0].char)
+
+            session.app.after_render += after_render
+
+            for kwargs, expected_frame in [
+                ({"show_frame": True}, True),
+                ({}, True),
+                ({"show_frame": False}, False),
+                ({}, False),
+            ]:
+                rendered_corners.clear()
+                pipe_input.send_text("hello\r")
+                assert await session.prompt_async(**kwargs) == "hello"
+                assert (rendered_corners[0] == "┌") is expected_frame
+
+    asyncio.run(run())
