@@ -556,6 +556,30 @@ not by returning a boolean.
 cursor position is not possible this way.
 
 
+Changing validation in a session
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A :class:`~prompt_toolkit.shortcuts.PromptSession` remembers the validator passed
+to :meth:`~prompt_toolkit.shortcuts.PromptSession.prompt` for subsequent prompts.
+Passing ``validator=None`` keeps the current validator; it does not disable
+validation. Pass a :class:`~prompt_toolkit.validation.DummyValidator` to accept
+any input, including an empty string:
+
+.. code:: python
+
+    from prompt_toolkit import PromptSession
+    from prompt_toolkit.validation import DummyValidator, Validator
+
+    session = PromptSession()
+    required = Validator.from_callable(bool, error_message="Please enter a value")
+
+    name = session.prompt("Name (required): ", validator=required)
+    nickname = session.prompt("Nickname (optional): ", validator=DummyValidator())
+
+The ``DummyValidator`` also remains active for subsequent prompts. Pass the
+original validator again when validation is needed.
+
+
 History
 -------
 
