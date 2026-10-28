@@ -5,6 +5,7 @@ input and check the result.
 
 from __future__ import annotations
 
+import asyncio
 from functools import partial
 
 import pytest
@@ -19,6 +20,7 @@ from prompt_toolkit.key_binding.bindings.named_commands import prefix_meta
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.output import DummyOutput
 from prompt_toolkit.shortcuts import PromptSession
+from prompt_toolkit.validation import Validator
 
 
 def _history():
@@ -69,6 +71,58 @@ def test_simple_text_input():
     result, cli = _feed_cli_with_input("hello\r")
     assert result.text == "hello"
     assert cli.current_buffer.text == "hello"
+
+
+def test_prompt_validator_none_clears_session_validator():
+    validator = Validator.from_callable(lambda text: True)
+
+    with create_pipe_input() as inp:
+        inp.send_text("hello\r")
+        session = PromptSession(
+            input=inp,
+            output=DummyOutput(),
+            validator=validator,
+        )
+
+        session.prompt(validator=None)
+
+    assert session.validator is None
+
+
+def test_prompt_without_validator_keeps_session_validator():
+    validator = Validator.from_callable(lambda text: True)
+
+    with create_pipe_input() as inp:
+        inp.send_text("hello\r")
+        session = PromptSession(
+            input=inp,
+            output=DummyOutput(),
+            validator=validator,
+        )
+
+        session.prompt()
+
+    assert session.validator is validator
+
+
+def test_prompt_async_validator_none_clears_session_validator():
+    validator = Validator.from_callable(lambda text: True)
+
+    async def run_prompt() -> PromptSession[str]:
+        with create_pipe_input() as inp:
+            inp.send_text("hello\r")
+            session = PromptSession(
+                input=inp,
+                output=DummyOutput(),
+                validator=validator,
+            )
+
+            await session.prompt_async(validator=None)
+
+        return session
+
+    session = asyncio.run(run_prompt())
+    assert session.validator is None
 
 
 def test_emacs_cursor_movements():

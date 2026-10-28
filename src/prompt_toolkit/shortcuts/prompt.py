@@ -225,6 +225,13 @@ PromptContinuationText = Union[
 _T = TypeVar("_T")
 
 
+class _Unset:
+    pass
+
+
+_UNSET = _Unset()
+
+
 class PromptSession(Generic[_T]):
     """
     PromptSession for a prompt application, which can be used as a GNU Readline
@@ -910,7 +917,7 @@ class PromptSession(Generic[_T]):
         validate_while_typing: FilterOrBool | None = None,
         complete_style: CompleteStyle | None = None,
         auto_suggest: AutoSuggest | None = None,
-        validator: Validator | None = None,
+        validator: Validator | None | _Unset = _UNSET,
         clipboard: Clipboard | None = None,
         mouse_support: FilterOrBool | None = None,
         input_processors: list[Processor] | None = None,
@@ -940,10 +947,10 @@ class PromptSession(Generic[_T]):
         attribute for the session, which means that it applies to the current,
         but also to the next prompts.
 
-        Note that in order to erase a ``Completer``, ``Validator`` or
-        ``AutoSuggest``, you can't use ``None``. Instead pass in a
-        ``DummyCompleter``, ``DummyValidator`` or ``DummyAutoSuggest`` instance
-        respectively. For a ``Lexer`` you can pass in an empty ``SimpleLexer``.
+        Note that in order to erase a ``Completer`` or ``AutoSuggest``, you
+        can't use ``None``. Instead pass in a ``DummyCompleter`` or
+        ``DummyAutoSuggest`` instance respectively. For a ``Lexer`` you can
+        pass in an empty ``SimpleLexer``.
 
         Additional arguments, specific for this prompt:
 
@@ -1024,8 +1031,8 @@ class PromptSession(Generic[_T]):
             self.complete_style = complete_style
         if auto_suggest is not None:
             self.auto_suggest = auto_suggest
-        if validator is not None:
-            self.validator = validator
+        if validator is not _UNSET:
+            self.validator = cast(Validator | None, validator)
         if clipboard is not None:
             self.clipboard = clipboard
         if mouse_support is not None:
@@ -1150,7 +1157,7 @@ class PromptSession(Generic[_T]):
         validate_while_typing: FilterOrBool | None = None,
         complete_style: CompleteStyle | None = None,
         auto_suggest: AutoSuggest | None = None,
-        validator: Validator | None = None,
+        validator: Validator | None | _Unset = _UNSET,
         clipboard: Clipboard | None = None,
         mouse_support: FilterOrBool | None = None,
         input_processors: list[Processor] | None = None,
@@ -1221,8 +1228,8 @@ class PromptSession(Generic[_T]):
             self.complete_style = complete_style
         if auto_suggest is not None:
             self.auto_suggest = auto_suggest
-        if validator is not None:
-            self.validator = validator
+        if validator is not _UNSET:
+            self.validator = cast(Validator | None, validator)
         if clipboard is not None:
             self.clipboard = clipboard
         if mouse_support is not None:
