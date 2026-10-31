@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from functools import partial
-from typing import Generic, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.auto_suggest import AutoSuggest, DynamicAutoSuggest
@@ -80,6 +80,9 @@ from prompt_toolkit.utils import get_cwidth
 from prompt_toolkit.validation import DynamicValidator, Validator
 
 from .toolbars import SearchToolbar
+
+if TYPE_CHECKING:
+    from prompt_toolkit.key_binding.key_bindings import NotImplementedOrNone
 
 __all__ = [
     "TextArea",
@@ -753,22 +756,28 @@ class _DialogList(Generic[_T]):
         else:
             self._selected_index = 0
 
+        def move_cursor_up() -> None:
+            self._selected_index = max(0, self._selected_index - 1)
+            if select_on_focus:
+                self._handle_enter()
+
+        def move_cursor_down() -> None:
+            self._selected_index = min(len(self.values) - 1, self._selected_index + 1)
+            if select_on_focus:
+                self._handle_enter()
+
         # Key bindings.
         kb = KeyBindings()
 
         @kb.add("up")
         @kb.add("k")  # Vi-like.
         def _up(event: E) -> None:
-            self._selected_index = max(0, self._selected_index - 1)
-            if select_on_focus:
-                self._handle_enter()
+            move_cursor_up()
 
         @kb.add("down")
         @kb.add("j")  # Vi-like.
         def _down(event: E) -> None:
-            self._selected_index = min(len(self.values) - 1, self._selected_index + 1)
-            if select_on_focus:
-                self._handle_enter()
+            move_cursor_down()
 
         @kb.add("pageup")
         def _pageup(event: E) -> None:
@@ -813,8 +822,16 @@ class _DialogList(Generic[_T]):
                 if select_on_focus:
                     self._handle_enter()
 
+        # Let Window keep the cursor visible when scrolling with the mouse.
+        class DialogListControl(FormattedTextControl):
+            def move_cursor_up(self) -> None:
+                move_cursor_up()
+
+            def move_cursor_down(self) -> None:
+                move_cursor_down()
+
         # Control and window.
-        self.control = FormattedTextControl(
+        self.control = DialogListControl(
             self._get_text_fragments,
             key_bindings=kb,
             focusable=True,
@@ -844,7 +861,7 @@ class _DialogList(Generic[_T]):
             self.current_value = self.values[self._selected_index][0]
 
     def _get_text_fragments(self) -> StyleAndTextTuples:
-        def mouse_handler(mouse_event: MouseEvent) -> None:
+        def mouse_handler(mouse_event: MouseEvent) -> NotImplementedOrNone:
             """
             Set `_selected_index` and `current_value` according to the y
             position of the mouse click event.
@@ -852,6 +869,10 @@ class _DialogList(Generic[_T]):
             if mouse_event.event_type == MouseEventType.MOUSE_UP:
                 self._selected_index = mouse_event.position.y
                 self._handle_enter()
+                return None
+
+            # Let Window handle scrolling.
+            return NotImplemented
 
         result: StyleAndTextTuples = []
         for i, value in enumerate(self.values):
