@@ -652,6 +652,7 @@ class PromptSession(Generic[_T]):
                     ConditionalContainer(
                         Window(
                             FormattedTextControl(get_prompt_text_1),
+                            wrap_lines=dyncond("wrap_lines"),
                             dont_extend_height=True,
                         ),
                         Condition(has_before_fragments),
