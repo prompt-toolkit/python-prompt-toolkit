@@ -7,7 +7,11 @@ import pytest
 from prompt_toolkit.application import Application
 from prompt_toolkit.application.current import set_app
 from prompt_toolkit.input.defaults import create_pipe_input
-from prompt_toolkit.key_binding.key_bindings import KeyBindings
+from prompt_toolkit.key_binding.key_bindings import (
+    DynamicKeyBindings,
+    KeyBindings,
+    merge_key_bindings,
+)
 from prompt_toolkit.key_binding.key_processor import KeyPress, KeyProcessor
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout import Layout, Window
@@ -202,3 +206,27 @@ def test_previous_key_sequence(processor):
         assert events[1].previous_key_sequence[0].data == "a"
         assert events[1].previous_key_sequence[1].key == "a"
         assert events[1].previous_key_sequence[1].data == "a"
+
+
+def test_dynamic_key_bindings_cache_with_reused_id(monkeypatch):
+    """
+    DynamicKeyBindings must not serve stale bindings when a new KeyBindings object reuses the address of a previous one
+    """
+    monkeypatch.setattr(
+        "prompt_toolkit.key_binding.key_bindings.id", lambda _: 0, raising=False
+    )
+
+    pretend_database = [0]
+
+    def build():
+        kb = KeyBindings()
+        value = pretend_database[0]
+        kb.add("a")(lambda _: value)
+        return kb
+
+    merged = merge_key_bindings([DynamicKeyBindings(build)])
+    lookups = []
+    for value in range(3):
+        pretend_database[0] = value
+        lookups.append(merged.get_bindings_for_keys(("a",))[-1].handler(None))
+    assert lookups == [0, 1, 2]
