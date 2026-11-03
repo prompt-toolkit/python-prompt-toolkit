@@ -630,11 +630,14 @@ class DynamicKeyBindings(_Proxy):
         self.__version = 0
         self._last_child_version = None
         self._dummy = KeyBindings()  # Empty key bindings.
+        self._bindings2 = self._dummy
 
     def _update_cache(self) -> None:
         key_bindings = self.get_key_bindings() or self._dummy
         assert isinstance(key_bindings, KeyBindingsBase)
-        version = id(key_bindings), key_bindings._version
+        if key_bindings is not self._bindings2:
+            self.__version += 1
+        version = self.__version, key_bindings._version
 
         self._bindings2 = key_bindings
         self._last_version = version
