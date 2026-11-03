@@ -628,7 +628,6 @@ class DynamicKeyBindings(_Proxy):
     def __init__(self, get_key_bindings: Callable[[], KeyBindingsBase | None]) -> None:
         self.get_key_bindings = get_key_bindings
         self.__version = 0
-        self._last_child_version = None
         self._dummy = KeyBindings()  # Empty key bindings.
         self._bindings2 = self._dummy
 
