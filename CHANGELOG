@@ -1,6 +1,15 @@
 CHANGELOG
 =========
 
+Unreleased
+----------
+
+New features:
+- Stack unfinished input with Escape-Q in ``PromptSession`` Emacs mode and
+  restore it after the next accepted input. Enabled by default; pass
+  ``enable_input_stack=False`` to opt out. The one-shot ``prompt()`` helper
+  keeps stacking disabled.
+
 3.0.53: 2026-07-26
 ------------------
 
