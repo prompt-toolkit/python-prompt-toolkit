@@ -51,6 +51,7 @@ from prompt_toolkit.eventloop import InputHook
 from prompt_toolkit.filters import (
     Condition,
     FilterOrBool,
+    emacs_mode,
     has_arg,
     has_focus,
     is_done,
@@ -301,6 +302,11 @@ class PromptSession(Generic[_T]):
     :param enable_open_in_editor: `bool` or
         :class:`~prompt_toolkit.filters.Filter`. Pressing 'v' in Vi mode or
         C-X C-E in emacs mode will open an external editor.
+    :param enable_input_stack: Enable Escape-Q (or Escape-q) in Emacs mode
+        to stack the current input and clear the buffer. After another nonempty input is
+        accepted, the next prompt without a nonempty default restores the most
+        recently stacked input, including its cursor position. Enabled by
+        default; pass ``False`` to opt out. Stack state belongs to this session.
     :param history: :class:`~prompt_toolkit.history.History` instance.
     :param clipboard: :class:`~prompt_toolkit.clipboard.Clipboard` instance.
         (e.g. :class:`~prompt_toolkit.clipboard.InMemoryClipboard`)
@@ -370,6 +376,7 @@ class PromptSession(Generic[_T]):
         "enable_system_prompt",
         "enable_suspend",
         "enable_open_in_editor",
+        "enable_input_stack",
         "reserve_space_for_menu",
         "tempfile_suffix",
         "tempfile",
@@ -393,6 +400,7 @@ class PromptSession(Generic[_T]):
         enable_system_prompt: FilterOrBool = False,
         enable_suspend: FilterOrBool = False,
         enable_open_in_editor: FilterOrBool = False,
+        enable_input_stack: bool = True,
         validator: Validator | None = None,
         completer: Completer | None = None,
         complete_in_thread: bool = False,
@@ -469,12 +477,17 @@ class PromptSession(Generic[_T]):
         self.enable_system_prompt = enable_system_prompt
         self.enable_suspend = enable_suspend
         self.enable_open_in_editor = enable_open_in_editor
+        self.enable_input_stack = enable_input_stack
         self.reserve_space_for_menu = reserve_space_for_menu
         self.tempfile_suffix = tempfile_suffix
         self.tempfile = tempfile
         self.show_frame = show_frame
         self.interrupt_exception = interrupt_exception
         self.eof_exception = eof_exception
+
+        # Unfinished inputs are session state, independent of input history.
+        self._input_stack: list[Document] = []
+        self._restore_input_stack = False
 
         # Create buffers, layout and Application.
         self.history = history
@@ -510,6 +523,8 @@ class PromptSession(Generic[_T]):
         def accept(buff: Buffer) -> bool:
             """Accept the content of the default buffer. This is called when
             the validation succeeds."""
+            if buff.text.strip() and self._input_stack:
+                self._restore_input_stack = True
             cast(Application[str], get_app()).exit(
                 result=buff.document.text, style="class:accepted"
             )
@@ -821,6 +836,22 @@ class PromptSession(Generic[_T]):
         handle = kb.add
         default_focused = has_focus(DEFAULT_BUFFER)
 
+        input_stack_enabled = (
+            default_focused & emacs_mode & self._dyncond("enable_input_stack")
+        )
+
+        @handle("escape", "q", filter=input_stack_enabled)
+        @handle("escape", "Q", filter=input_stack_enabled)
+        def _push_input(event: E) -> None:
+            "Stack unfinished input without accepting it or adding it to history."
+            if self.default_buffer.text:
+                self._input_stack.append(self.default_buffer.document)
+                self._restore_input_stack = False
+                self.default_buffer.go_to_history(
+                    len(self.default_buffer._working_lines) - 1
+                )
+                self.default_buffer.document = Document()
+
         @Condition
         def do_accept() -> bool:
             return not is_true(self.multiline) and self.app.layout.has_focus(
@@ -877,6 +908,19 @@ class PromptSession(Generic[_T]):
 
         return kb
 
+    def _get_default_input(self, default: str | Document) -> Document:
+        """Restore a ready draft only when no explicit nonempty default wins."""
+        document = default if isinstance(default, Document) else Document(default)
+        if (
+            self.enable_input_stack
+            and self._restore_input_stack
+            and self._input_stack
+            and not document.text
+        ):
+            self._restore_input_stack = False
+            return self._input_stack.pop()
+        return document
+
     def prompt(
         self,
         # When any of these arguments are passed, this value is overwritten
@@ -919,6 +963,7 @@ class PromptSession(Generic[_T]):
         enable_system_prompt: FilterOrBool | None = None,
         enable_suspend: FilterOrBool | None = None,
         enable_open_in_editor: FilterOrBool | None = None,
+        enable_input_stack: bool | None = None,
         tempfile_suffix: str | Callable[[], str] | None = None,
         tempfile: str | Callable[[], str] | None = None,
         show_frame: FilterOrBool | None = None,
@@ -948,7 +993,9 @@ class PromptSession(Generic[_T]):
         Additional arguments, specific for this prompt:
 
         :param default: The default input text to be shown. (This can be edited
-            by the user).
+            by the user). With input stacking enabled, a nonempty default takes
+            precedence over a pending draft, which remains available for a later
+            prompt with an empty default.
         :param accept_default: When `True`, automatically accept the default
             value without allowing the user to edit the input.
         :param pre_run: Callable, called at the start of `Application.run`.
@@ -1042,6 +1089,8 @@ class PromptSession(Generic[_T]):
             self.enable_suspend = enable_suspend
         if enable_open_in_editor is not None:
             self.enable_open_in_editor = enable_open_in_editor
+        if enable_input_stack is not None:
+            self.enable_input_stack = enable_input_stack
         if tempfile_suffix is not None:
             self.tempfile_suffix = tempfile_suffix
         if tempfile is not None:
@@ -1050,9 +1099,7 @@ class PromptSession(Generic[_T]):
             self.show_frame = show_frame
 
         self._add_pre_run_callables(pre_run, accept_default)
-        self.default_buffer.reset(
-            default if isinstance(default, Document) else Document(default)
-        )
+        self.default_buffer.reset(self._get_default_input(default))
         self.app.refresh_interval = self.refresh_interval  # This is not reactive.
 
         # If we are using the default output, and have a dumb terminal. Use the
@@ -1159,6 +1206,7 @@ class PromptSession(Generic[_T]):
         enable_system_prompt: FilterOrBool | None = None,
         enable_suspend: FilterOrBool | None = None,
         enable_open_in_editor: FilterOrBool | None = None,
+        enable_input_stack: bool | None = None,
         tempfile_suffix: str | Callable[[], str] | None = None,
         tempfile: str | Callable[[], str] | None = None,
         show_frame: FilterOrBool = False,
@@ -1239,6 +1287,8 @@ class PromptSession(Generic[_T]):
             self.enable_suspend = enable_suspend
         if enable_open_in_editor is not None:
             self.enable_open_in_editor = enable_open_in_editor
+        if enable_input_stack is not None:
+            self.enable_input_stack = enable_input_stack
         if tempfile_suffix is not None:
             self.tempfile_suffix = tempfile_suffix
         if tempfile is not None:
@@ -1247,9 +1297,7 @@ class PromptSession(Generic[_T]):
             self.show_frame = show_frame
 
         self._add_pre_run_callables(pre_run, accept_default)
-        self.default_buffer.reset(
-            default if isinstance(default, Document) else Document(default)
-        )
+        self.default_buffer.reset(self._get_default_input(default))
         self.app.refresh_interval = self.refresh_interval  # This is not reactive.
 
         # If we are using the default output, and have a dumb terminal. Use the
@@ -1451,9 +1499,11 @@ def prompt(
     The global `prompt` function. This will create a new `PromptSession`
     instance for every call.
     """
-    # The history is the only attribute that has to be passed to the
-    # `PromptSession`, it can't be passed into the `prompt()` method.
-    session: PromptSession[str] = PromptSession(history=history)
+    # History must be passed to the session constructor. Disable input
+    # stacking: this one-shot helper has no later prompt to restore drafts.
+    session: PromptSession[str] = PromptSession(
+        history=history, enable_input_stack=False
+    )
 
     return session.prompt(
         message,

@@ -70,6 +70,52 @@ This has mainly two advantages:
   :meth:`~prompt_toolkit.shortcuts.PromptSession.prompt` method.
 
 
+Stacking unfinished input
+-------------------------
+
+A :class:`~prompt_toolkit.shortcuts.PromptSession` can keep unfinished input
+while you enter something else. Input stacking is enabled by default:
+
+.. code:: python
+
+    from prompt_toolkit import PromptSession
+
+    session = PromptSession()
+    while True:
+        text = session.prompt("> ")
+        print(text)
+
+In Emacs editing mode, press Escape followed by ``Q`` (or ``q``) while editing a
+draft. The prompt stacks the entire input and clears the buffer. After you
+submit another nonempty input, the next call to ``session.prompt()`` restores the draft with
+its cursor position. Multiline drafts are supported. Multiple drafts restore
+in stack order, with the most recently stacked draft first.
+
+Pass ``enable_input_stack=False`` to opt out. The option can also be
+changed on :meth:`~prompt_toolkit.shortcuts.PromptSession.prompt` and
+:meth:`~prompt_toolkit.shortcuts.PromptSession.prompt_async`; changes apply to
+later prompts in the same session. Turning it off preserves pending drafts
+until it is enabled again. Each session has its own stack. Use a persistent
+``PromptSession`` for this feature; the one-shot ``prompt()`` helper creates a
+new session on each call, explicitly disables stacking, and does not expose
+this option. The stack key bindings are inactive in Vi mode, preserving its
+normal macro commands.
+
+Unsubmitted drafts are not added to history. Blank or whitespace-only input,
+rejected validation, Control-C and Control-D do not make a pending draft ready
+to restore. Canceling an intervening asynchronous prompt also leaves it pending.
+Once a draft has been restored, canceling it discards that current input normally.
+Pending drafts remain in memory only while the session exists.
+
+A nonempty ``default`` takes precedence over a ready draft and leaves it pending
+for a later prompt with an empty default. Both an omitted default and an
+explicit empty string or empty :class:`~prompt_toolkit.document.Document` allow
+restoration. ``accept_default=True`` can automatically submit a restored draft,
+just as it submits an ordinary default. Input stacking does not run application
+commands: the application still processes each returned input before calling
+``prompt()`` again.
+
+
 Syntax highlighting
 -------------------
 
