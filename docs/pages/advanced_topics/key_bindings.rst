@@ -227,9 +227,9 @@ to a certain condition. This is possible by wrapping it in a
         " Only activate key binding on the second half of each minute. "
         return datetime.datetime.now().second > 30
 
-     bindings = ConditionalKeyBindings(
-         key_bindings=my_bindings,
-         filter=is_active)
+    bindings = ConditionalKeyBindings(
+        key_bindings=my_bindings,
+        filter=is_active)
 
 If the condition is not satisfied, all the key bindings in `my_bindings` above
 will be ignored.
