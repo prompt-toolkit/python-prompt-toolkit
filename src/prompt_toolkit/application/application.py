@@ -1030,9 +1030,11 @@ class Application(Generic[_AppResult]):
         """
         Install our custom breakpointhook for the duration of this context
         manager. (We will only install the hook if no other custom hook was
-        set.)
+        set, including through PYTHONBREAKPOINT.)
         """
-        if sys.breakpointhook == sys.__breakpointhook__:
+        if sys.breakpointhook == sys.__breakpointhook__ and not os.environ.get(
+            "PYTHONBREAKPOINT"
+        ):
             sys.breakpointhook = self._breakpointhook
 
             try:
