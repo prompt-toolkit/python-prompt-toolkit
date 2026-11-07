@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+Unreleased
+----------
+
+New features:
+- Support ``r`` to replace characters in Vi character, line, and block selections,
+  preserving line endings.
+
 3.0.53: 2026-07-26
 ------------------
 
