@@ -449,6 +449,7 @@ def load_vi_bindings() -> KeyBindingsBase:
     handle("c-v", filter=vi_insert_mode)(get_by_name("quoted-insert"))
 
     @handle("escape")
+    @handle("r", "escape", filter=vi_selection_mode)
     def _back_to_navigation(event: E) -> None:
         """
         Escape goes to vi navigation mode.
@@ -826,6 +827,28 @@ def load_vi_bindings() -> KeyBindingsBase:
         Go to 'replace-single'-mode.
         """
         event.app.vi_state.input_mode = InputMode.REPLACE_SINGLE
+
+    @handle("r", Keys.Any, filter=vi_selection_mode)
+    def _replace_selection(event: E) -> None:
+        """
+        Replace every selected character, except for line endings.
+        """
+        # Ignore keys like arrows, whose data contains an escape sequence.
+        if len(event.data) != 1:
+            return
+
+        buff = event.current_buffer
+        document = buff.document
+        ranges = list(document.selection_ranges())
+        text = list(document.text)
+
+        for start, end in ranges:
+            text[start:end] = [
+                c if c == "\n" else event.data for c in document.text[start:end]
+            ]
+
+        buff.document = Document("".join(text), cursor_position=ranges[0][0])
+        buff.exit_selection()
 
     @handle("R", filter=vi_navigation_mode)
     def _replace_mode(event: E) -> None:

@@ -667,6 +667,108 @@ def test_vi_digraphs():
     assert result.text == "helloy"
 
 
+@pytest.mark.parametrize(
+    "text, selection, replacement, expected, cursor",
+    [
+        ("hello", "vll", "#", "###lo", 0),
+        ("hello", "$vhh", "#", "he###", 2),
+        ("hello", "lv", "#", "h#llo", 1),
+        ("abcde\n\nfghij", "lvjjll", "#", "a####\n\n####j", 1),
+        ("abcde\n\nfghij", "jjlllvkkhh", "#", "a####\n\n####j", 1),
+        ("a\nbc\n\ndef", "jVj", "#", "a\n##\n\ndef", 2),
+        ("a\nbc\n\ndef", "jjjVk", "#", "a\nbc\n\n###", 5),
+        ("abc\ndef\n", "jVj", "#", "abc\n###\n", 4),
+        ("abcde\nx\n\nfghij", "ll\x16jjjl", "#", "ab##e\nx\n\nfg##j", 2),
+        ("abcde\nx\n\nfghij", "jjjlll\x16kkkh", "#", "ab##e\nx\n\nfg##j", 2),
+        ("abcde\nx\n\nfghij", "lll\x16jjjh", "#", "ab##e\nx\n\nfg##j", 2),
+        ("\n\n\n", "\x16jj", "#", "\n\n\n", 0),
+        ("", "v", "#", "", 0),
+        ("", "V", "#", "", 0),
+        ("", "\x16", "#", "", 0),
+        ("###", "vll", "#", "###", 0),
+        ("a\tb", "vll", "#", "###", 0),
+        ("hello", "lvll", "界", "h界界界o", 1),
+        ("hello", "lvll", "\\", "h\\\\\\o", 1),
+    ],
+)
+def test_vi_replace_selection(text, selection, replacement, expected, cursor):
+    bindings = KeyBindings()
+    clipboard = InMemoryClipboard(ClipboardData("clipboard text"))
+
+    @bindings.add("c-q")
+    def finish(event):
+        # Finish without Escape so that we can check that replacement exits
+        # selection mode, even when the text did not change.
+        event.app.exit()
+
+    result, cli = _feed_cli_with_input(
+        text.replace("\n", "\r").replace("\t", "\x16\t")
+        + "\x1bgg"
+        + selection
+        + "r"
+        + replacement
+        + "\x11",
+        editing_mode=EditingMode.VI,
+        multiline=True,
+        clipboard=clipboard,
+        key_bindings=bindings,
+        check_line_ending=False,
+    )
+    assert result.text == expected
+    assert result.cursor_position == cursor
+    assert cli.current_buffer.selection_state is None
+    assert clipboard.get_data().text == "clipboard text"
+
+
+@pytest.mark.parametrize("selection", ["vjl", "Vj", "\x16jl"])
+def test_vi_replace_selection_undo(selection):
+    result, cli = _feed_cli_with_input(
+        "abc\rdef\x1bgg" + selection + "r#u\x1b\r",
+        editing_mode=EditingMode.VI,
+        multiline=True,
+    )
+    assert result.text == "abc\ndef"
+
+
+@pytest.mark.parametrize("selection", ["vll", "V", "\x16ll"])
+def test_vi_replace_selection_cancel(selection):
+    result, cli = _feed_cli_with_input(
+        "hello\x1bgg" + selection + "r\x1b\r",
+        editing_mode=EditingMode.VI,
+    )
+    assert result.text == "hello"
+    assert cli.current_buffer.selection_state is None
+
+
+def test_vi_replace_selection_read_only():
+    bindings = KeyBindings()
+
+    @bindings.add("c-o")
+    def make_read_only(event):
+        event.current_buffer.read_only = lambda: True
+
+    result, cli = _feed_cli_with_input(
+        "hello\x1bggvll\x0fr#\x1b\r",
+        editing_mode=EditingMode.VI,
+        key_bindings=bindings,
+    )
+    assert result.text == "hello"
+
+
+@pytest.mark.parametrize("key", ["\x1b[D", "\x1b[3~"])
+def test_vi_replace_selection_special_key(key):
+    result, cli = _feed_cli_with_input(
+        "hello\x1bggvllr" + key + "\x1b\r", editing_mode=EditingMode.VI
+    )
+    assert result.text == "hello"
+
+
+def test_vi_replace_single():
+    result, cli = _feed_cli_with_input("hello\x1bggr#\r", editing_mode=EditingMode.VI)
+    assert result.text == "#ello"
+    assert result.cursor_position == 0
+
+
 def test_vi_block_editing():
     "Test Vi Control-V style block insertion."
     feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI, multiline=True)

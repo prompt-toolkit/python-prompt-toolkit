@@ -346,6 +346,16 @@ the `record_in_macro` parameter to `False`:
         pass
 
 
+Replacing a Vi selection
+------------------------
+
+In Vi mode, select text with ``v`` (characters), ``V`` (lines), or ``Control-V``
+(a rectangular block), then press ``r`` followed by a character. This replaces
+each selected character with that character, preserving line endings. The
+selection ends and the cursor moves to its beginning. Press ``Escape`` after
+``r`` to cancel without changing the text.
+
+
 Creating new Vi text objects and operators
 ------------------------------------------
 
