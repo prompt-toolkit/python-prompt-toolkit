@@ -39,7 +39,7 @@ def call_soon_threadsafe(
     func: Callable[[], None],
     max_postpone_time: float | None = None,
     loop: asyncio.AbstractEventLoop | None = None,
-) -> None:
+) -> asyncio.Handle:
     """
     Wrapper around asyncio's `call_soon_threadsafe`.
 
@@ -55,17 +55,25 @@ def call_soon_threadsafe(
     process output.)
     However, we want to set a deadline value, for when the rendering should
     happen. (The UI should stay responsive).
+
+    Return a handle whose ``cancel()`` method prevents the callback from running,
+    including after it has been postponed. Cancellation cannot stop a callback
+    that has already started.
     """
     loop2 = loop or get_running_loop()
 
     # If no `max_postpone_time` has been given, schedule right now.
     if max_postpone_time is None:
-        loop2.call_soon_threadsafe(func)
-        return
+        return loop2.call_soon_threadsafe(func)
 
     max_postpone_until = time.time() + max_postpone_time
+    handle = asyncio.Handle(func, (), loop2)
 
     def schedule() -> None:
+        # The original handle remains the cancellation token across retries.
+        if handle.cancelled():
+            return
+
         # When there are no other tasks scheduled in the event loop. Run it
         # now.
         # Notice: uvloop doesn't have this _ready attribute. In that case,
@@ -83,6 +91,7 @@ def call_soon_threadsafe(
         loop2.call_soon_threadsafe(schedule)
 
     loop2.call_soon_threadsafe(schedule)
+    return handle
 
 
 def get_traceback_from_context(context: dict[str, Any]) -> TracebackType | None:
