@@ -152,11 +152,10 @@ class TextObject:
         from_ += buffer.cursor_position
         to += buffer.cursor_position
 
-        # For Vi mode, the SelectionState does include the upper position,
-        # while `self.operator_range` does not. So, go one to the left, unless
-        # we're in the line mode, then we don't want to risk going to the
-        # previous line, and missing one line in the selection.
-        if self.type != TextObjectType.LINEWISE:
+        # Characterwise operator ranges have an exclusive upper bound, while
+        # Vi selections include it. Linewise and block selections must keep
+        # their endpoints to avoid shifting the selected rows or columns.
+        if self.type in (TextObjectType.EXCLUSIVE, TextObjectType.INCLUSIVE):
             to -= 1
 
         document = Document(
