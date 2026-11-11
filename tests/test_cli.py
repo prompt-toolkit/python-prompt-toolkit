@@ -18,6 +18,7 @@ from prompt_toolkit.input.vt100_parser import ANSI_SEQUENCES
 from prompt_toolkit.key_binding.bindings.named_commands import prefix_meta
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.output import DummyOutput
+from prompt_toolkit.selection import SelectionType
 from prompt_toolkit.shortcuts import PromptSession
 
 
@@ -733,6 +734,39 @@ def test_vi_block_editing_empty_lines():
     result, cli = feed(operations.replace("insert", "A"))
 
     assert result.text == "***\n***\n***\n\n\n"
+
+
+@pytest.mark.parametrize("operator", ["d", "c", "y"])
+@pytest.mark.parametrize(
+    "text, start, movement, remaining, selected",
+    [
+        ("abcd\nefgh\nijkl", "gg0", "jj", "bcd\nfgh\njkl", "a\ne\ni"),
+        ("abcd\nefgh\nijkl", "G0", "kk", "bcd\nfgh\njkl", "a\ne\ni"),
+        ("abcd\nefgh\nijkl", "gg0l", "jjl", "ad\neh\nil", "bc\nfg\njk"),
+        ("abcd\nefgh\nijkl", "G0ll", "kkh", "ad\neh\nil", "bc\nfg\njk"),
+        ("abcd\nefgh\nijkl", "gg0l", "", "acd\nefgh\nijkl", "b"),
+        ("abcd\n\nx\nijkl", "gg0", "jjj", "bcd\n\n\njkl", "a\n\nx\ni"),
+    ],
+)
+def test_vi_visual_block_operators(
+    text, start, movement, remaining, selected, operator
+):
+    result, app = _feed_cli_with_input(
+        text.replace("\n", "\r")
+        + "\x1b"
+        + start
+        + "\x16"
+        + movement
+        + operator
+        + "\x1b\r",
+        editing_mode=EditingMode.VI,
+        multiline=True,
+    )
+
+    assert result.text == (text if operator == "y" else remaining)
+    clipboard_data = app.clipboard.get_data()
+    assert clipboard_data.text == selected
+    assert clipboard_data.type == SelectionType.BLOCK
 
 
 def test_vi_visual_line_copy():
