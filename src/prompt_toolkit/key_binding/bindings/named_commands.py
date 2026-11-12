@@ -6,6 +6,7 @@ See: http://www.delorie.com/gnu/docs/readline/rlman_13.html
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from typing import TypeVar, cast
 
@@ -669,18 +670,49 @@ def operate_and_get_next(event: E) -> None:
     the current line from the history for editing.
     """
     buff = event.current_buffer
-    new_index = buff.working_index + 1
+    if not buff.validate(set_cursor=True):
+        return
+
+    # Older history entries can still be prepended while loading. Keep the
+    # position relative to the end rather than to the currently loaded start.
+    index_from_end = buff.working_index + 1 - len(buff._working_lines)
+    last_history_entry = buff.history.get_strings()[-1:]
 
     # Accept the current input. (This will also redraw the interface in the
     # 'done' state.)
     buff.validate_and_handle()
 
-    # Set the new index at the start of the next run.
-    def set_working_index() -> None:
-        if new_index < len(buff._working_lines):
-            buff.working_index = new_index
+    # Accepting an older command can append it to history. Accepting the latest
+    # command doesn't add a duplicate, so only adjust when an entry was added.
+    if buff.history.get_strings()[-1:] != last_history_entry:
+        index_from_end -= 1
 
-    event.app.pre_run_callables.append(set_working_index)
+    def load_history() -> None:
+        initial_document = buff.document
+        initial_index_from_end = buff.working_index - len(buff._working_lines)
+
+        # Set the new index after history has loaded in the next run, unless
+        # the user already edited the input or selected another history entry.
+        def set_working_index(future: asyncio.Future[None]) -> None:
+            if (
+                future is not buff._load_history_task
+                or future.cancelled()
+                or future.exception() is not None
+                or buff.document != initial_document
+                or buff.working_index - len(buff._working_lines)
+                != initial_index_from_end
+            ):
+                return
+
+            new_index = len(buff._working_lines) + index_from_end
+            if 0 <= new_index < len(buff._working_lines):
+                buff.working_index = new_index
+
+        buff.load_history_if_not_yet_loaded()
+        assert buff._load_history_task is not None
+        buff._load_history_task.add_done_callback(set_working_index)
+
+    event.app.pre_run_callables.append(load_history)
 
 
 @register("edit-and-execute-command")

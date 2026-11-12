@@ -5,6 +5,7 @@ input and check the result.
 
 from __future__ import annotations
 
+import asyncio
 from functools import partial
 
 import pytest
@@ -12,13 +13,14 @@ import pytest
 from prompt_toolkit.clipboard import ClipboardData, InMemoryClipboard
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.filters import ViInsertMode
-from prompt_toolkit.history import InMemoryHistory
+from prompt_toolkit.history import InMemoryHistory, ThreadedHistory
 from prompt_toolkit.input.defaults import create_pipe_input
 from prompt_toolkit.input.vt100_parser import ANSI_SEQUENCES
 from prompt_toolkit.key_binding.bindings.named_commands import prefix_meta
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.output import DummyOutput
 from prompt_toolkit.shortcuts import PromptSession
+from prompt_toolkit.validation import Validator
 
 
 def _history():
@@ -346,6 +348,182 @@ def test_emacs_history_bindings():
     # Esc< ControlDown (beginning-of-history, next-history)
     result, cli = _feed_cli_with_input("\x1b<\x1b[1;5B\r", history=history)
     assert result.text == "line2 second input"
+
+
+@pytest.mark.parametrize("threaded", [False, True])
+@pytest.mark.parametrize(
+    "entries, up_count, current, following",
+    [
+        (["first", "second", "third"], 3, "first", "second"),
+        (["first", "second", "third"], 2, "second", "third"),
+        (["first", "second", "third"], 1, "third", ""),
+        (["first", "second", "first"], 3, "first", "second"),
+    ],
+)
+def test_emacs_operate_and_get_next(threaded, entries, up_count, current, following):
+    history = InMemoryHistory(entries)
+    if threaded:
+        history = ThreadedHistory(history)
+
+    with create_pipe_input() as inp:
+        session = PromptSession(input=inp, output=DummyOutput(), history=history)
+
+        def prompt_with_input(text):
+            async def feed_after_history():
+                buffer = session.default_buffer
+                buffer.load_history_if_not_yet_loaded()
+                await buffer._load_history_task
+                inp.send_text(text)
+
+            def pre_run():
+                session.app.create_background_task(feed_after_history())
+
+            return session.prompt(pre_run=pre_run)
+
+        assert prompt_with_input("\x1b[A" * up_count + "\x0f") == current
+        assert prompt_with_input("\r") == following
+
+
+@pytest.mark.parametrize(
+    "entries",
+    [
+        ["first", "second", "third"],
+        ["second", "third", "second"],
+        ["first", "second", "second"],
+    ],
+)
+def test_emacs_operate_and_get_next_partial_history(entries):
+    ready = asyncio.Event()
+
+    class PartialHistory(InMemoryHistory):
+        load_count = 0
+
+        async def load(self):
+            self.load_count += 1
+            loaded = 0
+            async for item in super().load():
+                yield item
+                loaded += 1
+                if self.load_count == 1 and loaded == 2:
+                    ready.set()
+                    await asyncio.Future()
+
+    with create_pipe_input() as inp:
+        session = PromptSession(
+            input=inp,
+            output=DummyOutput(),
+            history=PartialHistory(entries),
+        )
+
+        async def select_history():
+            await ready.wait()
+            inp.send_text("\x1b[A\x1b[A\x0f")
+
+        assert (
+            session.prompt(
+                pre_run=lambda: session.app.create_background_task(select_history())
+            )
+            == entries[1]
+        )
+
+        async def accept_next():
+            buffer = session.default_buffer
+            buffer.load_history_if_not_yet_loaded()
+            await buffer._load_history_task
+            inp.send_text("\r")
+
+        assert (
+            session.prompt(
+                pre_run=lambda: session.app.create_background_task(accept_next())
+            )
+            == entries[2]
+        )
+        assert session.default_buffer.working_index == 2
+
+
+@pytest.mark.parametrize(
+    "text, expected", [("new command", "new command"), ("\x1b[A", "first")]
+)
+def test_emacs_operate_and_get_next_preserves_input(text, expected):
+    loading = asyncio.Event()
+    resume = asyncio.Event()
+    input_processed = asyncio.Event()
+
+    class PausedHistory(InMemoryHistory):
+        load_count = 0
+
+        async def load(self):
+            self.load_count += 1
+            async for item in super().load():
+                yield item
+                if self.load_count == 2 and not loading.is_set():
+                    loading.set()
+                    await resume.wait()
+
+    with create_pipe_input() as inp:
+        session = PromptSession(
+            input=inp,
+            output=DummyOutput(),
+            history=PausedHistory(["first", "second", "third"]),
+        )
+        buffer = session.default_buffer
+
+        async def select_history():
+            buffer.load_history_if_not_yet_loaded()
+            await buffer._load_history_task
+            inp.send_text("\x1b[A\x1b[A\x1b[A\x0f")
+
+        assert (
+            session.prompt(
+                pre_run=lambda: session.app.create_background_task(select_history())
+            )
+            == "first"
+        )
+
+        def on_text_changed(buffer):
+            if buffer.text == expected:
+                input_processed.set()
+
+        buffer.on_text_changed += on_text_changed
+
+        async def enter_text():
+            await loading.wait()
+            inp.send_text(text)
+            await input_processed.wait()
+            resume.set()
+            await buffer._load_history_task
+            inp.send_text("\r")
+
+        assert (
+            session.prompt(
+                pre_run=lambda: session.app.create_background_task(enter_text())
+            )
+            == expected
+        )
+
+
+def test_emacs_operate_and_get_next_validation_failure():
+    with create_pipe_input() as inp:
+        session = PromptSession(
+            input=inp,
+            output=DummyOutput(),
+            history=InMemoryHistory(["first", "second", "third"]),
+            validator=Validator.from_callable(lambda text: text != "first"),
+        )
+
+        def prompt_with_input(text):
+            async def feed_after_history():
+                buffer = session.default_buffer
+                buffer.load_history_if_not_yet_loaded()
+                await buffer._load_history_task
+                inp.send_text(text)
+
+            return session.prompt(
+                pre_run=lambda: session.app.create_background_task(feed_after_history())
+            )
+
+        assert prompt_with_input("\x1b[A\x1b[A\x1b[A\x0f\x01\x0bedited\r") == "edited"
+        assert prompt_with_input("\r") == ""
 
 
 def test_emacs_reverse_search():
