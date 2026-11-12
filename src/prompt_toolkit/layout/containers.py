@@ -2349,25 +2349,25 @@ class Window(Container):
         # scroll to this line.
         line_height = get_line_height(ui_content.cursor_position.y)
         if line_height > height - scroll_offsets_top:
-            # Calculate the height of the text before the cursor (including
-            # line prefixes).
-            text_before_height = ui_content.get_height_for_line(
+            # Include the character under the cursor, which can wrap onto
+            # the next line even when all preceding text fits.
+            cursor_height = ui_content.get_height_for_line(
                 ui_content.cursor_position.y,
                 width,
                 self.get_line_prefix,
-                slice_stop=ui_content.cursor_position.x,
+                slice_stop=ui_content.cursor_position.x + 1,
             )
 
             # Adjust scroll offset.
             self.vertical_scroll = ui_content.cursor_position.y
             self.vertical_scroll_2 = min(
-                text_before_height - 1,  # Keep the cursor visible.
+                cursor_height - 1,  # Keep the cursor visible.
                 line_height
                 - height,  # Avoid blank lines at the bottom when scrolling up again.
                 self.vertical_scroll_2,
             )
             self.vertical_scroll_2 = max(
-                0, text_before_height - height, self.vertical_scroll_2
+                0, cursor_height - height, self.vertical_scroll_2
             )
             return
         else:

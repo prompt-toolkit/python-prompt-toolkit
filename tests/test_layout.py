@@ -2,9 +2,15 @@ from __future__ import annotations
 
 import pytest
 
+from prompt_toolkit import Application
+from prompt_toolkit.data_structures import Point, Size
+from prompt_toolkit.input.defaults import create_pipe_input
 from prompt_toolkit.layout import InvalidLayoutError, Layout
 from prompt_toolkit.layout.containers import HSplit, VSplit, Window
 from prompt_toolkit.layout.controls import BufferControl
+from prompt_toolkit.output import DummyOutput
+from prompt_toolkit.utils import get_cwidth
+from prompt_toolkit.widgets import TextArea
 
 
 def test_layout_class():
@@ -51,3 +57,72 @@ def test_layout_class():
 def test_create_invalid_layout():
     with pytest.raises(InvalidLayoutError):
         Layout(HSplit([]))
+
+
+@pytest.mark.parametrize("height", [1, 2])
+@pytest.mark.parametrize(
+    "prompt,prefix,character",
+    [
+        ("", "", " "),
+        (">>> ", "", " "),
+        ("界> ", "", " "),
+        ("", ".. ", " "),
+        (">>> ", ".. ", " "),
+        (">>> ", "界 ", " "),
+        (">>> ", "", "界"),
+        (">>> ", ".. ", "界"),
+    ],
+)
+def test_wrapped_text_area_cursor(height, prompt, prefix, character):
+    class Output(DummyOutput):
+        def get_size(self):
+            return Size(rows=height, columns=20)
+
+    prefix_width = get_cwidth(prefix)
+    text = "x" * (20 - get_cwidth(prompt) - prefix_width - 1)
+    text += "x" * ((height - 1) * (20 - prefix_width))
+    area = TextArea(
+        multiline=height > 1,
+        height=height,
+        wrap_lines=True,
+        prompt=prompt,
+        get_line_prefix=(lambda lineno, wrap_count: prefix) if prefix else None,
+    )
+    # Fill the window, type at the wrap boundary, then move back and insert.
+    keys = iter([text, "x", character, "\x1b[D", "X"])
+    positions = []
+    last_document = None
+
+    with create_pipe_input() as inp:
+
+        def after_render(app):
+            nonlocal last_document
+            if app.is_done or area.document == last_document:
+                return
+            last_document = area.document
+            info = area.window.render_info
+            positions.append((info.cursor_position, area.window.vertical_scroll_2))
+            key = next(keys, None)
+            if key is None:
+                app.exit()
+            else:
+                inp.send_text(key)
+
+        app = Application(
+            layout=Layout(area),
+            input=inp,
+            output=Output(),
+            full_screen=True,
+            after_render=after_render,
+        )
+        app.run()
+
+    assert positions[1:] == [
+        (Point(x=19, y=height - 1), 0),
+        (Point(x=prefix_width, y=height - 1), 1),
+        (Point(x=prefix_width + get_cwidth(character), y=height - 1), 1),
+        (Point(x=prefix_width, y=height - 1), 1),
+        (Point(x=prefix_width + 1, y=height - 1), 1),
+    ]
+    assert area.text == text + "xX" + character
+    assert area.buffer.cursor_position == len(text) + 2
