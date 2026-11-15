@@ -90,7 +90,10 @@ class _ConnectionStdout:
 
     def write(self, data: str) -> None:
         data = data.replace("\n", "\r\n")
-        self._buffer.append(data.encode(self._encoding, errors=self._errors))
+        # A literal 0xFF byte has to be sent as IAC IAC, otherwise the client
+        # interprets it (and the bytes after it) as a telnet command.
+        encoded = data.encode(self._encoding, errors=self._errors)
+        self._buffer.append(encoded.replace(IAC, IAC + IAC))
         self.flush()
 
     def isatty(self) -> bool:
