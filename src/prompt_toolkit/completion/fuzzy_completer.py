@@ -101,17 +101,16 @@ class FuzzyCompleter(Completer):
             # pattern.
             fuzzy_matches = [_FuzzyMatch(0, 0, compl) for compl in inner_completions]
         else:
-            pat = ".*?".join(map(re.escape, word_before_cursor))
-            pat = f"(?=({pat}))"  # lookahead regex to manage overlapping matches
-            regex = re.compile(pat, re.IGNORECASE)
+            # Match each character separately to retain re.IGNORECASE's Unicode
+            # semantics without building a backtracking subsequence regex.
+            patterns = [
+                re.compile(re.escape(c), re.IGNORECASE) for c in word_before_cursor
+            ]
             for compl in inner_completions:
-                matches = list(regex.finditer(compl.text))
-                if matches:
-                    # Prefer the match, closest to the left, then shortest.
-                    best = min(matches, key=lambda m: (m.start(), len(m.group(1))))
-                    fuzzy_matches.append(
-                        _FuzzyMatch(len(best.group(1)), best.start(), compl)
-                    )
+                bounds = _find_fuzzy_match(compl.text, patterns)
+                if bounds is not None:
+                    start, length = bounds
+                    fuzzy_matches.append(_FuzzyMatch(length, start, compl))
 
             def sort_key(fuzzy_match: _FuzzyMatch) -> tuple[int, int]:
                 "Sort by start position, then by the length of the match."
@@ -212,3 +211,47 @@ class _FuzzyMatch(NamedTuple):
     match_length: int
     start_pos: int
     completion: Completion
+
+
+def _find_fuzzy_match(
+    text: str, patterns: list[re.Pattern[str]]
+) -> tuple[int, int] | None:
+    """Find the leftmost, shortest subsequence in O(len(text) * len(patterns))."""
+    if not any(pattern.fullmatch("\n") for pattern in patterns):
+        # Within one line, taking each character's earliest occurrence gives
+        # the shortest match at the earliest start. If it cannot finish, no
+        # later start on that line can finish either.
+        offset = 0
+        for line in text.split("\n"):
+            first = patterns[0].search(line)
+            if first is not None:
+                end = first.end()
+                for pattern in patterns[1:]:
+                    match = pattern.search(line, end)
+                    if match is None:
+                        break
+                    end = match.end()
+                else:
+                    return offset + first.start(), end - first.start()
+            offset += len(line) + 1
+        return None
+
+    # Custom patterns can select queries containing literal newlines.
+    # ends[i] is the exclusive end of the earliest matching suffix for
+    # patterns[i:] to the right of the current position. Scan backwards so a
+    # character is never consumed twice. Earlier matches replace later ones.
+    ends: list[int | None] = [None] * len(patterns)
+    result = None
+    for position in range(len(text) - 1, -1, -1):
+        char = text[position]
+        for i, pattern in enumerate(patterns):
+            if pattern.fullmatch(char):
+                ends[i] = position + 1 if i == len(patterns) - 1 else ends[i + 1]
+                suffix_end = ends[i]
+                if i == 0 and suffix_end is not None:
+                    result = (position, suffix_end - position)
+            elif char == "\n":
+                # The old regex's .*? gaps could not skip a newline. Literal
+                # newline characters in a custom query can still match one.
+                ends[i] = None
+    return result
