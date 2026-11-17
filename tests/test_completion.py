@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import os
+import random
 import re
 import shutil
+import subprocess
+import sys
 import tempfile
 from contextlib import contextmanager
 
@@ -467,3 +470,42 @@ def test_deduplicate_completer():
         )
     )
     assert len(completions) == 5
+
+
+def test_fuzzy_completer_repeated_characters_do_not_backtrack():
+    # Keep a regression from hanging the test runner itself.
+    subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            """
+from prompt_toolkit.completion import CompleteEvent, FuzzyWordCompleter
+from prompt_toolkit.document import Document
+completer = FuzzyWordCompleter(["a" * 40])
+assert list(completer.get_completions(Document("a" * 12 + "b"), CompleteEvent())) == []
+""",
+        ],
+        check=True,
+        timeout=10,
+    )
+
+
+def test_fuzzy_match_retains_regex_ordering_and_unicode_semantics():
+    from prompt_toolkit.completion.fuzzy_completer import _find_fuzzy_match
+
+    randomizer = random.Random(459)
+    alphabet = "aAbB\nİiıſsKk.*"
+    for _ in range(3000):
+        text = "".join(randomizer.choices(alphabet, k=randomizer.randrange(16)))
+        word = "".join(randomizer.choices(alphabet, k=randomizer.randrange(1, 6)))
+        regex = re.compile(
+            "(?=(" + ".*?".join(map(re.escape, word)) + "))", re.IGNORECASE
+        )
+        matches = list(regex.finditer(text))
+        if matches:
+            best = min(matches, key=lambda match: (match.start(), len(match.group(1))))
+            expected = best.start(), len(best.group(1))
+        else:
+            expected = None
+        patterns = [re.compile(re.escape(char), re.IGNORECASE) for char in word]
+        assert _find_fuzzy_match(text, patterns) == expected, (text, word)
