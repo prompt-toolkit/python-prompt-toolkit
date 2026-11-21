@@ -25,6 +25,8 @@ from a list of options:
 
 .. image:: ../images/choice-input.png
 
+By default, a number key highlights a choice and Enter confirms it. Pass
+``accept_on_number=True`` to confirm choices 1 through 9 with a single key.
 
 Coloring the options
 --------------------

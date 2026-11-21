@@ -717,6 +717,7 @@ class _DialogList(Generic[_T]):
         show_scrollbar: bool = True,
         show_cursor: bool = True,
         show_numbers: bool = False,
+        on_number: Callable[[E], None] | None = None,
     ) -> None:
         assert len(values) > 0
         default_values = default_values or []
@@ -812,6 +813,8 @@ class _DialogList(Generic[_T]):
                 self._selected_index = min(len(self.values) - 1, index - 1)
                 if select_on_focus:
                     self._handle_enter()
+                if on_number is not None and index <= len(self.values):
+                    on_number(event)
 
         # Control and window.
         self.control = FormattedTextControl(
@@ -904,6 +907,7 @@ class RadioList(_DialogList[_T]):
     List of radio buttons. Only one can be checked at the same time.
 
     :param values: List of (value, label) tuples.
+    :param on_number: Handler called after pressing a displayed option number.
     """
 
     def __init__(
@@ -923,6 +927,7 @@ class RadioList(_DialogList[_T]):
         multiple_selection: bool = False,
         show_cursor: bool = True,
         show_scrollbar: bool = True,
+        on_number: Callable[[E], None] | None = None,
     ) -> None:
         if default is None:
             default_values = None
@@ -934,6 +939,7 @@ class RadioList(_DialogList[_T]):
             default_values=default_values,
             select_on_focus=select_on_focus,
             show_numbers=show_numbers,
+            on_number=on_number,
             open_character=open_character,
             select_character=select_character,
             close_character=close_character,

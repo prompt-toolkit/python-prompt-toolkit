@@ -81,6 +81,8 @@ class ChoiceInput(Generic[_T]):
         :class:`~prompt_toolkit.filters.Filter`. When True, surround the input
         with a frame.
     :param show_numbers: Whether to show the option numbers in front of each choice.
+    :param accept_on_number: Accept one of the first nine choices immediately
+        when its number is pressed.
     :param enable_interrupt: `bool` or
         :class:`~prompt_toolkit.filters.Filter`. When True, raise
         the ``interrupt_exception`` (``KeyboardInterrupt`` by default) when
@@ -101,6 +103,7 @@ class ChoiceInput(Generic[_T]):
         bottom_toolbar: AnyFormattedText = None,
         show_frame: FilterOrBool = False,
         show_numbers: bool = True,
+        accept_on_number: bool = False,
         enable_suspend: FilterOrBool = False,
         enable_interrupt: FilterOrBool = True,
         interrupt_exception: type[BaseException] = KeyboardInterrupt,
@@ -117,6 +120,7 @@ class ChoiceInput(Generic[_T]):
         self.symbol = symbol
         self.show_frame = show_frame
         self.show_numbers = show_numbers
+        self.accept_on_number = accept_on_number
         self.enable_suspend = enable_suspend
         self.interrupt_exception = interrupt_exception
         self.enable_interrupt = enable_interrupt
@@ -124,6 +128,12 @@ class ChoiceInput(Generic[_T]):
         self.key_bindings = key_bindings
 
     def _create_application(self) -> Application[_T]:
+        kb = KeyBindings()
+
+        @kb.add("enter", eager=True)
+        def _accept_input(event: E) -> None:
+            event.app.exit(result=radio_list.current_value, style="class:accepted")
+
         radio_list = RadioList(
             values=self.options,
             default=self.default,
@@ -133,6 +143,7 @@ class ChoiceInput(Generic[_T]):
             close_character="",
             show_cursor=False,
             show_numbers=self.show_numbers,
+            on_number=_accept_input if self.accept_on_number else None,
             container_style="class:input-selection",
             default_style="class:option",
             selected_style="",
@@ -202,13 +213,6 @@ class ChoiceInput(Generic[_T]):
             focused_element=radio_list,
         )
 
-        kb = KeyBindings()
-
-        @kb.add("enter", eager=True)
-        def _accept_input(event: E) -> None:
-            "Accept input when enter has been pressed."
-            event.app.exit(result=radio_list.current_value, style="class:accepted")
-
         @Condition
         def enable_interrupt() -> bool:
             return to_filter(self.enable_interrupt)()
@@ -259,6 +263,7 @@ def choice(
     symbol: str = ">",
     bottom_toolbar: AnyFormattedText = None,
     show_frame: bool = False,
+    accept_on_number: bool = False,
     enable_suspend: FilterOrBool = False,
     enable_interrupt: FilterOrBool = True,
     interrupt_exception: type[BaseException] = KeyboardInterrupt,
@@ -285,6 +290,8 @@ def choice(
     :param default: Default value. If none is given, the first option is
         considered the default.
     :param mouse_support: Enable mouse support.
+    :param accept_on_number: Accept one of the first nine choices immediately
+        when its number is pressed.
     :param style: :class:`.Style` instance for the color scheme.
     :param symbol: Symbol to be displayed in front of the selected choice.
     :param bottom_toolbar: Formatted text or callable that returns formatted
@@ -308,6 +315,7 @@ def choice(
         symbol=symbol,
         bottom_toolbar=bottom_toolbar,
         show_frame=show_frame,
+        accept_on_number=accept_on_number,
         enable_suspend=enable_suspend,
         enable_interrupt=enable_interrupt,
         interrupt_exception=interrupt_exception,
