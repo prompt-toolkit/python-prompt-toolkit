@@ -940,3 +940,23 @@ def test_accept_default():
         # prompt reset between calls happened at the wrong time, breaking this.)
         result = session.prompt(default="world", accept_default=True)
         assert result == "world"
+
+
+def test_vi_yank_last_arg():
+    """
+    In Vi insert mode, Meta-'.' and Meta-'_' yank the last argument of the
+    previous entry, like the Emacs bindings and readline's default
+    Vi-insert bindings. (Issue #1905.)
+    """
+    history = InMemoryHistory()
+    history.append_string("first one two")
+
+    feed = partial(_feed_cli_with_input, editing_mode=EditingMode.VI, history=history)
+
+    # Meta-'.' inserts the last word of the previous entry.
+    result, cli = feed("test \x1b.\r")
+    assert result.text == "test two"
+
+    # Alias: Meta-'_'.
+    result, cli = feed("test \x1b_\r")
+    assert result.text == "test two"

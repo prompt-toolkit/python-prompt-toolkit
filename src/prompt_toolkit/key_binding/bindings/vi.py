@@ -448,6 +448,11 @@ def load_vi_bindings() -> KeyBindingsBase:
     # Insert a character literally (quoted insert).
     handle("c-v", filter=vi_insert_mode)(get_by_name("quoted-insert"))
 
+    # Yank the last argument of the previous entry, like the Emacs
+    # bindings and readline's default Vi-insert bindings. (Issue #1905.)
+    handle("escape", ".", filter=vi_insert_mode)(get_by_name("yank-last-arg"))
+    handle("escape", "_", filter=vi_insert_mode)(get_by_name("yank-last-arg"))
+
     @handle("escape")
     def _back_to_navigation(event: E) -> None:
         """
