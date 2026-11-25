@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+from prompt_toolkit.input.ansi_escape_sequences import ANSI_SEQUENCES
 from prompt_toolkit.input.vt100_parser import Vt100Parser
 from prompt_toolkit.keys import Keys
 
@@ -22,6 +23,22 @@ def processor():
 @pytest.fixture
 def stream(processor):
     return Vt100Parser(processor.feed_key)
+
+
+def test_character_valued_ansi_sequence(processor, stream):
+    # A sequence mapped to a plain character should produce a key press
+    # carrying the character itself as data, not the raw escape sequence.
+    sequence = "\x1b[27;2;78~"
+    ANSI_SEQUENCES[sequence] = "N"
+    try:
+        stream.feed(sequence)
+        stream.flush()
+
+        assert len(processor.keys) == 1
+        assert processor.keys[0].key == "N"
+        assert processor.keys[0].data == "N"
+    finally:
+        del ANSI_SEQUENCES[sequence]
 
 
 def test_control_keys(processor, stream):
