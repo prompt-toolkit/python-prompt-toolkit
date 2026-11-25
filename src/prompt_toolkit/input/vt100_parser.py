@@ -188,6 +188,12 @@ class Vt100Parser:
                 self._in_bracketed_paste = True
                 self._paste_buffer = ""
             else:
+                if not isinstance(key, Keys) and insert_text:
+                    # This sequence maps to a plain character, so the key
+                    # press should carry the character itself as data.
+                    # Otherwise the raw escape sequence would end up inserted
+                    # in the buffer.
+                    insert_text = key
                 self.feed_key_callback(KeyPress(key, insert_text))
 
     def feed(self, data: str) -> None:
